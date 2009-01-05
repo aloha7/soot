@@ -1,0 +1,7 @@
+1. In ccr.app.TestCFG2.java:
+For the Context-Extraction Model:Context Variable [candidate, location, lastLocation, displace, curEstX, curEstY, bPos, cPos, lastPos, actLoc, estLoc, lastLoc, dist]
+For the Context-Intensity: Context Variable [candidate]
+2.The procedure to do the experiments:
+1). Get the failure rate of 140 faulty versions: ccr.test.TestDriver.java
+2). Get the criterion-adequacy test sets:ccr.test.Adequacy.java
+3). Get the fault detection rate of adequate test sets: ccr.test.Adequacy.java
