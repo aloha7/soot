@@ -58,6 +58,7 @@ public class TestDriver {
 		return (double) detected / (double) testSets.length;
 	}
 	
+	//2009-1-6:for context intensity
 	public static double test(String appClassName, String oracleClassName, 
 			TestSet testSets[]) {
 		
@@ -78,6 +79,65 @@ public class TestDriver {
 		double result = (double) detected / (double) testSets.length;
 		return result;
 	}
+	
+	//2009-1-6:for context intensity
+	public static double test(String appClassName, String oracleClassName, String criterion, TestSet testSets[]){
+		double detectionRate = 0;
+		int validTestSet = 0;
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(criterion +"_"+ appClassName + "_testSet.txt"));
+			String line = "Fault\t" + "Pass\t" + "Size\t" +"Pass/Size\t"+ "TestSet\t" + "ContextIntensity\t" + "Time\n";
+			
+			BufferedWriter bw_testcase = new BufferedWriter(new FileWriter(criterion+ "_" + appClassName + "_testcase.txt"));
+			String line_testcase = "Fault\t" + "TestSet\t"+"TestCase\t" + "Pass/Fail\t"+ "Change\t" + "Length\t" + "Time\n";
+			for(int i = 0; i < testSets.length; i++){
+				int validTestCase = 0;
+				
+				long startTime = System.currentTimeMillis();
+				int size_TestSet = testSets[i].size();
+				
+				
+				for(int j = 0; j < size_TestSet; j ++){
+					String testcase = testSets[i].get(j);
+					long startTime_testcase = System.currentTimeMillis();
+					ApplicationResult result = (ApplicationResult)run(appClassName, testcase);
+					long enduration_testcase = System.currentTimeMillis()-startTime_testcase;
+					line_testcase += appClassName +"\t" + i +"\t" + testcase +"\t";
+					if (!result.equals(run(oracleClassName, testcase))) {
+						validTestCase ++;
+						line_testcase += "F\t";
+					}else
+						line_testcase +="P\t";
+					line_testcase +=result.moved + "\t" +result.counter + "\t" + enduration_testcase +"\n";					
+				}
+				
+				
+				long enduration = System.currentTimeMillis()- startTime;
+				line += appClassName + "\t" + validTestCase + "\t"
+						+ size_TestSet + "\t" + (double) validTestCase
+						/ (double) size_TestSet + "\t" + i +"\t" + "1\t" + enduration +"\n"; 
+				if(validTestCase > 0 )
+					validTestSet ++;
+				
+			}
+			
+			bw_testcase.write(line_testcase);
+			bw_testcase.flush();
+			bw_testcase.close();
+			
+			bw.write(line);
+			bw.flush();
+			bw.newLine();
+			bw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		detectionRate = (double)validTestSet/(double)testSets.length;
+		return detectionRate;
+		
+	}
+	
 	
 	public static void test(
 			String versionPackageName, String oracleClassName, 
@@ -104,6 +164,7 @@ public class TestDriver {
 		}
 	}
 	
+	//2009-1-6: for context-intensity
 	public static void test(
 			String versionPackageName, String oracleClassName, 
 			TestSet testSets[][], String reportFile) {
@@ -112,47 +173,50 @@ public class TestDriver {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(reportFile));
 			String versionFolder = APPLICATION_FOLDER + "/" + versionPackageName;
 			File versions = new File(versionFolder);
+			int versionCounter = 0;
+			
 			
 			for (int i = 0; i < versions.list().length; i++) {
-				
-				System.out.println("faulty versions number:" + versions.list().length );
-				System.out.println("test sets size:" + testSets.length);
-				
-
-				String appClassName = versions.list()[i];
-				appClassName = APPLICATION_PACKAGE + "." + versionPackageName + "." + 
-						appClassName.substring(0, appClassName.indexOf(".java"));
-				
-			
-				
-				
-			//	1/14/2008 Martin	
-			//	String line = appClassName + "\tFault detection rate";
-				for (int j = 0; j < testSets.length; j++) { //the length is 50
-					String line = appClassName + "\tFault detection rate";
-					System.out.println("");
-					long startTime = System.currentTimeMillis();
-					line = line + "\t" + test(
-							appClassName, APPLICATION_PACKAGE + "." + 
-							oracleClassName, testSets[j]);
-				//	System.out.println(System.currentTimeMillis() - startTime);
-					line = line +  "\t" + "time\t" + String.valueOf((System.currentTimeMillis() - startTime));
+				if(versions.listFiles()[i].isFile()){
+					versionCounter ++;
+					String appClassName = versions.list()[i];
+					appClassName = APPLICATION_PACKAGE + "." + versionPackageName + "." + 
+							appClassName.substring(0, appClassName.indexOf(".java"));
+				//	1/14/2008 Martin	
+					for (int j = 0; j < testSets.length; j++) { //the length is 50
+						String line = appClassName + "\tFault detection rate";
+						System.out.println("");
+						long startTime = System.currentTimeMillis();
+						
+						//2009-1-6:context intensity
+//						line = line + "\t" + test(
+//								appClassName, APPLICATION_PACKAGE + "." + 
+//								oracleClassName, testSets[j]);
+						String criteria = new File(reportFile).getPath();
+						criteria = criteria.substring(0, criteria.indexOf("."));
+						line = line + "\t" + test(
+								appClassName, APPLICATION_PACKAGE + "." + 
+								oracleClassName, criteria, testSets[j]);
+					//	System.out.println(System.currentTimeMillis() - startTime);
+						line = line +  "\t" + "time\t" + String.valueOf((System.currentTimeMillis() - startTime));
+						
+						System.out.println(line);
+						bw.write(line);
+					//	1/14/2008 Martin
+						bw.flush();
+						bw.newLine();
+						
+					}
 					
+				/*	//1/14/2008:Martin
 					System.out.println(line);
 					bw.write(line);
-				//	1/14/2008 Martin
-					bw.flush();
 					bw.newLine();
-					
+					*/
 				}
-				
-			/*	//1/14/2008:Martin
-				System.out.println(line);
-				bw.write(line);
-				bw.newLine();
-				*/
-				
 			}
+			System.out.println("faulty versions number:" + versions.list().length );
+			System.out.println("test sets size:" + testSets.length);
 		//	bw.flush();
 			bw.close();
 		} catch (IOException e) {
@@ -160,7 +224,55 @@ public class TestDriver {
 		}
 	}
 	
+	//2009-1-5: for context-intensity experiment
 	public static void getFailureRate(
+			String versionPackageName, String oracleClassName, 
+			TestSet testpool, String reportDir) {
+		
+		try {
+			Oracle oracle = new Oracle(APPLICATION_PACKAGE + "." + oracleClassName, testpool);			
+			String versionFolder = APPLICATION_FOLDER + "/" + versionPackageName;
+			File versions = new File(versionFolder);
+			long startTime = System.currentTimeMillis();
+			for (int i = 0; i < versions.list().length; i++) {
+				if(versions.listFiles()[i].isFile()){
+					
+					String appClassName = versions.list()[i];
+					appClassName = APPLICATION_PACKAGE + "." + versionPackageName + "." + 
+							appClassName.substring(0, appClassName.indexOf(".java"));
+					int detected = 0;
+					String line = "TestCase\t"+"Changes\t"+"Length\t"+"Time\t"+"Pass/Fail\n";
+					for (int j = 0; j < testpool.size(); j++) {
+						long startTime1 = System.currentTimeMillis();
+						ApplicationResult result = (ApplicationResult)run(appClassName, testpool.get(j));
+						long last = System.currentTimeMillis()-startTime1;
+						line +=""+testpool.get(j)+"\t" + result.moved+"\t"+result.counter+"\t"+last+"\t";
+						if (!result.equals(
+								oracle.getOutcome(testpool.get(j)))) {
+							detected = detected + 1;
+							line +="F\n";
+						}else
+							line +="P\n";
+					}
+					line += appClassName + "\tFailure rate\t" + 
+							((double) detected / (double) testpool.size() + "\tTime:" + String.valueOf(System.currentTimeMillis()-startTime));
+					System.out.println(line);
+					BufferedWriter bw = new BufferedWriter(new FileWriter(reportDir + File.separator + appClassName +".txt"));
+					bw.write(line);
+					bw.newLine();
+					bw.flush();
+					bw.close();
+				}				
+			}
+			
+			
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+	}
+	
+	//2009-1-5: for context-intensity experiment
+	/*public static void getFailureRate(
 			String versionPackageName, String oracleClassName, 
 			TestSet testpool, String reportFile) {
 		
@@ -198,8 +310,7 @@ public class TestDriver {
 		} catch (IOException e) {
 			System.out.println(e);
 		}
-	}
-	
+	}*/
 	public static void main(String argv[]) {
 	
 	/*	TestSet testpool = new TestSet();
@@ -281,9 +392,12 @@ public class TestDriver {
 	*/	
 		//1. Get the failure rate of 140 faulty versions, test pool contains 10000 test cases, each runs 2 mins(in server).
 		long startTime = System.currentTimeMillis();
+//		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(
+//				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
+//				"src/ccr/experiment/failurerate.txt");	
 		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(
-				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
-				"src/ccr/experiment/failurerate.txt");		
+				0, 1),
+				"src/ccr/experiment/RQ3");	
 		System.out.println(System.currentTimeMillis() - startTime);
 		
 		
