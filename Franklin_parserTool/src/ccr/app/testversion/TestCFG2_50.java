@@ -472,7 +472,7 @@ public class TestCFG2_50 extends Application {
 		}
 		
 	//	Double result = new Double(distance);
-		ApplicationResult result = new ApplicationResult(moved, reliable);
+		ApplicationResult result = new ApplicationResult(moved, reliable, counter);
 		// EXIT // NODE
 		
 		return result;

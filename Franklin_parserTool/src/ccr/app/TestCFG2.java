@@ -469,7 +469,9 @@ public class TestCFG2 extends Application {
 		}
 		
 	//	Double result = new Double(distance);
-		ApplicationResult result = new ApplicationResult(moved, reliable);
+		//2009-1-5: for context-intensity experiment
+//		ApplicationResult result = new ApplicationResult(moved, reliable);
+		ApplicationResult result = new ApplicationResult(moved, reliable, counter);
 		// EXIT // NODE
 		
 		return result;
