@@ -637,22 +637,22 @@ public class Adequacy {
 				
 				//execute all test sets to evaluate their fault finding performance
 				TestSet testSets[][] = new TestSet[1][];
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allPoliciesTestSets.txt");
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allPoliciesTestSets.txt");
 				String versionPackageName = "testversion";
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/test-report-allPolicies.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/RQ1/allPolicies/allPolicies.txt");
 				
 				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets.txt");
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/test-report-all1ResolvedDU.txt");
+						"src/ccr/experiment/RQ1/all1ResolvedDU/all1ResolvedDU.txt");
 				
 				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets.txt");
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/test-report-all2ResolvedDU.txt");
+						"src/ccr/experiment/RQ1/all2ResolvedDU/all2ResolvedDU.txt");
 				
 				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets.txt");
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/test-report-allFullResolvedDU.txt");
+						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU.txt");
 			}
 		}
 		
