@@ -727,7 +727,7 @@ public class TestCFG2_84 extends Application {
 	private int toBoolean(double d) {
 		
 		int result = 0;
-		if (d != (double) 0) {
+		if(d>NOISE){
 			result = 1;
 		}
 		return result;
