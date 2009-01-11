@@ -1,0 +1,26 @@
+This file contains the list of changes to the Context Toolkit distribution:
+
+02/10/00: Context Toolkit public distribution created
+
+------------------------------------------------------------------------------------
+
+02/24/00: Maintenance update:
+
+1) Addition of the SimpleApp class. This was left out of the original distribution
+   by accident. This class is referred to in the installation guide. 
+
+2) Modification of the HTTPServerSocket class. There was some test code that should
+   have been commented out before it went in the distribution, so this was fixed.
+
+3) Modification of the Widget class. The update is to deal with the Global Time Clock
+   problem listed in the Known Bugs/Problems section of the online tutorial. 
+
+4) Addition of the OffsetThread class to help deal with #3 above. 
+
+5) Addition of the ntp.jar package to help deal with #3 above. ntp.jar is a 3rd party
+   jar file that is free to use and distribute under GPL. 
+
+=======================================================================================
+
+Any questions or comments: send mail to ctk@cc.gatech.edu
+Also see: http://www.cc.gatech.edu/fce/contexttoolkit

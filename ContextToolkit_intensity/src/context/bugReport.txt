@@ -1,0 +1,102 @@
+2008/7/2:
+1. How to invoke an asynchronous service?
+take "SimpleApp()" as an example. When BaseObject is a server, its "id" must
+be set; add a statement in  "context.arch.BaseObject.executeAsynchronousWidgetService()"
+since it is vital to label the invoker so that it can receive asynchronous results successfully;
+; move up the statement to get correct "Id" in "context.arch.service.helper.ServiceInput.ServiceInput(DataObject)"
+
+2008/7/3:
+1. PersonNamePresenceApp:
+add:import context.arch.storage.Attribute
+modify:PersonNamePresenceApp.pollPersonNamePresenceWidget()
+atts.addAttribute(WPersonNamePresence.TIMESTAMP)->atts.addAttribute(WPersonNamePresence.TIMESTAMP,Attribute.LONG);
+
+2008/7/5:
+1. CommunicationObject:
+add: CommunicationObject.runMethod() should handle with the "GET" request 
+
+2008/7/6:
+context.arch.server.STourId
+modify:USERID = ContextTypes.USERID -> USERID = ContextTypes.USERNAME
+
+2008/7/7:
+context.apps.TourApp:
+modify(135):DataObject callbacks = server.getWidgetCallbacks(serverHost, serverPort, serverId+"_"+userid) ->
+DataObject callbacks = server.getWidgetCallbacks(serverHost, serverPort, serverId);
+
+context.arch.generator.PositionIButton
+modify: change this class such that it can sample contexts from a script randomly.
+
+context.arch.interpreter.IButton2Name
+add(153):hash.put("01020304", "hwang");
+
+context.arch.interpreter.IDemoRecommender
+add:interpretData(73): this method is not finished yet.
+
+context.arch.storage.AttributeNameValue
+add:toDataObject(108):  v.addElement(value.toString())->if(value == null){
+    	  v.addElement(null);  
+      }else{
+    	  v.addElement(value.toString());  
+      }    
+      
+context.arch.widget.WTourDemo
+add(WTourDemo:255): add a function to invoke notify so that it can test TourApp
+
+context.arch.widget.WTourDemo
+modify(WTourDemo:353): WDisplay.CLASSNAME+SPACER+"here" -> WDisplay.CLASSNAME+SPACER+"test"
+
+2008/7/8:
+context.arch.interpreter.IDemoRecommender
+add(interpretData:91): make the function do return something instead of nothing.      
+
+context.app.Tour.TourApp:
+remove(askInterpreter):sb.append((String)atts.getAttributeNameValueAt(i).getValue()+", ")->sb.append(atts.getAttributeNameValueAt(i).getValue()+", ");
+(It causes an cast error))
+
+context.arch.widget.WTourEnd
+add(WTourEnd:137):
+//2008/7/8: add a script to test notify functions correctly.
+    PositionIButton sensor = new PositionIButton();
+    String locations = "test";
+    int[] iButtonId = new int[]{1,2,3,4};
+    String currentid = sensor.toHexString(iButtonId);
+    long currentTime = new Date().getTime();   
+    notify(Widget.UPDATE, new IButtonData(locations, currentid, Long.toString(currentTime)));
+    
+context.app.Tour.TourApp
+modify(handle-295):
+sm.sendMail(server.getHostAddress(),"chagall.cc.gatech.edu","anind@cc.gatech.edu",email,"FCL Demo Trip Summary",message.toString());->
+sm.sendMail(server.getHostAddress(),"study.cs.hku.hk","hwang@cs.hku.hk",email,"FCL Demo Trip Summary",message.toString());
+        
+add(handle-224,236):
+AttributeNameValues input1 = new AttributeNameValues();
+input.addAttributeNameValue(DemoInterest.DEMO_INTEREST, input1, Attribute.STRUCT);
+
+modify(handle-227,239):
+DemoInterest demoInterest = new DemoInterest(demoName, NO_INTEREST);            
+demoInterests.addDemoInterest(demoInterest);
+input.addAttributeNameValue(DemoInterests.DEMO_INTERESTS, demoInterests.toAttributeNameValues(), Attribute.STRUCT);
+
+2008/7/9
+add: WPersonPresence
+notify: since these widgets share one generator, it's necessary to distinguish different event categories.
+modify: ibutton = new PositionIButton (this,location); -> ibutton = PositionIButton.getInstance();ibutton.addListensor(this);
+
+modify: (1).PositionIButton
+Add a new context generator
+(2).TCPServerSocket(stopServer):runner = null -> runner.stop();
+
+2008/7/10£º
+add:context.test.util.TestCase.initializeTestCase(int widgetNum:32): while(length!=0) maybe it is correct to input empty event sequence
+
+2008/7/11:
+add:context.arch.generator.PositionIButton
+add a test stub to feed the context information to applications.
+
+
+
+
+
+
+
