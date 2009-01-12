@@ -27,7 +27,7 @@ public class DemoFile {
   public DemoFile(String filename) {
     try {
       URL url = new URL(filename);
-
+      String str = url.toString();
       String line=new String();
       BufferedReader reader = null;
       StringBuffer sb = new StringBuffer();

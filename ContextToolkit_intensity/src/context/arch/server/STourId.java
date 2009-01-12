@@ -105,6 +105,7 @@ System.out.println(this.getClass().getName() +  ":getConfigurationFile:" + parse
         System.out.println("TourApp Decode: "+de); 
     } catch(Exception e){
     	System.out.println(e);
+    	e.printStackTrace();
     }
   }
 

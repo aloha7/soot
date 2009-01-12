@@ -74,6 +74,7 @@ public class XMLURLReader {
       d = p.decodeData(replydata.getData());
     } catch (ProtocolException pe) {
         System.out.println ("getParsedData caught an exception: "+pe);
+        pe.printStackTrace();
         throw new DecodeException ("XMLURLReader getParsedData ProtocolException");
     } catch (InvalidProtocolException ipe) {
         System.out.println ("getParsedData caught an exception: "+ipe);

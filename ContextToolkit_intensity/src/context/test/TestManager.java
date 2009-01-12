@@ -1,6 +1,12 @@
 package context.test;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Vector;
+
+
 
 import context.arch.generator.PositionIButton;
 import context.arch.service.DisplayChoiceService;
@@ -73,6 +79,8 @@ public class TestManager extends Widget {
 		return testCases;
 	}
 	
+	
+	
 	public static void main(String[] args) {
 		try{
 				
@@ -95,7 +103,7 @@ public class TestManager extends Widget {
 			int maxVersion = 0;
 			boolean visual = true;
 			OutputProducer runner = new OutputProducer();	
-			//runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
+			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
 			
 		    //3. seed mutants in source codes and outputs for these faulty versions. 
 			minVersion = 37;

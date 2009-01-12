@@ -1,5 +1,6 @@
 package context.arch.generator;
 
+import java.io.File;
 import java.util.Date;
 import java.util.Vector;
 import java.util.Hashtable;
@@ -120,11 +121,11 @@ public class PositionIButton {
 			widget = (Widget)widgets.get(j);
 			widget.notify(info, data);
 		  }
-		  try{
+		  /*try{
 			  Thread.sleep((long)duration*1000);  			  
 		  }catch(Exception e){
 			System.out.println(e);  
-		  }			 
+		  }	*/		 
 	  }
   }
   
@@ -157,29 +158,54 @@ public class PositionIButton {
 			  TestCaseGenerator maker = new TestCaseGenerator();		  
 			  String file = Constant.baseFolder + "TestCase.txt";		  
 			  Vector testSuite = maker.retrieveTestCases(file);
-			  		  
-			  //2.start widgets(This can done by ant, but it will make different outputs for different test cases)		  		
-			  WTourRegistration tourStart = new WTourRegistration("test", 5700,false);
 			  
-			  WTourDemo	tourDemo = new WTourDemo("test", "http://127.0.0.1:5800/" +
-						"C:/WangHuai/Martin/Eclipse3.3/eclipse/ICSE'09/ConfigFile.txt",
+			  int testcaseNumber = Integer.parseInt(args[0]);
+			  String configFilePath = Logger.getInstance().generateConfigFile(testcaseNumber);
+			  
+			  
+//WTourRegistration tourStart = new WTourRegistration("test", 5700,false);
+//			  
+//			  WTourDemo	tourDemo = new WTourDemo("test", "http://127.0.0.1:5800/" +
+//						"C:/WangHuai/Martin/Eclipse3.3/eclipse/ICSE'09/ConfigFile.txt",
+//					"file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt", false);
+//			  
+//			  WTourEnd	tourEnd = new WTourEnd("test", 5900,false);
+//			  
+//			  IDemoRecommender recommender = new IDemoRecommender(7000);
+//			  
+//			  WDisplay display = new WDisplay("test", 8000, "100", "200", "graphics",false);
+//			  
+//			    STourId server = new STourId(6200, "01020304", new WidgetHandles(),
+//					  "http://127.0.0.1:5700/"+ System.getProperty("user.dir") + "/ConfigFile.txt");
+//			  
+//			  TourApp tour = new TourApp(9999, "01020304",  "http://127.0.0.1:5700/"+ System.getProperty("user.dir") +
+//			  		"/ConfigFile.txt", "file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt");
+//			  
+			  
+			  
+			  //2.start widgets(This can done by ant, but it will make different outputs for different test cases)		  		
+			  WTourRegistration tourStart = new WTourRegistration("test", 5000+ testcaseNumber ,false);
+			  
+			  WTourDemo	tourDemo = new WTourDemo("test", 6000+testcaseNumber , "http://127.0.0.1:" +(6000+testcaseNumber)+ "/"+
+					  configFilePath,/*"C:/WangHuai/Martin/Eclipse3.3/eclipse/ICSE'09/ConfigFile.txt"*/
 					"file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt", false);
 			  
-			  WTourEnd	tourEnd = new WTourEnd("test", 5900,false);
+			  WTourEnd	tourEnd = new WTourEnd("test", 7000 + testcaseNumber,false);
 			  
-			  IDemoRecommender recommender = new IDemoRecommender(7000);
+			  IDemoRecommender recommender = new IDemoRecommender(8000 + testcaseNumber);
 			  
-			  WDisplay display = new WDisplay("test", 8000, "100", "200", "graphics",false);
+			  WDisplay display = new WDisplay("test", 9000 + testcaseNumber, "100", "200", "graphics",false);
 			  
-			    STourId server = new STourId(6200, "01020304", new WidgetHandles(),
-					  "http://127.0.0.1:5700/"+ System.getProperty("user.dir") + "/ConfigFile.txt");
+			    STourId server = new STourId(10000 + testcaseNumber, "01020304", new WidgetHandles(),
+					  "http://127.0.0.1:" + (5000+testcaseNumber)+"/" + configFilePath);
 			  
-			  TourApp tour = new TourApp(9999, "01020304",  "http://127.0.0.1:5700/"+ System.getProperty("user.dir") +
-			  		"/ConfigFile.txt", "file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt");
+			  TourApp tour = new TourApp(11000 + testcaseNumber, "01020304",  "http://127.0.0.1:" + (5000+testcaseNumber) +"/"+ 
+				configFilePath
+			  		, "file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt");
 			  
 			  
 			  //3.start to simulate event sequences			  
-			  TestCase testCase = (TestCase)testSuite.get(Integer.parseInt(args[0]));
+			  TestCase testCase = (TestCase)testSuite.get(testcaseNumber);
 			  sensor = PositionIButton.getInstance();
 			  sensor.eventSequences = testCase;
 			  sensor.startSampling();			  
@@ -200,6 +226,7 @@ public class PositionIButton {
 		  System.out.println(e);
 	  }
 	  
+	    
 	  
   }
 }
