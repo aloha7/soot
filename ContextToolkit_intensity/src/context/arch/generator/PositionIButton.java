@@ -2,8 +2,10 @@ package context.arch.generator;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.Hashtable;
 
@@ -17,13 +19,10 @@ import context.arch.widget.WidgetHandles;
 import context.arch.server.STourId;
 import context.apps.Tour.TourApp;
 
-
 import context.arch.interpreter.IDemoRecommender;
-
 
 import context.test.util.*;
 import context.test.*;
-
 
 /**
  * This class acts as a wrapper around a Java iButton reader.  Whenever
@@ -37,123 +36,120 @@ import context.test.*;
  */
 public class PositionIButton {
 
-  private String location = ""; 
-  private String currentid = "";
-  private long currentTime = 0;
+	private String location = "";
+	private String currentid = "";
+	private long currentTime = 0;
 
-  //2008/7/9	
-  private static PositionIButton sensor = null;  
-  private Vector widgets = new Vector(); 
-  //private Thread runner = null;  
-  private static IButtonData data = null;
-  private TestCase eventSequences = null;
-  
-  
-  
-  private PositionIButton(){
-	  
-  }
-  
- 
-  
-  
-  public static PositionIButton getInstance(){
-	  if(sensor == null){
-		  sensor = new PositionIButton();
-		  String currentid = toHexString(new int[]{1,2,3,4});
-		  String location = "test";
-		  data = new IButtonData(location, currentid, Long.toString(new Date().getTime()));	  
-	  }
-	  return sensor;
-  }
-  
-  public void addListensor(Widget widget){
-	  widgets.add(widget);
-  }
+	//2008/7/9	
+	private static PositionIButton sensor = null;
+	private Vector widgets = new Vector();
+	//private Thread runner = null;  
+	private static IButtonData data = null;
+	private TestCase eventSequences = null;
 
-  private void startSimulate(){
-	  	 Widget widget = null;	
-	  
-		 ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
-		  
-		 String info = event.context;
-		 int duration = event.duration;
-		  
-		 for(int j = 0; j < widgets.size(); j ++){
-			widget = (Widget)widgets.get(j);
+	private PositionIButton() {
+
+	}
+
+	public static PositionIButton getInstance() {
+		if (sensor == null) {
+			sensor = new PositionIButton();
+			String currentid = toHexString(new int[] { 1, 2, 3, 4 });
+			String location = "test";
+			data = new IButtonData(location, currentid, Long
+					.toString(new Date().getTime()));
+		}
+		return sensor;
+	}
+
+	public void addListensor(Widget widget) {
+		widgets.add(widget);
+	}
+
+	private void startSimulate() {
+		Widget widget = null;
+
+		ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
+
+		String info = event.context;
+		int duration = event.duration;
+
+		for (int j = 0; j < widgets.size(); j++) {
+			widget = (Widget) widgets.get(j);
 			widget.notify(info, data);
-		 }		 		 	
-		 try{
-			  Thread.sleep((long)10000);  
-		 }catch(Exception e){
-			System.out.println(e);  
-		 }
-		 		 
-		 event = new ContextEvent(1, 1, WTourDemo.VISIT);
-		 info = event.context;
-		 duration = event.duration;		 
-		 for(int j = 0; j < widgets.size(); j ++){
-			widget = (Widget)widgets.get(j);
+		}
+		try {
+			Thread.sleep((long) 10000);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+
+		event = new ContextEvent(1, 1, WTourDemo.VISIT);
+		info = event.context;
+		duration = event.duration;
+		for (int j = 0; j < widgets.size(); j++) {
+			widget = (Widget) widgets.get(j);
 			widget.notify(info, data);
-		 }		 
-		 try{
-			  Thread.sleep((long)10000);  
-		 }catch(Exception e){
-			System.out.println(e);  
-		 }
-		 		 
-		 event = new ContextEvent(1, 1, WTourEnd.END);
-		 info = event.context;
-		 duration = event.duration;		 
-		 for(int j = 0; j < widgets.size(); j ++){
-			widget = (Widget)widgets.get(j);
+		}
+		try {
+			Thread.sleep((long) 10000);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+
+		event = new ContextEvent(1, 1, WTourEnd.END);
+		info = event.context;
+		duration = event.duration;
+		for (int j = 0; j < widgets.size(); j++) {
+			widget = (Widget) widgets.get(j);
 			widget.notify(info, data);
-		 }		 		 		 				 		 			
-  }
-  
-  //notify widgets about every event in sequences
-  public void startSampling(){
-	  Widget widget = null;		  	
-	  for(int i = 0; i < eventSequences.length; i ++){
-		  ContextEvent event = (ContextEvent)eventSequences.get(i);
-		  String info = event.context;
-		  int duration = event.duration;
-		  
-		  for(int j = 0; j < widgets.size(); j ++){
-			widget = (Widget)widgets.get(j);
-			widget.notify(info, data);
-		  }
-		  /*try{
+		}
+	}
+
+	//notify widgets about every event in sequences
+	public void startSampling() {
+		Widget widget = null;
+		for (int i = 0; i < eventSequences.length; i++) {
+			ContextEvent event = (ContextEvent) eventSequences.get(i);
+			String info = event.context;
+			int duration = event.duration;
+
+			for (int j = 0; j < widgets.size(); j++) {
+				widget = (Widget) widgets.get(j);
+				widget.notify(info, data);
+			}
+			/*try{
 			  Thread.sleep((long)duration*1000);  			  
-		  }catch(Exception e){
+			}catch(Exception e){
 			System.out.println(e);  
-		  }	*/		 
-	  }
-  }
-  
-  /*//2008/7/9: a thread version
-  public void quit(){	  
+			}	*/
+		}
+	}
+
+	/*//2008/7/9: a thread version
+	public void quit(){	  
 	  runner.stop();
-  }
-*/
+	}
+	 */
 
-  public static String toHexString(int[] arr) {
-    String str = "";
-    for (int i = 0;i < arr.length;i++) {
-      if (arr[i] < 0x10) {
-        str += "0";
-      }
-      str += Integer.toHexString(arr[i]).toUpperCase();
-    }
-    return str;
-  }
+	public static String toHexString(int[] arr) {
+		String str = "";
+		for (int i = 0; i < arr.length; i++) {
+			if (arr[i] < 0x10) {
+				str += "0";
+			}
+			str += Integer.toHexString(arr[i]).toUpperCase();
+		}
+		return str;
+	}
 
-  public IButtonData pollData() {
-	    IButtonData data = new IButtonData(location, currentid, Long.toString(currentTime));
-	    return data;
-  }
+	public IButtonData pollData() {
+		IButtonData data = new IButtonData(location, currentid, Long
+				.toString(currentTime));
+		return data;
+	}
 
-  public static void main(String[] args){
+	public static void main(String[] args){
 	  try{
 		  if(args.length == 1){
 			  //1.retrieve test cases firstly
@@ -195,8 +191,6 @@ public class PositionIButton {
 			  sensor.startSampling();			  
 			  //sensor.startSimulate();
 			  
-			  
-			  
 			  //4.stop widgets		  	
 			  tourStart.quit();
 			  tourDemo.quit();
@@ -208,29 +202,64 @@ public class PositionIButton {
 		  }else if( args.length == 2){
 			  int versionNumber = Integer.parseInt(args[0]);
 			  int testCaseNumber = Integer.parseInt(args[1]);
+			  
+			  //2.start widgets(This can done by ant, but it will make different outputs for different test cases)
+			  int port_Registration = PositionIButton.getAvailablePort(); 
+			  int port_End  =PositionIButton.getAvailablePort();
+			  int port_Demo = PositionIButton.getAvailablePort();
+			  int port_Recommender = PositionIButton.getAvailablePort();
+			  int port_Display = PositionIButton.getAvailablePort();
+			  int port_IDServer = PositionIButton.getAvailablePort();
+			  int port_App = PositionIButton.getAvailablePort();
+			  HashMap map = new HashMap();
+			  map.put("TourRegistration", port_Registration);
+			  map.put("TourDemo", port_Demo);
+			  map.put("TourEnd", port_End);
+			  map.put("IDServer", port_IDServer);
+			  map.put("TourApp", port_App);
+			  map.put("DisplayServer", port_Display);
+			  map.put("RecommenderServer", port_Recommender);
+			  
+			  String configFilePath = Logger.getInstance().generateConfigFile( testCaseNumber, map);
+			  
+			  WTourRegistration tourStart = new WTourRegistration("test", port_Registration ,false);
+			  
+			  WTourDemo	tourDemo = new WTourDemo("test", port_Demo , "http://127.0.0.1:" +port_Demo+ "/"+
+					  configFilePath, "file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt", false);
+			  
+			  WTourEnd	tourEnd = new WTourEnd("test", port_End, false);
+			  
+			  IDemoRecommender recommender = new IDemoRecommender(port_Recommender);
+			  
+			  WDisplay display = new WDisplay("test", port_Display, "100", "200", "graphics",false);
+			  
+			  STourId server = new STourId(port_IDServer, "01020304", new WidgetHandles(),
+					  "http://127.0.0.1:" + port_Registration+"/" + configFilePath);
+			  
+			  
+			  //2009/1/14:use reflection to initialize an object
+			  String className = null;
+			  if(versionNumber == 0){ //invoke the golden version
+				  className = "context.apps.Tour.TourApp";
+			  }else{
+				  className = "context.apps.Tour.mutants.TourApp_"+versionNumber; 
+			  }
+			  Class obj = Class.forName(className);
+			  Class[] types = new Class[4];
+			  types[0] = new Integer(port_App).TYPE;
+			  types[1] = "01020304".getClass();
+			  types[2] = ("http://127.0.0.1:" + port_Registration +"/"+ 
+				configFilePath).getClass();
+			  types[3] = ("file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt").getClass();
+			  
+			  Object[] values = new Object[4];
+			  values[0] = port_App;
+			  values[1] = "01020304";
+			  values[2] = "http://127.0.0.1:" + port_Registration +"/"+ 
+				configFilePath;
+			  values[3] = "file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt";
+			  
 
-			  /* String configFilePath = Logger.getInstance().generateConfigFile(versionNumber, testcaseNumber);
-			  
-			  //2.start widgets(This can done by ant, but it will make different outputs for different test cases)		  		
-			  WTourRegistration tourStart = new WTourRegistration("test", 5000+ testcaseNumber ,false);
-			  
-			  WTourDemo	tourDemo = new WTourDemo("test", 6000+testcaseNumber , "http://127.0.0.1:" +(6000+testcaseNumber)+ "/"+
-					  configFilePath,"C:/WangHuai/Martin/Eclipse3.3/eclipse/ICSE'09/ConfigFile.txt"
-					"file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt", false);
-			  
-			  WTourEnd	tourEnd = new WTourEnd("test", 7000 + testcaseNumber,false);
-			  
-			  IDemoRecommender recommender = new IDemoRecommender(8000 + testcaseNumber);
-			  
-			  WDisplay display = new WDisplay("test", 9000 + testcaseNumber, "100", "200", "graphics",false);
-			  
-			    STourId server = new STourId(10000 + testcaseNumber, "01020304", new WidgetHandles(),
-					  "http://127.0.0.1:" + (5000+testcaseNumber)+"/" + configFilePath);
-			  
-			  TourApp tour = new TourApp(11000 + testcaseNumber, "01020304",  "http://127.0.0.1:" + (5000+testcaseNumber) +"/"+ 
-				configFilePath
-			  		, "file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt");
-			  
 			  
 			  //3.start to simulate event sequences
 			  TestCaseGenerator maker = new TestCaseGenerator();		  
@@ -239,24 +268,31 @@ public class PositionIButton {
 			  TestCase testCase = (TestCase)testSuite.get(testCaseNumber);
 			  sensor = PositionIButton.getInstance();
 			  sensor.eventSequences = testCase;
-			  sensor.startSampling();			  
+			  sensor.startSampling();
 			  
-			  //4.stop widgets		  	
+			  //4.stop widgets	
+			
+			  
 			  tourStart.quit();
 			  tourDemo.quit();
 			  tourEnd.quit();							 
 			  recommender.quit();
 			  display.quit();
 			  server.quit();
-			  tour.quit();*/
+			  
+				//2009/1/14: use reflection to quit the method
+				  Object tour = obj.getConstructor(types).newInstance(values);
+				  Method quitMethod = obj.getMethod("quit", null);
+				  quitMethod.invoke(tour, null);
+				  
 			  
 		  }
 	  }catch(Exception e){
 		  System.out.println(e);
 	  }
   }
-  
-  public static int getAvailablePort() {
+
+	public static int getAvailablePort() {
 
 		int port = -1;
 		try {
@@ -265,15 +301,13 @@ public class PositionIButton {
 			// socket on any free port
 			port = socket.getLocalPort();
 			socket.close();
-			
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return port;
 
- }
-  
-  
-  
+	}
+
 }
