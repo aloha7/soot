@@ -43,8 +43,9 @@ public class Manipulator {
 		}
 	}
 
-	public static Manipulator getInstance(){
+	public synchronized static Manipulator getInstance(){
 		if(manipulator==null){
+			System.err.println("!!!!");
 			manipulator = new Manipulator();
 			manipulator.drivers = new Vector();
 			manipulator.loadDrivers(Constant.baseFolder + "/ContextIntensity/Drivers.txt");
@@ -52,7 +53,13 @@ public class Manipulator {
 		return manipulator;
 	}
 	
-	
+	public void printFlag(){
+		System.out.println("start to trace status flag:");
+		for(int i = 0; i < driverFlags.length; i ++){
+			System.out.print(driverFlags[i] + "\t");
+		}
+		System.out.println();
+	}
 	
 	public synchronized int enterScheduler(String threadID, String cappID){
 		int position = this.checkScheduler(threadID, cappID);
@@ -60,8 +67,9 @@ public class Manipulator {
 			long start = System.currentTimeMillis();
 			try {
 //				this.notifyAll();
-				this.wait(timeout);
-							
+//				this.wait(timeout);
+				this.printFlag();
+				this.wait();			
 //				lock.notifyAll();
 //				lock.wait(timeout);
 			} catch (InterruptedException e) {
@@ -84,7 +92,7 @@ public class Manipulator {
 		return position;
 	}
 	
-	/*public synchronized int checkScheduler(String threadID, String cappID){
+	public synchronized int checkScheduler(String threadID, String cappID){
 		int position = this.getIndex(threadID, cappID);
 		if(position == -1) //if not in drivers, capp will be skipped
 			return -2;
@@ -92,30 +100,30 @@ public class Manipulator {
 			return position;
 		else
 			return -1; //copp will wait
-	}*/
-	
-	public synchronized int checkScheduler(String threadID, String cappID){
-		int position = this.getFirstUnexecuted();
-		int pos = this.getIndex(threadID, cappID);
-
-		if(position == -1){
-			//all capps in the driver have been executed
-			return -2;
-		}else {
-			if(pos == position) //exactly turn to this capp to execute
-				return pos ;
-			else{
-				if(pos > -1) //exist but current capp is not the right turn to run
-					return -1;
-				else{
-					if(this.canReachToExitThroughCapps(cappID)){
-						return -2;
-					}else
-						return -1;
-				}
-			}
-		}
 	}
+	
+//	public synchronized int checkScheduler(String threadID, String cappID){
+//		int position = this.getFirstUnexecuted();
+//		int pos = this.getIndex(threadID, cappID);
+//
+//		if(position == -1){
+//			//all capps in the driver have been executed
+//			return -2;
+//		}else {
+//			if(pos == position) //exactly turn to this capp to execute
+//				return pos ;
+//			else{
+//				if(pos > -1) //exist but current capp is not the right turn to run
+//					return -1;
+//				else{
+//					if(this.canReachToExitThroughCapps(cappID)){
+//						return -2;
+//					}else
+//						return -1;
+//				}
+//			}
+//		}
+//	}
 	
 	public synchronized void exitScheduler(String threadID, String cappID){
 		int i = this.getIndex(threadID, cappID);
@@ -180,6 +188,7 @@ public class Manipulator {
 		
 		return canExecute;
 	}
+	
 	
 	
 }
