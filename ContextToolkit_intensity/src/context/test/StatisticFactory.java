@@ -92,6 +92,7 @@ public class StatisticFactory {
 			 File report = new File(reportFile);
 			 if(!report.getParentFile().exists())
 				 report.getParentFile().mkdirs();
+			 
 			  
 			 StringBuffer sb = new StringBuffer();
 			 while((line_src = bs_src.readLine())!= null){

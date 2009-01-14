@@ -142,7 +142,7 @@ System.out.println("Recovery success");
 		
 	public static String replaceFirst(String src, String pattern, String replacement){
 		
-		String result = src;
+		String result = src;		
 		System.out.println("before(GenMutant):"+result);
 		int index = src.indexOf(pattern);
 		if(index >= 0){

@@ -106,7 +106,7 @@ public class TestManager extends Widget {
 //			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
 			
 		    //3. seed mutants in source codes and outputs for these faulty versions. 
-			minVersion = 1;
+			minVersion = 76;
 			maxVersion = 85;
 			MutantMaker mutant = new MutantMaker();			
 //			mutant.seedMutant(testSuiteSize, minVersion, maxVersion, visual);

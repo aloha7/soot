@@ -242,6 +242,7 @@ public class WTourDemo extends WPersonPresence implements AsyncServiceHandler {
         System.out.println("TourApp MalformedURL: "+mue);
     } catch (DecodeException de) {
         System.out.println("TourApp Decode: "+de); 
+        de.printStackTrace();
     }
     demoInfo = new DemoFile(demoFile);
     demoUrl = demoInfo.getDemoUrl(demo);

@@ -238,19 +238,4 @@ public class TourApp implements context.arch.handler.Handler
         this.server.quit();
     }
 
-    public static void main( java.lang.String[] argv )
-    {
-        if (argv.length == 3) {
-            System.out.println( "Attempting to create a TourApp on " + DEFAULT_PORT + " for " + argv[0] );
-            context.apps.Tour.TourApp ta = new context.apps.Tour.TourApp( argv[0], argv[1], argv[2] );
-        } else {
-            if (argv.length == 4) {
-                System.out.println( "Attempting to create a TourApp on " + argv[1] + " for " + argv[0] );
-                context.apps.Tour.TourApp ta = new context.apps.Tour.TourApp( Integer.parseInt( argv[1] ), argv[0], argv[2], argv[3] );
-            } else {
-                System.out.println( "USAGE: java TourApp <userid> [port] <config file> <demo info file>" );
-            }
-        }
-    }
-
 }

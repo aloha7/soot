@@ -4,7 +4,7 @@ public class A1_Thread implements Runnable{
 
 	public void run(){
 		while(true){
-			System.out.println(this);
+			
 			System.out.println("A1_Thread is running");	
 		}		
 	}

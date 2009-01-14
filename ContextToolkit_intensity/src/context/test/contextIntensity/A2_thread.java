@@ -10,7 +10,7 @@ public class A2_thread extends Thread{
 			int pos = Manipulator.getInstance().enterScheduler(this.getName(), "10");
 			System.out.println(this.getName() + " is running(" +pos+")");	
 			Manipulator.getInstance().exitScheduler(this.getName(), "10");
-			System.out.println(this.getName() + " hello(" +pos+")");
+//			System.out.println(this.getName() + " hello(" +pos+")");
 		}		
 	}
 		

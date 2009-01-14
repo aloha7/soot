@@ -1,6 +1,8 @@
 package context.arch.generator;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Date;
 import java.util.Vector;
 import java.util.Hashtable;
@@ -163,24 +165,6 @@ public class PositionIButton {
 			  String configFilePath = Logger.getInstance().generateConfigFile(testcaseNumber);
 			  
 			  
-//WTourRegistration tourStart = new WTourRegistration("test", 5700,false);
-//			  
-//			  WTourDemo	tourDemo = new WTourDemo("test", "http://127.0.0.1:5800/" +
-//						"C:/WangHuai/Martin/Eclipse3.3/eclipse/ICSE'09/ConfigFile.txt",
-//					"file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt", false);
-//			  
-//			  WTourEnd	tourEnd = new WTourEnd("test", 5900,false);
-//			  
-//			  IDemoRecommender recommender = new IDemoRecommender(7000);
-//			  
-//			  WDisplay display = new WDisplay("test", 8000, "100", "200", "graphics",false);
-//			  
-//			    STourId server = new STourId(6200, "01020304", new WidgetHandles(),
-//					  "http://127.0.0.1:5700/"+ System.getProperty("user.dir") + "/ConfigFile.txt");
-//			  
-//			  TourApp tour = new TourApp(9999, "01020304",  "http://127.0.0.1:5700/"+ System.getProperty("user.dir") +
-//			  		"/ConfigFile.txt", "file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt");
-//			  
 			  
 			  
 			  //2.start widgets(This can done by ant, but it will make different outputs for different test cases)		  		
@@ -221,12 +205,75 @@ public class PositionIButton {
 			  display.quit();
 			  server.quit();
 			  tour.quit();
+		  }else if( args.length == 2){
+			  int versionNumber = Integer.parseInt(args[0]);
+			  int testCaseNumber = Integer.parseInt(args[1]);
+
+			  /* String configFilePath = Logger.getInstance().generateConfigFile(versionNumber, testcaseNumber);
+			  
+			  //2.start widgets(This can done by ant, but it will make different outputs for different test cases)		  		
+			  WTourRegistration tourStart = new WTourRegistration("test", 5000+ testcaseNumber ,false);
+			  
+			  WTourDemo	tourDemo = new WTourDemo("test", 6000+testcaseNumber , "http://127.0.0.1:" +(6000+testcaseNumber)+ "/"+
+					  configFilePath,"C:/WangHuai/Martin/Eclipse3.3/eclipse/ICSE'09/ConfigFile.txt"
+					"file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt", false);
+			  
+			  WTourEnd	tourEnd = new WTourEnd("test", 7000 + testcaseNumber,false);
+			  
+			  IDemoRecommender recommender = new IDemoRecommender(8000 + testcaseNumber);
+			  
+			  WDisplay display = new WDisplay("test", 9000 + testcaseNumber, "100", "200", "graphics",false);
+			  
+			    STourId server = new STourId(10000 + testcaseNumber, "01020304", new WidgetHandles(),
+					  "http://127.0.0.1:" + (5000+testcaseNumber)+"/" + configFilePath);
+			  
+			  TourApp tour = new TourApp(11000 + testcaseNumber, "01020304",  "http://127.0.0.1:" + (5000+testcaseNumber) +"/"+ 
+				configFilePath
+			  		, "file:///" + System.getProperty("user.dir")+ "/DemoInfoFile.txt");
+			  
+			  
+			  //3.start to simulate event sequences
+			  TestCaseGenerator maker = new TestCaseGenerator();		  
+			  String file = Constant.baseFolder + "TestCase.txt";		  
+			  Vector testSuite = maker.retrieveTestCases(file);
+			  TestCase testCase = (TestCase)testSuite.get(testCaseNumber);
+			  sensor = PositionIButton.getInstance();
+			  sensor.eventSequences = testCase;
+			  sensor.startSampling();			  
+			  
+			  //4.stop widgets		  	
+			  tourStart.quit();
+			  tourDemo.quit();
+			  tourEnd.quit();							 
+			  recommender.quit();
+			  display.quit();
+			  server.quit();
+			  tour.quit();*/
+			  
 		  }
 	  }catch(Exception e){
 		  System.out.println(e);
 	  }
-	  
-	    
-	  
   }
+  
+  public static int getAvailablePort() {
+
+		int port = -1;
+		try {
+
+			ServerSocket socket = new ServerSocket(0); // A port of 0 creates a
+			// socket on any free port
+			port = socket.getLocalPort();
+			socket.close();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return port;
+
+ }
+  
+  
+  
 }

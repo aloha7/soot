@@ -1,20 +1,24 @@
 package context.test.util;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.File;
+import java.io.IOException;
 
 public class Logger {
-		
+
 	private static Logger m_Logger;
 
 	private String path;
-	
+
 	private static BufferedWriter writer = null;
-	
+
 	public static Logger getInstance() {
-		if (m_Logger == null) {			
-			m_Logger = new Logger();		
+		if (m_Logger == null) {
+			m_Logger = new Logger();
 		}
 		return m_Logger;
 	}
@@ -22,44 +26,46 @@ public class Logger {
 	/**
 	 * 
 	 * @param filename
-	 * @param append: false means override, true means append
+	 * @param append:
+	 *            false means override, true means append
 	 */
 	public void setPath(String filename, boolean append) {
 		this.path = filename;
-		try{
-			writer = new BufferedWriter(new FileWriter(path, append));	
-		}catch(Exception e){
+		try {
+			writer = new BufferedWriter(new FileWriter(path, append));
+		} catch (Exception e) {
 			System.out.println(e);
 		}
 	}
 
 	public void write(String log) {
 		try {
-			if(writer!=null){
-				writer.write(log);					
-			}			
+			if (writer != null) {
+				writer.write(log);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-	public void close(){
-		try{
-			if(writer!=null){
+
+	public void close() {
+		try {
+			if (writer != null) {
 				writer.flush();
-				writer.close();			
-			}	
-		}catch(Exception e){
+				writer.close();
+			}
+		} catch (Exception e) {
 			System.out.println(e);
-		}		
+		}
 	}
-	
-	public static String generateConfigFile(int testcaseNumber){
-	    Logger log = Logger.getInstance();
-	    String fileName =Constant.baseFolder + "/Config/ConfigFile_"+testcaseNumber+".txt"; 
+
+	public static String generateConfigFile(int testcaseNumber) {
+		Logger log = Logger.getInstance();
+		String fileName = Constant.baseFolder + "/Config/ConfigFile_"
+				+ testcaseNumber + ".txt";
 		log.setPath(fileName, false);
-					
-		StringBuilder sb = new StringBuilder();			
+
+		StringBuilder sb = new StringBuilder();
 		sb.append("<?xml version=\"1.0\"?>\n");
 		sb.append("<CONFIGURATION><VERSION>1.0.0</VERSION>\n");
 		sb.append("<DESCRIPTION>hello</DESCRIPTION>\n");
@@ -68,22 +74,172 @@ public class Logger {
 		sb.append("   <location>test</location>\n");
 		sb.append("  <timestamp>2</timestamp>\n</PARAMETERS>\n");
 		sb.append(" <WIDGETS><WIDGET><ID>TourDemo_test</ID>\n");
-		sb.append("<HOST>127.0.0.1</HOST>\n");			
-		sb.append("   <PORT>"+(6000+testcaseNumber)+"</PORT>\n");
+		sb.append("<HOST>127.0.0.1</HOST>\n");
+		sb.append("   <PORT>" + (6000 + testcaseNumber) + "</PORT>\n");
 		sb.append("  <TYPE>Widget</TYPE>\n");
 		sb.append("  </WIDGET>\n");
 		sb.append(" <WIDGET><ID>TourEnd_test</ID>\n");
 		sb.append("<HOST>127.0.0.1</HOST>\n");
-		sb.append("<PORT>"+(7000 + testcaseNumber)+"</PORT>\n");
+		sb.append("<PORT>" + (7000 + testcaseNumber) + "</PORT>\n");
 		sb.append("<TYPE>Widget</TYPE>\n</WIDGET>\n");
 		sb.append("<WIDGET>\n<ID>TourRegistration_test</ID>\n");
 		sb.append("<HOST>127.0.0.1</HOST>\n");
-		sb.append("     <PORT>"+(5000+ testcaseNumber)+"</PORT>\n<TYPE>Widget</TYPE>\n</WIDGET>\n</WIDGETS>\n");
-		sb.append("<SERVERS> <Server><ID>idServer_01020304</ID>\n <HOST>127.0.0.1</HOST>\n<PORT>"+(10000 + testcaseNumber)+"</PORT>\n"
-+"<TYPE>Service</TYPE>\n" +"</Server>\n</SERVERS>\n</CONFIGURATION>");
-		log.write(sb.toString());	
+		sb.append("     <PORT>" + (5000 + testcaseNumber)
+				+ "</PORT>\n<TYPE>Widget</TYPE>\n</WIDGET>\n</WIDGETS>\n");
+		sb
+				.append("<SERVERS> <Server><ID>idServer_01020304</ID>\n <HOST>127.0.0.1</HOST>\n<PORT>"
+						+ (10000 + testcaseNumber)
+						+ "</PORT>\n"
+						+ "<TYPE>Service</TYPE>\n"
+						+ "</Server>\n</SERVERS>\n</CONFIGURATION>");
+		log.write(sb.toString());
 		log.close();
 		return fileName;
-  }
- 
+	}
+
+	public void deleteFile(String srcFile){
+		File file = new File(srcFile);
+		if(file.exists()){
+			if(file.isDirectory()){
+				File[] files = file.listFiles();
+				for(File temp: files)
+					this.deleteFile(temp.getPath());
+			}else{
+				file.delete();
+			}
+		}
+	}
+	
+	public static int duplicateFlag = 1;
+
+	public void moveFiles(String srcDir, String destDir, String type){
+		try {
+			File src = new File(srcDir);
+			if(src.exists()){
+				File dest = new File(destDir);
+				if(!dest.exists()){
+					dest.mkdirs();
+				}
+				if(src.isFile()){
+					BufferedReader br = new BufferedReader(new FileReader(src));
+					String srcFile = src.getName();
+					String srcType = srcFile.substring(srcFile.indexOf(".") + ".".length());
+					if(srcType.equals(type)){
+						//destFile: TourApp.java -> TourApp_1.java
+						String destFile = srcFile.substring(0, srcFile.indexOf(".")) + "_"+duplicateFlag + srcFile.substring(srcFile.indexOf("."));
+						duplicateFlag ++;
+						BufferedWriter bw  = new BufferedWriter(new FileWriter(destDir + "\\" +  destFile));
+						
+						String line = null;
+						StringBuilder sb = new StringBuilder();
+						while((line = br.readLine())!= null){
+							sb.append(line+"\n");					
+						}
+						bw.write(sb.toString());
+						bw.close();
+						br.close();
+					}					
+				}else{
+					File[] files = src.listFiles();
+					for(File file: files){
+						this.moveFiles(file.getPath(), destDir, type);
+					}
+				}
+					
+			}else{
+				System.out.println("Folder " + srcDir + " does not exist");
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
+	}
+	
+	
+	
+	public void changePackage(String srcDir, String packageName){
+		try {
+			File src = new File(srcDir);
+			if(src.exists()){
+				if(src.isFile()){
+					BufferedReader br = new BufferedReader(new FileReader(srcDir));
+					String className = src.getName().substring(0, src.getName().indexOf("."));
+					String line = null;
+					StringBuilder sb = new StringBuilder();
+					while((line = br.readLine())!= null){
+						if(line.indexOf("package")!=-1){ //change the package						
+							sb.append("package " + packageName + ";\n");
+							sb.append("import context.test.contextIntensity.*;\n");
+							sb.append("import context.apps.Tour.*;\n");
+						}else if(line.indexOf("public class")!= -1){
+							int i = line.indexOf("public class") + "public class".length();
+							i = line.indexOf(" ", i);
+							int j = line.indexOf(" ", i + 1);
+							
+							sb.append(line.substring(0, i + 1) + className + line.substring(j) +  "\n");
+						}else if(line.indexOf("TourApp")!= -1 && line.indexOf("TourAppFrame")==-1 && line.indexOf("context.apps.Tour.TourApp")==-1){							
+							sb.append(line.replaceAll("TourApp", className) + "\n");
+						}else if(line.indexOf("context.apps.Tour.TourApp")!=-1 ){
+							if( line.indexOf("TourAppFrame")==-1){
+								sb.append(line.replaceAll("context.apps.Tour.TourApp", packageName + "." + className)+ "\n");				
+							}
+						}else{
+							sb.append(line + "\n");
+						}
+					}
+					
+//					String content = sb.toString();
+//					content.replaceAll("TourApp", className);
+					
+					br.close();
+					BufferedWriter bw =new BufferedWriter(new FileWriter(src.getPath()));
+					bw.write(sb.toString());
+					bw.close();
+				}else{
+					File[] files = src.listFiles();
+					for(File temp: files){
+						this.changePackage(temp.getPath(), packageName);
+					}
+				}
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+		
+	/**
+	 * 
+	 * @param srcDir
+	 * @param destDir
+	 * @param type: can be ".java" or ".class"
+	 * @param packageName
+	 */
+	public void changePackage(String srcDir, String destDir, String type, String packageName){
+		
+	}
+	
+	
+
+	public static void main(String[] args) {
+		String srcDir = Constant.baseFolder + "result";
+		String destDir = Constant.baseFolder +"src/context/apps/Tour/mutants";
+		String packageName = "a";
+		String type = "java";
+		Logger.getInstance().deleteFile(destDir);
+		Logger.getInstance().moveFiles(srcDir, destDir, type);
+		
+		Logger.getInstance().changePackage(destDir, "context.apps.Tour.mutants");
+//		String a =  "abasd public TourApp( int localport, java.lang.String userid, java.lang.String configFile, java.lang.String demoFile ) dew";
+//		System.out.print(a.replaceAll("TourApp", "TourApp_1"));
+	}
 }
