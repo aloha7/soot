@@ -103,17 +103,17 @@ public class TestManager extends Widget {
 			int maxVersion = 0;
 			boolean visual = true;
 			OutputProducer runner = new OutputProducer();	
-//			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
+			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
 			
 		    //3. seed mutants in source codes and outputs for these faulty versions. 
 			minVersion = 76;
 			maxVersion = 85;
 			MutantMaker mutant = new MutantMaker();			
-//			mutant.seedMutant(testSuiteSize, minVersion, maxVersion, visual);
+			mutant.seedMutant(testSuiteSize, minVersion, maxVersion, visual);
 
 			//4. get the failure rate of these mutants
 			StatisticFactory sat = new StatisticFactory();
-			sat.getFailureRate(minVersion, maxVersion);
+//			sat.getFailureRate(minVersion, maxVersion);
 			
 		}catch(Exception e){
 			System.out.println(e);
