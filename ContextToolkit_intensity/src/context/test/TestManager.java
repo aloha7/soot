@@ -84,7 +84,7 @@ public class TestManager extends Widget {
 	public static void main(String[] args) {
 		try{
 				
-			int testSuiteSize = 1000;
+			int testSuiteSize = 100;
 			//Senario setting: how many events are involved in?
 			Vector vector = new Vector();
 			vector.addElement(WTourRegistration.UPDATE);
@@ -103,13 +103,13 @@ public class TestManager extends Widget {
 			int maxVersion = 0;
 			boolean visual = true;
 			OutputProducer runner = new OutputProducer();	
-			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
+//			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
 			
 		    //3. seed mutants in source codes and outputs for these faulty versions. 
-			minVersion = 37;
-			maxVersion = 40;
+			minVersion = 1;
+			maxVersion = 85;
 			MutantMaker mutant = new MutantMaker();			
-			mutant.seedMutant(testSuiteSize, minVersion, maxVersion, visual);
+//			mutant.seedMutant(testSuiteSize, minVersion, maxVersion, visual);
 
 			//4. get the failure rate of these mutants
 			StatisticFactory sat = new StatisticFactory();

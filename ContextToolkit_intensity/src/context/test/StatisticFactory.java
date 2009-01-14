@@ -55,6 +55,7 @@ public class StatisticFactory {
 		 
 		 File dir = new File(folder2);
 		 if(!dir.exists()){
+			 dir.mkdirs();
 			 return ;
 		 }else{
 			 File[] dest = dir.listFiles();			 			
@@ -80,6 +81,7 @@ public class StatisticFactory {
 	private static void compareFile(File srcFile, File destFile, String reportFile){				
 		 try{
 			 Boolean labeled = false;
+//			 File srcFile = new File(srcFile)
 			 BufferedReader bs_src = new BufferedReader(new FileReader(srcFile));			 
 			 BufferedReader bs_dest = new BufferedReader(new FileReader(destFile));
 			 

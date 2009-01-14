@@ -35,8 +35,8 @@ public class OutputProducer {
 			}
 							
 			//2008/7/11: does it need to wait for ant to complete?
-			Thread.sleep((120*60)*1000);//120 minutes
-			//Thread.sleep(3*1000);
+//			Thread.sleep((3*60)*1000);//120 minutes
+			Thread.sleep((3*60)*1000);
 		}catch(Exception e){
 			System.out.println(e);
 		}		
