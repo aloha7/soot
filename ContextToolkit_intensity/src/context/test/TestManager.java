@@ -100,16 +100,17 @@ public class TestManager extends Widget {
 			
 			//2. run test cases on the golden version to produce oracles
 			int minVersion = 0;
-			int maxVersion = 0;
+			int maxVersion = 2;
 			boolean visual = true;
 			OutputProducer runner = new OutputProducer();	
 			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
 			
+			//2009/1/15: we does not need this at all, since all test cases are executed sequentially
 		    //3. seed mutants in source codes and outputs for these faulty versions. 
-			minVersion = 76;
-			maxVersion = 85;
-			MutantMaker mutant = new MutantMaker();			
-			mutant.seedMutant(testSuiteSize, minVersion, maxVersion, visual);
+//			minVersion = 0;
+//			maxVersion = 2;
+//			MutantMaker mutant = new MutantMaker();			
+//			mutant.seedMutant(testSuiteSize, minVersion, maxVersion, visual);
 
 			//4. get the failure rate of these mutants
 			StatisticFactory sat = new StatisticFactory();

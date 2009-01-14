@@ -151,6 +151,7 @@ public class PositionIButton {
 
 	public static void main(String[] args) {
 		try {
+			System.out.println("PositionIButton has been executed");
 			if (args.length == 1) {
 				//1.retrieve test cases firstly
 				TestCaseGenerator maker = new TestCaseGenerator();
