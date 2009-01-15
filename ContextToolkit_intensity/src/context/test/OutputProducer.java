@@ -14,6 +14,13 @@ import java.util.HashMap;
 
 public class OutputProducer {
 
+	/**
+	 * 
+	 * @param testSuiteSize
+	 * @param minVersion
+	 * @param maxVersion
+	 * @param visual: whether to display the command
+	 */
 	public void produceOutput(int testSuiteSize, int minVersion,
 			int maxVersion, boolean visual) {
 		// 1.generate a script to invoke ant
@@ -36,13 +43,116 @@ public class OutputProducer {
 			}
 
 			// 2008/7/11: does it need to wait for ant to complete?
-			// Thread.sleep((3*60)*1000);//120 minutes
-			// Thread.sleep((3*60)*1000);
+//			 Thread.sleep((3*60)*1000);//120 minutes
+			 Thread.sleep((3*60)*1000);
 		} catch (Exception e) {
 			System.out.println(e);
 		}
 	}
 
+	/**2009/1/15: to run mutant versions concurrently, we need to use Ant to feed test cases and redirect outputs
+	 * 
+	 * @param testSuiteSize
+	 * @param versionNumber
+	 * @param visual
+	 */
+	public void produceOutput(int testSuiteSize, int versionNumber,
+			 boolean visual) {
+		// 1.generate a script to invoke ant
+		String script = Constant.baseFolder + "test/script/runTestCase_"+ versionNumber;
+		this.generateScript(script);
+
+		// 2.prepare build.xml
+		this.generateAntScript(testSuiteSize, versionNumber);
+
+		// 3.invoke ant to produce outputs automatically
+		try {
+			if (visual) {
+				// run bat file
+				String m_Run = "cmd /c start " + script + ".cmd";
+				Runtime.getRuntime().exec(m_Run);
+			} else {
+				// vbs script can stop dos windows from popping up
+				String m_Run = "cmd /c start " + script + ".vbs";
+				Runtime.getRuntime().exec(m_Run);
+			}
+
+			// 2008/7/11: does it need to wait for ant to complete?
+//			 Thread.sleep((3*60)*1000);//120 minutes
+			 Thread.sleep((1*5)*1000);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
+	
+	
+	private void generateAntScript(int testSuiteSize, int versionNumber
+			) {
+		Logger log = Logger.getInstance();
+		log.setPath(Constant.baseFolder + "build.xml", false);
+
+		StringBuilder sb = new StringBuilder();
+		sb
+				.append("<project name=\"contexttoolkit\" default=\"run-TestManager\" basedir=\".\">"
+						+ Constant.LINESHIFTER);
+		sb.append(" <path id=\"project.class.path\">" + Constant.LINESHIFTER);
+		sb.append("  <pathelement location=\"bin\"/>" + Constant.LINESHIFTER);
+		sb.append("  <fileset dir=\"lib\">" + Constant.LINESHIFTER);
+		sb.append("   <include name=\"**/*.jar\"/>" + Constant.LINESHIFTER);
+		sb.append("  </fileset>" + Constant.LINESHIFTER);
+		sb.append(" </path>" + Constant.LINESHIFTER);
+
+		sb.append(Constant.LINESHIFTER + Constant.LINESHIFTER
+				+ Constant.LINESHIFTER);
+
+		sb.append(" <target name=\"run-TestManager\">" + Constant.LINESHIFTER);
+		sb.append("     <echo message=\"starting TestManager...\"/> "
+				+ Constant.LINESHIFTER);
+
+			sb.append("     <echo message=\"start Version " + versionNumber+ "...\"/> "
+					+ Constant.LINESHIFTER);
+			sb.append("     <delete dir=\"test/output/" + versionNumber + "\"/>"
+					+ Constant.LINESHIFTER);
+			sb.append("     <mkdir dir=\"test/output/" + versionNumber + "\"/>"
+					+ Constant.LINESHIFTER);
+			for (int j = 0; j < testSuiteSize; j++) {
+				sb.append("     <java fork=\"true\" taskname=\"TestManager\""
+						+ Constant.LINESHIFTER);
+				sb
+						.append("           classname=\"context.arch.generator.PositionIButton\" output=\"test/output/"
+								+ versionNumber
+								+ "/"
+								+ j
+								+ ".txt\">"
+								+ Constant.LINESHIFTER);
+				
+				sb.append("       <arg value=\"" + versionNumber + "\"/>"
+						+ Constant.LINESHIFTER);
+				sb.append("       <arg value=\"" + j + "\"/>"
+						+ Constant.LINESHIFTER);
+				sb.append("      <classpath refid=\"project.class.path\"/>"
+						+ Constant.LINESHIFTER);
+				sb.append("     </java>" + Constant.LINESHIFTER);
+			}
+
+			
+			File dir = new File(Constant.baseFolder + "test/output/" + versionNumber);
+			if (!dir.exists())
+				dir.mkdirs();
+
+
+
+		sb.append(" </target>" + Constant.LINESHIFTER);
+
+		sb.append(Constant.LINESHIFTER + Constant.LINESHIFTER
+				+ Constant.LINESHIFTER);
+
+		sb.append("</project>");
+
+		log.write(sb.toString());
+		log.close();
+	}
+	
 	// 2008/7/10: make a build.xml to run test cases
 	// private void generateAntScript(int testSuiteSize, int minVersion, int
 	// maxVersion){
@@ -326,13 +436,26 @@ public class OutputProducer {
 	
 	public static void main(String[] args) {
 
-		OutputProducer prod = new OutputProducer();
-		// prod.generateAntScript(100, 0, 0);
-//		prod.produceOutput(100, 0, 1, true);
-		long start = System.currentTimeMillis();
-		prod.runVersions(1, 5, 100);
-		System.out.println("Run Time:" + "\n" + (System.currentTimeMillis()- start));
-//		prod.runVersion(0, 10);
+		try {
+			OutputProducer prod = new OutputProducer();
+			// prod.generateAntScript(100, 0, 0);
+			int minVersion = 51;
+			int maxVersion = 53;
+			int testSuiteSize = 100;
+			
+			long start = System.currentTimeMillis();
+			for(int versionNum = minVersion; versionNum <= maxVersion; versionNum ++){
+				prod.produceOutput(testSuiteSize, versionNum,  true);
+				String command = "cmd /c exit";
+				Runtime.getRuntime().exec(command);
+			}
+			System.out.println("Run Time:" + "\n" + (System.currentTimeMillis()- start));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+
 	}
 
 }

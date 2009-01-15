@@ -99,11 +99,18 @@ public class TestManager extends Widget {
 			
 			
 			//2. run test cases on the golden version to produce oracles
-			int minVersion = 0;
+			int minVersion = 17;
 			int maxVersion = 207;
 			boolean visual = true;
-			OutputProducer runner = new OutputProducer();	
-			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
+			OutputProducer runner = new OutputProducer();
+			for(int versionNum = minVersion; versionNum <= maxVersion; versionNum ++){
+				runner.produceOutput(testSuiteSize, versionNum,  true);
+				String command = "cmd /c exit";
+				Runtime.getRuntime().exec(command);
+			}
+			
+			
+//			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
 			
 			//2009/1/15: we does not need this at all, since all test cases are executed sequentially
 		    //3. seed mutants in source codes and outputs for these faulty versions. 
