@@ -105,8 +105,6 @@ public class TestManager extends Widget {
 			OutputProducer runner = new OutputProducer();
 			for(int versionNum = minVersion; versionNum <= maxVersion; versionNum ++){
 				runner.produceOutput(testSuiteSize, versionNum,  true);
-				String command = "cmd /c exit";
-				Runtime.getRuntime().exec(command);
 			}
 			
 			

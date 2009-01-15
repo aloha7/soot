@@ -12,6 +12,9 @@ import context.arch.generator.*;
 import context.arch.widget.*;
 import java.util.HashMap;
 
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.ProjectHelper;
+
 public class OutputProducer {
 
 	/**
@@ -30,6 +33,8 @@ public class OutputProducer {
 		// 2.prepare build.xml
 		this.generateAntScript(testSuiteSize, minVersion, maxVersion);
 
+		
+		
 		// 3.invoke ant to produce outputs automatically
 		try {
 			if (visual) {
@@ -58,42 +63,26 @@ public class OutputProducer {
 	 */
 	public void produceOutput(int testSuiteSize, int versionNumber,
 			 boolean visual) {
-		// 1.generate a script to invoke ant
-		String script = Constant.baseFolder + "test/script/runTestCase_"+ versionNumber;
-		this.generateScript(script);
-
-		// 2.prepare build.xml
-		this.generateAntScript(testSuiteSize, versionNumber);
-
-		// 3.invoke ant to produce outputs automatically
-		try {
-			if (visual) {
-				// run bat file
-				String m_Run = "cmd /c start " + script + ".cmd";
-				Runtime.getRuntime().exec(m_Run);
-			} else {
-				// vbs script can stop dos windows from popping up
-				String m_Run = "cmd /c start " + script + ".vbs";
-				Runtime.getRuntime().exec(m_Run);
-			}
-
-			// 2008/7/11: does it need to wait for ant to complete?
-//			 Thread.sleep((3*60)*1000);//120 minutes
-			 Thread.sleep((1*5)*1000);
-		} catch (Exception e) {
-			System.out.println(e);
-		}
+		// 2009/1/15
+		// 1.prepare build.xml
+		String buildFile = this.generateAntScript(testSuiteSize, versionNumber);
+		//2. Sequential version: use Java to invoke Ant directly to avoid poping up Windows, but this method is blocked until it finished		
+//		this.execAnt(buildFile);
+		//Concurrent version step 2: start a thread to run Ant files
+		new ExecAntThread(buildFile).start();
+		
 	}
 	
-	
-	private void generateAntScript(int testSuiteSize, int versionNumber
+	//2009/1/15: one version has its own build.xml
+	private String generateAntScript(int testSuiteSize, int versionNumber
 			) {
+		String antScriptFile = Constant.baseFolder + "test/script/build_"+versionNumber+".xml";
 		Logger log = Logger.getInstance();
-		log.setPath(Constant.baseFolder + "build.xml", false);
+		log.setPath(antScriptFile, false);
 
 		StringBuilder sb = new StringBuilder();
 		sb
-				.append("<project name=\"contexttoolkit\" default=\"run-TestManager\" basedir=\".\">"
+				.append("<project name=\"contexttoolkit\" default=\"run-TestManager\" basedir=\""+ Constant.baseFolder +"\">"
 						+ Constant.LINESHIFTER);
 		sb.append(" <path id=\"project.class.path\">" + Constant.LINESHIFTER);
 		sb.append("  <pathelement location=\"bin\"/>" + Constant.LINESHIFTER);
@@ -134,6 +123,7 @@ public class OutputProducer {
 						+ Constant.LINESHIFTER);
 				sb.append("     </java>" + Constant.LINESHIFTER);
 			}
+		
 
 			
 			File dir = new File(Constant.baseFolder + "test/output/" + versionNumber);
@@ -147,10 +137,18 @@ public class OutputProducer {
 		sb.append(Constant.LINESHIFTER + Constant.LINESHIFTER
 				+ Constant.LINESHIFTER);
 
+		//2009/1/15: exit the windows
+		sb.append("<target name = \"exit\">" +Constant.LINESHIFTER);
+		sb.append("<exec executable=\"cmd.exe\">"+Constant.LINESHIFTER);
+		sb.append("<arg line = \"/c exit\"/>"+Constant.LINESHIFTER);
+		sb.append("</exec>"+Constant.LINESHIFTER);
+		sb.append("</target>"+Constant.LINESHIFTER);
 		sb.append("</project>");
 
 		log.write(sb.toString());
 		log.close();
+		
+		return antScriptFile;
 	}
 	
 	// 2008/7/10: make a build.xml to run test cases
@@ -230,7 +228,7 @@ public class OutputProducer {
 	// only used to redirect the output
 	private void generateAntScript(int testSuiteSize, int minVersion,
 			int maxVersion) {
-		Logger log = Logger.getInstance();
+		Logger log = Logger.getInstance();		
 		log.setPath(Constant.baseFolder + "build.xml", false);
 
 		StringBuilder sb = new StringBuilder();
@@ -306,7 +304,6 @@ public class OutputProducer {
 	 * @param versionNumber
 	 */
 	private void generateScript(String path) {
-
 		// vbs script
 		Logger log = Logger.getInstance();
 		log.setPath(path + ".vbs", false);
@@ -321,7 +318,17 @@ public class OutputProducer {
 		log.write("ant" + Constant.LINESHIFTER);
 		log.write("exit");
 		log.close();
-
+	}
+	
+	//2009/1/15: use Java to invoke Ant directly instead of use .bat to invoke it
+	public void execAnt(String buildFile){
+		Project p = new Project();
+		p.init();
+		File file = new File(buildFile);
+		p.setUserProperty("ant.file", file.getAbsolutePath());
+		ProjectHelper.configureProject(p, file);
+		p.executeTarget(p.getDefaultTarget());
+		
 	}
 
 	public void runVersions(int minVersion, int maxVersion, int testSetSize){
@@ -436,24 +443,21 @@ public class OutputProducer {
 	
 	public static void main(String[] args) {
 
-		try {
+		
 			OutputProducer prod = new OutputProducer();
 			// prod.generateAntScript(100, 0, 0);
-			int minVersion = 51;
-			int maxVersion = 53;
+			int minVersion = 56;
+			int maxVersion = 207;
 			int testSuiteSize = 100;
 			
 			long start = System.currentTimeMillis();
 			for(int versionNum = minVersion; versionNum <= maxVersion; versionNum ++){
 				prod.produceOutput(testSuiteSize, versionNum,  true);
-				String command = "cmd /c exit";
-				Runtime.getRuntime().exec(command);
+//				String command = "cmd /c exit";
+//				Runtime.getRuntime().exec(command);
 			}
 			System.out.println("Run Time:" + "\n" + (System.currentTimeMillis()- start));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 		
 
 	}

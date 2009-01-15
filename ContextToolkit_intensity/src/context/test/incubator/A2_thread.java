@@ -1,4 +1,6 @@
-package context.test.contextIntensity;
+package context.test.incubator;
+
+import context.test.contextIntensity.Manipulator;
 
 
 public class A2_thread extends Thread{
