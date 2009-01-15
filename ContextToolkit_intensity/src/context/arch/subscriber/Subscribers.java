@@ -113,7 +113,8 @@ public class Subscribers extends Vector {
    * @param sub Subscriber information to put in the entry
    */
   private void writeLog(String header, Subscriber sub) {
-    try {
+	//2009/1/15:no log is needed for this experiment
+   /* try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(filename,true)); //append rather rather overwrite
       String out = new String(header+mh.encodeData(sub.toDataObject())+"\n");
       writer.write(out,0,out.length());
@@ -125,7 +126,7 @@ public class Subscribers extends Vector {
         System.out.println("Subscribers writeLog() Encode: "+ee);
     } catch (InvalidEncoderException iee) {
         System.out.println("Subscribers writeLog() InvalidEncoder: "+iee);
-    }
+    }*/
   }
 
   /**
