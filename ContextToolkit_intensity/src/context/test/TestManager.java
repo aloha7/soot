@@ -100,7 +100,7 @@ public class TestManager extends Widget {
 			
 			//2. run test cases on the golden version to produce oracles
 			int minVersion = 0;
-			int maxVersion = 2;
+			int maxVersion = 207;
 			boolean visual = true;
 			OutputProducer runner = new OutputProducer();	
 			runner.produceOutput(testSuiteSize, minVersion, maxVersion, visual);
@@ -114,7 +114,7 @@ public class TestManager extends Widget {
 
 			//4. get the failure rate of these mutants
 			StatisticFactory sat = new StatisticFactory();
-//			sat.getFailureRate(minVersion, maxVersion);
+			sat.getFailureRate(minVersion, maxVersion);
 			
 		}catch(Exception e){
 			System.out.println(e);
