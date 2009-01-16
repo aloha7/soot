@@ -276,7 +276,8 @@ public class PositionIButton {
 						+ configFilePath;
 				values[3] = "file:///" + System.getProperty("user.dir")
 						+ "/DemoInfoFile.txt";
-
+				Object tour = obj.getConstructor(types).newInstance(values);
+				
 				//3.start to simulate event sequences
 				TestCaseGenerator maker = new TestCaseGenerator();
 				String file = Constant.baseFolder + "TestCase.txt";
@@ -296,13 +297,13 @@ public class PositionIButton {
 				server.quit();
 
 				// 2009/1/14: use reflection to quit the method
-				Object tour = obj.getConstructor(types).newInstance(values);
+//				Object tour = obj.getConstructor(types).newInstance(values);
 				Method quitMethod = obj.getMethod("quit", null);
 				quitMethod.invoke(tour, null);
 
 			}
 		} catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 

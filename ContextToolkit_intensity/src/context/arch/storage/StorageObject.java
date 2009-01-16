@@ -223,6 +223,7 @@ public class StorageObject {
    * @see context.arch.storage.Storage#checkFlushCondition()
    */
   public void store(AttributeNameValues atts) {
+	  //2009/1/16:there is no need to store atts
 	  /*
     storage.store(atts); //just keep AttributeNameValues in the StorageVector
     if (storage.checkFlushCondition()) {

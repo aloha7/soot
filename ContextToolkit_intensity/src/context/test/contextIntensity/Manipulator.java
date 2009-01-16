@@ -17,10 +17,11 @@ public class Manipulator {
 	private boolean[] driverFlags;
 	private long timeout = 3* 1000; //30 seconds
 //	private Object lock = new Object();
+	private static Logger log; //Cannot use this Logger anymore since it is used in other places
 	
 	private Manipulator(){
+
 	}
-	
 	
 	public void loadDrivers(String pathFile){
 		try {
@@ -45,11 +46,22 @@ public class Manipulator {
 
 	public synchronized static Manipulator getInstance(){
 		if(manipulator==null){
-			System.err.println("!!!!");
+//			System.err.println("!!!!");
 			manipulator = new Manipulator();
 			manipulator.drivers = new Vector();
-			manipulator.loadDrivers(Constant.baseFolder + "/ContextIntensity/Drivers.txt");
+			manipulator.loadDrivers(Constant.baseFolder + "/ContextIntensity/Drivers/Drivers.txt");
+			
 		}		
+		return manipulator;
+	}
+	
+	public synchronized static Manipulator getInstance(String outputDir){
+		if(manipulator == null){
+			manipulator = new Manipulator();
+			manipulator.drivers = new Vector();
+			manipulator.loadDrivers(Constant.baseFolder + "ContextIntensity/Drivers/Drivers_CA.txt");
+//			Logger.getInstance().setPath(Constant.baseFolder + outputDir + "/1.txt" , true);
+		}
 		return manipulator;
 	}
 	
@@ -66,12 +78,8 @@ public class Manipulator {
 		while(position == -1){//wait
 			long start = System.currentTimeMillis();
 			try {
-//				this.notifyAll();
-//				this.wait(timeout);
-				this.printFlag();
+//				this.printFlag();
 				this.wait();			
-//				lock.notifyAll();
-//				lock.wait(timeout);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -102,6 +110,7 @@ public class Manipulator {
 			return -1; //copp will wait
 	}
 	
+	//2009/1/15: an updated version of checkScheduler
 //	public synchronized int checkScheduler(String threadID, String cappID){
 //		int position = this.getFirstUnexecuted();
 //		int pos = this.getIndex(threadID, cappID);
@@ -128,8 +137,11 @@ public class Manipulator {
 	public synchronized void exitScheduler(String threadID, String cappID){
 		int i = this.getIndex(threadID, cappID);
 		if(i > -1){ //some drivers may not exist at all.
-			driverFlags[i] = true;	
-		}		
+			driverFlags[i] = true;
+			
+		}	
+//		Logger.getInstance().write(threadID + "|" + cappID);
+//		Logger.getInstance().close();
 		this.notifyAll();
 	}
 	

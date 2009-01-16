@@ -187,14 +187,14 @@ public class WTourEnd extends WPersonPresence {
 	  //2008/7/9
 	if(event.equals(WTourEnd.END)){
 		System.out.println(this.getClass().getName() + " gets a context:" + WTourEnd.END);
-		/*
+		
 	    AttributeNameValues atts = IButtonData2Attributes((IButtonData)data);
 	    if (atts != null) {      
 	      if (subscribers.numSubscribers() > 0) {
 	        sendToSubscribers(END, atts);
 	      }
 	      store(atts);
-	    }*/	    
+	    }	    
 	}
 	  
   }

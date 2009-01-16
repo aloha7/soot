@@ -32,8 +32,6 @@ public class OutputProducer {
 
 		// 2.prepare build.xml
 		this.generateAntScript(testSuiteSize, minVersion, maxVersion);
-
-		
 		
 		// 3.invoke ant to produce outputs automatically
 		try {
@@ -442,11 +440,9 @@ public class OutputProducer {
 	
 	
 	public static void main(String[] args) {
-
-		
 			OutputProducer prod = new OutputProducer();
 			// prod.generateAntScript(100, 0, 0);
-			int minVersion = 56;
+			int minVersion = 0;
 			int maxVersion = 207;
 			int testSuiteSize = 100;
 			

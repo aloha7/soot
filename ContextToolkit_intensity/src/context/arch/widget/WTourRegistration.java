@@ -203,16 +203,16 @@ public class WTourRegistration extends WPersonPresence implements ActionListener
 	  //2008/7/9
 	  if(event.equals(WTourRegistration.UPDATE)){
 		  System.out.println(this.getClass().getName() + " gets a context:" + event);
-		  /*
+		  
 		    atts = IButtonData2Attributes((IButtonData)data);
 		    
 		    //2008/7/13:disable GUI.
-		    registration = new RegistrationFrame(this,",");
-		    registration.setTitle("Tour Registration");
-		    registration.pack();
-		    registration.setResizable(true);
-		    registration.show();
-		    
+//		    registration = new RegistrationFrame(this,",");
+//		    registration.setTitle("Tour Registration");
+//		    registration.pack();
+//		    registration.setResizable(true);
+//		    registration.show();
+//		    
 		    
 		    AttributeNameValues subAtts = new AttributeNameValues();
 		    subAtts.addAttributeNameValue(NAME,"Wang Huai");
@@ -222,10 +222,11 @@ public class WTourRegistration extends WPersonPresence implements ActionListener
 		    atts.addAttributeNameValue(INTERESTS,"context,application,capture");
 		    
 		    atts.addAttributeNameValue(DISPLAY_DEVICE,"127.0.0.1");
+		    
 		    if (subscribers.numSubscribers() > 0) {
 		          sendToSubscribers(UPDATE, atts);
 		    }
-		        store(atts);*/		    		    		     		    	
+		        store(atts);		    		    		     		    	
 	  }
     
   }

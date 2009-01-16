@@ -89,17 +89,18 @@ public class TestManager extends Widget {
 			Vector vector = new Vector();
 			vector.addElement(WTourRegistration.UPDATE);
 			vector.addElement(WTourDemo.VISIT);
+			vector.addElement(WTourDemo.INTEREST);
 			vector.addElement(WTourEnd.END);
 			
 		
 			//1. produce and store test cases
-			TestCaseGenerator maker = new TestCaseGenerator(vector);			
+			//TestCaseGenerator maker = new TestCaseGenerator(vector);			
 			//Vector testSuite = maker.generateTestCases(testSuiteSize);
 			//maker.storeTestCases(testSuite, Constant.baseFolder + "TestCase.txt");							
 			
 			
 			//2. run test cases on the golden version to produce oracles
-			int minVersion = 17;
+			int minVersion = 56;
 			int maxVersion = 207;
 			boolean visual = true;
 			OutputProducer runner = new OutputProducer();
