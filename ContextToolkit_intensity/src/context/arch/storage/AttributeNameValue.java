@@ -66,6 +66,7 @@ public class AttributeNameValue extends Attribute {
    * @param attribute DataObject containing the attribute info
    */
   public AttributeNameValue(DataObject attribute) {
+	  String name1 = (String)attribute.getDataObject(ATTRIBUTE_NAME).getValue().firstElement();
     type = DEFAULT_TYPE;
     Hashtable hash = attribute.getAttributes();
     if (hash != null) {
@@ -80,6 +81,7 @@ public class AttributeNameValue extends Attribute {
     else {
       Vector val = attribute.getDataObject(ATTRIBUTE_VALUE).getValue();
       value = val.firstElement();
+//      value = (String)attribute.getDataObject(ATTRIBUTE_VALUE).getValue().firstElement();
     }
     name = (String)attribute.getDataObject(ATTRIBUTE_NAME).getValue().firstElement();
   }

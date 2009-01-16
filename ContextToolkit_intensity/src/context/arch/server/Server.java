@@ -2,6 +2,8 @@ package context.arch.server;
 
 import context.arch.comm.DataObject;
 import context.arch.handler.Handler;
+import context.arch.widget.WTourDemo;
+import context.arch.widget.WTourRegistration;
 import context.arch.widget.Widget;
 import context.arch.widget.WidgetHandle;
 import context.arch.widget.WidgetHandles;
@@ -384,10 +386,41 @@ public abstract class Server extends Widget implements Handler {
    */
   public DataObject handle(String callback, DataObject data) throws InvalidMethodException, MethodException {
     if (callbacks.hasCallback(callback)) {
-      AttributeNameValues attsObj = new AttributeNameValues(data);
+    	//2009/1/16: to concurrently execute test cases
+//      AttributeNameValues attsObj = new AttributeNameValues(data);
+    	AttributeNameValues subAtts = new AttributeNameValues();
+    	
+    	//for WTourRegistration.update
+	    subAtts.addAttributeNameValue(WTourRegistration.NAME,"Wang Huai");
+	    subAtts.addAttributeNameValue(WTourRegistration.AFFILIATION,"HKU");
+	    subAtts.addAttributeNameValue(WTourRegistration.EMAIL,"dragonwanghuai@gmail.com");
+	    AttributeNameValues attsObj = new AttributeNameValues();
+	    attsObj.addAttributeNameValue(WTourRegistration.CONTACT_INFO,subAtts,Attribute.STRUCT);		  		    			   
+	    attsObj.addAttributeNameValue(WTourRegistration.INTERESTS,"context,application,capture");
+	    attsObj.addAttributeNameValue(WTourRegistration.DISPLAY_DEVICE,"127.0.0.1");
+	    
+	    
+	    //2.for WTourDemo.interest
+	    attsObj.addAttributeNameValue(WTourDemo.DEMO_NAME, "abc");
+		attsObj
+				.addAttributeNameValue(WTourDemo.USERID, id.substring(WTourDemo.CLASSNAME
+						.length()));
+		attsObj.addAttributeNameValue(TIMESTAMP, getCurrentTime(),
+				Attribute.LONG);
+		attsObj
+		.addAttributeNameValue(WTourDemo.INTEREST_LEVEL, WTourDemo.MEDIUM_INTEREST);
+		
+		//3.for WTourDemo.visit
+//		attsObj.getAttributeNameValue(WTourDemo.LOCATION).setName(WTourDemo.DEMO_NAME);
+		attsObj.addAttributeNameValue(WTourDemo.DEMO_URL, "abc");
+		attsObj.addAttributeNameValue(WTourDemo.DEMOER_URL, "abc");
+		
+		//4.for WTourEnd.end
+		
+		
       if (attsObj != null) {
         sendToSubscribers(callback,attsObj);
-        storeAttributeNameValues(attsObj);
+//        storeAttributeNameValues(attsObj);
       }
     }
     else {

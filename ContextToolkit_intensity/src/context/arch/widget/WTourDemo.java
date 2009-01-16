@@ -353,7 +353,7 @@ public class WTourDemo extends WPersonPresence implements AsyncServiceHandler {
 				DataObject poll = pollWidget(serverHost, serverPort, serverId,
 						attributes);
 				AttributeNameValues pollAtts = new AttributeNameValues(poll);
-
+				
 				String display = (String) pollAtts.getAttributeNameValue(
 						DISPLAY_DEVICE).getValue();
 

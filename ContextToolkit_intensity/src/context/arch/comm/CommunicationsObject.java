@@ -130,6 +130,9 @@ public class CommunicationsObject {
     this(handler,DEFAULT_CLIENT,DEFAULT_SERVER,DEFAULT_PORT);
   }
 
+  public int getPort(){
+	  return this.serverPort;
+  }
   /** 
    * Constructor for CommunicationsObject using given 
    * port. It uses the default server and client class.

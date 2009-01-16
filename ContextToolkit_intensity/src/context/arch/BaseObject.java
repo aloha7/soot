@@ -116,7 +116,8 @@ public class BaseObject implements MessageHandler, CommunicationsHandler {
   
   private String id;
   private String version = "undefined";
-
+ 
+  public int port = 0;
   /**
    * Basic constructor that creates a CommunicationsObject
    * with the given port and protocol, and creates a 
@@ -136,6 +137,7 @@ public class BaseObject implements MessageHandler, CommunicationsHandler {
   public BaseObject(String clientClass, String serverClass, int serverPort, String encoderClass,
                     String decoderClass) {
     try {
+    	this.port = serverPort;
       communications = new CommunicationsObject(this,clientClass,serverClass,serverPort);
 //System.out.println(this.getClass().getName() + ":\r\nstart a server");
 

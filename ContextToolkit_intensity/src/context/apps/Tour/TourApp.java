@@ -197,7 +197,6 @@ public class TourApp implements context.arch.handler.Handler
             } else {
                 if (callback.equals( SUBSCRIBER_ID + Constants.SPACER + WTourDemo.INTEREST )) {
                     context.arch.storage.AttributeNameValues atts = new context.arch.storage.AttributeNameValues( data );
-                    
                 
                     manu.enterScheduler(WTourDemo.INTEREST, "5");
                     java.lang.String interest = (java.lang.String) atts.getAttributeNameValue( WTourDemo.INTEREST_LEVEL ).getValue();

@@ -46,7 +46,9 @@ public class PositionIButton {
 	//private Thread runner = null;  
 	private static IButtonData data = null;
 	private TestCase eventSequences = null;
-
+//	private static String serverHost;
+//	private static int serverPort;
+	
 	private PositionIButton() {
 
 	}
@@ -67,60 +69,64 @@ public class PositionIButton {
 	}
 	
 	
-	//2009/1/16:this approach may make TourApp run sequential instead of concurrently
-	//we need to send data via HTTPClient instead of invoke notify() directly
+	
 	private void startSimulate() {
-//		Widget widget = null;
-//
-//		ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
-//
-//		String info = event.context;
-//		int duration = event.duration;
-//
-//		for (int j = 0; j < widgets.size(); j++) {
-//			widget = (Widget) widgets.get(j);
-//			widget.notify(info, data);
-//		}
-//		
-//
-//		event = new ContextEvent(1, 1, WTourDemo.VISIT);
-//		info = event.context;
-//		duration = event.duration;
-//		for (int j = 0; j < widgets.size(); j++) {
-//			widget = (Widget) widgets.get(j);
-//			widget.notify(info, data);
-//		}
-//		
-//		event = new ContextEvent(1, 1, WTourDemo.INTEREST);
-//		info = event.context;
-//		duration = event.duration;
-//		for (int j = 0; j < widgets.size(); j++) {
-//			widget = (Widget) widgets.get(j);
-//			widget.notify(info, data);
-//		}
-//
-//		event = new ContextEvent(1, 1, WTourEnd.END);
-//		info = event.context;
-//		duration = event.duration;
-//		for (int j = 0; j < widgets.size(); j++) {
-//			widget = (Widget) widgets.get(j);
-//			widget.notify(info, data);
-//		}
-		
-		//2009/1/16:
+		Widget widget = null;
+
 		ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
-		new TestCaseFeedThread(widgets, event.context, data).run();
+
+		String info = event.context;
+		int duration = event.duration;
+
+		for (int j = 0; j < widgets.size(); j++) {
+			widget = (Widget) widgets.get(j);
+			widget.notify(info, data);
+		}
+		
 
 		event = new ContextEvent(1, 1, WTourDemo.VISIT);
-		new TestCaseFeedThread(widgets, event.context, data).run();
+		info = event.context;
+		duration = event.duration;
+		for (int j = 0; j < widgets.size(); j++) {
+			widget = (Widget) widgets.get(j);
+			widget.notify(info, data);
+		}
 		
 		event = new ContextEvent(1, 1, WTourDemo.INTEREST);
-		new TestCaseFeedThread(widgets, event.context, data).run();
+		info = event.context;
+		duration = event.duration;
+		for (int j = 0; j < widgets.size(); j++) {
+			widget = (Widget) widgets.get(j);
+			widget.notify(info, data);
+		}
+
+		event = new ContextEvent(1, 1, WTourEnd.END);
+		info = event.context;
+		duration = event.duration;
+		for (int j = 0; j < widgets.size(); j++) {
+			widget = (Widget) widgets.get(j);
+			widget.notify(info, data);
+		}
+	}
+	
+	//2009/1/16:this approach may make TourApp run sequential instead of concurrently
+	//we need to send data via HTTPClient instead of invoke notify() directly
+	private void startSimulate(int serverPort) {
+		//2009/1/16:
+		ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
+//		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
+
+		event = new ContextEvent(1, 1, WTourDemo.VISIT);
+		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
+		
+		event = new ContextEvent(1, 1, WTourDemo.INTEREST);
+		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
 		
 		event = new ContextEvent(1, 1, WTourEnd.END);
-		new TestCaseFeedThread(widgets, event.context, data).run();
+		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
 	}
 
+	
 	//notify widgets about every event in sequences
 	public void startSampling() {
 		Widget widget = null;
@@ -243,7 +249,10 @@ public class PositionIButton {
 				map.put("TourApp", port_App);
 				map.put("DisplayServer", port_Display);
 				map.put("RecommenderServer", port_Recommender);
-
+				
+				//2009/1/16: 
+				
+				
 				String configFilePath = Logger.getInstance()
 						.generateConfigFile(testCaseNumber, map);
 
@@ -302,7 +311,7 @@ public class PositionIButton {
 				sensor.eventSequences = testCase;
 //				sensor.startSampling();
 				//2009/1/16:used to generate test cases 
-				sensor.startSimulate();
+				sensor.startSimulate(port_IDServer);
 				
 				
 				//4.stop widgets	
