@@ -325,6 +325,12 @@ public class BaseObject implements MessageHandler, CommunicationsHandler {
 //System.out.println(this.getClass().getName() + "(receive):\r\n" + encodeData(decoded));    
     return decoded;
   }
+  
+  //2009/1/16:just sending data is OK, no need for returns
+  public void userRequestAsynchronous(DataObject data, String url, String server, int port) throws EncodeException, ProtocolException, InvalidProtocolException, DecodeException, InvalidDecoderException, InvalidEncoderException {
+	    String encoded = encodeData(data);
+	    communications.sendRequestAsynchronous(encoded, url, server, port);
+	  }
 
   /**
    * This method allows a component to subscribe to changes in other components.

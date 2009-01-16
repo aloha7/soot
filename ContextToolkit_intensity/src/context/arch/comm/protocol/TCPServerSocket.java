@@ -94,6 +94,7 @@ public class TCPServerSocket implements Runnable, Cloneable {
    * @see #handleIncomingRequest(java.net.Socket)
    */
   public void run() {
+	//2009/1/16: use thread to handleIncomingRequest
     if (serverSocket != null) {
       while (true) {
         try {
@@ -113,8 +114,14 @@ public class TCPServerSocket implements Runnable, Cloneable {
     }
     else {
 //System.out.println("TCPServerSocket" + "handleIncomingRequest");    	
-      handleIncomingRequest(data);
+//      handleIncomingRequest(data);
+    	//2009/1/16:
+    	new HandleRequestThread(this, data).start();
+    	
     }
+    
+    
+    
   }
 
   /**

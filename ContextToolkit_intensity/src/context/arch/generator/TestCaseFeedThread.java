@@ -102,8 +102,10 @@ public class TestCaseFeedThread implements Runnable {
 			DataObject send = new DataObject(Subscriber.SUBSCRIPTION_CALLBACK, v);
 
 			try {
-				server.userRequest(send, Subscriber.SUBSCRIPTION_CALLBACK,
+//				System.out.println(info + " has sent");
+				server.userRequestAsynchronous(send, Subscriber.SUBSCRIPTION_CALLBACK,
 						this.serverHost, this.serverPort);
+				
 			} catch (EncodeException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

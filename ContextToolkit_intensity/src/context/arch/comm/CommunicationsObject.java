@@ -362,6 +362,19 @@ public class CommunicationsObject {
     reply = client.stripReplyProtocol(s);
     return reply;
   }
+  
+  
+  //2009/1/16: no requires for output
+  private void sendRequestAsynchronous(CommunicationsClient client, String request, String url) throws ProtocolException {
+	    String fullRequest = null;
+	    Socket s;
+	    try {
+	   	fullRequest = client.addRequestProtocol (request, url);
+	    } catch (Exception e) {
+		  System.out.println ("While addRequestProtocol in sendRequest: " + e);
+	    }
+	    s = client.sendRequest(fullRequest); 
+	  }
 
   /**
    * This method sends the given request using the CommunicationsClient object.
@@ -436,6 +449,12 @@ public class CommunicationsObject {
     CommunicationsClient client = createCommunicationsClient(host, port);
     return sendRequest (client, request, url);
   }
+  
+  //2009/1/16: no need for returns
+  public void sendRequestAsynchronous(String request, String url, String host, int port) throws InvalidProtocolException, ProtocolException {
+	    CommunicationsClient client = createCommunicationsClient(host, port);
+	    sendRequestAsynchronous(client, request, url);
+	  }
 
   /**
    * This method creates a communications client with the given hostname and port

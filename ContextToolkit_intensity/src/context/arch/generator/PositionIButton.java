@@ -114,7 +114,7 @@ public class PositionIButton {
 	private void startSimulate(int serverPort) {
 		//2009/1/16:
 		ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
-//		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
+		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
 
 		event = new ContextEvent(1, 1, WTourDemo.VISIT);
 		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
@@ -314,18 +314,19 @@ public class PositionIButton {
 				sensor.startSimulate(port_IDServer);
 				
 				
-				//4.stop widgets	
-				tourStart.quit();
-				tourDemo.quit();
-				tourEnd.quit();
-				recommender.quit();
-				display.quit();
-				server.quit();
+				//4.stop widgets
+				//2009/1/17:client needs to sleep for timeout, otherwise server has no enough time to execute specified paths. 
+//				tourStart.quit();
+//				tourDemo.quit();
+//				tourEnd.quit();
+//				recommender.quit();
+//				display.quit();
+//				server.quit();
 
 				// 2009/1/14: use reflection to quit the method
 //				Object tour = obj.getConstructor(types).newInstance(values);
-				Method quitMethod = obj.getMethod("quit", null);
-				quitMethod.invoke(tour, null);
+//				Method quitMethod = obj.getMethod("quit", null);
+//				quitMethod.invoke(tour, null);
 
 			}
 		} catch (Exception e) {
