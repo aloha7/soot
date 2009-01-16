@@ -186,7 +186,7 @@ public class WTourEnd extends WPersonPresence {
   public void notify(String event, Object data) {
 	  //2008/7/9
 	if(event.equals(WTourEnd.END)){
-		System.out.println(this.getClass().getName() + " gets a context:" + WTourEnd.END);
+//		System.out.println(this.getClass().getName() + " gets a context:" + WTourEnd.END);
 		
 	    AttributeNameValues atts = IButtonData2Attributes((IButtonData)data);
 	    if (atts != null) {      

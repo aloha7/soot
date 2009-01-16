@@ -86,7 +86,7 @@ public class STourId extends Server {
     try {
       XMLURLReader reader = new XMLURLReader(configFile);
       DataObject data = reader.getParsedData();
-System.out.println(this.getClass().getName() +  ":getConfigurationFile:" + parser.encodeData(data));      
+//System.out.println(this.getClass().getName() +  ":getConfigurationFile:" + parser.encodeData(data));      
       Configuration config = new Configuration(data);
       ConfigObjects widgetObjs = config.getWidgetConfigurations();
       if (widgetObjs != null) { //If extending is necessary, add widgets in the configuration files, then the system will load it automatically
@@ -98,7 +98,7 @@ System.out.println(this.getClass().getName() +  ":getConfigurationFile:" + parse
       setWidgets(widgets);
       serverSetup(); //Get Attributes, Services from Widgets
       startSubscriptions(); //Get callbacks from Subscriptions, and subscribe the widgets' according attributes  
-      System.out.println(CLASSNAME+SPACER+userid + " is running");
+//      System.out.println(CLASSNAME+SPACER+userid + " is running");
     } catch (MalformedURLException mue) {
         System.out.println("TourApp MalformedURL: "+mue);
     } catch (DecodeException de) {

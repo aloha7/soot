@@ -202,7 +202,7 @@ public class WTourRegistration extends WPersonPresence implements ActionListener
   public void notify(String event, Object data) {
 	  //2008/7/9
 	  if(event.equals(WTourRegistration.UPDATE)){
-		  System.out.println(this.getClass().getName() + " gets a context:" + event);
+//		  System.out.println(this.getClass().getName() + " gets a context:" + event);
 		  
 		    atts = IButtonData2Attributes((IButtonData)data);
 		    

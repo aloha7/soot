@@ -15,10 +15,10 @@ public class Manipulator {
 	private static Manipulator manipulator = null;
 	private Vector drivers;
 	private boolean[] driverFlags;
-	private long timeout = 3* 1000; //30 seconds
+	private long timeout = 3* 1000; //3 seconds
 //	private Object lock = new Object();
 	private static Logger log; //Cannot use this Logger anymore since it is used in other places
-	
+	private static String driverFile = Constant.baseFolder + "/ContextIntensity/Drivers/Drivers_CA.txt";
 	private Manipulator(){
 
 	}
@@ -49,7 +49,7 @@ public class Manipulator {
 //			System.err.println("!!!!");
 			manipulator = new Manipulator();
 			manipulator.drivers = new Vector();
-			manipulator.loadDrivers(Constant.baseFolder + "/ContextIntensity/Drivers/Drivers.txt");
+			manipulator.loadDrivers(driverFile);
 			
 		}		
 		return manipulator;
@@ -59,7 +59,7 @@ public class Manipulator {
 		if(manipulator == null){
 			manipulator = new Manipulator();
 			manipulator.drivers = new Vector();
-			manipulator.loadDrivers(Constant.baseFolder + "ContextIntensity/Drivers/Drivers_CA.txt");
+			manipulator.loadDrivers(driverFile);
 //			Logger.getInstance().setPath(Constant.baseFolder + outputDir + "/1.txt" , true);
 		}
 		return manipulator;
@@ -79,6 +79,7 @@ public class Manipulator {
 			long start = System.currentTimeMillis();
 			try {
 //				this.printFlag();
+				System.out.println(threadID + cappID + " is waiting");
 				this.wait();			
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -160,7 +161,7 @@ public class Manipulator {
 	public synchronized int getIndex(String threadID, String cappID){
 		int index = -1;  
 		for(int i = 0; i < drivers.size(); i ++){ 
-			if((threadID +"|" +cappID).equals((String)drivers.get(i))){
+			if((threadID +cappID).equals((String)drivers.get(i))){
 						if(!driverFlags[i]){//search for the first one not to be executed
 							index = i;	
 							break;	

@@ -224,7 +224,7 @@ public class HTTPServerSocket extends TCPServerSocket implements CommunicationsS
         }
 
         String readerData = new String(tempdata);
- System.out.println(this.getClass().getName() + "data: "+readerData);
+// System.out.println(this.getClass().getName() + "data: "+readerData);
 	  StringReader reader = new StringReader(readerData);
         return new RequestData(RequestData.DECODE,file,reader);
       }

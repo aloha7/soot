@@ -147,17 +147,20 @@ public class TourApp implements context.arch.handler.Handler
             demoVisits = new context.apps.Tour.DemoVisits();
             context.arch.storage.AttributeNameValues atts = new context.arch.storage.AttributeNameValues( data );
             
-            System.out.println("TourApp receives: " + WTourRegistration.UPDATE );
-            manu.enterScheduler(this.getClass().getName() + "|" + WTourRegistration.UPDATE, "1");
+            
+//            manu.enterScheduler(this.getClass().getName() + "|" + WTourRegistration.UPDATE, "1");
+            manu.enterScheduler( WTourRegistration.UPDATE, "1");
             interests = (java.lang.String) atts.getAttributeNameValue( WTourRegistration.INTERESTS ).getValue();
-            manu.exitScheduler(this.getClass().getName() + "|" + WTourRegistration.UPDATE, "1");
+            manu.exitScheduler(WTourRegistration.UPDATE, "1");
+            System.out.println( WTourRegistration.UPDATE  + "1");
             
             context.arch.storage.AttributeNameValue att = atts.getAttributeNameValue( WTourRegistration.CONTACT_INFO );
             context.arch.storage.AttributeNameValues atts2 = (context.arch.storage.AttributeNameValues) att.getValue();
             
-            manu.enterScheduler(this.getClass().getName() + "|" + WTourRegistration.UPDATE, "2");
+            manu.enterScheduler(WTourRegistration.UPDATE, "2");
             name = (java.lang.String) atts2.getAttributeNameValue( WTourRegistration.NAME ).getValue();
-            manu.exitScheduler(this.getClass().getName() + "|" + WTourRegistration.UPDATE, "2");
+            manu.exitScheduler(WTourRegistration.UPDATE, "2");
+            System.out.println( WTourRegistration.UPDATE  + "2");
             
             affiliation = (java.lang.String) atts2.getAttributeNameValue( WTourRegistration.AFFILIATION ).getValue();
             email = (java.lang.String) atts2.getAttributeNameValue( WTourRegistration.EMAIL ).getValue();
@@ -165,21 +168,22 @@ public class TourApp implements context.arch.handler.Handler
             context.arch.storage.AttributeNameValues input = new context.arch.storage.AttributeNameValues();
             input.addAttributeNameValue( WTourRegistration.INTERESTS, interests );
             input.addAttributeNameValue( Demos.DEMOS, demo.getDemos().toAttributeNameValues(), Attribute.STRUCT );
-//            java.lang.String result = askInterpreter( input );
+            java.lang.String result = askInterpreter( input );
         } else {
             if (callback.equals( SUBSCRIBER_ID + Constants.SPACER + WTourDemo.VISIT )) {
-            	
-            	System.out.println("TourApp receives: " + WTourDemo.VISIT);
-            	manu.enterScheduler(this.getClass().getName() + "|" + WTourDemo.VISIT, "3");
+
+            	manu.enterScheduler(WTourDemo.VISIT, "3");
                 context.arch.storage.AttributeNameValues atts = new context.arch.storage.AttributeNameValues( data );
-                manu.exitScheduler(this.getClass().getName() + "|" + WTourRegistration.UPDATE, "3");
+                manu.exitScheduler(WTourDemo.VISIT, "3");
+                System.out.println(WTourDemo.VISIT + "3");
                 
                 java.lang.String demourl = (java.lang.String) atts.getAttributeNameValue( WTourDemo.DEMO_URL ).getValue();
                 java.lang.String demoerurl = (java.lang.String) atts.getAttributeNameValue( WTourDemo.DEMOER_URL ).getValue();
                 
-                manu.enterScheduler(this.getClass().getName() + "|" + WTourDemo.VISIT, "4");
+                manu.enterScheduler(WTourDemo.VISIT, "4");
                 java.lang.String demoName = (java.lang.String) atts.getAttributeNameValue( WTourDemo.DEMO_NAME ).getValue();
-                manu.exitScheduler(this.getClass().getName() + "|" + WTourDemo.VISIT, "4");
+                manu.exitScheduler(WTourDemo.VISIT, "4");
+                System.out.println(WTourDemo.VISIT + "4");
                 
                 java.lang.String timestamp = (java.lang.String) atts.getAttributeNameValue( WTourDemo.TIMESTAMP ).getValue();
                 context.apps.Tour.DemoInterest demoInterest = new context.apps.Tour.DemoInterest( demoName, NO_INTEREST );
@@ -189,26 +193,29 @@ public class TourApp implements context.arch.handler.Handler
                 input.addAttributeNameValue( DemoInterests.DEMO_INTERESTS, demoInterests.toAttributeNameValues(), Attribute.STRUCT );
                 input.addAttributeNameValue( WTourRegistration.INTERESTS, interests );
                 input.addAttributeNameValue( Demos.DEMOS, demo.getDemos().toAttributeNameValues(), Attribute.STRUCT );
-//                java.lang.String result = askInterpreter( input );
+                java.lang.String result = askInterpreter( input );
             } else {
                 if (callback.equals( SUBSCRIBER_ID + Constants.SPACER + WTourDemo.INTEREST )) {
                     context.arch.storage.AttributeNameValues atts = new context.arch.storage.AttributeNameValues( data );
                     
-                    System.out.println("TourApp receives: " + WTourDemo.INTEREST);
-                    manu.enterScheduler(this.getClass().getName() + "|" + WTourDemo.INTEREST, "5");
+                
+                    manu.enterScheduler(WTourDemo.INTEREST, "5");
                     java.lang.String interest = (java.lang.String) atts.getAttributeNameValue( WTourDemo.INTEREST_LEVEL ).getValue();
-                    manu.exitScheduler(this.getClass().getName() + "|" + WTourDemo.INTEREST, "5");
+                    manu.exitScheduler(WTourDemo.INTEREST, "5");
+                    System.out.println(WTourDemo.INTEREST + "5");
                     
                     java.lang.String demoName = (java.lang.String) atts.getAttributeNameValue( WTourDemo.DEMO_NAME ).getValue();
-                    manu.enterScheduler(this.getClass().getName() + "|" + WTourDemo.INTEREST, "6");
+                    
+                    manu.enterScheduler(WTourDemo.INTEREST, "6");
                     demoInterests.addDemoInterest( demoName, interest );
-                    manu.exitScheduler(this.getClass().getName() + "|" + WTourDemo.INTEREST, "6");
+                    manu.exitScheduler(WTourDemo.INTEREST, "6");
+                    System.out.println(WTourDemo.INTEREST + "6");
                     
                     context.arch.storage.AttributeNameValues input = new context.arch.storage.AttributeNameValues();
                     input.addAttributeNameValue( DemoInterests.DEMO_INTERESTS, demoInterests.toAttributeNameValues(), Attribute.STRUCT );
                     input.addAttributeNameValue( WTourRegistration.INTERESTS, interests );
                     input.addAttributeNameValue( Demos.DEMOS, demo.getDemos().toAttributeNameValues(), Attribute.STRUCT );
-//                    java.lang.String result = askInterpreter( input );
+                    java.lang.String result = askInterpreter( input );
                     context.apps.Tour.DemoVisit dv = demoVisits.getDemoVisit( demoName );
                     if (dv != null) {
                         dv.setInterest( interest );
@@ -216,18 +223,20 @@ public class TourApp implements context.arch.handler.Handler
                 } else {
                     if (callback.equals( SUBSCRIBER_ID + Constants.SPACER + WTourEnd.END )) {
                     	
-                    	System.out.println("TourApp receives: " + WTourEnd.END);
-                    	manu.enterScheduler(this.getClass().getName() + "|" + WTourDemo.INTEREST, "7");
+                    	
+                    	manu.enterScheduler(WTourEnd.END, "7");
                         context.arch.storage.AttributeNameValues input = new context.arch.storage.AttributeNameValues();
-                        manu.exitScheduler(this.getClass().getName() + "|" + WTourDemo.INTEREST, "7");
+                        manu.exitScheduler(WTourEnd.END, "7");
+                        System.out.println(WTourEnd.END + "7");
                         
                         input.addAttributeNameValue( DemoInterests.DEMO_INTERESTS, demoInterests.toAttributeNameValues(), Attribute.STRUCT );
                         input.addAttributeNameValue( WTourRegistration.INTERESTS, interests );
                         input.addAttributeNameValue( Demos.DEMOS, demo.getDemos().toAttributeNameValues(), Attribute.STRUCT );
                         
-                        manu.enterScheduler(this.getClass().getName() + "|" + WTourEnd.END, "8");
-//                        java.lang.String result = askInterpreter( input );
-                        manu.exitScheduler(this.getClass().getName() + "|" + WTourEnd.END, "8");
+                        manu.enterScheduler(WTourEnd.END, "8");
+                        java.lang.String result = askInterpreter( input );
+                        manu.exitScheduler(WTourEnd.END, "8");
+                        System.out.println(WTourEnd.END + "8");
                         
                         java.lang.StringBuffer message = new java.lang.StringBuffer( name + ", thank you for visiting the FCL lab and taking our tour!\n\n" );
                         message.append( "Following is a summary of your tour:\n\n" );
@@ -239,9 +248,10 @@ public class TourApp implements context.arch.handler.Handler
                             message.append( dv.getDemoUrl() + ", or go the demoer's web page at " + dv.getDemoerUrl() + ".\n\n" );
                         }
                         message.append( "Based on your interests which you used to register with the tour guide program, we think\n" );
-//                        message.append( "the following demos might also be interesting to you: \n" + result );
-                        //context.arch.util.SendMail sm = new context.arch.util.SendMail();
-                        System.out.println(message.toString());//sm.sendMail( server.getHostAddress(), "study.cs.hku.hk", "hwang@cs.hku.hk", email, "FCL Demo Trip Summary", message.toString() );
+                        message.append( "the following demos might also be interesting to you: \n" + result );
+                        context.arch.util.SendMail sm = new context.arch.util.SendMail();
+//                        System.out.println(message.toString());
+                        sm.sendMail( server.getHostAddress(), "study.cs.hku.hk", "hwang@cs.hku.hk", email, "FCL Demo Trip Summary", message.toString() );
                     } else {
                         throw new context.arch.InvalidMethodException( Error.UNKNOWN_CALLBACK_ERROR );
                     }

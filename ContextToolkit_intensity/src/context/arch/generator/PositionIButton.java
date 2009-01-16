@@ -65,45 +65,60 @@ public class PositionIButton {
 	public void addListensor(Widget widget) {
 		widgets.add(widget);
 	}
-
+	
+	
+	//2009/1/16:this approach may make TourApp run sequential instead of concurrently
+	//we need to send data via HTTPClient instead of invoke notify() directly
 	private void startSimulate() {
-		Widget widget = null;
-
+//		Widget widget = null;
+//
+//		ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
+//
+//		String info = event.context;
+//		int duration = event.duration;
+//
+//		for (int j = 0; j < widgets.size(); j++) {
+//			widget = (Widget) widgets.get(j);
+//			widget.notify(info, data);
+//		}
+//		
+//
+//		event = new ContextEvent(1, 1, WTourDemo.VISIT);
+//		info = event.context;
+//		duration = event.duration;
+//		for (int j = 0; j < widgets.size(); j++) {
+//			widget = (Widget) widgets.get(j);
+//			widget.notify(info, data);
+//		}
+//		
+//		event = new ContextEvent(1, 1, WTourDemo.INTEREST);
+//		info = event.context;
+//		duration = event.duration;
+//		for (int j = 0; j < widgets.size(); j++) {
+//			widget = (Widget) widgets.get(j);
+//			widget.notify(info, data);
+//		}
+//
+//		event = new ContextEvent(1, 1, WTourEnd.END);
+//		info = event.context;
+//		duration = event.duration;
+//		for (int j = 0; j < widgets.size(); j++) {
+//			widget = (Widget) widgets.get(j);
+//			widget.notify(info, data);
+//		}
+		
+		//2009/1/16:
 		ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
-
-		String info = event.context;
-		int duration = event.duration;
-
-		for (int j = 0; j < widgets.size(); j++) {
-			widget = (Widget) widgets.get(j);
-			widget.notify(info, data);
-		}
-		try {
-			Thread.sleep((long) 10000);
-		} catch (Exception e) {
-			System.out.println(e);
-		}
+		new TestCaseFeedThread(widgets, event.context, data).run();
 
 		event = new ContextEvent(1, 1, WTourDemo.VISIT);
-		info = event.context;
-		duration = event.duration;
-		for (int j = 0; j < widgets.size(); j++) {
-			widget = (Widget) widgets.get(j);
-			widget.notify(info, data);
-		}
-		try {
-			Thread.sleep((long) 10000);
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-
+		new TestCaseFeedThread(widgets, event.context, data).run();
+		
+		event = new ContextEvent(1, 1, WTourDemo.INTEREST);
+		new TestCaseFeedThread(widgets, event.context, data).run();
+		
 		event = new ContextEvent(1, 1, WTourEnd.END);
-		info = event.context;
-		duration = event.duration;
-		for (int j = 0; j < widgets.size(); j++) {
-			widget = (Widget) widgets.get(j);
-			widget.notify(info, data);
-		}
+		new TestCaseFeedThread(widgets, event.context, data).run();
 	}
 
 	//notify widgets about every event in sequences
@@ -151,7 +166,7 @@ public class PositionIButton {
 
 	public static void main(String[] args) {
 		try {
-			System.out.println("PositionIButton has been executed");
+//			System.out.println("PositionIButton has been executed");
 			if (args.length == 1) {
 				//1.retrieve test cases firstly
 				TestCaseGenerator maker = new TestCaseGenerator();
@@ -285,10 +300,12 @@ public class PositionIButton {
 				TestCase testCase = (TestCase) testSuite.get(testCaseNumber);
 				sensor = PositionIButton.getInstance();
 				sensor.eventSequences = testCase;
-				sensor.startSampling();
-
+//				sensor.startSampling();
+				//2009/1/16:used to generate test cases 
+				sensor.startSimulate();
+				
+				
 				//4.stop widgets	
-
 				tourStart.quit();
 				tourDemo.quit();
 				tourEnd.quit();

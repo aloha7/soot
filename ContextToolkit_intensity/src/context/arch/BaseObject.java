@@ -137,7 +137,7 @@ public class BaseObject implements MessageHandler, CommunicationsHandler {
                     String decoderClass) {
     try {
       communications = new CommunicationsObject(this,clientClass,serverClass,serverPort);
-System.out.println(this.getClass().getName() + ":\r\nstart a server");
+//System.out.println(this.getClass().getName() + ":\r\nstart a server");
 
 //I think that if serverPort is less than 0, then there is 
 //no any necessarity to start a local server. No, it still needs a server to receive asynchronous context update.  
@@ -934,26 +934,32 @@ System.out.println(this.getClass().getName() + ":\r\nstart a server");
    */
   public DataObject askInterpreter(String remoteHost, int remotePort, String remoteId,
                                    AttributeNameValues data) {
-    Vector v = new Vector();    
-    DataObject interpret = new DataObject(Constants.INTERPRET, v);
-    v.addElement(new DataObject (ID, remoteId));
-    v.addElement(data.toDataObject());
-    try {
-      return userRequest(interpret, Constants.INTERPRET, remoteHost, remotePort);
-    } catch (DecodeException de) {
-        System.out.println("BaseObject askInterpreter() Decode: "+de);
-    } catch (EncodeException ee) {
-        System.out.println("BaseObject askInterpreter() Encode: "+ee);
-    } catch (InvalidDecoderException ide) {
-        System.out.println("BaseObject askInterpreter() InvalidDecoder: "+ide);
-    } catch (InvalidEncoderException iee) {
-        System.out.println("BaseObject askInterpreter() InvalidEncoder: "+iee);
-    } catch (InvalidProtocolException ipe) {
-        System.out.println("BaseObject askInterpreter() InvalidProtocol: "+ipe);
-    } catch (ProtocolException pe) {
-        System.out.println("BaseObject askInterpreter() Protocol: "+pe);
-    }
-    return null;
+//    Vector v = new Vector();    
+//    DataObject interpret = new DataObject(Constants.INTERPRET, v);
+//    v.addElement(new DataObject (ID, remoteId));
+//    v.addElement(data.toDataObject());
+//   	
+//    try {
+//      return userRequest(interpret, Constants.INTERPRET, remoteHost, remotePort);
+//    } catch (DecodeException de) {
+//        System.out.println("BaseObject askInterpreter() Decode: "+de);
+//    } catch (EncodeException ee) {
+//        System.out.println("BaseObject askInterpreter() Encode: "+ee);
+//    } catch (InvalidDecoderException ide) {
+//        System.out.println("BaseObject askInterpreter() InvalidDecoder: "+ide);
+//    } catch (InvalidEncoderException iee) {
+//        System.out.println("BaseObject askInterpreter() InvalidEncoder: "+iee);
+//    } catch (InvalidProtocolException ipe) {
+//        System.out.println("BaseObject askInterpreter() InvalidProtocol: "+ipe);
+//    } catch (ProtocolException pe) {
+//        System.out.println("BaseObject askInterpreter() Protocol: "+pe);
+//    }
+//    return null;
+    
+  //2009/1/16: no need to interpret results in this experiment
+	  AttributeNameValues atts = new AttributeNameValues();
+	  return atts.toDataObject();
+	  
   }
 
   /**

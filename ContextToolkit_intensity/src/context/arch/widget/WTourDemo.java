@@ -320,8 +320,8 @@ public class WTourDemo extends WPersonPresence implements AsyncServiceHandler {
 	public void notify(String event, Object data) {
 		//2008/7/9
 		if (event.equals(WTourDemo.VISIT)) {
-			System.out.println(this.getClass().getName() + " gets a context:"
-					+ WTourDemo.VISIT);
+//			System.out.println(this.getClass().getName() + " gets a context:"
+//					+ WTourDemo.VISIT);
 
 			IButtonData ibutton = (IButtonData) data;
 			AttributeNameValues atts = IButtonData2Attributes(ibutton);
@@ -387,8 +387,8 @@ public class WTourDemo extends WPersonPresence implements AsyncServiceHandler {
 
 			}
 		} else if (event.equals(WTourDemo.INTEREST)) {//2009/1/16:
-			System.out.println(this.getClass().getName() + " gets a context:"
-					+ WTourDemo.INTEREST);
+//			System.out.println(this.getClass().getName() + " gets a context:"
+//					+ WTourDemo.INTEREST);
 
 			IButtonData ibutton = (IButtonData) data;
 			AttributeNameValues atts = new AttributeNameValues();

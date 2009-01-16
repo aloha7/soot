@@ -141,7 +141,7 @@ public class HTTPClientSocket extends TCPClientSocket implements CommunicationsC
       text.append(data + eol);
     }
     text.append(eol);
-System.out.println(this.getClass().getName()+":" + eol + text);    
+//System.out.println(this.getClass().getName()+":" + eol + text);    
     return text.toString();
   }
 
@@ -282,7 +282,7 @@ System.out.println(this.getClass().getName()+":" + eol + text);
 
     try {
       out.writeBytes(content);
-System.out.println(this.getClass().getName() + ":\r\n" + content);      
+//System.out.println(this.getClass().getName() + ":\r\n" + content);      
       out.flush();
     } catch (Exception e) {
         System.out.println ("While creating socket in sendRequest: " + e);

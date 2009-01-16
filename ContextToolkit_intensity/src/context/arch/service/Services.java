@@ -27,7 +27,7 @@ public class Services extends Hashtable {
    */
   public void addService(Service service) {
     put(service.getName(),service);
-System.out.println(this.getClass().getName() + "(addService):\r\n" + service.getName());    
+//System.out.println(this.getClass().getName() + "(addService):\r\n" + service.getName());    
   }
 
   /**
