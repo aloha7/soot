@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.Vector;
 
 import context.test.util.Constant;
@@ -27,9 +28,11 @@ public class Manipulator {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(pathFile));
 			String line = null;
-			//each line represents: threadID + "|"+statementID
-			while((line = reader.readLine())!= null)
-				drivers.add(line);				
+			//each line represents: threadID+statementID
+			while((line = reader.readLine())!= null){
+				drivers.add(line);	
+			}
+							
 
 			driverFlags = new boolean[drivers.size()];
 			for(int i = 0; i < driverFlags.length; i++)
@@ -43,7 +46,53 @@ public class Manipulator {
 			ep.printStackTrace();
 		}
 	}
+	
+	//2009/1/17: one file may contains many drivers
+	/*public void loadDrivers(String pathFile){
+		try {
+			Vector driverMatrix  = new Vector();
+			Vector execFlagMatrix = new Vector();
+			BufferedReader reader = new BufferedReader(new FileReader(pathFile));
+			String line = null;
 
+			//each line represents one driver(a execution path): (threadID+statementID)*
+			while((line = reader.readLine())!= null){
+				Vector singleDrive = new Vector();
+				Vector execFlag = new Vector();
+				
+				int index = line.indexOf("\t");
+				while(index >-1){
+					singleDrive.add(line.substring(0, index));
+					execFlag.add(false);
+					line = line.substring(index + "\t".length());
+					index = line.indexOf("\t");
+				}
+				//the last index
+				if(line.length() > 0){
+					singleDrive.add(line);
+					execFlag.add(false);
+				}
+				driverMatrix.add(singleDrive);
+				execFlagMatrix.add(execFlag);
+				
+//				Scanner scan = new Scanner(line).useDelimiter("\t");
+////				scan.useDelimiter("\t");
+//				while(scan.hasNext()){
+//					singleDrive.add(scan.next());
+//					execFlag.add(false);
+//				}
+				
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch (IOException ep) {
+			// TODO Auto-generated catch block
+			ep.printStackTrace();
+		}
+	}*/
+
+	
 	public synchronized static Manipulator getInstance(){
 		if(manipulator==null){
 //			System.err.println("!!!!");
@@ -79,7 +128,7 @@ public class Manipulator {
 			long start = System.currentTimeMillis();
 			try {
 //				this.printFlag();
-				System.out.println(threadID + cappID + " is waiting");
+				System.err.println(threadID + cappID + " is waiting");
 				this.wait();			
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -143,6 +192,7 @@ public class Manipulator {
 		}	
 //		Logger.getInstance().write(threadID + "|" + cappID);
 //		Logger.getInstance().close();
+		System.err.println(threadID + cappID);
 		this.notifyAll();
 	}
 	

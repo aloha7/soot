@@ -315,7 +315,8 @@ public class PositionIButton {
 				
 				
 				//4.stop widgets
-				//2009/1/17:client needs to sleep for timeout, otherwise server has no enough time to execute specified paths. 
+				//2009/1/17:client needs to sleep for timeout, otherwise server has no enough time to execute specified paths.
+//				Thread.sleep((3)*1000);
 //				tourStart.quit();
 //				tourDemo.quit();
 //				tourEnd.quit();
@@ -324,7 +325,6 @@ public class PositionIButton {
 //				server.quit();
 
 				// 2009/1/14: use reflection to quit the method
-//				Object tour = obj.getConstructor(types).newInstance(values);
 //				Method quitMethod = obj.getMethod("quit", null);
 //				quitMethod.invoke(tour, null);
 
