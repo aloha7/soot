@@ -165,7 +165,7 @@ public class WPersonPresence extends Widget {
     setVersion(VERSION_NUMBER);
     this.location = location;
     //2008/7/9: bound listensor to the same sensor 
-    //ibutton = new PositionIButton (this,location); //bind message handler with the PositionIButton
+    //ibutton = new PositionIButton (this,location); //bind message handler with the PositionIButton    
     ibutton = PositionIButton.getInstance();
     ibutton.addListensor(this);
   }

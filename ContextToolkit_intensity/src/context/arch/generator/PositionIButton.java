@@ -44,11 +44,9 @@ public class PositionIButton {
 	//2008/7/9	
 	private static PositionIButton sensor = null;
 	private Vector widgets = new Vector();
-	//private Thread runner = null;  
 	private static IButtonData data = null;
 	private TestCase eventSequences = null;
-//	private static String serverHost;
-//	private static int serverPort;
+	
 	
 	private PositionIButton() {
 
@@ -314,21 +312,23 @@ public class PositionIButton {
 				//2009/1/16:used to generate test cases 
 				sensor.startSimulate(port_IDServer);
 				
-				Thread.sleep((3)*1000);
-				Manipulator.getInstance().printAllUncoveredDrivers();
+				
+				
 				//4.stop widgets
 				//2009/1/17:client needs to sleep for timeout, otherwise server has no enough time to execute specified paths.
-//				Thread.sleep((3)*1000);
-//				tourStart.quit();
-//				tourDemo.quit();
-//				tourEnd.quit();
-//				recommender.quit();
-//				display.quit();
-//				server.quit();
+				Thread.sleep((3)*1000);
+				Manipulator.getInstance().printAllUncoveredDrivers();
+				
+				tourStart.quit();
+				tourDemo.quit();
+				tourEnd.quit();
+				recommender.quit();
+				display.quit();
+				server.quit();
 
 				// 2009/1/14: use reflection to quit the method
-//				Method quitMethod = obj.getMethod("quit", null);
-//				quitMethod.invoke(tour, null);
+				Method quitMethod = obj.getMethod("quit", null);
+				quitMethod.invoke(tour, null);
 
 			}
 		} catch (Exception e) {

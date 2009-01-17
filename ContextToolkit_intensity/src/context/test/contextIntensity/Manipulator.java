@@ -50,6 +50,23 @@ public class Manipulator {
 		return manipulator;
 	}
 
+	//2009/1/17: reset these two data structure when finish executing one test case 
+	public synchronized void setDrivers(Vector drivers){
+		this.driverMatrix = drivers;
+		
+		//reset execFlagMatrix
+		Vector flagsMatrix = new Vector(); 
+		for(int i = 0; i < drivers.size(); i ++){			
+			Vector flags = new Vector();
+			for(int j = 0; j < ((Vector)drivers.get(i)).size(); j ++){
+				flags.add(false);
+			}
+			flagsMatrix.add(flags);
+		}
+		
+		this.execFlagMatrix = flagsMatrix;
+	}
+	
 	// 2009/1/17: one file may contains many drivers
 	public void loadDrivers(String pathFile) {
 		try {
@@ -98,7 +115,7 @@ public class Manipulator {
 			System.err.println();
 		}
 	}
-
+	
 	public synchronized int enterScheduler(String threadID, String cappID) {
 		int position = this.checkScheduler(threadID, cappID);
 		while (position == -1) {// wait
@@ -196,6 +213,36 @@ public class Manipulator {
 	// }
 	// }
 	
+	//2009/1/17: this information is necessary to decide whether to add a
+	//test case to a test suite or not
+	public synchronized Vector getAllUncoveredDrivers(){
+		Vector uncoveredDrivers = new Vector();
+		for(int i = 0; i < execFlagMatrix.size(); i ++){
+			Vector execFlag = (Vector)execFlagMatrix.get(i);
+			int j;
+			for( j = 0; j < execFlag.size(); j++){
+				if(!(Boolean)execFlag.get(j)){//has not been covered
+					break;
+				}
+			}
+			if(j != execFlag.size()){ //the ith driver has not been covered
+				Vector driver = (Vector)driverMatrix.get(i); 
+				uncoveredDrivers.add(driver);
+			}
+		}
+		return uncoveredDrivers;
+	}
+	
+	public synchronized void printVector(Vector eles){		
+		for(int i = 0; i < eles.size(); i ++){
+			if(eles.get(i) instanceof Vector){
+				this.printVector((Vector)eles.get(i));
+			}else{
+				System.err.print(eles.get(i) + "\t");
+			}
+		}
+		
+	}
 	public synchronized void printAllUncoveredDrivers(){
 		Logger.getInstance().setPath(
 				Constant.baseFolder + "/ContextIntensity/TimeOut.txt",
