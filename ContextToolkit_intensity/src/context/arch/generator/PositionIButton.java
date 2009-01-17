@@ -21,6 +21,7 @@ import context.apps.Tour.TourApp;
 
 import context.arch.interpreter.IDemoRecommender;
 
+import context.test.contextIntensity.Manipulator;
 import context.test.util.*;
 import context.test.*;
 
@@ -313,7 +314,8 @@ public class PositionIButton {
 				//2009/1/16:used to generate test cases 
 				sensor.startSimulate(port_IDServer);
 				
-				
+				Thread.sleep((3)*1000);
+				Manipulator.getInstance().printAllUncoveredDrivers();
 				//4.stop widgets
 				//2009/1/17:client needs to sleep for timeout, otherwise server has no enough time to execute specified paths.
 //				Thread.sleep((3)*1000);
