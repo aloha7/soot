@@ -131,7 +131,7 @@ public class Manipulator {
 			long enduration = System.currentTimeMillis() - start;
 			if (enduration >= timeout) {// timeout occurs, list all uncovered drivers
 //				this.printAllUncoveredDrivers();
-				System.exit(0);				
+//				System.exit(0);				
 			} else
 				position = this.checkScheduler(threadID, cappID);
 		}

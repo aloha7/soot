@@ -1,5 +1,9 @@
 package context.test;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Random;
 import java.util.Vector;
 
@@ -43,9 +47,13 @@ public class TestManagers {
 		
 		do{
 			//2. random select a test case
-			String testCase = this.getTestCase(testSet);
+			int testCaseIndex = this.getTestCaseIndex(testSet);
+//			int testCaseIndex = 0;
+			String testCase = (String)this.testPool.get(testCaseIndex);
+			
 			//3.feed test case to SUT: faulty version index(must be golden version 0) + test case index		
-//			PositionIButton program = new PositionIButton("0", "0");
+			PositionIButton.getInstance().set(0, testCaseIndex, testCase);
+			PositionIButton.getInstance().runTestCase();
 			
 			//4.judge whether this test case increases the coverage
 			leftDrivers = manager.getAllUncoveredDrivers();
@@ -57,7 +65,8 @@ public class TestManagers {
 			drivers = leftDrivers;
 			manager.setDrivers(drivers);
 		}while(leftDrivers.size() > 0);//6.feed more test cases if there are some uncovered drivers
-
+		System.out.println("Get an adequate test set:");
+		this.toString(testSet);
 		return testSet;
 	}
 	
@@ -93,11 +102,7 @@ public class TestManagers {
 		return sb.toString();
 	}
 	
-	/**
-	 * randomly get a test case which is different from any elements in testSet
-	 * @param testSet
-	 * @return
-	 */
+	
 	public String getTestCase(Vector testSet){
 		String testCase;
 		
@@ -106,6 +111,24 @@ public class TestManagers {
 		}while(testSet.contains(testCase));
 		
 		return testCase;
+	}
+	
+	/**
+	 * randomly get a test case which is different from any elements in testSet
+	 * @param testSet
+	 * @return
+	 */
+	public int getTestCaseIndex(Vector testSet){
+		int testCaseIndex;
+		String testCase;
+		Random rand = new Random();
+		
+		do{
+			testCaseIndex = rand.nextInt(testPool.size());
+			testCase = (String)testPool.get(testCaseIndex);
+		}while(testSet.contains(testCase));
+		
+		return testCaseIndex;
 	}
 	
 	public void saveTestArtifacts(String path, Vector data){
@@ -124,6 +147,23 @@ public class TestManagers {
 			}
 		}
 		return sb.toString();
+	}
+	
+	private void loadTestPoolFromFile(String testPoolFile){
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(testPoolFile));
+			String testCase = null;
+			this.testPool = new Vector();
+			while((testCase = br.readLine())!=null){				
+				this.testPool.add(testCase);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public static void main(String[] args){
@@ -152,8 +192,17 @@ public class TestManagers {
 //		System.out.println(all.contains(test1));
 		
 		TestManagers manager = new TestManagers();
-		manager.generateTestPool(events);
-		manager.saveTestArtifacts(Constant.baseFolder + "ContextIntensity/TestPool.txt", manager.testPool);
+		
+		//1. generate test pools
+//		manager.generateTestPool(events);
+//		manager.saveTestArtifacts(Constant.baseFolder + "ContextIntensity/TestPool.txt", manager.testPool);
+		
+		//2. load test pools from files
+		manager.loadTestPoolFromFile(Constant.baseFolder + "ContextIntensity/TestPool.txt");
+		
+		//3. get adequacy test sets
+		manager.generateAdequateTestSet(Constant.baseFolder + "ContextIntensity/Drivers/Drivers_CA.txt");
+		
 //		String str_testPool = manager.toString(manager.testPool);
 //		String str_testPool = manager.toString(all);
 		

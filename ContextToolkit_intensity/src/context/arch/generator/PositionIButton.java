@@ -2,6 +2,7 @@ package context.arch.generator;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.util.Date;
@@ -46,7 +47,157 @@ public class PositionIButton {
 	private Vector widgets = new Vector();
 	private static IButtonData data = null;
 	private TestCase eventSequences = null;
+	private int mutantVersion;
+	private int testCaseIndex;
+	private String testCase;
 	
+	//2009/1/17: we need no Ant to do experiments
+	public void set(int versionNumber, int index, String testCaseInstance){
+		this.mutantVersion = versionNumber;
+		testCaseIndex = index;
+		testCase = testCaseInstance;
+	}
+	
+	//2009/1/17: by this way, we can get adequate test sets without Ant
+	public void runTestCase(){
+		int versionNumber = this.mutantVersion;
+		int testCaseNumber = this.testCaseIndex;
+		String testCaseInstance = this.testCase;
+		
+		//2.start widgets(This can done by ant, but it will make different outputs for different test cases)
+		int port_Registration = PositionIButton.getAvailablePort();
+		int port_End = PositionIButton.getAvailablePort();
+		int port_Demo = PositionIButton.getAvailablePort();
+		int port_Recommender = PositionIButton.getAvailablePort();
+		int port_Display = PositionIButton.getAvailablePort();
+		int port_IDServer = PositionIButton.getAvailablePort();
+		int port_App = PositionIButton.getAvailablePort();
+		HashMap map = new HashMap();
+		map.put("TourRegistration", port_Registration);
+		map.put("TourDemo", port_Demo);
+		map.put("TourEnd", port_End);
+		map.put("IDServer", port_IDServer);
+		map.put("TourApp", port_App);
+		map.put("DisplayServer", port_Display);
+		map.put("RecommenderServer", port_Recommender);
+		
+		//2009/1/16: 
+		String configFilePath = Logger.getInstance()
+				.generateConfigFile(testCaseNumber, map);
+
+		WTourRegistration tourStart = new WTourRegistration("test",
+				port_Registration, false);
+
+		WTourDemo tourDemo = new WTourDemo("test", port_Demo,
+				"http://127.0.0.1:" + port_Demo + "/" + configFilePath,
+				"file:///" + System.getProperty("user.dir")
+						+ "/DemoInfoFile.txt", false);
+
+		WTourEnd tourEnd = new WTourEnd("test", port_End, false);
+
+		IDemoRecommender recommender = new IDemoRecommender(
+				port_Recommender);
+
+		WDisplay display = new WDisplay("test", port_Display, "100",
+				"200", "graphics", false);
+
+		STourId server = new STourId(port_IDServer, "01020304",
+				new WidgetHandles(), "http://127.0.0.1:"
+						+ port_Registration + "/" + configFilePath);
+
+		//2009/1/14:use reflection to initialize an object
+		String className = null;
+		if (versionNumber == 0) { //invoke the golden version
+			className = "context.apps.Tour.TourApp";
+		} else {
+			className = "context.apps.Tour.mutants.TourApp_"
+					+ versionNumber;
+		}
+		try {
+			Class obj = Class.forName(className);
+			Class[] types = new Class[4];
+			types[0] = new Integer(port_App).TYPE;
+			types[1] = "01020304".getClass();
+			types[2] = ("http://127.0.0.1:" + port_Registration + "/" + configFilePath)
+					.getClass();
+			types[3] = ("file:///" + System.getProperty("user.dir") + "/DemoInfoFile.txt")
+					.getClass();
+
+			Object[] values = new Object[4];
+			values[0] = port_App;
+			values[1] = "01020304";
+			values[2] = "http://127.0.0.1:" + port_Registration + "/"
+					+ configFilePath;
+			values[3] = "file:///" + System.getProperty("user.dir")
+					+ "/DemoInfoFile.txt";
+			Object tour = obj.getConstructor(types).newInstance(values);
+			
+			//3.start to simulate event sequences
+//			TestCaseGenerator maker = new TestCaseGenerator();
+//			String file = Constant.baseFolder + "TestCase.txt";
+//			Vector testSuite = maker.retrieveTestCases(file);
+//			TestCase testCase = (TestCase) testSuite.get(testCaseNumber);
+//			sensor = PositionIButton.getInstance();
+//			sensor.eventSequences = testCase;
+//		sensor.startSampling();
+			//2009/1/16:used to generate test cases 
+			sensor.startSimulate(port_IDServer, testCaseInstance);
+			
+			//4.stop widgets
+			//2009/1/17:client needs to sleep for timeout, otherwise server has no enough time to execute specified paths.
+			try {
+				Thread.sleep((3)*1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			tourStart.quit();
+			tourDemo.quit();
+			tourEnd.quit();
+			recommender.quit();
+			display.quit();
+			server.quit();
+
+			// 2009/1/14: use reflection to quit the method
+			Method quitMethod = obj.getMethod("quit", null);
+			quitMethod.invoke(tour, null);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
+	
+	private void startSimulate(int serverPort, String testCase) {
+		//2009/1/18:
+		int index = testCase.indexOf("\t");
+		while(index > -1){
+			String event = testCase.substring(0, index);
+			new TestCaseFeedThread( event, data, "127.0.0.1", serverPort).run();
+			testCase = testCase.substring(index + "\t".length());
+			index = testCase.indexOf("\t");
+		}
+		if(testCase.length() > 0){			
+			new TestCaseFeedThread(testCase, data, "127.0.0.1", serverPort).run();
+		}
+	}
 	
 	private PositionIButton() {
 
