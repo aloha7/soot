@@ -21,6 +21,61 @@ public class Reflection {
 		System.out.println(v1 + "" + v2);
 	}
 
+	public Reflection(){
+		try {
+			Class ownClass = Class
+					.forName("context.test.incubator.Reflection");
+			int a = 1;
+			double b = 2.0;
+
+			Object[] values = new Object[2];
+			values[0] = a;
+			values[1] = b;
+
+			Class[] types = new Class[values.length];
+			types[0] = new Integer(a).TYPE;
+			types[1] = new Double(b).TYPE;
+
+			
+			Constructor[] cs = ownClass.getConstructors();
+			for (Constructor c : cs) {
+				Class[] arguments = c.getParameterTypes();
+				for (Class arg : arguments) {
+					System.out.println(arg.toString());
+				}
+			}
+
+			try {
+				Object instance = ownClass.getConstructor(types).newInstance(values);
+				Method method = ownClass.getMethod("print", types);
+				method.invoke(instance, values);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InstantiationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			/*	Method method =  ownClass.getMethod("print", types);
+				method.invoke(instance, values);*/
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
 	/**
 	 * @param args
 	 */
@@ -29,7 +84,7 @@ public class Reflection {
 
 		try {
 			Class ownClass = Class
-					.forName("context.test.contextIntensity.Reflection");
+					.forName("context.test.incubator.Reflection");
 			int a = 1;
 			double b = 2.0;
 

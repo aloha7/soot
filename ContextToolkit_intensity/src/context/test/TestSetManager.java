@@ -21,7 +21,7 @@ public class TestSetManager {
 
 	public Vector testPool;
 	public Vector testSets;
-	public int SIZE_TESTPOOL = 100;
+	public int SIZE_TESTPOOL = 1000;
 	public int NUMBER_TESTSET = 1;
 	public int MAX_LENGTH_TESTCASE = 10;
 	public int MIN_LENGTH_TESTCASE = 4;
@@ -57,12 +57,13 @@ public class TestSetManager {
 				sb.append("time:\t" + enduration + "\n");
 				testSets.add(testSet);
 			}
+			System.out.println(testSets.size() + "th test set");
 		} while (testSets.size() < NUMBER_TESTSET);
 
 		// 3. save testSets into files
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(savePath,
-					false));
+					true));
 			bw.write(sb.toString());
 			bw.close();
 		} catch (IOException e) {
@@ -71,7 +72,7 @@ public class TestSetManager {
 		}
 	}
 
-	public Vector getAdequateTestSets(String filePath){
+	public Vector getAdequateTestSetsFromFile(String filePath){
 		Vector testSets = new Vector();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filePath));
@@ -140,7 +141,15 @@ public class TestSetManager {
 				+ "):" + "\n" + this.toString(testSet));
 		return testSet;
 	}
-
+	
+	public String getTestCaseInstance(int testCaseIndex){
+		if(this.testPool==null){
+			this.loadTestPoolFromFile(Constant.baseFolder
+					+ "ContextIntensity/TestPool.txt");
+		}
+		return (String)this.testPool.get(testCaseIndex);
+	}
+	
 	public Vector generateTestPool(Vector events) {
 		testPool = new Vector();
 		while (testPool.size() < SIZE_TESTPOOL) {
@@ -161,6 +170,7 @@ public class TestSetManager {
 		while (testPool.size() < SIZE_TESTPOOL) {
 			// generate a test case
 			String testCase = this.generateRestrictedTestCase(events);
+//			System.out.println(testPool.size() + "th test case");
 			// add it to the test pool if not duplicated
 			if (!testPool.contains(testCase)) {
 				testPool.add(testCase);
@@ -290,10 +300,10 @@ public class TestSetManager {
 		TestSetManager manager = new TestSetManager();
 
 		// 1. [option]generate test pools
-		// manager.generateTestPool(events);
-		// manager.generateRestrictedTestPool(events);
-		// manager.saveTestArtifacts(Constant.baseFolder +
-		// "ContextIntensity/TestPool.txt", manager.testPool);
+//		 manager.generateTestPool(events);
+//		 manager.generateRestrictedTestPool(events);
+//		 manager.saveTestArtifacts(Constant.baseFolder +
+//		 "ContextIntensity/TestPool.txt", manager.testPool);
 
 		// 2. [mandatory]load test pools from files
 		manager.loadTestPoolFromFile(Constant.baseFolder
@@ -311,7 +321,7 @@ public class TestSetManager {
 				Constant.baseFolder
 						+ "ContextIntensity/AdequateTestSet/TestSet_CA.txt");
 
-//		Vector testSets = manager.getAdequateTestSets(Constant.baseFolder
+//		Vector testSets = manager.getAdequateTestSetsFromFile(Constant.baseFolder
 //		+ "ContextIntensity/AdequateTestSet/TestSet_CA.txt");
 //System.out.println();
 		

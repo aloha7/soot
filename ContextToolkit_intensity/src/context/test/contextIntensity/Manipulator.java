@@ -122,7 +122,7 @@ public class Manipulator {
 		while (position == -1) {// wait
 			long start = System.currentTimeMillis();
 			try {
-//				System.err.println(threadID + cappID + " is waiting");
+				System.err.println(threadID + cappID + " is waiting");
 				this.wait(timeout);
 //				System.err.println(threadID + cappID + " leave waiting status");
 			} catch (InterruptedException e) {

@@ -149,6 +149,98 @@ public class OutputProducer {
 		return antScriptFile;
 	}
 	
+	//2009/1/18: generate new Ants for new test cases
+	public String generateAntScript(Vector testSets,  String criteria, int versionNumber 
+			) {
+		String antScriptFile = Constant.baseFolder + "test/script/build_"+versionNumber+".xml";
+		Logger log = Logger.getInstance();
+		log.setPath(antScriptFile, false);
+		
+		TestSetManager manager_TS = new TestSetManager();
+		
+		
+		StringBuilder sb = new StringBuilder();
+		sb
+				.append("<project name=\"contexttoolkit\" default=\"run-TestManager\" basedir=\""+ Constant.baseFolder +"\">"
+						+ Constant.LINESHIFTER);
+		sb.append(" <path id=\"project.class.path\">" + Constant.LINESHIFTER);
+		sb.append("  <pathelement location=\"bin\"/>" + Constant.LINESHIFTER);
+		sb.append("  <fileset dir=\"lib\">" + Constant.LINESHIFTER);
+		sb.append("   <include name=\"**/*.jar\"/>" + Constant.LINESHIFTER);
+		sb.append("  </fileset>" + Constant.LINESHIFTER);
+		sb.append(" </path>" + Constant.LINESHIFTER);
+
+		sb.append(Constant.LINESHIFTER + Constant.LINESHIFTER
+				+ Constant.LINESHIFTER);
+
+		sb.append(" <target name=\"run-TestManager\">" + Constant.LINESHIFTER);
+		sb.append("     <echo message=\"starting TestManager...\"/> "
+				+ Constant.LINESHIFTER);
+
+			sb.append("     <echo message=\"start Version " + versionNumber+ "...\"/> "
+					+ Constant.LINESHIFTER);
+			
+			for (int j = 0; j < testSets.size(); j++) {
+				Vector testSet = (Vector)testSets.get(j);
+				
+				sb.append("     <delete dir=\"test/output/" + criteria + "/"+versionNumber + "/" + j + "\"/>"
+						+ Constant.LINESHIFTER);
+				sb.append("     <mkdir dir=\"test/output/" + criteria + "/" + versionNumber + "/"+ j + "\"/>"
+						+ Constant.LINESHIFTER);
+				
+				for(int k = 0; k < testSet.size(); k ++){
+					String testCaseNumber = (String)testSet.get(k);
+					String testCaseInstance = manager_TS.getTestCaseInstance(Integer.parseInt(testCaseNumber));
+					sb.append("     <java fork=\"true\" taskname=\"TestManager\""
+							+ Constant.LINESHIFTER);
+					sb
+							.append("           classname=\"context.arch.generator.PositionIButton\" output=\"test/output/"
+									+ criteria + "/"
+									+ versionNumber +"/"
+									+ j + "/"
+									+ testCaseNumber
+									+ ".txt\">"
+									+ Constant.LINESHIFTER);
+					
+					sb.append("       <arg value=\"" + versionNumber + "\"/>"
+							+ Constant.LINESHIFTER);
+					sb.append("       <arg value=\"" + testCaseNumber + "\"/>"
+							+ Constant.LINESHIFTER);
+					sb.append("       <arg value=\"" + testCaseInstance + "\"/>"
+							+ Constant.LINESHIFTER);
+					sb.append("      <classpath refid=\"project.class.path\"/>"
+							+ Constant.LINESHIFTER);
+					sb.append("     </java>" + Constant.LINESHIFTER);		
+				}
+			}
+		
+
+			
+			File dir = new File(Constant.baseFolder + "test/output/" + versionNumber);
+			if (!dir.exists())
+				dir.mkdirs();
+
+
+
+		sb.append(" </target>" + Constant.LINESHIFTER);
+
+		sb.append(Constant.LINESHIFTER + Constant.LINESHIFTER
+				+ Constant.LINESHIFTER);
+
+//		//2009/1/15: exit the windows
+//		sb.append("<target name = \"exit\">" +Constant.LINESHIFTER);
+//		sb.append("<exec executable=\"cmd.exe\">"+Constant.LINESHIFTER);
+//		sb.append("<arg line = \"/c exit\"/>"+Constant.LINESHIFTER);
+//		sb.append("</exec>"+Constant.LINESHIFTER);
+//		sb.append("</target>"+Constant.LINESHIFTER);
+		sb.append("</project>");
+
+		log.write(sb.toString());
+		log.close();
+		
+		return antScriptFile;
+	}
+	
 	// 2008/7/10: make a build.xml to run test cases
 	// private void generateAntScript(int testSuiteSize, int minVersion, int
 	// maxVersion){
@@ -440,20 +532,20 @@ public class OutputProducer {
 	
 	
 	public static void main(String[] args) {
-			OutputProducer prod = new OutputProducer();
-			// prod.generateAntScript(100, 0, 0);
-			int minVersion = 0;
-			int maxVersion = 207;
-			int testSuiteSize = 100;
-			
-			long start = System.currentTimeMillis();
-			for(int versionNum = minVersion; versionNum <= maxVersion; versionNum ++){
-				prod.produceOutput(testSuiteSize, versionNum,  true);
-//				String command = "cmd /c exit";
-//				Runtime.getRuntime().exec(command);
-			}
-			System.out.println("Run Time:" + "\n" + (System.currentTimeMillis()- start));
-		
+//			OutputProducer prod = new OutputProducer();
+//			// prod.generateAntScript(100, 0, 0);
+//			int minVersion = 0;
+//			int maxVersion = 207;
+//			int testSuiteSize = 100;
+//			
+//			long start = System.currentTimeMillis();
+//			for(int versionNum = minVersion; versionNum <= maxVersion; versionNum ++){
+//				prod.produceOutput(testSuiteSize, versionNum,  true);
+////				String command = "cmd /c exit";
+////				Runtime.getRuntime().exec(command);
+//			}
+//			System.out.println("Run Time:" + "\n" + (System.currentTimeMillis()- start));
+//		
 		
 
 	}
