@@ -6,7 +6,7 @@ import context.arch.widget.WTourDemo;
 import context.arch.widget.WTourEnd;
 import context.arch.widget.WTourRegistration;
 
-public class VectorTest {
+public class TestVector {
 	
 	public static void main(String[] args){
 		Vector events = new Vector();

@@ -346,7 +346,7 @@ public class PositionIButton {
 				PositionIButton.getInstance().runTestCase();
 				PositionIButton.getInstance().stopRunning();
 				System.err.println(testCaseNumber + " finishes its execution");
-				System.exit(0);
+//				System.exit(0);
 			 }
 	}
 

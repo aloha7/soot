@@ -17,8 +17,8 @@ public class Manipulator {
 	// private boolean[] driverFlags;
 
 	// 2009/1/17: cover multiple drivers at each time
-	Vector driverMatrix;
-	Vector execFlagMatrix;
+	public Vector driverMatrix;
+	public Vector execFlagMatrix;
 	int currentDriver = -1;// select it by matching the first capp in one
 							// driver, reset it when current driver is
 							// satisfied.
@@ -131,7 +131,7 @@ public class Manipulator {
 			}
 			long enduration = System.currentTimeMillis() - start;
 			if (enduration >= timeout) {// timeout occurs, list all uncovered drivers
-//				this.printAllUncoveredDrivers();
+				this.printAllUncoveredDrivers();
 //				System.exit(0);				
 			} else
 				position = this.checkScheduler(threadID, cappID);
@@ -245,10 +245,6 @@ public class Manipulator {
 		
 	}
 	public synchronized void printAllUncoveredDrivers(){
-		Logger.getInstance().setPath(
-				Constant.baseFolder + "/ContextIntensity/TimeOut.txt",
-				false);
-		
 		StringBuilder sb = new StringBuilder();
 		
 		//2009/1/17:report all uncovered drivers
@@ -267,6 +263,7 @@ public class Manipulator {
 				sb.append("\n");
 			}
 		}
+		System.out.println(sb.toString());
 		if(sb.length() > 0 ){
 			System.err.println("Lists of uncovered drivers:" + "\n" + sb.toString());
 		}

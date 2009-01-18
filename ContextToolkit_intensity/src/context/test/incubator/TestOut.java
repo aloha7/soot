@@ -12,6 +12,7 @@ public class TestOut {
 		try {
 			PrintStream ps =new PrintStream(new BufferedOutputStream(new FileOutputStream("c:\\a.txt"))); 
 			System.setOut(ps);
+			System.setErr(ps);
 			System.out.println("abcdse");
 			Reflection ref = new Reflection();
 			ps.close();

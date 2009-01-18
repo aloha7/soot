@@ -24,7 +24,7 @@ public class Reflection {
 	public Reflection(){
 		try {
 			Class ownClass = Class
-					.forName("context.test.incubator.Reflection");
+					.forName("context.test.contextI.Reflection");
 			int a = 1;
 			double b = 2.0;
 
