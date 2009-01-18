@@ -140,13 +140,33 @@ public class Logger {
 	public void deleteFile(String srcFile){
 		File file = new File(srcFile);
 		if(file.exists()){
-			if(file.isDirectory()){
+			if(file.isDirectory()){				
 				File[] files = file.listFiles();
 				for(File temp: files)
 					this.deleteFile(temp.getPath());
 			}else{
 				file.delete();
 			}
+		}
+	}
+	
+	//2009/1/18:delete all files and directory in srcDir
+	public void delete(String srcDir){
+		
+		File file = new File(srcDir);
+		while(file.exists()){
+			if(file.isDirectory()){				
+				File[] files = file.listFiles();
+				if(files.length == 0){//no directory and files in this directory
+					file.delete();
+				}else{
+					for(File temp: files)
+						this.delete(temp.getPath());	
+				}
+			}else{
+				file.delete();
+			}
+			
 		}
 	}
 	
@@ -272,13 +292,13 @@ public class Logger {
 
 	public static void main(String[] args) {
 		String srcDir = Constant.baseFolder + "result";
-		String destDir = Constant.baseFolder +"src/context/apps/Tour/mutants";
+		String destDir = "Y:\\Programs\\ContextToolkit_ExperimentStatistics";
 		String packageName = "a";
 		String type = "java";
-		Logger.getInstance().deleteFile(destDir);
-		Logger.getInstance().moveFiles(srcDir, destDir, type);
+		Logger.getInstance().delete(destDir);
+//		Logger.getInstance().moveFiles(srcDir, destDir, type);
 		
-		Logger.getInstance().changePackage(destDir, "context.apps.Tour.mutants");
+//		Logger.getInstance().changePackage(destDir, "context.apps.Tour.mutants");
 //		String a =  "abasd public TourApp( int localport, java.lang.String userid, java.lang.String configFile, java.lang.String demoFile ) dew";
 //		System.out.print(a.replaceAll("TourApp", "TourApp_1"));
 	}

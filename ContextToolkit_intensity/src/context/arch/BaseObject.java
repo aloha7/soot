@@ -1149,7 +1149,7 @@ public class BaseObject implements MessageHandler, CommunicationsHandler {
    */
   public void quit() {
     communications.quit();
-    System.exit(EXIT_OK);
+//    System.exit(EXIT_OK);
   }
 
   /**

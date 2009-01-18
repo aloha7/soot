@@ -51,6 +51,16 @@ public class PositionIButton {
 	private int testCaseIndex;
 	private String testCase;
 	
+	//2009/1/18: used to stop these servers
+	private WTourRegistration tourStart;
+	private WTourDemo tourDemo;
+	private WTourEnd tourEnd;
+	private IDemoRecommender recommender;
+	private WDisplay display;
+	private STourId server;
+	private Class obj;
+	private Object tour;
+	
 	//2009/1/17: we need no Ant to do experiments
 	public void set(int versionNumber, int index, String testCaseInstance){
 		this.mutantVersion = versionNumber;
@@ -85,23 +95,23 @@ public class PositionIButton {
 		String configFilePath = Logger.getInstance()
 				.generateConfigFile(testCaseNumber, map);
 
-		WTourRegistration tourStart = new WTourRegistration("test",
+		tourStart = new WTourRegistration("test",
 				port_Registration, false);
 
-		WTourDemo tourDemo = new WTourDemo("test", port_Demo,
+		tourDemo = new WTourDemo("test", port_Demo,
 				"http://127.0.0.1:" + port_Demo + "/" + configFilePath,
 				"file:///" + System.getProperty("user.dir")
 						+ "/DemoInfoFile.txt", false);
 
-		WTourEnd tourEnd = new WTourEnd("test", port_End, false);
+		tourEnd = new WTourEnd("test", port_End, false);
 
-		IDemoRecommender recommender = new IDemoRecommender(
+		recommender = new IDemoRecommender(
 				port_Recommender);
 
-		WDisplay display = new WDisplay("test", port_Display, "100",
+		display = new WDisplay("test", port_Display, "100",
 				"200", "graphics", false);
 
-		STourId server = new STourId(port_IDServer, "01020304",
+		server = new STourId(port_IDServer, "01020304",
 				new WidgetHandles(), "http://127.0.0.1:"
 						+ port_Registration + "/" + configFilePath);
 
@@ -114,7 +124,7 @@ public class PositionIButton {
 					+ versionNumber;
 		}
 		try {
-			Class obj = Class.forName(className);
+			obj = Class.forName(className);
 			Class[] types = new Class[4];
 			types[0] = new Integer(port_App).TYPE;
 			types[1] = "01020304".getClass();
@@ -130,37 +140,17 @@ public class PositionIButton {
 					+ configFilePath;
 			values[3] = "file:///" + System.getProperty("user.dir")
 					+ "/DemoInfoFile.txt";
-			Object tour = obj.getConstructor(types).newInstance(values);
+			tour = obj.getConstructor(types).newInstance(values);
 			
-			//3.start to simulate event sequences
-//			TestCaseGenerator maker = new TestCaseGenerator();
-//			String file = Constant.baseFolder + "TestCase.txt";
-//			Vector testSuite = maker.retrieveTestCases(file);
-//			TestCase testCase = (TestCase) testSuite.get(testCaseNumber);
-//			sensor = PositionIButton.getInstance();
-//			sensor.eventSequences = testCase;
-//		sensor.startSampling();
-			//2009/1/16:used to generate test cases 
 			sensor.startSimulate(port_IDServer, testCaseInstance);
 			
-			//4.stop widgets
-			//2009/1/17:client needs to sleep for timeout, otherwise server has no enough time to execute specified paths.
 			try {
 				Thread.sleep((3)*1000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			tourStart.quit();
-			tourDemo.quit();
-			tourEnd.quit();
-			recommender.quit();
-			display.quit();
-			server.quit();
-
-			// 2009/1/14: use reflection to quit the method
-			Method quitMethod = obj.getMethod("quit", null);
-			quitMethod.invoke(tour, null);
+			
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -183,6 +173,34 @@ public class PositionIButton {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
+	}
+	
+	public void stopRunning(){
+		tourStart.quit();
+		tourDemo.quit();
+		tourEnd.quit();
+		recommender.quit();
+		display.quit();
+		server.quit();
+		try {
+			Method quitMethod = obj.getMethod("quit", null);
+			quitMethod.invoke(tour, null);
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void startSimulate(int serverPort, String testCase) {
@@ -217,8 +235,6 @@ public class PositionIButton {
 	public void addListensor(Widget widget) {
 		widgets.add(widget);
 	}
-	
-	
 	
 	private void startSimulate() {
 		Widget widget = null;

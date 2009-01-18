@@ -43,10 +43,11 @@ public class Manipulator {
 	}
 
 	public synchronized static Manipulator getInstance(String driversFile) {
-		if (manipulator == null) {
-			manipulator = new Manipulator();
-			manipulator.loadDrivers(driversFile);
-		}
+		//when this is the case, we must reinitialize an instance of manipulator 
+		
+		manipulator = new Manipulator();
+		manipulator.loadDrivers(driversFile);
+
 		return manipulator;
 	}
 
@@ -121,9 +122,9 @@ public class Manipulator {
 		while (position == -1) {// wait
 			long start = System.currentTimeMillis();
 			try {
-				System.err.println(threadID + cappID + " is waiting");
+//				System.err.println(threadID + cappID + " is waiting");
 				this.wait(timeout);
-				System.err.println(threadID + cappID + " leave waiting status");
+//				System.err.println(threadID + cappID + " leave waiting status");
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -313,7 +314,7 @@ public class Manipulator {
 		}
 		if(allCovered){
 			System.err.println("All drivers in the file has been covered!");
-			System.exit(0);
+//			System.exit(0);
 		}
 	}
 
