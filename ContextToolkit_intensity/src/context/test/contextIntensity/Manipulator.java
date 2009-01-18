@@ -296,7 +296,7 @@ public class Manipulator {
 				}	
 			}
 		}
-		System.err.println(threadID + cappID);
+//		System.err.println(threadID + cappID);
 		this.notifyAll();
 		
 		boolean allCovered = true;
