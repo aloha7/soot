@@ -223,9 +223,9 @@ public class Logger {
 	
 	public void changePackage(String srcDir, String packageName){
 		try {
-			File src = new File(srcDir);
+			File src = new File(srcDir);			
 			if(src.exists()){
-				if(src.isFile()){
+				if(src.isFile() && src.getName().contains(".java")){
 					BufferedReader br = new BufferedReader(new FileReader(srcDir));
 					String className = src.getName().substring(0, src.getName().indexOf("."));
 					String line = null;
@@ -262,7 +262,9 @@ public class Logger {
 				}else{
 					File[] files = src.listFiles();
 					for(File temp: files){
-						this.changePackage(temp.getPath(), packageName);
+						if(temp.getName().contains(".java")){
+							this.changePackage(temp.getPath(), packageName);	
+						}
 					}
 				}
 			}
@@ -291,15 +293,13 @@ public class Logger {
 	
 
 	public static void main(String[] args) {
-		String srcDir = Constant.baseFolder + "result";
-		String destDir = "Y:\\Programs\\ContextToolkit_ExperimentStatistics";
+		String srcDir = "C:\\WangHuai\\Martin\\Eclipse3.4\\ContextToolkit_intensity\\temp";
+		String destDir = "C:\\WangHuai\\Martin\\Eclipse3.3.1\\ContextToolkit_intensity\\src\\context\\apps\\Tour\\mutants";
 		String packageName = "a";
 		String type = "java";
-		Logger.getInstance().delete(destDir);
+//		Logger.getInstance().delete(destDir);
 //		Logger.getInstance().moveFiles(srcDir, destDir, type);
 		
-//		Logger.getInstance().changePackage(destDir, "context.apps.Tour.mutants");
-//		String a =  "abasd public TourApp( int localport, java.lang.String userid, java.lang.String configFile, java.lang.String demoFile ) dew";
-//		System.out.print(a.replaceAll("TourApp", "TourApp_1"));
+		Logger.getInstance().changePackage(destDir, "context.apps.Tour.mutants");
 	}
 }

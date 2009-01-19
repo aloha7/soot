@@ -6,6 +6,7 @@ import context.test.contextIntensity.*;
 import context.apps.Tour.*;
 
 
+import context.test.contextIntensity.*;
 import context.arch.BaseObject;
 import context.arch.comm.DataObject;
 import context.arch.handler.Handler;
@@ -39,6 +40,8 @@ import java.net.MalformedURLException;
 
 public class TourApp_90 implements context.arch.handler.Handler
 {
+
+    context.test.contextIntensity.Manipulator manu = Manipulator.getInstance();
 
     public static final int DEFAULT_PORT = 5555;
 
@@ -146,10 +149,14 @@ public class TourApp_90 implements context.arch.handler.Handler
             demoInterests = new context.apps.Tour.DemoInterests();
             demoVisits = new context.apps.Tour.DemoVisits();
             context.arch.storage.AttributeNameValues atts = new context.arch.storage.AttributeNameValues( data );
+            manu.enterScheduler( WTourRegistration.UPDATE, "1" );
             interests = (java.lang.String) atts.getAttributeNameValue( WTourRegistration.INTERESTS ).getValue();
+            manu.exitScheduler( WTourRegistration.UPDATE, "1" );
             context.arch.storage.AttributeNameValue att = atts.getAttributeNameValue( WTourRegistration.CONTACT_INFO );
             context.arch.storage.AttributeNameValues atts2 = (context.arch.storage.AttributeNameValues) att.getValue();
+            manu.enterScheduler( WTourRegistration.UPDATE, "2" );
             name = (java.lang.String) atts2.getAttributeNameValue( WTourRegistration.NAME ).getValue();
+            manu.exitScheduler( WTourRegistration.UPDATE, "2" );
             affiliation = (java.lang.String) atts2.getAttributeNameValue( WTourRegistration.AFFILIATION ).getValue();
             email = (java.lang.String) atts2.getAttributeNameValue( WTourRegistration.EMAIL ).getValue();
             initialTime = new java.lang.Long( (java.lang.String) atts.getAttributeNameValue( WTourRegistration.TIMESTAMP ).getValue() );
@@ -159,10 +166,14 @@ public class TourApp_90 implements context.arch.handler.Handler
             java.lang.String result = askInterpreter( input );
         } else {
             if (callback.equals( SUBSCRIBER_ID + Constants.SPACER + WTourDemo.VISIT )) {
+                manu.enterScheduler( WTourDemo.VISIT, "3" );
                 context.arch.storage.AttributeNameValues atts = new context.arch.storage.AttributeNameValues( data );
+                manu.exitScheduler( WTourDemo.VISIT, "3" );
                 java.lang.String demourl = (java.lang.String) atts.getAttributeNameValue( WTourDemo.DEMO_URL ).getValue();
                 java.lang.String demoerurl = (java.lang.String) atts.getAttributeNameValue( WTourDemo.DEMOER_URL ).getValue();
+                manu.enterScheduler( WTourDemo.VISIT, "4" );
                 java.lang.String demoName = (java.lang.String) atts.getAttributeNameValue( WTourDemo.DEMO_NAME ).getValue();
+                manu.exitScheduler( WTourDemo.VISIT, "4" );
                 java.lang.String timestamp = (java.lang.String) atts.getAttributeNameValue( WTourDemo.TIMESTAMP ).getValue();
                 context.apps.Tour.DemoInterest demoInterest = new context.apps.Tour.DemoInterest( demoName, NO_INTEREST );
                 demoInterests.addDemoInterest( demoInterest );
@@ -175,9 +186,13 @@ public class TourApp_90 implements context.arch.handler.Handler
             } else {
                 if (callback.equals( SUBSCRIBER_ID + Constants.SPACER + WTourDemo.INTEREST )) {
                     context.arch.storage.AttributeNameValues atts = new context.arch.storage.AttributeNameValues( data );
+                    manu.enterScheduler( WTourDemo.INTEREST, "5" );
                     java.lang.String interest = (java.lang.String) atts.getAttributeNameValue( WTourDemo.INTEREST_LEVEL ).getValue();
+                    manu.exitScheduler( WTourDemo.INTEREST, "5" );
                     java.lang.String demoName = (java.lang.String) atts.getAttributeNameValue( WTourDemo.DEMO_NAME ).getValue();
+                    manu.enterScheduler( WTourDemo.INTEREST, "6" );
                     demoInterests.addDemoInterest( demoName, interest );
+                    manu.exitScheduler( WTourDemo.INTEREST, "6" );
                     context.arch.storage.AttributeNameValues input = new context.arch.storage.AttributeNameValues();
                     input.addAttributeNameValue( DemoInterests.DEMO_INTERESTS, demoInterests.toAttributeNameValues(), Attribute.STRUCT );
                     input.addAttributeNameValue( WTourRegistration.INTERESTS, interests );
@@ -189,11 +204,15 @@ public class TourApp_90 implements context.arch.handler.Handler
                     }
                 } else {
                     if (callback.equals( SUBSCRIBER_ID + Constants.SPACER + WTourEnd.END )) {
+                        manu.enterScheduler( WTourEnd.END, "7" );
                         context.arch.storage.AttributeNameValues input = new context.arch.storage.AttributeNameValues();
+                        manu.exitScheduler( WTourEnd.END, "7" );
                         input.addAttributeNameValue( DemoInterests.DEMO_INTERESTS, demoInterests.toAttributeNameValues(), Attribute.STRUCT );
                         input.addAttributeNameValue( WTourRegistration.INTERESTS, interests );
                         input.addAttributeNameValue( Demos.DEMOS, demo.getDemos().toAttributeNameValues(), Attribute.STRUCT );
+                        manu.enterScheduler( WTourEnd.END, "8" );
                         java.lang.String result = askInterpreter( input );
+                        manu.exitScheduler( WTourEnd.END, "8" );
                         java.lang.StringBuffer message = new java.lang.StringBuffer( name + ", thank you for visiting the FCL lab and taking our tour!\n\n" );
                         message.append( "Following is a summary of your tour:\n\n" );
                         for (int i = 0; i < demoVisits.numDemoVisits(); i++) {
@@ -205,7 +224,8 @@ public class TourApp_90 implements context.arch.handler.Handler
                         }
                         message.append( "Based on your interests which you used to register with the tour guide program, we think\n" );
                         message.append( "the following demos might also be interesting to you: \n" + result );
-                        System.out.println( message.toString() );
+                        context.arch.util.SendMail sm = new context.arch.util.SendMail();
+                        sm.sendMail( ((context.arch.interpreter.IIButton2Name)server).getHostAddress(), "study.cs.hku.hk", "hwang@cs.hku.hk", email, "FCL Demo Trip Summary", message.toString() );
                     } else {
                         throw new context.arch.InvalidMethodException( Error.UNKNOWN_CALLBACK_ERROR );
                     }
@@ -217,7 +237,7 @@ public class TourApp_90 implements context.arch.handler.Handler
 
     private java.lang.String askInterpreter( context.arch.storage.AttributeNameValues input )
     {
-        context.arch.comm.DataObject result = server.askInterpreter( intHost, intPort--, intId, input );
+        context.arch.comm.DataObject result = server.askInterpreter( intHost, intPort, intId, input );
         context.arch.storage.AttributeNameValues atts = new context.arch.storage.AttributeNameValues( result );
         if (atts == null) {
             return null;
@@ -236,21 +256,6 @@ public class TourApp_90 implements context.arch.handler.Handler
     public void quit()
     {
         this.server.quit();
-    }
-
-    public static void main( java.lang.String[] argv )
-    {
-        if (argv.length == 3) {
-            System.out.println( "Attempting to create a TourApp_90 on " + DEFAULT_PORT + " for " + argv[0] );
-            context.apps.Tour.mutants.TourApp_90 ta = new context.apps.Tour.mutants.TourApp_90( argv[0], argv[1], argv[2] );
-        } else {
-            if (argv.length == 4) {
-                System.out.println( "Attempting to create a TourApp_90 on " + argv[1] + " for " + argv[0] );
-                context.apps.Tour.mutants.TourApp_90 ta = new context.apps.Tour.mutants.TourApp_90( Integer.parseInt( argv[1] ), argv[0], argv[2], argv[3] );
-            } else {
-                System.out.println( "USAGE: java TourApp_90 <userid> [port] <config file> <demo info file>" );
-            }
-        }
     }
 
 }

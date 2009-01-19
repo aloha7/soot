@@ -122,7 +122,7 @@ public class Manipulator {
 		while (position == -1) {// wait
 			long start = System.currentTimeMillis();
 			try {
-				System.err.println(threadID + cappID + " is waiting");
+//				System.err.println(threadID + cappID + " is waiting");
 				this.wait(timeout);
 //				System.err.println(threadID + cappID + " leave waiting status");
 			} catch (InterruptedException e) {
@@ -131,7 +131,7 @@ public class Manipulator {
 			}
 			long enduration = System.currentTimeMillis() - start;
 			if (enduration >= timeout) {// timeout occurs, list all uncovered drivers
-				this.printAllUncoveredDrivers();
+//				this.printAllUncoveredDrivers();
 //				System.exit(0);				
 			} else
 				position = this.checkScheduler(threadID, cappID);
@@ -310,7 +310,7 @@ public class Manipulator {
 				break;
 		}
 		if(allCovered){
-			System.err.println("All drivers in the file has been covered!");
+//			System.err.println("All drivers in the file has been covered!");
 //			System.exit(0);
 		}
 	}

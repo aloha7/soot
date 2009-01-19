@@ -22,7 +22,7 @@ public class TestSetManager {
 	public Vector testPool;
 	public Vector testSets;
 	public int SIZE_TESTPOOL = 1000;
-	public int NUMBER_TESTSET = 1;
+	public int NUMBER_TESTSET = 100;
 	public int MAX_LENGTH_TESTCASE = 10;
 	public int MIN_LENGTH_TESTCASE = 4;
 
