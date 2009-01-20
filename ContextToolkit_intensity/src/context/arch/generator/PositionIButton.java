@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.util.Hashtable;
 
+import context.arch.BaseObject;
 import context.arch.widget.Widget;
 
 import context.arch.widget.WTourRegistration;
@@ -18,8 +19,18 @@ import context.arch.widget.WTourEnd;
 import context.arch.widget.WDisplay;
 import context.arch.widget.WidgetHandles;
 import context.arch.server.STourId;
+import context.arch.storage.Attribute;
+import context.arch.storage.AttributeNameValues;
+import context.arch.subscriber.Subscriber;
 import context.apps.Tour.TourApp;
 
+import context.arch.comm.DataObject;
+import context.arch.comm.language.DecodeException;
+import context.arch.comm.language.EncodeException;
+import context.arch.comm.language.InvalidDecoderException;
+import context.arch.comm.language.InvalidEncoderException;
+import context.arch.comm.protocol.InvalidProtocolException;
+import context.arch.comm.protocol.ProtocolException;
 import context.arch.interpreter.IDemoRecommender;
 
 import context.test.contextIntensity.Manipulator;
@@ -60,6 +71,9 @@ public class PositionIButton {
 	private STourId server;
 	private Class obj;
 	private Object tour;
+	
+	//2009/1/19: used to send data
+	private static BaseObject sender;
 	
 	//2009/1/17: we need no Ant to do experiments
 	public void set(int versionNumber, int testCaseNumber, String testCaseInstance){
@@ -145,7 +159,7 @@ public class PositionIButton {
 			sensor.startSimulate(port_IDServer, testCaseInstance);
 			
 			try {
-				Thread.sleep((3)*1000);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -208,12 +222,81 @@ public class PositionIButton {
 		int index = testCase.indexOf("\t");
 		while(index > -1){
 			String event = testCase.substring(0, index);
-			new TestCaseFeedThread( event, data, "127.0.0.1", serverPort).run();
+			//2009/1/19: not use thread to save port resources and memory resources
+//			new TestCaseFeedThread(this.sender, event, data, "127.0.0.1", serverPort).run();
+			this.sendTestCase(event, data, "127.0.0.1", serverPort);
 			testCase = testCase.substring(index + "\t".length());
 			index = testCase.indexOf("\t");
 		}
 		if(testCase.length() > 0){			
-			new TestCaseFeedThread(testCase, data, "127.0.0.1", serverPort).run();
+			this.sendTestCase(testCase, data, "127.0.0.1", serverPort);
+//			new TestCaseFeedThread(this.sender, testCase, data, "127.0.0.1", serverPort).run();
+		}
+	}
+	
+	public void sendTestCase(String info,
+			IButtonData datum, String serverHosts, int serverPorts){
+		// 1.prepare data
+		Vector m = new Vector();
+		AttributeNameValues subAtts = new AttributeNameValues();
+	    subAtts.addAttributeNameValue(WTourRegistration.NAME,"Wang Huai");
+	    subAtts.addAttributeNameValue(WTourRegistration.AFFILIATION,"HKU");
+	    subAtts.addAttributeNameValue(WTourRegistration.EMAIL,"dragonwanghuai@gmail.com");
+	    AttributeNameValues atts = new AttributeNameValues();
+	    atts.addAttributeNameValue(WTourRegistration.CONTACT_INFO,subAtts,Attribute.STRUCT);		  		    			   
+	    atts.addAttributeNameValue(WTourRegistration.INTERESTS,"context,application,capture");
+	    atts.addAttributeNameValue(WTourRegistration.DISPLAY_DEVICE,"127.0.0.1");			
+		m.addElement(atts.toDataObject());
+
+		// 2.prepare callbacks
+		String callBack = "";
+		if (info.equals(WTourRegistration.UPDATE)) {
+			callBack = WTourRegistration.CLASSNAME
+					+ WTourRegistration.SPACER + "test"
+					+ WTourRegistration.SPACER + info;
+		} else if (info.equals(WTourEnd.END)) {
+			callBack = WTourEnd.CLASSNAME + WTourEnd.SPACER + "test"
+					+ WTourEnd.SPACER + info;
+		} else if ((info.equals(WTourDemo.INTEREST) || (info
+				.equals(WTourDemo.VISIT)))) {
+			callBack = WTourDemo.CLASSNAME + WTourDemo.SPACER + "test"
+					+ WTourDemo.SPACER + info;
+		}
+
+		Vector v = new Vector();
+		v.addElement(new DataObject(Subscriber.SUBSCRIBER_ID,
+				STourId.CLASSNAME + "_01020304"));
+
+		v.addElement(new DataObject(Subscriber.CALLBACK_TAG, callBack));
+		v.addElement(new DataObject(
+				AttributeNameValues.ATTRIBUTE_NAME_VALUES, m));
+		
+		// 3. package all info in DataObject
+		DataObject send = new DataObject(Subscriber.SUBSCRIPTION_CALLBACK, v);
+
+		try {
+//			System.out.println(info + " has sent");
+			PositionIButton.getInstance().sender.userRequestAsynchronous(send, Subscriber.SUBSCRIPTION_CALLBACK,
+					serverHosts, serverPorts);
+//			server.quit();
+		} catch (EncodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DecodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidDecoderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidEncoderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -228,6 +311,8 @@ public class PositionIButton {
 			String location = "test";
 			data = new IButtonData(location, currentid, Long
 					.toString(new Date().getTime()));
+			sender = new BaseObject(PositionIButton
+					.getAvailablePort());
 		}
 		return sensor;
 	}
@@ -280,16 +365,16 @@ public class PositionIButton {
 	private void startSimulate(int serverPort) {
 		//2009/1/16:
 		ContextEvent event = new ContextEvent(0, 1, WTourRegistration.UPDATE);
-		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
+		new TestCaseFeedThread( this.sender, event.context, data, "127.0.0.1", serverPort).run();
 
 		event = new ContextEvent(1, 1, WTourDemo.VISIT);
-		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
+		new TestCaseFeedThread( this.sender, event.context, data, "127.0.0.1", serverPort).run();
 		
 		event = new ContextEvent(1, 1, WTourDemo.INTEREST);
-		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
+		new TestCaseFeedThread( this.sender, event.context, data, "127.0.0.1", serverPort).run();
 		
 		event = new ContextEvent(1, 1, WTourEnd.END);
-		new TestCaseFeedThread( event.context, data, "127.0.0.1", serverPort).run();
+		new TestCaseFeedThread( this.sender, event.context, data, "127.0.0.1", serverPort).run();
 	}
 
 	

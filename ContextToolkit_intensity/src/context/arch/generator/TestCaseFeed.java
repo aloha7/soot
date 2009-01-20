@@ -1,9 +1,7 @@
 package context.arch.generator;
 
-import java.util.Hashtable;
 import java.util.Vector;
 
-import context.apps.Tour.TourApp;
 import context.arch.BaseObject;
 import context.arch.comm.DataObject;
 import context.arch.comm.language.DecodeException;
@@ -16,22 +14,19 @@ import context.arch.server.STourId;
 import context.arch.storage.Attribute;
 import context.arch.storage.AttributeNameValues;
 import context.arch.subscriber.Subscriber;
-import context.arch.util.Constants;
-import context.arch.widget.WPersonNamePresence2;
 import context.arch.widget.WTourDemo;
 import context.arch.widget.WTourEnd;
 import context.arch.widget.WTourRegistration;
-import context.arch.widget.Widget;
 
-public class TestCaseFeedThread implements Runnable {
-
-//	private Vector widgetSet;
+public class TestCaseFeed {
 	private String info;
 	private IButtonData data;
 	private String serverHost;
 	private int serverPort;
-	private BaseObject server;
-	public TestCaseFeedThread(BaseObject server,  String information,
+
+	
+	
+	public TestCaseFeed( String information,
 			IButtonData datum, String serverHosts, int serverPorts) {
 //		this.widgetSet = widgets;
 		this.info = information;
@@ -128,5 +123,4 @@ public class TestCaseFeedThread implements Runnable {
 
 		}
 //	}
-
 }

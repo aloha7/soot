@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Vector;
 
+import context.arch.generator.PositionIButton;
 import context.test.util.Constant;
 import context.test.util.Logger;
 
@@ -23,7 +24,7 @@ public class Manipulator {
 							// driver, reset it when current driver is
 							// satisfied.
 
-	private long timeout = 3 * 1000; // 3 seconds
+	private long timeout = 100; // 3 seconds
 	private static Logger log; // Cannot use this Logger anymore since it is
 								// used in other places
 	private static String driverFile = Constant.baseFolder
@@ -131,6 +132,7 @@ public class Manipulator {
 			}
 			long enduration = System.currentTimeMillis() - start;
 			if (enduration >= timeout) {// timeout occurs, list all uncovered drivers
+				PositionIButton.getInstance().stopRunning();
 //				this.printAllUncoveredDrivers();
 //				System.exit(0);				
 			} else

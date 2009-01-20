@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Vector;
 
@@ -25,7 +26,8 @@ public class TestSetManager {
 	public int NUMBER_TESTSET = 100;
 	public int MAX_LENGTH_TESTCASE = 10;
 	public int MIN_LENGTH_TESTCASE = 4;
-
+	public HashMap intensities;
+	
 	public void generateAllTestSets(String criteriaFile) {
 		this.testSets = new Vector();
 		do {
@@ -37,6 +39,50 @@ public class TestSetManager {
 		} while (testSets.size() < NUMBER_TESTSET);
 	}
 
+	public double getIntensity(String testCaseIndex){
+		return Double.parseDouble((String)this.intensities.get(testCaseIndex));
+	}
+	
+	public double analysisIntensity(String testCaseInstance){
+		Vector eventSequences = new Vector();
+		int index = testCaseInstance.indexOf("\t");
+		while(index > -1){
+			String event = testCaseInstance.substring(0, index);
+			eventSequences.add(event);
+			testCaseInstance = testCaseInstance.substring(index + "\t".length());
+			index = testCaseInstance.indexOf("\t");
+		}
+		if(testCaseInstance.length() >0){
+			eventSequences.add(testCaseInstance);
+		}
+		if(eventSequences.size() == 1){
+			return 0;
+		}else{
+			double HammingDistance = 0;
+			for(int i = 0; i < eventSequences.size() - 1; i ++){
+				String before = (String)eventSequences.get(i);
+				String after = (String)eventSequences.get(i +1);
+				if(!before.equals(after)){
+					HammingDistance ++;
+				}
+			}
+			return HammingDistance/(eventSequences.size()-1);	
+		}
+	}
+	
+	public void getIntensities(String testPoolFile){
+		this.intensities = new HashMap();
+		if(testPool==null){
+			this.loadTestPoolFromFile(testPoolFile);
+		}
+		
+		for(int i = 0; i < testPool.size(); i ++){
+			String testCaseInstance = (String)testPool.get(i);
+			intensities.put(""+ i, ""+this.analysisIntensity(testCaseInstance));
+		}
+		
+	}
+	
 	public void generateAllTestSetsAndSave(String criteriaFile, String savePath) {
 
 		StringBuilder sb = new StringBuilder();

@@ -77,8 +77,11 @@ public class TCPServerSocket implements Runnable, Cloneable {
     //  runner = null;
        
       try {
-        serverSocket.close();
-        runner.stop();
+    	  //2009/1/19: stop the server when it is not
+    	  if(!serverSocket.isClosed()){
+    		  serverSocket.close();
+    	        runner.stop();	  
+    	  }
       } catch (IOException ioe) {
           System.out.println("TCPServerSocket stopServer error: "+ioe);
       }
