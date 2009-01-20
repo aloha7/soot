@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Vector;
@@ -24,8 +25,9 @@ public class TestSetManager {
 	public Vector testSets;
 	public int SIZE_TESTPOOL = 1000;
 	public int NUMBER_TESTSET = 100;
-	public int MAX_LENGTH_TESTCASE = 10;
+	public int MAX_LENGTH_TESTCASE = 11;
 	public int MIN_LENGTH_TESTCASE = 4;
+	public int FIX_LENGTH_TESTCASE = -19;
 	public HashMap intensities;
 	
 	public void generateAllTestSets(String criteriaFile) {
@@ -41,6 +43,35 @@ public class TestSetManager {
 
 	public double getIntensity(String testCaseIndex){
 		return Double.parseDouble((String)this.intensities.get(testCaseIndex));
+	}
+	
+	private void tranverseData(String filePath, String savePath){
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(filePath));
+			String line = null;
+		
+			Vector testPool = new Vector();
+			
+			StringBuffer sb = new StringBuffer();
+			while((line = br.readLine())!= null){
+				String[] flags = line.split("\t");
+				for(int i = 2; i < flags.length; i ++){
+					sb.append(flags[i] + "\t");
+				}
+				sb.append(flags[0] + "\t" + flags[1] + "\t\n");
+			}
+			br.close();
+			
+			BufferedWriter bw = new BufferedWriter(new FileWriter(savePath));
+			bw.write(sb.toString());
+			bw.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public double analysisIntensity(String testCaseInstance){
@@ -209,20 +240,80 @@ public class TestSetManager {
 		return testPool;
 	}
 
-	// 2009/1/18: it can generate lots of unvalid test cases if no restrictions
-	// at all
+
+	/**generate a test pool whose intensities distributed evenly from 0 to 1
+	 * 
+	 * @param events
+	 * @return
+	 */
 	public Vector generateRestrictedTestPool(Vector events) {
+		Random diffRand = new Random();
+		Random chooseRand = new Random();
+		
 		testPool = new Vector();
 		while (testPool.size() < SIZE_TESTPOOL) {
 			// generate a test case
-			String testCase = this.generateRestrictedTestCase(events);
-//			System.out.println(testPool.size() + "th test case");
+			String testCase = this.generateRestrictedTestCase(events, diffRand, chooseRand);
 			// add it to the test pool if not duplicated
 			if (!testPool.contains(testCase)) {
-				testPool.add(testCase);
+				
+				double intensity = this.analysisIntensity(testCase);
+				String completeTS = "intensity:\t"+ intensity + "\t"+testCase + "\n";
+//				testCase += "\t" + "intensity:\t" + intensity + "\n";
+				if(intensity <=0.0 && intensity >=0.0){
+//					testPool.add(testCase);
+					testPool.add(completeTS);
+				}
 			}
 		}
 		return testPool;
+	}
+	
+	public String generateRestrictedTestCase(Vector events, Random diffRand, Random chooseRand){
+		
+		ArrayList testCase = new ArrayList();
+		
+		Random rand = new Random();
+		int length_TS;
+		
+		if(FIX_LENGTH_TESTCASE > 0){
+			length_TS = FIX_LENGTH_TESTCASE;
+		}else{
+			// length of test cases:[MIN_LENGTH_TESTCASE, MAX_LENGTH_TESTCASE]
+			do {
+				length_TS = rand.nextInt(this.MAX_LENGTH_TESTCASE);
+			} while (length_TS < MIN_LENGTH_TESTCASE);			
+		}
+
+		testCase.add((String)events.get(0));
+		
+//		for (int i = 0; i < events.size(); i++) {
+//			testCase.add((String)events.get(i));
+//		}
+//
+		length_TS = length_TS - testCase.size();
+		for (int i = 0; i < length_TS; i++) {
+			String latestEvent =(String)testCase.get(testCase.size()-1);
+			if(diffRand.nextBoolean()){//different
+				testCase.add(latestEvent);
+				
+			}else{ //duplicate
+				String nextEvent;
+				do{
+					int index = chooseRand.nextInt(events.size());
+					nextEvent = (String)events.get(index);
+				}while(nextEvent.equals(latestEvent));
+				testCase.add(nextEvent);
+			}
+		}
+		
+		
+		StringBuilder sb = new StringBuilder();
+		for(int i = 0; i < testCase.size(); i ++){
+			sb.append((String)testCase.get(i) + "\t");
+		}
+		
+		return sb.toString();
 	}
 
 	public String generateRestrictedTestCase(Vector events) {
@@ -235,6 +326,8 @@ public class TestSetManager {
 			length_TS = rand.nextInt(this.MAX_LENGTH_TESTCASE);
 		} while (length_TS < MIN_LENGTH_TESTCASE);
 
+		
+		
 		for (int i = 0; i < events.size(); i++) {
 			sb.append((String) events.get(i) + "\t");
 		}
@@ -312,7 +405,7 @@ public class TestSetManager {
 			if (data.get(i) instanceof Vector) {
 				sb.append(this.toString((Vector) data.get(i)));
 			} else {
-				sb.append(data.get(i) + "\n");
+				sb.append(data.get(i) +"\t");
 			}
 		}
 		return sb.toString();
@@ -324,6 +417,7 @@ public class TestSetManager {
 			String testCase = null;
 			this.testPool = new Vector();
 			while ((testCase = br.readLine()) != null) {
+				testCase = testCase.substring(0, testCase.indexOf("intensity"));
 				this.testPool.add(testCase);
 			}
 		} catch (FileNotFoundException e) {
@@ -351,6 +445,10 @@ public class TestSetManager {
 //		 manager.saveTestArtifacts(Constant.baseFolder +
 //		 "ContextIntensity/TestPool.txt", manager.testPool);
 
+//		 manager.tranverseData(Constant.baseFolder +
+//				 "ContextIntensity/TestPool.txt", Constant.baseFolder +
+//				 "ContextIntensity/TestPool_b.txt");
+		 
 		// 2. [mandatory]load test pools from files
 		manager.loadTestPoolFromFile(Constant.baseFolder
 				+ "ContextIntensity/TestPool.txt");
@@ -363,9 +461,9 @@ public class TestSetManager {
 		// manager.generateAllTestSets(Constant.baseFolder +
 		// "ContextIntensity/Drivers/Drivers_CA.txt");
 		manager.generateAllTestSetsAndSave(Constant.baseFolder
-				+ "ContextIntensity/Drivers/Drivers_CA.txt",
+				+ "ContextIntensity/Drivers/Drivers_Stoc1.txt",
 				Constant.baseFolder
-						+ "ContextIntensity/AdequateTestSet/TestSet_CA.txt");
+						+ "ContextIntensity/AdequateTestSet/TestSet_Stoc1.txt");
 
 //		Vector testSets = manager.getAdequateTestSetsFromFile(Constant.baseFolder
 //		+ "ContextIntensity/AdequateTestSet/TestSet_CA.txt");

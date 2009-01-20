@@ -99,7 +99,7 @@ public class TestManagers {
 		// 2009/1/18: use Ant can cause unexpected exceptions, we use
 		// reflections to have a
 		// 3.execute adequate test sets to see whether exceptions are thrown
-		int min_Version = 94;
+		int min_Version = 205;
 		int max_Version = 236;
 		String criteria = "CA";
 		test.executeTestSets(min_Version, max_Version, criteria, testSets);

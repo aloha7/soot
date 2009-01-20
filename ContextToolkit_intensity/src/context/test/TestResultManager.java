@@ -40,7 +40,7 @@ public class TestResultManager {
 		}
 		
 		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(analysisPath));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(savePath));
 			bw.write(sb.toString());
 			bw.close();
 		} catch (IOException e) {
@@ -87,18 +87,6 @@ public class TestResultManager {
 		return histogram;
 	}
 	
-	
-	
-	/**
-	 * analysis the fault detection performance of a specified criteria
-	 * 
-	 * @param dir
-	 * @param criteria
-	 */
-	public void getTestPerformance(String dir, String criteria) {
-
-	}
-
 	/**Failure rate of fault versions are calculated as rate of validTestSet and validTestCase 
 	 * 
 	 * @param result
@@ -147,9 +135,11 @@ public class TestResultManager {
 	public static void main(String[] args){
 		//4. analysis results
 		TestResultManager manager = new TestResultManager();
-		String analysisPath = "C:\\WangHuai\\Martin\\Eclipse3.3.1\\ContextToolkit_intensity\\test\\output\\CA";
+		String analysisPath = "C:\\WangHuai\\Martin\\Eclipse3.3.1\\ContextToolkit_intensity\\test\\output\\data\\hwang\\bin\\test\\output\\CA";
 		String criteria = "CA";
 //		HashMap result = manager.analysisResult(criteria, analysisPath);
+		String savePath = Constant.baseFolder + "test/output/summary.txt";
+		manager.analysisResult(criteria, analysisPath, savePath);
 		System.out.println("A");
 	}
 }
