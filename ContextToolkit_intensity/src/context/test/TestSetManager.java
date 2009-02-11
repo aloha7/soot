@@ -24,7 +24,7 @@ public class TestSetManager {
 	public Vector testPool;
 	public Vector testSets;
 	public int SIZE_TESTPOOL = 1000;
-	public int NUMBER_TESTSET = 100;
+	public int NUMBER_TESTSET = 500; //2009/1/19: this number must be big enough to get equal-sized test sets
 	public int MAX_LENGTH_TESTCASE = 11;
 	public int MIN_LENGTH_TESTCASE = 4;
 	public int FIX_LENGTH_TESTCASE = -19;
@@ -40,8 +40,55 @@ public class TestSetManager {
 			}
 		} while (testSets.size() < NUMBER_TESTSET);
 	}
+	
+	/**select same sized test sets to be a candidate
+	 * 
+	 * @param size: the size of candidate test set
+	 * @param testSetFile
+	 * @param saveFile: a record in this file: time  + event sequences + intensity of test set
+	 */
+	public void analysisTestSets(String size_TS, String testSetFile, String saveFile){
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(testSetFile));
+			String line = null;
+			StringBuilder sb = new StringBuilder();
+			while((line = br.readLine())!= null){
+				//line = time + size + event sequence
+				String[] strs = line.split("\t");
+				String size = strs[3];
+				if(size.equals(size_TS)){					
+					sb.append(strs[0] + "\t" + strs[1] + "\t" );
+					
+					double sumIntensity = 0; 
+					for(int i = 0; i < Integer.parseInt(size); i ++ ){
+						String testCaseIndex = strs[i + 4];
+						sumIntensity += this.getIntensity(testCaseIndex);
+						sb.append(testCaseIndex + "\t");
+					}
+					double averageIntensity = sumIntensity / Integer.parseInt(size);
+					sb.append(averageIntensity + "\n");
+				}
+				
+			}			
+			br.close();
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
+			bw.write(sb.toString());
+			bw.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	public double getIntensity(String testCaseIndex){
+		if(this.intensities == null){
+			String testPoolFile = Constant.baseFolder
+				+ "ContextIntensity/TestPool.txt";
+			this.getIntensities(testPoolFile);
+		}
 		return Double.parseDouble((String)this.intensities.get(testCaseIndex));
 	}
 	
@@ -128,10 +175,12 @@ public class TestSetManager {
 			// 1. judge whether duplicated
 			if (!testSets.contains(testSet)) {
 				// 2. save test case
+				sb.append("time:\t" + enduration + "\t");
+				sb.append("size:\t" + testSet.size() + "\t");
 				for (int i = 0; i < testSet.size(); i++) {
 					sb.append(testSet.get(i) + "\t");
 				}
-				sb.append("time:\t" + enduration + "\n");
+				sb.append("\n");
 				testSets.add(testSet);
 			}
 			System.out.println(testSets.size() + "th test set");
@@ -411,7 +460,7 @@ public class TestSetManager {
 		return sb.toString();
 	}
 
-	private void loadTestPoolFromFile(String testPoolFile) {
+	public void loadTestPoolFromFile(String testPoolFile) {
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(testPoolFile));
 			String testCase = null;
@@ -459,12 +508,21 @@ public class TestSetManager {
 //		 manager.generateAdequateTestSet(Constant.baseFolder +
 //		 "ContextIntensity/Drivers/Drivers_CA.txt");
 		// manager.generateAllTestSets(Constant.baseFolder +
-		// "ContextIntensity/Drivers/Drivers_CA.txt");
-		manager.generateAllTestSetsAndSave(Constant.baseFolder
-				+ "ContextIntensity/Drivers/Drivers_Stoc1.txt",
-				Constant.baseFolder
-						+ "ContextIntensity/AdequateTestSet/TestSet_Stoc1.txt");
+		// "ContetIntensity/Drivers/Drivers_CA.txt");
+//		manager.generateAllTestSetsAndSave(Constant.baseFolder
+//				+ "ContextIntensity/Drivers/Drivers_CA.txt",
+//				Constant.baseFolder
+//						+ "ContextIntensity/AdequateTestSet/TestSet_CA.txt");
 
+//		manager.generateAllTestSetsAndSave(Constant.baseFolder
+//				+ "ContextIntensity/Drivers/Drivers_Stoc1.txt",
+//				Constant.baseFolder
+//						+ "ContextIntensity/AdequateTestSet/TestSet_Stoc1.txt");
+
+		String testSetFile = "C:\\WangHuai\\Martin\\Eclipse3.3.1\\ContextToolkit_intensity\\ContextIntensity\\AdequateTestSet\\TestSet_Stoc1.txt";
+		String saveFile =  "C:\\WangHuai\\Martin\\Eclipse3.3.1\\ContextToolkit_intensity\\ContextIntensity\\AdequateTestSet\\TestSet_Stoc1_a.txt";
+		manager.analysisTestSets("3", testSetFile, saveFile);
+		
 //		Vector testSets = manager.getAdequateTestSetsFromFile(Constant.baseFolder
 //		+ "ContextIntensity/AdequateTestSet/TestSet_CA.txt");
 //System.out.println();
