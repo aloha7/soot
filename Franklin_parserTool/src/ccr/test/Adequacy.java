@@ -642,13 +642,13 @@ public class Adequacy {
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 //						"src/ccr/experiment/RQ1/allPolicies/allPolicies.txt");
 				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/RQ1/all1ResolvedDU/all1ResolvedDU.txt");
-				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/RQ1/all2ResolvedDU/all2ResolvedDU.txt");
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/RQ1/all1ResolvedDU/all1ResolvedDU.txt");
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/RQ1/all2ResolvedDU/all2ResolvedDU.txt");
 				
 				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets.txt");
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 

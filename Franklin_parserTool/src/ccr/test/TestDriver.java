@@ -396,7 +396,7 @@ public class TestDriver {
 //				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
 //				"src/ccr/experiment/failurerate.txt");	
 		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(
-				0, 1),
+				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
 				"src/ccr/experiment/RQ3");	
 		System.out.println(System.currentTimeMillis() - startTime);
 		
