@@ -95,7 +95,7 @@ public class OutputManager {
 	public static void main(String[] args){
 		OutputManager manager = new OutputManager();
 //		String saveFile = Constant.baseFolder + "/test/output/failedTestCase.txt";
-//		manager.getFailedTestCase(saveFile);
+//		manager.saveFailedTestCase(saveFile);
 //		String[] strs = manager.getFailedTestCase(saveFile);
 //		System.out.println("0");
 

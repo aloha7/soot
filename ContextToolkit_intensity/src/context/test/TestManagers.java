@@ -21,21 +21,17 @@ public class TestManagers {
 	public Manipulator manager;
 
 	
-	public void getOutput( int iteration){
+	public void getOutput(Vector testPool, int iteration){
 		OutputManager manager_OP = new OutputManager();
 		String saveFile = Constant.baseFolder + "/test/output/failedTestCase.txt";
-		manager_OP.getFailedTestCase(saveFile);
+//		manager_OP.saveFailedTestCase(saveFile);
 		String[] testCaseList = manager_OP.getFailedTestCase(saveFile);
 
 		for(String testCase: testCaseList){
 			int testCaseIndex = Integer.parseInt(testCase);
-			Vector testPool = new Vector();
-			testPool.add(testCaseIndex);
-			this.getOutput(0, 0, testPool, iteration);
+			this.getOutput(0, 0, testPool, iteration, testCaseIndex, testCaseIndex);
 		}
 	}
-	
-	
 	
 	/**2009/2/11: due to the non-deterministic execution of concurrent programs,
 	 * a test case may produce different output. Thus it requires multiple runnings
@@ -60,58 +56,114 @@ public class TestManagers {
 				new File(directory).mkdirs();	
 			}
 			
-			
-			for (int i = min_TestCase; i <= max_TestCase; i++) {
-				// 1.prepare the directory: delete it when it exists and
-				// recreate it
-				
-				String testCaseInstance = (String) testPool.get(i);
-				String file = directory + "/" + i + ".txt";
+			//2009/2/11: when deriving oracles, it needs not to separate different executions 
+			if(versionNumber == 0){
+				for (int i = min_TestCase; i <= max_TestCase; i++) {
+					// 1.prepare the directory: delete it when it exists and
+					// recreate it
+					
+					String testCaseInstance = (String) testPool.get(i);
+					String file = directory + "/" + i + ".txt";
 
-				// 2009/2/11: for debugging purpose
-				// System.err.println("versionNumber:" + versionNumber +
-				// "\n"
-				// + "testSetNumber:" + i + "\n" +
-				// "testCaseNumber:" + testCaseIndex + "\n" + file + "\n");
+					// 2009/2/11: for debugging purpose
+					// System.err.println("versionNumber:" + versionNumber +
+					// "\n"
+					// + "testSetNumber:" + i + "\n" +
+					// "testCaseNumber:" + testCaseIndex + "\n" + file + "\n");
 
-				for (int k = 0; k < iteration; k++) {
-					try {
-						// 5.redirect the output before execution
-						FileOutputStream outStr = new FileOutputStream(file, true);
-						BufferedOutputStream bufStr = new BufferedOutputStream(outStr);
-						PrintStream ps = new PrintStream(bufStr);
-						
-//						if(new File(file).exists()){
-//							ps = new PrintStream(
-//									new BufferedOutputStream(new FileOutputStream(
-//											file, true)));
-//						}else{
-//							ps = new PrintStream(
-//									new BufferedOutputStream(new FileOutputStream(
-//											file, false)));
-//						}
-						
-						System.setOut(ps);
-						System.setErr(ps);
-						// 6. execute the test case
-						PositionIButton.getInstance().set(0, i,
-								testCaseInstance);
-						PositionIButton.getInstance().runTestCase();
-						PositionIButton.getInstance().stopRunning();
+					for (int k = 0; k < iteration; k++) {
+						try {
+							// 5.redirect the output before execution
+							FileOutputStream outStr = new FileOutputStream(file, true);
+							BufferedOutputStream bufStr = new BufferedOutputStream(outStr);
+							PrintStream ps = new PrintStream(bufStr);
+							
+//							if(new File(file).exists()){
+//								ps = new PrintStream(
+//										new BufferedOutputStream(new FileOutputStream(
+//												file, true)));
+//							}else{
+//								ps = new PrintStream(
+//										new BufferedOutputStream(new FileOutputStream(
+//												file, false)));
+//							}
+							
+							System.setOut(ps);
+							System.setErr(ps);
+							// 6. execute the test case
+							PositionIButton.getInstance().set(0, i,
+									testCaseInstance);
+							PositionIButton.getInstance().runTestCase();
+							PositionIButton.getInstance().stopRunning();
 
-						// 7. close the output
-						outStr.close();
-						bufStr.close();
-						ps.close();
+							// 7. close the output
+							outStr.close();
+							bufStr.close();
+							ps.close();
 
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException ex) {
-						ex.printStackTrace();
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException ex) {
+							ex.printStackTrace();
+						}
+					}
+				}
+			}else{ //for faulty versions, it needs to different executions by different file names
+				for (int i = min_TestCase; i <= max_TestCase; i++) {
+					// 1.prepare the directory: delete it when it exists and
+					// recreate it
+					
+					String testCaseInstance = (String) testPool.get(i);
+					
+
+					// 2009/2/11: for debugging purpose
+					// System.err.println("versionNumber:" + versionNumber +
+					// "\n"
+					// + "testSetNumber:" + i + "\n" +
+					// "testCaseNumber:" + testCaseIndex + "\n" + file + "\n");
+
+					for (int k = 0; k < iteration; k++) {
+						try {
+							// 5.redirect the output before execution
+							String file = directory + "/" + i +"_" + k +".txt";
+							FileOutputStream outStr = new FileOutputStream(file, true);
+							BufferedOutputStream bufStr = new BufferedOutputStream(outStr);
+							PrintStream ps = new PrintStream(bufStr);
+							
+//							if(new File(file).exists()){
+//								ps = new PrintStream(
+//										new BufferedOutputStream(new FileOutputStream(
+//												file, true)));
+//							}else{
+//								ps = new PrintStream(
+//										new BufferedOutputStream(new FileOutputStream(
+//												file, false)));
+//							}
+							
+							System.setOut(ps);
+							System.setErr(ps);
+							// 6. execute the test case
+							PositionIButton.getInstance().set(0, i,
+									testCaseInstance);
+							PositionIButton.getInstance().runTestCase();
+							PositionIButton.getInstance().stopRunning();
+
+							// 7. close the output
+							outStr.close();
+							bufStr.close();
+							ps.close();
+
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException ex) {
+							ex.printStackTrace();
+						}
 					}
 				}
 			}
+			
 		}
 	}
 
@@ -218,7 +270,7 @@ public class TestManagers {
 			System.out.println(System.currentTimeMillis()-start);
 		}else if(args.length == 1){
 			iteration = Integer.parseInt(args[0]);
-			test.getOutput(iteration);
+			test.getOutput(testPool, iteration);
 		}else if(args.length ==3){
 			min_Version = Integer.parseInt(args[0]);
 			max_Version = Integer.parseInt(args[1]);
