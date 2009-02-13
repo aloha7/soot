@@ -16,9 +16,14 @@ public class ScriptManager {
 						+ begin + " " + (begin + interval -1) + " &"+"\n");
 				begin = begin + interval;
 			}while(begin < max_TestCase);
+			
+		}
+		if(min_Version == max_Version){
+			Logger.getInstance().setPath(Constant.baseFolder + "runScript_"+max_Version+".sh", false);
+		}else{
+			Logger.getInstance().setPath(Constant.baseFolder + "runScript_"+min_Version + "_" + max_Version+".sh", false);			
 		}
 		
-		Logger.getInstance().setPath(Constant.baseFolder + "runScript.sh", false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
 	}
@@ -39,8 +44,14 @@ public class ScriptManager {
 			min_TestCase = Integer.parseInt(args[3]);
 			max_TestCase = Integer.parseInt(args[4]);
 			interval = Integer.parseInt(args[5]);
+//			for(int versionNumber = min_Version; versionNumber < max_Version; versionNumber ++){
+//				manager_SC.generateExecutionScript(versionNumber, versionNumber, iteration, min_TestCase, max_TestCase, interval);
+//			}
 		}
-		manager_SC.generateExecutionScript(min_Version, max_Version, iteration, min_TestCase, max_TestCase, interval);
+			manager_SC.generateExecutionScript(min_Version, max_Version, iteration, min_TestCase, max_TestCase, interval);			
+		
+		
+		
 	}
 
 }

@@ -253,68 +253,71 @@ public class TestManagers {
 		TestManagers test = new TestManagers();
 		test.manager_TS = new TestSetManager();
 		
-		//1. 2009/2/11: get output for all faulty versions
-		String testPoolFile = Constant.baseFolder + "ContextIntensity/TestPool.txt";
-		test.manager_TS.loadTestPoolFromFile(testPoolFile);
-		Vector testPool = test.manager_TS.testPool;
-		
-		int min_Version, max_Version, iteration;
-		
-		if(args.length ==0){ //slowest but most automated
-			min_Version = 0;
-			max_Version = 236;
-			iteration = 100;
-			
-			long start = System.currentTimeMillis();
-			test.getOutput(min_Version, max_Version, testPool, iteration);
-			System.out.println(System.currentTimeMillis()-start);
-		}else if(args.length == 1){
-			iteration = Integer.parseInt(args[0]);
-			test.getOutput(testPool, iteration);
-		}else if(args.length ==3){
-			min_Version = Integer.parseInt(args[0]);
-			max_Version = Integer.parseInt(args[1]);
-			iteration = Integer.parseInt(args[2]);
-			
-			long start = System.currentTimeMillis();
-			test.getOutput(min_Version, max_Version, testPool, iteration);
-			System.out.println(System.currentTimeMillis()-start);
-			
-		}else if(args.length == 5){ 
-			//fasted, require about 40 minutes to generate 1000*100 outputs if 10 threads are opened
-			min_Version = Integer.parseInt(args[0]);
-			max_Version = Integer.parseInt(args[1]);
-			iteration = Integer.parseInt(args[2]);
-			
-			int min_TestCase = Integer.parseInt(args[3]);
-			int max_TestCase = Integer.parseInt(args[4]);
-			test.getOutput(min_Version, max_Version, testPool, iteration, min_TestCase, max_TestCase);
-		}
+//		//1. 2009/2/11: get output for all faulty versions
+//		String testPoolFile = Constant.baseFolder + "ContextIntensity/TestPool.txt";
+//		test.manager_TS.loadTestPoolFromFile(testPoolFile);
+//		Vector testPool = test.manager_TS.testPool;
+//		
+//		int min_Version, max_Version, iteration;
+//		
+//		if(args.length ==0){ //slowest but most automated
+//			min_Version = 0;
+//			max_Version = 236;
+//			iteration = 100;
+//			
+//			long start = System.currentTimeMillis();
+//			test.getOutput(min_Version, max_Version, testPool, iteration);
+//			System.out.println(System.currentTimeMillis()-start);
+//		}else if(args.length == 1){
+//			iteration = Integer.parseInt(args[0]);
+//			test.getOutput(testPool, iteration);
+//		}else if(args.length ==3){
+//			min_Version = Integer.parseInt(args[0]);
+//			max_Version = Integer.parseInt(args[1]);
+//			iteration = Integer.parseInt(args[2]);
+//			
+//			long start = System.currentTimeMillis();
+//			test.getOutput(min_Version, max_Version, testPool, iteration);
+//			System.out.println(System.currentTimeMillis()-start);
+//			
+//		}else if(args.length == 5){ 
+//			//fasted, require about 40 minutes to generate 1000*100 outputs if 10 threads are opened
+//			min_Version = Integer.parseInt(args[0]);
+//			max_Version = Integer.parseInt(args[1]);
+//			iteration = Integer.parseInt(args[2]);
+//			
+//			int min_TestCase = Integer.parseInt(args[3]);
+//			int max_TestCase = Integer.parseInt(args[4]);
+//			test.getOutput(min_Version, max_Version, testPool, iteration, min_TestCase, max_TestCase);
+//		}
 		
 		// 1. get Adequacy test sets from files
-//		String file_TS = Constant.baseFolder
-//				+ "ContextIntensity/AdequateTestSet/TestSet_CA.txt";
+		String file_TS = Constant.baseFolder
+				+ "ContextIntensity/AdequateTestSet/TestSet_CA.txt";
 //		
 //		String file_TS = Constant.baseFolder
 //		+ "ContextIntensity/AdequateTestSet/TestSet_Stoc1.txt";
 		
-//		Vector testSets = test.manager_TS.getAdequateTestSetsFromFile(file_TS);
+		Vector testSets = test.manager_TS.getAdequateTestSetsFromFile(file_TS);
 
 		// 2. set the Drivers before execution
-//		String criteriaFile = Constant.baseFolder
-//				+ "ContextIntensity/Drivers/Drivers_CA.txt";
+		String criteriaFile = Constant.baseFolder
+				+ "ContextIntensity/Drivers/Drivers_CA.txt";
 		
 //		String criteriaFile = Constant.baseFolder
 //		+ "ContextIntensity/Drivers/Drivers_Stoc1.txt";
 //		test.manager = Manipulator.getInstance(criteriaFile);
 
-		// 2009/1/18: use Ant can cause unexpected exceptions, we use
-		// reflections to have a
+		// 2009/1/18: 
 		// 3.execute adequate test sets to see whether exceptions are thrown
-//		int min_Version = 0;
-//		int max_Version = 0;
-//		String criteria = "Stoc1";
-//		test.executeTestSets(min_Version, max_Version, criteria, testSets);
+		int min_Version = 0;
+		int max_Version = 0;
+		String criteria = "CA";
+		if(args.length ==2){
+			min_Version = Integer.parseInt(args[0]);
+			max_Version = Integer.parseInt(args[1]);
+		}
+		test.executeTestSets(min_Version, max_Version, criteria, testSets);
 		System.exit(0);
 	}
 
