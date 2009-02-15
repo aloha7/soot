@@ -8,6 +8,8 @@ import java.util.*;
 import java.math.*;
 
 public class Adequacy {
+	//2009/2/15:
+	
 	
 	public static TestSet[] getTestSets(
 			String appClassName, Criterion c, TestSet testpool, int maxTrials, int num) {		
@@ -125,6 +127,7 @@ public class Adequacy {
 		return testSets;
 	}
 	
+	//2009/2/15:
 	public static void getTestSets(
 			String appClassName, Criterion c, TestSet testpool, 
 			int maxTrials, int num, String filename, int testSuiteSize) {
@@ -236,7 +239,7 @@ public class Adequacy {
 		}		
 	//	TestSet testSets[] = new TestSet[lines.size()];
 		
-		//1/16/2008:Martin:
+		//1/16/2008:Martin: the last three lines are not TestSets
 		TestSet testSets[] = new TestSet[lines.size() - 3];
 		for (int i = 0; i < lines.size() - 3; i++) {
 			testSets[i] = new TestSet((String) lines.get(i));
@@ -249,10 +252,16 @@ public class Adequacy {
 	public static TestSet getAdequacyTestSet(
 			String appClassName, Criterion c, TestSet testpool, int maxTrials, int testSuiteSize) {
 		
-		Criterion criterion = (Criterion) c.clone();
-		TestSet testSet = new TestSet();
-		TestSet visited = new TestSet();
-		int originalSize = criterion.size();
+//		Criterion criterion = (Criterion) c.clone();
+//		TestSet testSet = new TestSet();
+//		TestSet visited = new TestSet();
+//		int originalSize = criterion.size();
+		
+		//2009-2-15:
+		Criterion criterion;
+		TestSet testSet;
+		TestSet visited;
+		int originalSize;
 		
 		//1/15/2008
 		long time = System.currentTimeMillis();
@@ -329,30 +338,58 @@ public class Adequacy {
 //		}
 		
 		//version4: when a criterion is covered but the required test set has not been met, then add random test cases to this set
-		while (visited.size() < maxTrials && visited.size() < testpool.size() && 
-				criterion.size() > 0 ) {
-			String testcase = testpool.getByRandom();
-			if (!visited.contains(testcase)) {
-				visited.add(testcase);
-				String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
-										
-				if (checkCoverage(stringTrace, criterion)) {
-					testSet.add(testcase);
-				}
-			}
-		}
-		int currentSize = criterion.size();
-		testSet.setCoverage((float) (originalSize - currentSize) / (float) originalSize);
-		if(criterion.size() == 0){ // when criteria has been met, but the test set size is too small, then add random test cases to this set
-			while(testSet.size() < testSuiteSize){
+//		while (visited.size() < maxTrials && visited.size() < testpool.size() && 
+//				criterion.size() > 0 ) {
+//			String testcase = testpool.getByRandom();
+//			if (!visited.contains(testcase)) {
+//				visited.add(testcase);
+//				String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
+//										
+//				if (checkCoverage(stringTrace, criterion)) {
+//					testSet.add(testcase);
+//				}
+//			}
+//		}
+//		int currentSize = criterion.size();
+//		testSet.setCoverage((float) (originalSize - currentSize) / (float) originalSize);
+//		if(criterion.size() == 0){ // when criteria has been met, but the test set size is too small, then add random test cases to this set
+//			while(testSet.size() < testSuiteSize){
+//				String testcase = testpool.getByRandom();
+//				if (!visited.contains(testcase)) {
+//					visited.add(testcase);
+//					testSet.add(testcase);
+//				}					
+//		    }	
+//		}
+	    
+		//2009/2/15:
+		//version 5: get adequate test sets with a specified size
+		do{
+			
+			criterion = (Criterion) c.clone();
+			testSet = new TestSet();
+			visited = new TestSet();
+			originalSize = criterion.size();
+			while (visited.size() < maxTrials && visited.size() < testpool.size() && 
+					criterion.size() > 0 ) {
 				String testcase = testpool.getByRandom();
 				if (!visited.contains(testcase)) {
 					visited.add(testcase);
-					testSet.add(testcase);
-				}					
-		    }	
-		}
-	    
+					String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
+											
+					if (checkCoverage(stringTrace, criterion)) {
+						testSet.add(testcase);
+					}
+				}
+			}	
+		}while(testSet.size()!= testSuiteSize);
+		
+		
+		
+		int currentSize = criterion.size();
+		testSet.setCoverage((float) (originalSize - currentSize) / (float) originalSize);			
+	
+		
 		
 		testSet.geneTime = System.currentTimeMillis() - time;
 	//	System.out.println(c);
@@ -388,6 +425,7 @@ public class Adequacy {
 		int currentSize = criterion.size();
 		testSet.setCoverage((float) (originalSize - currentSize) / (float) originalSize);			
 	
+		
 		
 		
 		//version 2: to see the average test suite size to satisfy a specified criteria while the size of test set should less than 19
@@ -467,8 +505,12 @@ public class Adequacy {
 	//	testSetSize, instruction, testPoolStartLabel, testPoolSize
 //		argv = new String[]{"50", "together_noOrdinary"};
 		//2009-1-5
-		argv = new String[]{"50", "Context_Intensity"};
-		CFG g = new CFG("src/ccr/app/TestCFG2.java");
+//		argv = new String[]{"1", "Context_Intensity","-100","2"};
+
+//		CFG g = new CFG("src/ccr/app/TestCFG2.java");
+		//2009-2-14: run in the server, no Eclipse supports.
+		CFG g = new CFG(System.getProperty("user.dir")+"/src/ccr/app/TestCFG2.java");
+
 		//g.getAllFullResolvedDU();
 		Criterion c;
 		int testSetsSize = Integer.parseInt(argv[0]);
@@ -622,18 +664,25 @@ public class Adequacy {
 						*/
 			}else if(instruction.equals("Context_Intensity")){	
 				//generate criterion-adequate test sets
-//				c = g.getAllPolicies();
+				c = g.getAllPolicies();
+				int size = Integer.parseInt(argv[2]);
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-//						"src/ccr/experiment/allPoliciesTestSets.txt");
+//						"src/ccr/experiment/allPoliciesTestSets_20090215.txt", size);
+//				
 //				c = g.getAllKResolvedDU(1);
+//				size = Integer.parseInt(argv[3]);
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-//						"src/ccr/experiment/all1ResolvedDUTestSets.txt");
+//						"src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt",size);
+				
 //				c = g.getAllKResolvedDU(2);
+//				size = Integer.parseInt(argv[4]);
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-//						"src/ccr/experiment/all2ResolvedDUTestSets.txt");
+//						"src/ccr/experiment/all2ResolvedDUTestSets_20090215.txt", size);
+				
+				size = Integer.parseInt(argv[5]);
 //				c = g.getAllFullResolvedDU();
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-//						"src/ccr/experiment/allFullResolvedDUTestSets.txt");
+//						"src/ccr/experiment/allFullResolvedDUTestSets_20090215.txt", size);
 				
 				//execute all test sets to evaluate their fault finding performance
 				TestSet testSets[][] = new TestSet[1][];
@@ -649,10 +698,10 @@ public class Adequacy {
 //				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets.txt");
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 //						"src/ccr/experiment/RQ1/all2ResolvedDU/all2ResolvedDU.txt");
-				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets.txt");
+//				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets_20090215.txt");
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU.txt");
+						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
 			}
 		}
 		

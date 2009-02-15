@@ -85,49 +85,80 @@ public class TestDriver {
 		double detectionRate = 0;
 		int validTestSet = 0;
 		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(criterion +"_"+ appClassName + "_testSet.txt"));
-			String line = "Fault\t" + "Pass\t" + "Size\t" +"Pass/Size\t"+ "TestSet\t" + "ContextIntensity\t" + "Time\n";
 			
-			BufferedWriter bw_testcase = new BufferedWriter(new FileWriter(criterion+ "_" + appClassName + "_testcase.txt"));
-			String line_testcase = "Fault\t" + "TestSet\t"+"TestCase\t" + "Pass/Fail\t"+ "Change\t" + "Length\t" + "Time\n";
+			//2009-1-6:
+//			BufferedWriter bw = new BufferedWriter(new FileWriter(criterion +"_"+ appClassName + "_testSet.txt"));
+//			String line = "Fault\t" + "Pass\t" + "Size\t" +"Pass/Size\t"+ "TestSet\t" + "ContextIntensity\t" + "Time\n";
+//			
+//			BufferedWriter bw_testcase = new BufferedWriter(new FileWriter(criterion+ "_" + appClassName + "_testcase.txt"));
+//			String line_testcase = "Fault\t" + "TestSet\t"+"TestCase\t" + "Pass/Fail\t"+ "Change\t" + "Length\t" + "Time\n";
+//			for(int i = 0; i < testSets.length; i++){
+//				int validTestCase = 0;
+//				
+//				long startTime = System.currentTimeMillis();
+//				int size_TestSet = testSets[i].size();
+//				
+//				
+//				for(int j = 0; j < size_TestSet; j ++){
+//					String testcase = testSets[i].get(j);
+//					long startTime_testcase = System.currentTimeMillis();
+//					ApplicationResult result = (ApplicationResult)run(appClassName, testcase);
+//					long enduration_testcase = System.currentTimeMillis()-startTime_testcase;
+//					line_testcase += appClassName +"\t" + i +"\t" + testcase +"\t";
+//					if (!result.equals(run(oracleClassName, testcase))) {
+//						validTestCase ++;
+//						line_testcase += "F\t";
+//					}else
+//						line_testcase +="P\t";
+//					line_testcase +=result.moved + "\t" +result.counter + "\t" + enduration_testcase +"\n";					
+//				}
+//				
+//				
+//				long enduration = System.currentTimeMillis()- startTime;
+//				line += appClassName + "\t" + validTestCase + "\t"
+//						+ size_TestSet + "\t" + (double) validTestCase
+//						/ (double) size_TestSet + "\t" + i +"\t" + "1\t" + enduration +"\n"; 
+//				if(validTestCase > 0 )
+//					validTestSet ++;
+//				
+//			}
+			
+			
+			//2009-2-15:reshape the output
+			BufferedWriter bw = new BufferedWriter(new FileWriter(criterion +"_"+ appClassName + "_testSet.txt"));
+			StringBuilder sb = new StringBuilder();
+			sb.append("FaultyVersion" + "\t" + "TestSet" + "\t" + "#TestCase"
+					+ "\t" + "#ValidTestCase" + "\t" + "%ValidTestCase" + "\t"
+					+ "\t" + "#ValidTestSet" + "\t" + "#TestSet" + "\n");	
+			
+			
+			
 			for(int i = 0; i < testSets.length; i++){
 				int validTestCase = 0;
-				
-				long startTime = System.currentTimeMillis();
+				TestSet testSet = testSets[i];
 				int size_TestSet = testSets[i].size();
-				
-				
 				for(int j = 0; j < size_TestSet; j ++){
 					String testcase = testSets[i].get(j);
-					long startTime_testcase = System.currentTimeMillis();
 					ApplicationResult result = (ApplicationResult)run(appClassName, testcase);
-					long enduration_testcase = System.currentTimeMillis()-startTime_testcase;
-					line_testcase += appClassName +"\t" + i +"\t" + testcase +"\t";
-					if (!result.equals(run(oracleClassName, testcase))) {
+					if (!result.equals(run(oracleClassName, testcase)))
 						validTestCase ++;
-						line_testcase += "F\t";
-					}else
-						line_testcase +="P\t";
-					line_testcase +=result.moved + "\t" +result.counter + "\t" + enduration_testcase +"\n";					
 				}
+				String line = appClassName.substring(appClassName.indexOf("_")+"_".length()) + "\t" + testSet.index + "\t" + size_TestSet + "\t"
+				+ validTestCase + "\t" + (double)validTestCase/(double)size_TestSet + "\t";
 				
-				
-				long enduration = System.currentTimeMillis()- startTime;
-				line += appClassName + "\t" + validTestCase + "\t"
-						+ size_TestSet + "\t" + (double) validTestCase
-						/ (double) size_TestSet + "\t" + i +"\t" + "1\t" + enduration +"\n"; 
-				if(validTestCase > 0 )
-					validTestSet ++;
-				
+				if(validTestCase > 0)
+					line += "1" + "\t";
+				else
+					line += "0" + "\t";
+				line +="1" + "\n";
+				System.out.println(line);
+				sb.append(line);
 			}
 			
-			bw_testcase.write(line_testcase);
-			bw_testcase.flush();
-			bw_testcase.close();
 			
-			bw.write(line);
+			bw.write(sb.toString());
 			bw.flush();
-			bw.newLine();
+		
 			bw.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -175,6 +206,11 @@ public class TestDriver {
 			File versions = new File(versionFolder);
 			int versionCounter = 0;
 			
+			//2009-2-15
+//			StringBuilder sb = new StringBuilder();
+//			sb.append("FaultyVersion" + "\t" + "TestSet" + "\t" + "#TestCase"
+//					+ "\t" + "#ValidTestCase" + "\t" + "%ValidTestCase" + "\t"
+//					+ "\t" + "#ValidTestSet" + "\t" + "#TestSet" + "\n");	
 			
 			for (int i = 0; i < versions.list().length; i++) {
 				if(versions.listFiles()[i].isFile()){
@@ -183,42 +219,56 @@ public class TestDriver {
 					appClassName = APPLICATION_PACKAGE + "." + versionPackageName + "." + 
 							appClassName.substring(0, appClassName.indexOf(".java"));
 				//	1/14/2008 Martin	
-					for (int j = 0; j < testSets.length; j++) { //the length is 50
-						String line = appClassName + "\tFault detection rate";
-						System.out.println("");
-						long startTime = System.currentTimeMillis();
-						
-						//2009-1-6:context intensity
+//					for (int j = 0; j < testSets.length; j++) { //the length is 50
+//						String line = appClassName + "\tFault detection rate";
+//						System.out.println("");
+//						long startTime = System.currentTimeMillis();
+//						
+//						//2009-1-6:context intensity
+////						line = line + "\t" + test(
+////								appClassName, APPLICATION_PACKAGE + "." + 
+////								oracleClassName, testSets[j]);
+//						String criteria = new File(reportFile).getPath();
+//						criteria = criteria.substring(0, criteria.indexOf("."));
 //						line = line + "\t" + test(
 //								appClassName, APPLICATION_PACKAGE + "." + 
-//								oracleClassName, testSets[j]);
-						String criteria = new File(reportFile).getPath();
-						criteria = criteria.substring(0, criteria.indexOf("."));
-						line = line + "\t" + test(
-								appClassName, APPLICATION_PACKAGE + "." + 
-								oracleClassName, criteria, testSets[j]);
-					//	System.out.println(System.currentTimeMillis() - startTime);
-						line = line +  "\t" + "time\t" + String.valueOf((System.currentTimeMillis() - startTime));
-						
-						System.out.println(line);
-						bw.write(line);
-					//	1/14/2008 Martin
-						bw.flush();
-						bw.newLine();
-						
-					}
+//								oracleClassName, criteria, testSets[j]);
+//					//	System.out.println(System.currentTimeMillis() - startTime);
+//						line = line +  "\t" + "time\t" + String.valueOf((System.currentTimeMillis() - startTime));
+//						
+//						System.out.println(line);
+//						bw.write(line);
+//					//	1/14/2008 Martin
+//						bw.flush();
+//						bw.newLine();
+//						
+//					}
 					
 				/*	//1/14/2008:Martin
 					System.out.println(line);
 					bw.write(line);
 					bw.newLine();
 					*/
+					
+					//2009-2-15: re-generate the forms of outputs
+					for (int j = 0; j < testSets.length; j++) { //the length is 50
+						
+						
+						long startTime = System.currentTimeMillis();
+						//2009-2-15:context intensity
+						String criteria = new File(reportFile).getPath();
+						criteria = criteria.substring(0, criteria.indexOf("."));
+						test(appClassName, APPLICATION_PACKAGE + "." + oracleClassName, criteria, testSets[j]);
+
+						
+					}
+					
 				}
 			}
-			System.out.println("faulty versions number:" + versions.list().length );
-			System.out.println("test sets size:" + testSets.length);
-		//	bw.flush();
-			bw.close();
+			
+//			System.out.println("faulty versions number:" + versions.list().length );
+//			System.out.println("test sets size:" + testSets.length);
+			
 		} catch (IOException e) {
 			System.out.println(e);
 		}
