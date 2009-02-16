@@ -144,8 +144,12 @@ public class TestSet {
 	
 	public String toString() {
 		
-		return SIZE_TAG + size() + "\t" + COVERAGE_TAG + displayCoverage() + "\t" + "Time:" + String.valueOf(geneTime)
-				+ "\t" + testcases.toString();
+//		return SIZE_TAG + size() + "\t" + COVERAGE_TAG + displayCoverage() + "\t" + "Time:" + String.valueOf(geneTime)
+//				+ "\t" + testcases.toString();
+		
+		return "\t" + size() + "\t" + COVERAGE_TAG + displayCoverage() + "\t" + "Time:" + String.valueOf(geneTime)
+		+ "\t" + testcases.toString();
+
 	}
 	
 	public static void main(String argv[]) {

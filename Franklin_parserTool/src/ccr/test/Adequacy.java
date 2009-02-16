@@ -53,7 +53,7 @@ public class Adequacy {
 						
 			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
 			for (int i = 0; i < testSets.length; i++) {				
-				bw.write(testSets[i].toString());
+				bw.write(i + "\t" + testSets[i].toString());
 				bw.flush();
 				bw.newLine();
 				
@@ -500,6 +500,32 @@ public class Adequacy {
 		return testpool;
 	}
 
+	//2009-02-16:load the test pool from the file
+	public static TestSet getTestPool(String file, boolean containHeader){
+		TestSet testpool = new TestSet();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(file));
+			String str = null;
+			
+			if(containHeader){ //if the first row is the header 
+				br.readLine();
+			}
+			
+			while((str = br.readLine())!= null){
+				TestCase tc = new TestCase(str);
+				testpool.add(tc.index);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return testpool;
+	}
+	
 	/**
 	 * 
 	 * @param testCaseFile
@@ -516,6 +542,26 @@ public class Adequacy {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static void attachTSWithCI(TestSet[] testSets, String saveFile){
+		StringBuilder sb = new StringBuilder();
+		sb.append("TestSet" + "\t" + "Size" + "\t" + "Coverage" + "\t" + "CI" + "\n");
+
+		for(int j = 0; j < testSets.length; j ++){
+			TestSet ts = testSets[j];
+			double CI = Adequacy.getAverageCI(ts);
+			sb.append(ts.index + "\t" + ts.size() + "\t" + ts.coverage + "\t" + CI + "\n");
+		}
+		
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
+			bw.write(sb.toString());
+			bw.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -544,7 +590,9 @@ public class Adequacy {
 //		argv = new String[]{"50", "together_noOrdinary"};
 		//2009-1-5
 //		argv = new String[]{"1", "Context_Intensity","-100","2"};
-
+		
+		argv = new String[]{"1", "Context_Intensity"};
+		
 //		CFG g = new CFG("src/ccr/app/TestCFG2.java");
 		//2009-2-14: run in the server, no Eclipse supports.
 		CFG g = new CFG(System.getProperty("user.dir")+"/src/ccr/app/TestCFG2.java");
@@ -560,7 +608,10 @@ public class Adequacy {
 			testPoolSize = Integer.parseInt(argv[3]);
 		}
 		
-		TestSet testpool = getTestPool(testPoolStartLabel, testPoolSize);
+//		TestSet testpool = getTestPool(testPoolStartLabel, testPoolSize);
+		//2009-02-16:test pool is loaded from file
+		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/TestPool_20090216.txt";
+		TestSet testpool = getTestPool(testPoolFile, true);
 		
 		int maxTrials = 2000;
 		int[] nums = new int[]{21};
@@ -702,27 +753,27 @@ public class Adequacy {
 						*/
 			}else if(instruction.equals("Context_Intensity")){	
 				//2009-02-15:generate criterion-adequate test sets
-				c = g.getAllPolicies();
-				int size = Integer.parseInt(argv[2]);
+//				c = g.getAllPolicies();
+//				int size = Integer.parseInt(argv[2]);
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-//						"src/ccr/experiment/allPoliciesTestSets_20090215.txt", size);
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/allPoliciesTestSets_20090216.txt", size);
 //				
 //				c = g.getAllKResolvedDU(1);
 //				size = Integer.parseInt(argv[3]);
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-//						"src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt",size);
-				
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/all1ResolvedDUTestSets_20090216.txt",size);
+//				
 //				c = g.getAllKResolvedDU(2);
 //				size = Integer.parseInt(argv[4]);
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-//						"src/ccr/experiment/all2ResolvedDUTestSets_20090215.txt", size);
-				
-				size = Integer.parseInt(argv[5]);
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/all2ResolvedDUTestSets_20090216.txt", size);
+//				
+//				size = Integer.parseInt(argv[5]);
 //				c = g.getAllFullResolvedDU();
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-//						"src/ccr/experiment/allFullResolvedDUTestSets_20090215.txt", size);
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/allFullResolvedDUTestSets_20090216.txt", size);
 				
-				//execute all test sets to evaluate their fault finding performance
+				//2009-2-15: execute all test sets to evaluate their fault finding performance
 				TestSet testSets[][] = new TestSet[1][];
 //				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allPoliciesTestSets.txt");
 				String versionPackageName = "testversion";
@@ -738,21 +789,21 @@ public class Adequacy {
 //						"src/ccr/experiment/RQ1/all2ResolvedDU/all2ResolvedDU.txt");
 //				
 				//2009-2-15:re-shape the output format of testing
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
-				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
-				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
-				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allPoliciesTestSets_20090215.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/RQ1/allFullResolvedDU/allPolicies_20090215.txt");
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/RQ1/allFullResolvedDU/all1ResolvedDU_20090215.txt");
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets_20090215.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/RQ1/allFullResolvedDU/all2ResolvedDU_20090215.txt");
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets_20090215.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
 				
 				//2009-2-15:attach test set with CI information
 //				String testCaseFile = "src/ccr/experiment/CI_testcase.txt";
@@ -776,6 +827,50 @@ public class Adequacy {
 //					// TODO Auto-generated catch block
 //					e.printStackTrace();
 //				}
+				
+				//2009-02-16:regenerate test sets based on new test pool who have the evenly distributed CI, 
+				//and we have no limitations on test set sizes
+				c = g.getAllPolicies();
+				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/allPoliciesTestSets_20090216.txt");
+				
+				c = g.getAllKResolvedDU(1);
+				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/all1ResolvedDUTestSets_20090216.txt");
+				
+				c = g.getAllKResolvedDU(2);
+				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/all2ResolvedDUTestSets_20090216.txt");
+//				
+				c = g.getAllFullResolvedDU();
+				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/allFullResolvedDUTestSets_20090215.txt");
+				
+				//2009-2-16:attach test set with CI information
+				Adequacy.loadTestCase(testPoolFile);
+				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/allPoliciesTestSets_20090216.txt");
+				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/allPoliciesTestSets_20090216_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/allPolicies_20090216.txt");
+				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/all1ResolvedDUTestSets_20090216.txt");
+				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/all1ResolvedDUTestSets_20090216_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/all1ResolvedDU_20090216.txt");
+//				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/all2ResolvedDUTestSets_20090216.txt");
+				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/all2ResolvedDUTestSets_20090216_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/all2ResolvedDU_20090216.txt");
+				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/allFullResolvedDUTestSets_20090215.txt");
+				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/allFullResolvedDUTestSets_20090215_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/allFullResolvedDU_20090215.txt");
+				
+				
+				
 				
 			}
 		}
