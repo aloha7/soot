@@ -9,7 +9,7 @@ import java.math.*;
 
 public class Adequacy {
 	//2009/2/15:
-	
+	public static HashMap testCases= new HashMap();
 	
 	public static TestSet[] getTestSets(
 			String appClassName, Criterion c, TestSet testpool, int maxTrials, int num) {		
@@ -365,7 +365,6 @@ public class Adequacy {
 		//2009/2/15:
 		//version 5: get adequate test sets with a specified size
 		do{
-			
 			criterion = (Criterion) c.clone();
 			testSet = new TestSet();
 			visited = new TestSet();
@@ -499,6 +498,45 @@ public class Adequacy {
 			testpool.add("" + i);
 		}
 		return testpool;
+	}
+
+	/**
+	 * 
+	 * @param testCaseFile
+	 */
+	public static void loadTestCase(String testCaseFile){
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(testCaseFile));
+			String str = br.readLine(); //the first line is the header
+			
+			while((str = br.readLine())!=null){
+				TestCase tc = new TestCase(str);
+				Adequacy.testCases.put(tc.index, tc);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**2009-2-16:attach test sets with the average Context Intensity of its test cases
+	 * 
+	 * @param ts
+	 * @param testcaseFile
+	 * @return
+	 */
+	public static double getAverageCI(TestSet ts){
+		double avg_CI = 0.0;
+		double sum_CI = 0.0;
+		for(int i = 0; i < ts.testcases.size(); i ++){
+			String index_testcase = (String)ts.testcases.get(i);
+			sum_CI += ((TestCase)Adequacy.testCases.get(index_testcase)).CI;
+		}
+		avg_CI = sum_CI/(double)ts.testcases.size();
+		return avg_CI;
 	}
 	
 	public static void main(String argv[]) {
@@ -663,7 +701,7 @@ public class Adequacy {
 						"src/ccr/experiment/allFullResolvedDUTestSets_noOrdinary.txt");
 						*/
 			}else if(instruction.equals("Context_Intensity")){	
-				//generate criterion-adequate test sets
+				//2009-02-15:generate criterion-adequate test sets
 				c = g.getAllPolicies();
 				int size = Integer.parseInt(argv[2]);
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
@@ -694,14 +732,51 @@ public class Adequacy {
 //				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets.txt");
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 //						"src/ccr/experiment/RQ1/all1ResolvedDU/all1ResolvedDU.txt");
-//				
+				
 //				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets.txt");
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 //						"src/ccr/experiment/RQ1/all2ResolvedDU/all2ResolvedDU.txt");
 //				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets_20090215.txt");
+				//2009-2-15:re-shape the output format of testing
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
+				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
+				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
+				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
+				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
+				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_20090215.txt");
+				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+						"src/ccr/experiment/RQ1/allFullResolvedDU/allFullResolvedDU_20090215.txt");
+				
+				//2009-2-15:attach test set with CI information
+//				String testCaseFile = "src/ccr/experiment/CI_testcase.txt";
+//				Adequacy.loadTestCase(testCaseFile);
+//				StringBuilder sb = new StringBuilder();
+//				sb.append("TestSet" + "\t" + "Size" + "\t" + "Coverage" + "\t" + "CI" + "\n");
+//				
+//				String testSetFile = "src/ccr/experiment/all1ResolvedDUTestSets_20090215_CI.txt";
+//
+//				for(int j = 0; j < testSets[0].length; j ++){
+//					TestSet ts = testSets[0][j];
+//					double CI = Adequacy.getAverageCI(ts);
+//					sb.append(ts.index + "\t" + ts.size() + "\t" + ts.coverage + "\t" + CI + "\n");
+//				}
+//				
+//				try {
+//					BufferedWriter bw = new BufferedWriter(new FileWriter(testSetFile));
+//					bw.write(sb.toString());
+//					bw.close();
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+				
 			}
 		}
 		

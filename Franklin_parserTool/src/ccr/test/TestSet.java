@@ -8,8 +8,8 @@ public class TestSet {
 	
 	public static String COVERAGE_TAG = "Coverage:\t";
 	public static String SIZE_TAG = "Size:\t";
-	private Vector testcases;
-	private double coverage = 0.0;
+	public Vector testcases;
+	public double coverage = 0.0;
 	
 	//1/15/2008
 	public long geneTime; //the cost of test sets
