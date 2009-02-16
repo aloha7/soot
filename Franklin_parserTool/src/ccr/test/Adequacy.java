@@ -514,6 +514,7 @@ public class Adequacy {
 			while((str = br.readLine())!= null){
 				TestCase tc = new TestCase(str);
 				testpool.add(tc.index);
+				testCases.put(tc.index, tc);
 			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -591,7 +592,7 @@ public class Adequacy {
 		//2009-1-5
 //		argv = new String[]{"1", "Context_Intensity","-100","2"};
 		
-		argv = new String[]{"1", "Context_Intensity"};
+//		argv = new String[]{"1", "Context_Intensity"};
 		
 //		CFG g = new CFG("src/ccr/app/TestCFG2.java");
 		//2009-2-14: run in the server, no Eclipse supports.

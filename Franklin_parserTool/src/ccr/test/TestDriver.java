@@ -3,6 +3,9 @@ package ccr.test;
 import ccr.app.*;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class TestDriver {
 
@@ -160,6 +163,8 @@ public class TestDriver {
 		}
 	}
 
+	
+	
 	// 2009-1-6: for context-intensity
 	public static void test(String versionPackageName, String oracleClassName,
 			TestSet testSets[][], String reportFile) {
@@ -247,20 +252,41 @@ public class TestDriver {
 		}
 	}
 
-	// 2009-1-5: for context-intensity experiment
-	public static void getFailureRate(String versionPackageName,
-			String oracleClassName, TestSet testpool, String reportDir) {
-
+	//2009-2-16: 
+	public static void getFailureRate(String versionPackageName, String oracleClassName, TestSet testpool, String reportDir){
 		try {
 			Oracle oracle = new Oracle(APPLICATION_PACKAGE + "."
 					+ oracleClassName, testpool);
 			String versionFolder = APPLICATION_FOLDER + "/"
 					+ versionPackageName;
 			File versions = new File(versionFolder);
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append("FaultyVersion" + "\t" + "TestCase" +"\t"+ "P/F" + "\n");
+			
+			HashMap failureRate = new HashMap(); //keep all valid test cases for a specified fault
+			for(int i = 0 ; i < versions.list().length; i ++){				
+				if((versions.listFiles()[i]).isFile()){
+					String appClassName = versions.list()[i];
+					appClassName = APPLICATION_PACKAGE
+							+ "."
+							+ versionPackageName
+							+ "."
+							+ appClassName.substring(0, appClassName
+									.indexOf(".java"));
+					failureRate.put(appClassName, new ArrayList());	
+				}
+			}
+			
+			HashMap validTestCase = new HashMap(); //keep all exposed faults for a specified test case
+			for(int i = 0; i < testpool.size(); i ++){
+				validTestCase.put(testpool.get(i), new ArrayList());
+			}
+			
 			long startTime = System.currentTimeMillis();
 			for (int i = 0; i < versions.list().length; i++) {
+				//for each faulty version
 				if (versions.listFiles()[i].isFile()) {
-
 					String appClassName = versions.list()[i];
 					appClassName = APPLICATION_PACKAGE
 							+ "."
@@ -269,41 +295,150 @@ public class TestDriver {
 							+ appClassName.substring(0, appClassName
 									.indexOf(".java"));
 					int detected = 0;
-					String line = "TestCase\t" + "Changes\t" + "Length\t"
-							+ "Time\t" + "Pass/Fail\n";
+					System.out.println("Start version:" + appClassName);
 					for (int j = 0; j < testpool.size(); j++) {
 						long startTime1 = System.currentTimeMillis();
 						ApplicationResult result = (ApplicationResult) run(
 								appClassName, testpool.get(j));
 						long last = System.currentTimeMillis() - startTime1;
-						line += "" + testpool.get(j) + "\t" + result.moved
-								+ "\t" + result.counter + "\t" + last + "\t";
+						sb.append(appClassName + "\t" + testpool.get(j) + "\t");
 						if (!result.equals(oracle.getOutcome(testpool.get(j)))) {
 							detected = detected + 1;
-							line += "F\n";
+							((ArrayList)failureRate.get(appClassName)).add(testpool.get(j));
+							((ArrayList)validTestCase.get(testpool.get(j))).add(appClassName);
+							sb.append("F\n");
 						} else
-							line += "P\n";
+							sb.append("P\n");
 					}
-					line += appClassName
-							+ "\tFailure rate\t"
-							+ ((double) detected / (double) testpool.size()
-									+ "\tTime:" + String.valueOf(System
-									.currentTimeMillis()
-									- startTime));
-					System.out.println(line);
-					BufferedWriter bw = new BufferedWriter(new FileWriter(
-							reportDir + File.separator + appClassName + ".txt"));
-					bw.write(line);
-					bw.newLine();
-					bw.flush();
-					bw.close();
 				}
 			}
+			
+			
+			//detailed result
+			BufferedWriter bw = new BufferedWriter(new FileWriter(reportDir + "/detailed.txt"));
+			bw.write(sb.toString());
+			bw.close();
 
+			//failure rate of faulty version
+			bw = new BufferedWriter(new FileWriter(reportDir + "/failureRate.txt"));
+			Iterator ite = failureRate.keySet().iterator();
+			StringBuilder temp = new StringBuilder();
+			temp.append("FaultyVersion" + "\t" + "FailureRate" + "\t" + "Avg.CI.ValidTestCase" + "\n");
+			while(ite.hasNext()){ //for each faulty version
+				String faultyVersion = (String)ite.next();
+				ArrayList validTestCases = (ArrayList)failureRate.get(faultyVersion);
+				//get faulty version and failure rate
+				temp.append(faultyVersion + "\t" + (double)validTestCases.size()/(double)testpool.size() + "\t");
+				
+				//get Avg.CI of validTestCase
+				if(validTestCases.size() > 0){
+					//the failure rate of faults is not 0
+					TestSet ts = new TestSet(); 
+					for(int i = 0; i < validTestCases.size(); i ++){
+						ts.add(validTestCases.get(i)+"");
+					}
+					temp.append(Adequacy.getAverageCI(ts)+"\n");
+				}else{
+					temp.append("0.0" + "\n");
+				}
+				
+			}
+			bw.write(temp.toString());
+			bw.flush();
+			bw.close();
+			
+			//valid test cases exposed faults
+			bw = new BufferedWriter(new FileWriter(reportDir + "/validTestCases.txt"));
+			ite = validTestCase.keySet().iterator();
+			StringBuilder tmp = new StringBuilder();
+			tmp.append("TestCase" + "\t" + "#ExposedFault" + "\t" + "CI" + "\t" + "Avg.FailureRate" + "\n");
+			while(ite.hasNext()){ //for each faulty version
+				String testcase = (String)ite.next();
+				ArrayList exposedFault = (ArrayList)validTestCase.get(testcase);
+				//get test case and exposed faults
+				tmp.append(testcase + "\t" + exposedFault.size() + "\t");
+				
+				//get CI of test case
+				tmp.append(((TestCase)Adequacy.testCases.get(testcase)).CI + "\t");
+				
+				//get Avg.failure rate of exposed faults
+				double sum_failureRate = 0.0;
+				if(exposedFault.size() > 0){
+					for(int i = 0; i < exposedFault.size(); i ++){
+						String fault = (String)exposedFault.get(i);
+						sum_failureRate += (double)((ArrayList)failureRate.get(fault)).size()/(double)testpool.size();
+					}
+					tmp.append(sum_failureRate/(double)exposedFault.size()+"\n");	
+				}else{
+					tmp.append("0.0"+"\n");
+				}
+			}
+			bw.write(tmp.toString());
+			bw.flush();
+			bw.close();
 		} catch (IOException e) {
 			System.out.println(e);
 		}
+
 	}
+	
+	// 2009-1-5: for context-intensity experiment
+//	public static void getFailureRate(String versionPackageName,
+//			String oracleClassName, TestSet testpool, String reportDir) {
+//
+//		try {
+//			Oracle oracle = new Oracle(APPLICATION_PACKAGE + "."
+//					+ oracleClassName, testpool);
+//			String versionFolder = APPLICATION_FOLDER + "/"
+//					+ versionPackageName;
+//			File versions = new File(versionFolder);
+//			long startTime = System.currentTimeMillis();
+//			for (int i = 0; i < versions.list().length; i++) {
+//				if (versions.listFiles()[i].isFile()) {
+//
+//					String appClassName = versions.list()[i];
+//					appClassName = APPLICATION_PACKAGE
+//							+ "."
+//							+ versionPackageName
+//							+ "."
+//							+ appClassName.substring(0, appClassName
+//									.indexOf(".java"));
+//					int detected = 0;
+//					String line = "TestCase\t" + "Changes\t" + "Length\t"
+//							+ "Time\t" + "Pass/Fail\n";
+//					for (int j = 0; j < testpool.size(); j++) {
+//						long startTime1 = System.currentTimeMillis();
+//						ApplicationResult result = (ApplicationResult) run(
+//								appClassName, testpool.get(j));
+//						long last = System.currentTimeMillis() - startTime1;
+//						line += "" + testpool.get(j) + "\t" + result.moved
+//								+ "\t" + result.counter + "\t" + last + "\t";
+//						if (!result.equals(oracle.getOutcome(testpool.get(j)))) {
+//							detected = detected + 1;
+//							line += "F\n";
+//						} else
+//							line += "P\n";
+//					}
+//					line += appClassName
+//							+ "\tFailure rate\t"
+//							+ ((double) detected / (double) testpool.size()
+//									+ "\tTime:" + String.valueOf(System
+//									.currentTimeMillis()
+//									- startTime));
+//					System.out.println(line);
+//					BufferedWriter bw = new BufferedWriter(new FileWriter(
+//							reportDir + File.separator + appClassName + ".txt"));
+//					bw.write(line);
+//					bw.newLine();
+//					bw.flush();
+//					bw.close();
+//				}
+//			}
+//
+//		} catch (IOException e) {
+//			System.out.println(e);
+//		}
+//	}
 
 	// 2009-1-5: for context-intensity experiment
 	/*
@@ -438,10 +573,18 @@ public class TestDriver {
 		long startTime = System.currentTimeMillis();
 		// getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(
 		//				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
-		//				"src/ccr/experiment/failurerate.txt");	
-		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(
-				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
-				"src/ccr/experiment/RQ3");
+		//				"src/ccr/experiment/failurerate.txt");			
+//		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(
+//				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
+//				"src/ccr/experiment/RQ3");
+//		System.out.println(System.currentTimeMillis() - startTime);
+		
+		//2009-02-16: we re-generate all test pools such that it ensures  CI of all test cases
+		// are evenly distributed from 0.0 to 1.0
+		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/TestPool_20090216.txt";
+		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
+				"src/ccr/experiment/Context-Intensity_backup/TestHarness/");
+		
 		System.out.println(System.currentTimeMillis() - startTime);
 
 	}
