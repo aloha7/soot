@@ -1,5 +1,8 @@
 package ccr.app;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class TestCFG2 extends Application {
@@ -23,6 +26,12 @@ public class TestCFG2 extends Application {
 //	private int mode = MODE_MIX;
 	
 	private Vector queue;
+	//2009-2-15:
+	private Vector CoordinateQueue = new Vector();
+	private Vector PositionQueue = new Vector();
+	int lastPos = -1;
+	int changes = 0;
+	
 	private long timestamp;
 	private Context candidate;
 
@@ -56,7 +65,8 @@ public class TestCFG2 extends Application {
 		int cPos = -1;
 		int stay = 0;
 	//	int mode = MODE_MIX;
-		int lastPos = -1;
+		//2009-2-15: make this local variable to be global one
+//		int lastPos = -1;
 		timestamp = System.currentTimeMillis();
 		counter = 0;
 	//	double distance = 0;
@@ -738,7 +748,8 @@ public class TestCFG2 extends Application {
 	}
 
 	protected void resolve() {
-		
+		CoordinateQueue.add(this.toCoordinates(candidate));
+		PositionQueue.add(lastPos);
 		boolean consistent = true;//the context is inconsistent when it is inconsistent with any one element in the queue;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
@@ -773,15 +784,57 @@ public class TestCFG2 extends Application {
 			queue.add(0, candidate);
 		} else {
 			candidate = (Context) queue.get(0); //basically speaking, get the head of the queue if it is not consistent
+			this.changes ++;
 		}
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
 	}
 	
+	public int getChanges(Vector queue){
+		int changes = 0;
+		Object last = null;
+		Object previous = null;
+		if(queue.size() == 1){
+			changes = 0;
+		}
+		for(int i = 0; i < queue.size()-1; i ++){
+			previous = queue.get(i);
+			last = queue.get(i +1);
+			if(previous!=last)
+				changes ++;
+		}
+		return changes;
+	}
+	
 	public static void main(String argv[]) {
 		
-		String testcase = "10"; 
-		System.out.println("result = " + (new TestCFG2()).application(testcase));
-	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
+		//2009-02-15: get the context intensity for each test case
+		StringBuilder sb = new StringBuilder();
+		sb.append("TestCase" + "\t" + "length" + "\t" +"changes" + "\t" + "CI" +"\n");
+		for(int i = -500000; i < 500000; i ++){
+			String testcase = "" + i;
+			TestCFG2 ins = new TestCFG2();
+			ins.application(testcase);
+		
+			int changes = ins.getChanges(ins.PositionQueue);
+			
+			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
+					+"\t" + (double)changes/ins.PositionQueue.size() );
+			
+//			for(int j = 0; j < ins.PositionQueue.size(); j ++){
+//				sb.append(ins.PositionQueue.get(j)+"\t");
+//			}
+			sb.append("\n");
+		}
+		System.out.println(sb.toString());
+		String saveFile = "src/ccr/experiment/Context-Intensity_backup/CI_testcase_1M_0.txt";
+		
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile, false));
+			bw.write(sb.toString());
+			bw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-
 }
