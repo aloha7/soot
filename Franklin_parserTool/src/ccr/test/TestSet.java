@@ -100,6 +100,33 @@ public class TestSet {
 		return get((int) (Math.random() * (double) size()));
 	}
 	
+	//2009-02-17: generate a test case whose CI from min_CI to max_CI
+	public String getByRandom(double min_CI, double max_CI){
+		String randomTC = null;
+		double CI; 
+		if(!isEmpty()){
+			do{
+				randomTC = get((int)(Math.random()*(double)size()));
+				CI = ((TestCase)Adequacy.testCases.get(randomTC)).CI;
+			}while(CI > max_CI || CI < min_CI);
+		}
+		return randomTC;
+	}
+	
+	
+	//2009-02-17: generate a test case whose CI are not in min_CI to max_CI
+	public String getByRandomExclude(double min_CI, double max_CI){
+		String randomTC = null;
+		double CI; 
+		if(!isEmpty()){
+			do{
+				randomTC = get((int)(Math.random()*(double)size()));
+				CI = ((TestCase)Adequacy.testCases.get(randomTC)).CI;
+			}while(CI < max_CI && CI > min_CI);
+		}
+		return randomTC;
+	}
+	
 	public boolean isEmpty() {
 		
 		return testcases.isEmpty();

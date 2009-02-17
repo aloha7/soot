@@ -274,7 +274,8 @@ public class TestDriver {
 							+ "."
 							+ appClassName.substring(0, appClassName
 									.indexOf(".java"));
-					failureRate.put(appClassName, new ArrayList());	
+					//2009-2-17: re-form the appClassName to delete any redundant characters
+					failureRate.put(appClassName.substring(appClassName.indexOf("_") + "_".length()), new ArrayList());	
 				}
 			}
 			
@@ -295,17 +296,18 @@ public class TestDriver {
 							+ appClassName.substring(0, appClassName
 									.indexOf(".java"));
 					int detected = 0;
-					System.out.println("Start version:" + appClassName);
+					System.out.println("Start version:" + appClassName.substring(appClassName.indexOf("_")+"_".length()));
 					for (int j = 0; j < testpool.size(); j++) {
 						long startTime1 = System.currentTimeMillis();
 						ApplicationResult result = (ApplicationResult) run(
 								appClassName, testpool.get(j));
 						long last = System.currentTimeMillis() - startTime1;
-						sb.append(appClassName + "\t" + testpool.get(j) + "\t");
+						sb.append(appClassName.substring(appClassName.indexOf("_")+"_".length()) + "\t" + testpool.get(j) + "\t");
 						if (!result.equals(oracle.getOutcome(testpool.get(j)))) {
 							detected = detected + 1;
-							((ArrayList)failureRate.get(appClassName)).add(testpool.get(j));
-							((ArrayList)validTestCase.get(testpool.get(j))).add(appClassName);
+							String faultName = appClassName.substring(appClassName.indexOf("_")+"_".length());
+							((ArrayList)failureRate.get(faultName)).add(testpool.get(j));
+							((ArrayList)validTestCase.get(testpool.get(j))).add(appClassName.substring(appClassName.indexOf("_")+"_".length()));
 							sb.append("F\n");
 						} else
 							sb.append("P\n");
