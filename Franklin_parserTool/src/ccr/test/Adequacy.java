@@ -777,7 +777,7 @@ public class Adequacy {
 //		argv = new String[]{"1", "Context_Intensity","-100","2"};
 		
 		//2009-2-17:
-		argv = new String[]{"100", "Context_Intensity","0.1","0.3","a"};
+//		argv = new String[]{"100", "Context_Intensity","0.1","0.3","a"};
 //		argv = new String[]{"1", "Context_Intensity"};
 		
 //		CFG g = new CFG("src/ccr/app/TestCFG2.java");
@@ -797,7 +797,8 @@ public class Adequacy {
 		
 //		TestSet testpool = getTestPool(testPoolStartLabel, testPoolSize);
 		//2009-02-16:test pool is loaded from file
-		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/TestPool_20090216.txt";
+		String date = argv[4];
+		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
 		TestSet testpool = getTestPool(testPoolFile, true);
 		
 		int maxTrials = 2000;
@@ -1036,44 +1037,86 @@ public class Adequacy {
 				//2009-2-16:attach test set with CI information
 				Adequacy.loadTestCase(testPoolFile);
 				
-				//2009-2-17: generate adequate test sets from
+				//2009-2-17: generate adequate test sets from test cases with CI from 0.1 to 0.3
+//				double min_CI = Double.parseDouble(argv[2]);
+//				double max_CI = Double.parseDouble(argv[3]);
+//				c = g.getAllPolicies();
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allPoliciesTestSets.txt", min_CI, max_CI);
+//				
+//				c = g.getAllKResolvedDU(1);
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all1ResolvedDUTestSets.txt", min_CI, max_CI);
+//				
+//				c = g.getAllKResolvedDU(2);
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all2ResolvedDUTestSets.txt", min_CI, max_CI);
+//				
+//				c = g.getAllFullResolvedDU();
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//				"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allFullResolvedDUTestSets.txt", min_CI, max_CI);
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allPoliciesTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allPoliciesTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allPolicies.txt");
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all1ResolvedDUTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all1ResolvedDUTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all1ResolvedDU.txt");
+				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all2ResolvedDUTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all2ResolvedDUTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all2ResolvedDU.txt");
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allFullResolvedDUTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allFullResolvedDUTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allFullResolvedDU.txt");
+				
+				//2009-2-19: generate adequate test sets from test cases with CI from 0.2 to 0.3, 
+				//comparing with the result of 2009-02-17 we can see 
+				//whether the CI strongly correlated with testing performance.
 				double min_CI = Double.parseDouble(argv[2]);
 				double max_CI = Double.parseDouble(argv[3]);
-				c = g.getAllPolicies();
-				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allPoliciesTestSets.txt", min_CI, max_CI);
 				
-				c = g.getAllKResolvedDU(1);
-				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all1ResolvedDUTestSets.txt", min_CI, max_CI);
+//				c = g.getAllPolicies();
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets.txt", min_CI, max_CI);
+//				
+//				c = g.getAllKResolvedDU(1);
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets.txt", min_CI, max_CI);
 				
 				c = g.getAllKResolvedDU(2);
 				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all2ResolvedDUTestSets.txt", min_CI, max_CI);
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets.txt", min_CI, max_CI);
 				
 				c = g.getAllFullResolvedDU();
 				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-				"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allFullResolvedDUTestSets.txt", min_CI, max_CI);
+				"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allFullResolvedDUTestSets.txt", min_CI, max_CI);
 				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allPoliciesTestSets.txt");
-				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allPoliciesTestSets_CI.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allPolicies.txt");
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPolicies.txt");
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDU.txt");
 				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all1ResolvedDUTestSets.txt");
-				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all1ResolvedDUTestSets_CI.txt");
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets.txt");
+				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_CI.txt");
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all1ResolvedDU.txt");
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDU.txt");
 				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all2ResolvedDUTestSets.txt");
-				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all2ResolvedDUTestSets_CI.txt");
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allFullResolvedDUTestSets.txt");
+				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allFullResolvedDUTestSets_CI.txt");
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/all2ResolvedDU.txt");
-				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allFullResolvedDUTestSets.txt");
-				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allFullResolvedDUTestSets_CI.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/allFullResolvedDU.txt");
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allFullResolvedDU.txt");
 				
 			}
 		}
