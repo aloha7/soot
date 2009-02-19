@@ -163,53 +163,7 @@ public class TestDriver {
 		}
 	}
 
-	//2009-2-17:
-	public static void translateFormat(String detailFile, String saveFile, boolean containHeader){
-		try {
-			BufferedReader br =new BufferedReader(new FileReader(detailFile));
-			String str = null;
-			HashMap faults = new HashMap();
-			if(containHeader)
-				br.readLine();
-			
-			while((str = br.readLine())!= null){
-				String[] strs = str.split("\t");
-				if(strs[2].equals("F")){
-					double CI = ((TestCase)Adequacy.testCases.get(strs[1])).CI;
-					if(faults.containsKey(strs[0]))
-						((ArrayList)faults.get(strs[0])).add(CI);
-					else{
-						ArrayList temp = new ArrayList();
-						temp.add(CI);
-						faults.put(strs[0], temp);
-					}
-				}
-			}
-			
-			Iterator ite = faults.keySet().iterator();
-			StringBuilder sb = new StringBuilder();
-			while(ite.hasNext()){
-				String fault = (String)ite.next();
-				sb.append(fault.substring(fault.indexOf("_")+"_".length()) + "\t");
-				ArrayList CIs = (ArrayList)faults.get(fault);
-				for(int i = 0; i < CIs.size(); i++){
-					sb.append(CIs.get(i)+"\t");
-				}
-				sb.append("\n");
-			}
-			
-			Logger.getInstance().setPath(saveFile, false);
-			Logger.getInstance().write(sb.toString());
-			Logger.getInstance().close();
-			
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+	
 	
 	// 2009-1-6: for context-intensity
 	public static void test(String versionPackageName, String oracleClassName,
@@ -632,17 +586,6 @@ public class TestDriver {
 		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/TestPool_20090216.txt";
 //		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
 //				"src/ccr/experiment/Context-Intensity_backup/TestHarness/");
-
-		
-		//2009-02-17:
-		boolean containHeader = true;
-		Adequacy.getTestPool(testcaseFile, containHeader);
-		String detailFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/detailed.txt";
-		
-		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/detailed_faults.txt";
-		TestDriver.translateFormat(detailFile, saveFile, containHeader);
-		
-		System.out.println(System.currentTimeMillis() - startTime);
 
 	}
 
