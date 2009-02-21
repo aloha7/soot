@@ -870,25 +870,25 @@ public class TestCFG2 extends Application {
 		long startTime = System.currentTimeMillis();
 		for(int i = start; i < last; i ++){
 			String testcase = "" + i;
-			System.out.println(testcase);
+			
 			TestCFG2 ins = new TestCFG2();
 			ins.application(testcase);
-			int changes = ins.getChanges(ins.CoordinateQueue);
+			int changes = ins.getChanges(ins.CoordinateQueue, ins.ERR);
 			sb.append(testcase + "\t"+ins.CoordinateQueue.size() +"\t" + changes 
-					+"\t" + (double)changes/(ins.CoordinateQueue.size()-1));
+					+"\t" + (double)changes/(double)(ins.CoordinateQueue.size()-1));
 			sb.append("\n");
+			System.out.println(testcase);
 		}
-//		System.out.println(sb.toString());
-		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/Testcases_CI.txt";
+//		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/Testcases_CI.txt";
 		
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile, true));
-			bw.write(sb.toString());
-			bw.close();			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile, true));
+//			bw.write(sb.toString());
+//			bw.close();			
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		System.out.println(System.currentTimeMillis()-startTime);
 		
 		//2009-02-19: test whether the program is random one
