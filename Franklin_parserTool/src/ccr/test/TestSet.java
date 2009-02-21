@@ -17,6 +17,9 @@ public class TestSet {
 	//2009-2-15
 	public String index;
 	
+	//2009-2-21: replace counters
+	public int replaceCounter;
+	
 	public TestSet() {
 		
 		testcases = new Vector();
@@ -100,6 +103,21 @@ public class TestSet {
 		return get((int) (Math.random() * (double) size()));
 	}
 	
+	public String getByRandom(double min_CI, double max_CI, int maxTrial){
+		String randomTC = null;
+		double CI;
+		int count = 0;
+		if(!isEmpty()){
+			do{
+				count ++;
+				randomTC = get((int)(Math.random()*(double)size()));
+				CI = ((TestCase)Adequacy.testCases.get(randomTC)).CI;
+			}while((CI > max_CI || CI < min_CI) && count < maxTrial);
+		}
+		
+		return randomTC;
+	}
+	
 	//2009-02-17: generate a test case whose CI from min_CI to max_CI
 	public String getByRandom(double min_CI, double max_CI){
 		String randomTC = null;
@@ -175,7 +193,7 @@ public class TestSet {
 //				+ "\t" + testcases.toString();
 		
 		return "\t" + size() + "\t" + COVERAGE_TAG + displayCoverage() + "\t" + "Time:" + String.valueOf(geneTime)
-		+ "\t" + testcases.toString();
+		+ "\t" + testcases.toString() +"\t"+ "replaceCounter:" + "\t" + replaceCounter;
 
 	}
 	
