@@ -879,16 +879,16 @@ public class TestCFG2 extends Application {
 			sb.append("\n");
 			System.out.println(testcase);
 		}
-//		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/Testcases_CI.txt";
+		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/Testcases_CI.txt";
 		
-//		try {
-//			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile, true));
-//			bw.write(sb.toString());
-//			bw.close();			
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile, true));
+			bw.write(sb.toString());
+			bw.close();			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.out.println(System.currentTimeMillis()-startTime);
 		
 		//2009-02-19: test whether the program is random one
