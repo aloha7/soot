@@ -116,8 +116,6 @@ public class Adequacy {
 		return testSets;
 	}
 	
-	 
-	
 	//2009-2-17:
 	//2009-2-21:revise the test case selection strategies: add a test case if it increases the coverage or
 	//if it has a higher CI value than existing one while not decrease the coverage 
@@ -283,6 +281,221 @@ public class Adequacy {
 		testSet.replaceCounter = replaceCounter;
 		return testSet;
 	}
+	
+	//2009-02-22:
+	public static void getTestSets(
+			String appClassName, Criterion c, TestSet testpool, 
+			int maxTrials, int num, String filename, double min_CI, double max_CI, int testSuiteSize) {
+		
+		TestSet testSets[] = getTestSets(appClassName, c, testpool, maxTrials,  num, min_CI, max_CI, testSuiteSize);
+		try {
+			
+			//the Size of test set: max, min, average, std
+			int maxSize = 0;
+			int minSize = Integer.MAX_VALUE;
+			int totalSize = 0;			
+			int averageSize = 0;
+			double stdSize = 0.0;
+			
+			//the Coverage of test set:
+			double maxCoverage = 0.0;
+			double minCoverage = Double.MAX_VALUE;
+			double totalCoverage = 0.0;
+			double averageCoverage = 0.0;
+			double stdCoverage = 0.0;
+			
+			//the time of test set:
+			long maxTime = 0;
+			long minTime = Long.MAX_VALUE;
+			long totalTime = 0;
+			long averageTime = 0;
+			double stdTime = 0;
+						
+			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+			for (int i = 0; i < testSets.length; i++) {				
+				bw.write(i + "\t" + testSets[i].toString());
+				bw.flush();
+				bw.newLine();
+				
+				//size
+				int currentSize = testSets[i].size();
+				if(maxSize < currentSize)
+					maxSize = currentSize;
+				if(minSize > currentSize)
+					minSize = currentSize;
+				totalSize += currentSize;
+				
+				//coverage
+				double currentCoverage = testSets[i].getCoverage();
+				if(maxCoverage < currentCoverage)
+					maxCoverage = currentCoverage;
+				if(minCoverage > currentCoverage)
+					minCoverage = currentCoverage;
+				totalCoverage += currentCoverage;
+				
+				//time
+				long currentTime = testSets[i].geneTime;
+				if(maxTime < currentTime)
+					maxTime = currentTime;
+				if(minTime > currentTime)
+					minTime = currentTime;
+				totalTime += currentTime; 							
+			}		
+			
+			//Size, Coverage, time 
+			averageSize = totalSize / testSets.length;
+			averageCoverage = totalCoverage/testSets.length;
+			averageTime = totalTime/testSets.length;
+			
+			double tempSize = 0.0;
+			double tempCoverage = 0.0;
+			double tempTime = 0.0;
+			for (int i = 0; i < testSets.length; i++) {
+				tempSize += (testSets[i].size() - averageSize) * (testSets[i].size() - averageSize);
+				tempCoverage +=(testSets[i].getCoverage() - averageCoverage)*(testSets[i].getCoverage() - averageCoverage);
+				tempTime += (testSets[i].geneTime - averageTime)*(testSets[i].geneTime - averageTime);
+			}
+			stdSize = Math.sqrt(tempSize/testSets.length);
+			stdCoverage = Math.sqrt(tempCoverage/testSets.length);
+			stdTime = Math.sqrt(tempTime/testSets.length);
+			
+			String line = 
+					"maxSize:" + maxSize + "\t" + "minSize:" + minSize + "\t" + "averageSize:" + 
+					averageSize + "\t" + "stdSize:" + stdSize + 
+					"\n" + "maxCoverage:" + maxCoverage + "\t" + "minCoverage:" + minCoverage + "\t" + "averageCoverage:" + 
+					averageCoverage + "\t" + "stdCoverage:" + stdCoverage +
+					"\n" + "maxTime:" + maxTime + "\t" + "minTime:" + minTime + "\t" + "averageTime:" + 
+					averageTime + "\t" + "stdTime:" + stdTime;
+			
+			bw.write(line);
+			bw.flush();			
+			bw.close();
+			System.out.println("Test sets " + filename + " generated");
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+	}
+	
+	//2009-02-22:
+	public static TestSet[] getTestSets(
+			String appClassName, Criterion c, TestSet testpool, int maxTrials, int num, double min_CI, double max_CI, int testSuiteSize) {		
+		TestSet testSets[] = new TestSet[num];
+		for (int i = 0; i < num; i++) {
+			testSets[i] = getAdequacyTestSet(appClassName, c, testpool, maxTrials, min_CI, max_CI, testSuiteSize);
+			System.out.println("Test set " + i + ": " + testSets[i].toString());
+		}			
+		return testSets;
+	}
+	
+	//2009-02-22:revise the test case selection strategy: add a test case when it increases the coverage or it has a higher CI value 
+	//while not decrease the coverage
+	//when a criterion is covered but the required test set has not been met, then add random test cases to this set
+	public static TestSet getAdequacyTestSet(String appClassName, Criterion c, TestSet testpool, int maxTrials, double min_CI, double max_CI, int testSuiteSize){
+		
+		int replaceCounter = 0; //record the replace times
+		Criterion criterion = (Criterion) c.clone();
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		HashMap testcase_uniqueTraces = new HashMap(); 
+		
+		int originalSize = criterion.size();
+		while (visited.size() < maxTrials && visited.size() < testpool.size() && 
+				criterion.size() > 0 ) {
+			//first select test cases whose CI falls in [min_CI, max_CI]
+//			String testcase = testpool.getByRandom(min_CI, max_CI);
+			String testcase = testpool.getByRandom();
+			TestCase testCase = (TestCase)Adequacy.testCases.get(testcase);
+			
+			if (!visited.contains(testcase)) {
+				visited.add(testcase);
+				String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
+				
+				ArrayList uniqueCover = Adequacy.increaseCoverage(stringTrace, criterion);
+				if (uniqueCover.size() > 0) {
+					testcase_uniqueTraces.put(testcase, uniqueCover);
+					testSet.add(testcase);
+				}else{ 
+					//2009-2-21: if the test case does not increase the coverage
+					double CI =  ((TestCase)(Adequacy.testCases.get(testcase))).CI;
+
+					Vector testcases = testSet.testcases;
+					ArrayList replaced = new ArrayList(); //keep all test cases in the test set that has lower CI values in ascending orders
+
+					for(int i = 0; i < testcases.size(); i ++){ //check whether some test cases have lower CI than current ones.						
+						TestCase temp = (TestCase)Adequacy.testCases.get((String)testcases.get(i));
+						double CI_temp = temp.CI;
+						if(CI_temp<CI){ //add temp to replace queue which is sorted by ascending order of CI
+							if(replaced.size() > 0){
+								int j=0;
+								boolean added = false;
+								for(; j < replaced.size(); j++){
+									TestCase replacedTC = (TestCase)replaced.get(j);
+									double CI_replacedTC = replacedTC.CI;
+									if(CI_replacedTC > CI_temp){
+										//it is a correct place to insert current test case(ascending order): temp
+										replaced.add(j, temp);
+										added = true;
+										break;
+									}
+								}
+								if(!added){ //add it if it has not 
+									replaced.add(temp);
+								}
+							}else{
+								replaced.add(temp);
+							}
+							
+						}
+					}
+					
+					//just faciliate to compare 
+					ArrayList traceList = new ArrayList();
+					for(int k =0 ; k < stringTrace.length; k++)
+						traceList.add(stringTrace[k]);					
+					
+					for(int i = 0; i < replaced.size(); i ++){  
+						TestCase temp = (TestCase)replaced.get(i);
+						ArrayList temp_uniqueTraces = (ArrayList)testcase_uniqueTraces.get(temp.index);
+						//if a "testcase" contains all unique statements covered by "temp", 
+						//then we can safely replace "temp" with "testcase"
+						int j =0; 
+						for(; j < temp_uniqueTraces.size(); j++){
+							String unique = (String)temp_uniqueTraces.get(j);
+							if(!traceList.contains(unique))
+								break;
+						}
+						if(j ==temp_uniqueTraces.size()){ 
+							//replace "temp" with "testcase"
+							testcase_uniqueTraces.remove(temp.index);
+							testcase_uniqueTraces.put(testcase, temp_uniqueTraces);
+							
+							testSet.remove(temp.index);
+							testSet.add(testcase);
+							replaceCounter ++;
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		while(testSet.size() < testSuiteSize){
+			String testcase = testpool.getByRandom();
+			 
+			if(!visited.contains(testcase) && !testSet.contains(testcase)){
+				String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
+				Adequacy.checkCoverage(stringTrace, criterion); //remove redundant coverage
+				visited.add(testcase);
+				testSet.add(testcase);
+			}
+		}
+		int currentSize = criterion.size();
+		testSet.setCoverage((float) (originalSize - currentSize) / (float) originalSize);	
+		testSet.replaceCounter = replaceCounter;
+		return testSet;
+	}
+	
+	
 	
 	public static TestSet[] getTestSets(
 			String appClassName, Criterion c, TestSet testpool, int maxTrials, int num) {		
@@ -522,6 +735,9 @@ public class Adequacy {
 	
 	
 	//2008/8/19:modified version
+	//2009-02-22:comparing new test case selection strategy with old one with the same test suite size
+	//revise the test case selection strategy: add a test case if it increases the coverage or it 
+	//has a higher CI value while not decrease the coverage
 	public static TestSet getAdequacyTestSet(
 			String appClassName, Criterion c, TestSet testpool, int maxTrials, int testSuiteSize) {
 		
@@ -531,10 +747,10 @@ public class Adequacy {
 //		int originalSize = criterion.size();
 		
 		//2009-2-15:
-		Criterion criterion;
-		TestSet testSet;
-		TestSet visited;
-		int originalSize;
+//		Criterion criterion;
+//		TestSet testSet;
+//		TestSet visited;
+//		int originalSize;
 		
 		//1/15/2008
 		long time = System.currentTimeMillis();
@@ -637,35 +853,60 @@ public class Adequacy {
 	    
 		//2009/2/15:
 		//version 5: get adequate test sets with a specified size
-		do{
-			criterion = (Criterion) c.clone();
-			testSet = new TestSet();
-			visited = new TestSet();
-			originalSize = criterion.size();
-			while (visited.size() < maxTrials && visited.size() < testpool.size() && 
-					criterion.size() > 0 ) {
-				String testcase = testpool.getByRandom();
-				if (!visited.contains(testcase)) {
-					visited.add(testcase);
-					String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
-											
-					if (checkCoverage(stringTrace, criterion)) {
-						testSet.add(testcase);
-					}
+//		do{
+//			criterion = (Criterion) c.clone();
+//			testSet = new TestSet();
+//			visited = new TestSet();
+//			originalSize = criterion.size();
+//			while (visited.size() < maxTrials && visited.size() < testpool.size() && 
+//					criterion.size() > 0 ) {
+//				String testcase = testpool.getByRandom();
+//				if (!visited.contains(testcase)) {
+//					visited.add(testcase);
+//					String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
+//											
+//					if (checkCoverage(stringTrace, criterion)) {
+//						testSet.add(testcase);
+//					}
+//				}
+//			}	
+//		}while(testSet.size()!= testSuiteSize);
+		
+		
+		
+		//2009-02-22: randomly select test cases from test pool until the fixed test suite size is reached, 
+		Criterion criterion = (Criterion) c.clone();
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		
+		int originalSize = criterion.size();
+		while (visited.size() < maxTrials && visited.size() < testpool.size() && 
+				criterion.size() > 0 ) {
+			String testcase = testpool.getByRandom();
+			if (!visited.contains(testcase)) {
+				visited.add(testcase);
+				String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
+										
+				if (checkCoverage(stringTrace, criterion)) {
+					testSet.add(testcase);
 				}
-			}	
-		}while(testSet.size()!= testSuiteSize);
+			}
+		}
 		
-		
-		
+		while(testSet.size() < testSuiteSize){
+			String testcase = testpool.getByRandom();
+			 
+			if(!visited.contains(testcase) && !testSet.contains(testcase)){
+				String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
+				Adequacy.checkCoverage(stringTrace, criterion); //remove redundant coverage
+				visited.add(testcase);
+				testSet.add(testcase);
+			}
+		}
 		int currentSize = criterion.size();
-		testSet.setCoverage((float) (originalSize - currentSize) / (float) originalSize);			
-	
-		
-		
+		testSet.setCoverage((float) (originalSize - currentSize) / (float) originalSize);
+					
 		testSet.geneTime = System.currentTimeMillis() - time;
-	//	System.out.println(c);
-	//	System.out.println(criterion);
 		return testSet;
 	}
 	
@@ -1232,7 +1473,7 @@ public class Adequacy {
 //				//new: select test cases based on revised selection strategies
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
 //						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets.txt", min_CI, max_CI);
-				
+//				
 //				c = g.getAllKResolvedDU(1);
 //				//old selection strategies
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
@@ -1240,14 +1481,14 @@ public class Adequacy {
 //				//new selection strategies
 //				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
 //						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets.txt", min_CI, max_CI);
-//				
-				c = g.getAllKResolvedDU(2);
-				//old selection strategies
-				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old.txt");
-				//new selection strategies
-				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets.txt", min_CI, max_CI);
+////				
+//				c = g.getAllKResolvedDU(2);
+//				//old selection strategies
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old.txt");
+//				//new selection strategies
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets.txt", min_CI, max_CI);
 //				
 //				c = g.getAllFullResolvedDU();
 //				//old selection strategies
@@ -1265,7 +1506,7 @@ public class Adequacy {
 //				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets_CI.txt");
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 //						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPolicies.txt");
-				
+//				
 //				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets_old.txt");
 //				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets_old_CI.txt");
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
@@ -1275,15 +1516,15 @@ public class Adequacy {
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 //						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDU.txt");
 //				
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old.txt");
-				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old_CI.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDU_old.txt");
-				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets.txt");
-				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_CI.txt");
-				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDU.txt");
-//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDU_old.txt");
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDU.txt");
+				
 //				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allFullResolvedDUTestSets_old.txt");
 //				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allFullResolvedDUTestSets_old_CI.txt");
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
@@ -1292,6 +1533,61 @@ public class Adequacy {
 //				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allFullResolvedDUTestSets_CI.txt");
 //				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 //						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allFullResolvedDU.txt");
+				
+				//2009-02-22: fix the size of test suite to be 58, using random-repetition to compensate the small test sets
+				int fixSize_TestSet = Integer.parseInt(argv[5]);
+
+//				c = g.getAllPolicies();
+////				//old: select test cases based on old selection strategies
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets_old.txt", fixSize_TestSet);
+//				//new selection strategy
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets.txt", min_CI, max_CI, fixSize_TestSet);
+				
+//				c = g.getAllKResolvedDU(1);
+//				//old selection strategies
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets_old.txt", fixSize_TestSet);
+//				//new selection strategies
+//				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets.txt", min_CI,max_CI, fixSize_TestSet);
+//
+				c = g.getAllKResolvedDU(2);
+				//old selection strategies
+				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old.txt", fixSize_TestSet);
+				//new selection strategies
+				getTestSets("TestCFG2_ins", c, testpool, maxTrials, testSetsSize, 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets.txt", min_CI, max_CI, fixSize_TestSet);
+
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets_old.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets_old_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPolicies_old.txt");
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPolicies.txt");
+//				
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets_old.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets_old_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDU_old.txt");
+//				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets.txt");
+//				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDUTestSets_CI.txt");
+//				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDU.txt");
+////				
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old.txt");
+				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_old_CI.txt");
+				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDU_old.txt");
+				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets.txt");
+				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDUTestSets_CI.txt");
+				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all2ResolvedDU.txt");
+				
 				
 			}
 		}

@@ -18,7 +18,7 @@ public class TestSet {
 	public String index;
 	
 	//2009-2-21: replace counters
-	public int replaceCounter;
+	public int replaceCounter=0;
 	
 	public TestSet() {
 		

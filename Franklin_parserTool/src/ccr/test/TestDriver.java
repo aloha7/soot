@@ -9,8 +9,8 @@ import java.util.Iterator;
 
 public class TestDriver {
 
-	public static final int TEST_POOL_SIZE = 10000;
-	public static final int TEST_POOL_START_LABEL = -5000;
+	public static final int TEST_POOL_SIZE = 20000;
+	public static final int TEST_POOL_START_LABEL = -10000;
 	public static final String APPLICATION_FOLDER = "src/ccr/app";
 	public static final String APPLICATION_PACKAGE = "ccr.app";
 	public static final String VERSION_PACKAGE_NAME = "version";
