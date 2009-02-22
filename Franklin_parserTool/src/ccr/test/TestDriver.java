@@ -163,9 +163,6 @@ public class TestDriver {
 		}
 	}
 
-	
-	
-	// 2009-1-6: for context-intensity
 	public static void test(String versionPackageName, String oracleClassName,
 			TestSet testSets[][], String reportFile) {
 
@@ -182,7 +179,96 @@ public class TestDriver {
 					+ "\t" + "#ValidTestCase" + "\t" + "%ValidTestCase" + "\t"
 					+ "\t" + "#ValidTestSet" + "\t" + "#TestSet" + "\n");
 
-			for (int i = 0; i < versions.list().length; i++) {
+			for (int i = 0; i <versions.listFiles().length; i++) {
+				if (versions.listFiles()[i].isFile()) {
+					versionCounter++;
+					String appClassName = versions.list()[i];
+					appClassName = APPLICATION_PACKAGE
+							+ "."
+							+ versionPackageName
+							+ "."
+							+ appClassName.substring(0, appClassName
+									.indexOf(".java"));
+					// 1/14/2008 Martin
+					// for (int j = 0; j < testSets.length; j++) { //the length
+					// is 50
+					// String line = appClassName + "\tFault detection rate";
+					// System.out.println("");
+					// long startTime = System.currentTimeMillis();
+					//						
+					// //2009-1-6:context intensity
+					// // line = line + "\t" + test(
+					// // appClassName, APPLICATION_PACKAGE + "." +
+					// // oracleClassName, testSets[j]);
+					// String criteria = new File(reportFile).getPath();
+					// criteria = criteria.substring(0, criteria.indexOf("."));
+					// line = line + "\t" + test(
+					// appClassName, APPLICATION_PACKAGE + "." +
+					// oracleClassName, criteria, testSets[j]);
+					// // System.out.println(System.currentTimeMillis() -
+					// startTime);
+					// line = line + "\t" + "time\t" +
+					// String.valueOf((System.currentTimeMillis() - startTime));
+					//						
+					// System.out.println(line);
+					// bw.write(line);
+					// // 1/14/2008 Martin
+					// bw.flush();
+					// bw.newLine();
+					//						
+					// }
+
+					/*
+					 * //1/14/2008:Martin System.out.println(line);
+					 * bw.write(line); bw.newLine();
+					 */
+
+					// 2009-2-15: re-generate the forms of outputs
+					for (int j = 0; j < testSets.length; j++) { // the length is
+																// 50
+						long startTime = System.currentTimeMillis();
+						// 2009-2-15:context intensity
+						String criteria = new File(reportFile).getPath();
+						criteria = criteria.substring(0, criteria.indexOf("."));
+						sb.append(test(appClassName, APPLICATION_PACKAGE + "."
+								+ oracleClassName, criteria, testSets[j]));
+					}
+
+				}
+			}
+			bw.write(sb.toString());
+			
+			bw.close();
+
+			// System.out.println("faulty versions number:" +
+			// versions.list().length );
+			// System.out.println("test sets size:" + testSets.length);
+
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+	}
+
+	
+	// 2009-1-6: for context-intensity
+	//2009-2-22: for concurrent purpose
+	public static void test(String versionPackageName, String oracleClassName,
+			TestSet testSets[][], String reportFile, int startVersion, int endVersion ) {
+
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(reportFile));
+			String versionFolder = APPLICATION_FOLDER + "/"
+					+ versionPackageName;
+			File versions = new File(versionFolder);
+			int versionCounter = 0;
+
+			// 2009-2-15
+			StringBuilder sb = new StringBuilder();
+			sb.append("FaultyVersion" + "\t" + "TestSet" + "\t" + "#TestCase"
+					+ "\t" + "#ValidTestCase" + "\t" + "%ValidTestCase" + "\t"
+					+ "\t" + "#ValidTestSet" + "\t" + "#TestSet" + "\n");
+
+			for (int i = startVersion; i <endVersion; i++) {
 				if (versions.listFiles()[i].isFile()) {
 					versionCounter++;
 					String appClassName = versions.list()[i];
@@ -315,12 +401,11 @@ public class TestDriver {
 				}
 			}
 			
-			
 			//detailed result
 			BufferedWriter bw = new BufferedWriter(new FileWriter(reportDir + "/detailed.txt"));
 			bw.write(sb.toString());
 			bw.close();
-
+			
 			//failure rate of faulty version
 			bw = new BufferedWriter(new FileWriter(reportDir + "/failureRate.txt"));
 			Iterator ite = failureRate.keySet().iterator();
@@ -583,10 +668,14 @@ public class TestDriver {
 		
 		//2009-02-16: we re-generate all test pools such that it ensures  CI of all test cases
 		// are evenly distributed from 0.0 to 1.0
-		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/TestPool_20090216.txt";
+//		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/TestPool_20090216.txt";
 //		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
 //				"src/ccr/experiment/Context-Intensity_backup/TestHarness/");
-
+		
+		//2009-02-21:
+		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/TestPool.txt";
+		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
+				"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/");
 	}
 
 }
