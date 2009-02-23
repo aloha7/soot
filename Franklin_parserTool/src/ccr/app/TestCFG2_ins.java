@@ -40,11 +40,11 @@ public class TestCFG2_ins extends Application {
 		queue = new Vector();
 		Coordinates location = null;
 		Random rand = new Random(seed);
-		CCRScenarios scenarios = new CCRScenarios(seed);
+		CCRScenarios scenarios = new CCRScenarios(seed);//this input doesn't have any explicit meanings
 		long t;
 		Coordinates actLoc;
 		Coordinates estLoc;
-		Coordinates lastLoc;  
+		Coordinates lastLoc;
 		double dist;
 		double displace;
 		double error;
@@ -920,7 +920,7 @@ public class TestCFG2_ins extends Application {
 	private int toBoolean(double d) {
 		
 		int result = 0;
-		if (d != (double) 0) {
+		if (d != (double) 0) { //need to change this line d >= ERR
 			result = 1;
 		}
 		return result;
@@ -936,7 +936,7 @@ public class TestCFG2_ins extends Application {
 
 	protected void resolve() {
 		
-		boolean consistent = true;
+		boolean consistent = true;//the context is inconsistent when it is inconsistent with any one element in the queue;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
 			if (filterLocCons2Stay(ctx, candidate) && !funcLocDistOk(ctx, candidate)) {
@@ -975,7 +975,7 @@ public class TestCFG2_ins extends Application {
 			// Context definition
 			queue.add(0, candidate);
 		} else {
-			candidate = (Context) queue.get(0);
+			candidate = (Context) queue.get(0); //basically speaking, get the head of the queue if it is not consistent
 		}
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
 	}
