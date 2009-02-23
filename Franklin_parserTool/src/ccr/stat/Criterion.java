@@ -123,6 +123,23 @@ public class Criterion implements Cloneable {
 		return policies.contains(policy);
 	}
 	
+	public boolean removeByID(Node node, Node node1){
+		boolean result = false;
+		if(DUMap.containsKey(node)){
+			NodeSet nodes = DUMap.get(node);
+			for(int i = 0; i < nodes.size(); i++){
+				Node tmp_node = (Node)nodes.get(i);
+				if(tmp_node.index.equals(((PolicyNode)node1).policy.context)){
+					DUMap.remove(node, node1);
+					result = true;
+					break;
+				}
+			}
+		}
+		
+		return result;
+	}
+	
 	public boolean remove(Node node, Node node1) {
 		
 		boolean result = false;
@@ -161,6 +178,21 @@ public class Criterion implements Cloneable {
 			nodes.remove(node);
 			result = true;
 		}
+		return result;
+	}
+	
+	
+	public boolean removeByCtx(String ctx){
+		boolean result = false;
+		for(int i = 0; i < policies.size(); i++){
+			Policy policy = (Policy)policies.get(i);
+			if(policy.index.equals(ctx)){
+				policies.remove(policy);
+				result = true;
+				break;
+			}
+		}
+		
 		return result;
 	}
 	

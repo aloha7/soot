@@ -701,6 +701,17 @@ public class CFG implements Cloneable {
 				criterion.add(source.getResolution(name));
 			}
 		}
+		
+		//2009-02-22: important faults here: for all policies, we need to record all PolicyNode
+		//to filter all policies 
+		for (int i = 0; i < N.size(); i++) {
+			Node node = N.get(i);
+			if (node.hasContextDef()) {
+				ContextVariable context = (ContextVariable) node.getDef(0);
+				Resolution resolution = source.getResolution(context.name);
+				getPolicyNodeSet(node, resolution);;
+			}
+		}
 		return criterion;
 	}
 	
@@ -728,11 +739,10 @@ public class CFG implements Cloneable {
 	
 	public static void main(String argv[]) {
 		
-		CFG g = new CFG("src/ccr/app/SmartAirCondition.java");
-	//	CFG g = new CFG("src//ccr//app//TestCFG2.java");
-		System.out.println(g.display());
+//		CFG g = new CFG("src/ccr/app/SmartAirCondition.java");
+		CFG g = new CFG("src//ccr//app//TestCFG2.java");
+//		System.out.println(g.display());
 	//	System.out.println("DU associations: " + g.getDUAssociations());
-		
 		
 		//What's the difference between FullDemand and FullInline?        
 	/*	System.out.println("FullDemand: " + g.resolveFullDemand());

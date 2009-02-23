@@ -4,7 +4,7 @@ import ccr.app.*;
 
 public class Policy {
 	
-	private final String context;
+	public final String context;
 	public final String index;
 	public final String constraint;
 	private final String solution;

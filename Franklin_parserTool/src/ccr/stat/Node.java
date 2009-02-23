@@ -3,8 +3,8 @@ package ccr.stat;
 public class Node {
 	
 	public final String index;
-	protected final String statement;
-	protected final VariableSet Def, Use;
+	public final String statement;
+	public final VariableSet Def, Use;
 //	public NodeSet Pred, Succ;
 	
 	public Node(String id, String s, VariableSet d, VariableSet u) {
