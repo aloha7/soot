@@ -1571,7 +1571,6 @@ public class Adequacy {
 				
 				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets_old.txt");
 				Adequacy.attachTSWithCI(testSets[0], "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets_old_CI.txt");
-				
 				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 						"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPolicies_old_"+start+"_"+end+".txt", start, end);
 				testSets[0] = Adequacy.getTestSets("src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/allPoliciesTestSets.txt");

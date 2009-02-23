@@ -219,7 +219,7 @@ public class Instrument {
 		
 	//	generateVersions("TestCFG2", "experiment", TestDriver.VERSION_PACKAGE_NAME, 20);
 	//	generateVersions("TestCFG2", "experiment", "trialversion", 1, 0);
-		generateVersions("TestCFG2", "src/ccr/app", "testversion", 100, 1010);
+//		generateVersions("TestCFG2", "src/ccr/app", "testversion", 100, 1010);
 		
 	//	for (int i = 0; i < 10; i++) {
 	//		generateVersions("TestCFG2", "src/ccr/app", "testversion/version0" + i, 10, 10 * i);

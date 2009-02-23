@@ -268,7 +268,7 @@ public class TestDriver {
 					+ "\t" + "#ValidTestCase" + "\t" + "%ValidTestCase" + "\t"
 					+ "\t" + "#ValidTestSet" + "\t" + "#TestSet" + "\n");
 
-			for (int i = startVersion; i <endVersion; i++) {
+			for (int i = 0; i <versions.listFiles().length; i++) {				
 				if (versions.listFiles()[i].isFile()) {
 					versionCounter++;
 					String appClassName = versions.list()[i];
@@ -278,39 +278,9 @@ public class TestDriver {
 							+ "."
 							+ appClassName.substring(0, appClassName
 									.indexOf(".java"));
-					// 1/14/2008 Martin
-					// for (int j = 0; j < testSets.length; j++) { //the length
-					// is 50
-					// String line = appClassName + "\tFault detection rate";
-					// System.out.println("");
-					// long startTime = System.currentTimeMillis();
-					//						
-					// //2009-1-6:context intensity
-					// // line = line + "\t" + test(
-					// // appClassName, APPLICATION_PACKAGE + "." +
-					// // oracleClassName, testSets[j]);
-					// String criteria = new File(reportFile).getPath();
-					// criteria = criteria.substring(0, criteria.indexOf("."));
-					// line = line + "\t" + test(
-					// appClassName, APPLICATION_PACKAGE + "." +
-					// oracleClassName, criteria, testSets[j]);
-					// // System.out.println(System.currentTimeMillis() -
-					// startTime);
-					// line = line + "\t" + "time\t" +
-					// String.valueOf((System.currentTimeMillis() - startTime));
-					//						
-					// System.out.println(line);
-					// bw.write(line);
-					// // 1/14/2008 Martin
-					// bw.flush();
-					// bw.newLine();
-					//						
-					// }
-
-					/*
-					 * //1/14/2008:Martin System.out.println(line);
-					 * bw.write(line); bw.newLine();
-					 */
+					int faultyVersion =Integer.parseInt(appClassName.substring(appClassName.indexOf("_")+"_".length())); 
+					if(faultyVersion< startVersion || faultyVersion >= endVersion)
+						continue;
 
 					// 2009-2-15: re-generate the forms of outputs
 					for (int j = 0; j < testSets.length; j++) { // the length is
