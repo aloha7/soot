@@ -816,9 +816,9 @@ public class TestCFG2 extends Application {
 			ins.application(testcase);
 		
 			int changes = ins.getChanges(ins.PositionQueue);
-			
+			System.out.println(testcase);
 			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
-					+"\t" + (double)(changes/ins.PositionQueue.size()-1) );
+					+"\t" + (double)changes/(double)(ins.PositionQueue.size()-1)) ;
 			
 //			for(int j = 0; j < ins.PositionQueue.size(); j ++){
 //				sb.append(ins.PositionQueue.get(j)+"\t");
