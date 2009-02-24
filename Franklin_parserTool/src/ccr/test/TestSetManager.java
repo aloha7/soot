@@ -23,6 +23,54 @@ import ccr.stat.VariableSet;
 public class TestSetManager {
 	public static HashMap testCases = new HashMap();
 
+	public static void attachTSWithCI(TestSet[] testSets, String saveFile){
+		StringBuilder sb = new StringBuilder();
+		sb.append("TestSet" + "\t" + "Size" + "\t" + "Coverage" + "\t" + "CI" + "\n");
+
+		for(int j = 0; j < testSets.length; j ++){
+			TestSet ts = testSets[j];
+			double CI = Adequacy.getAverageCI(ts);
+			sb.append(ts.index + "\t" + ts.size() + "\t" + ts.coverage + "\t" + CI + "\n");
+		}
+		
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
+			bw.write(sb.toString());
+			bw.close();
+			System.out.println(saveFile + " has been generated");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**2009-02-22: load test sets from files
+	 * 
+	 * @param filename
+	 * @return
+	 */
+	public static TestSet[] getTestSets(String filename) {
+		Vector lines = new Vector();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(filename));
+			String line = br.readLine();
+			while (line != null) {
+				lines.add(line);
+				line = br.readLine();
+			}
+			br.close();
+		} catch (IOException e) {
+			System.out.println(e);
+		}		
+		
+		//1/16/2009:Martin: the last three lines are not TestSets
+		TestSet testSets[] = new TestSet[lines.size() - 3];
+		for (int i = 0; i < lines.size() - 3; i++) {
+			testSets[i] = new TestSet((String) lines.get(i));
+		}
+		return testSets;
+	}
+	
 	//2009-02-22:
 	public static TestSet getRandomTestSet(String appClassName,
 			TestSet testpool, int testSuiteSize) {
@@ -753,8 +801,15 @@ public class TestSetManager {
 	private static boolean checkCoverage(String stringTrace[],
 			Criterion criterion) {
 		Node trace[] = new Node[stringTrace.length];
+		int policyNodes =0 ;
 		for (int i = 0; i < trace.length; i++) {
 			trace[i] = NodeIndex.getInstance().get(stringTrace[i]);
+			if( stringTrace[i].contains(":")){
+				if(trace[i] instanceof PolicyNode){
+					policyNodes ++;	
+				}
+				
+			}
 		}
 		boolean effective = false;
 
@@ -931,7 +986,7 @@ public class TestSetManager {
 		}
 	}
 
-	public static void getTestSets(String appClassName, Criterion c,
+	public static TestSet[] getTestSets(String appClassName, Criterion c,
 			TestSet testpool, int maxTrials, int testSetNum, double min_CI,
 			double max_CI, String newOrOld, String randomOrCriteria,
 			int testSuiteSize, String saveFile) {
@@ -942,6 +997,10 @@ public class TestSetManager {
 					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
 							appClassName, c, testpool, maxTrials, min_CI,
 							max_CI);
+					
+					//2009-02-24: set the index of testSets					
+					testSets[i].index = ""+ i; 
+					
 					System.out.println("Test set " + i + ": "
 							+ testSets[i].toString());
 				}
@@ -950,6 +1009,10 @@ public class TestSetManager {
 					testSets[i] = TestSetManager
 							.getAdequacyTestSet_conventional(appClassName, c,
 									testpool, maxTrials);
+					
+					//2009-02-24: set the index of testSets					
+					testSets[i].index = ""+ i; 
+					
 					System.out.println("Test set " + i + ": "
 							+ testSets[i].toString());
 				}
@@ -961,6 +1024,10 @@ public class TestSetManager {
 							.getAdequacyTestSet_refined_fixSize(appClassName,
 									c, testpool, maxTrials, min_CI, max_CI,
 									testSuiteSize, randomOrCriteria);
+					
+					//2009-02-24: set the index of testSets					
+					testSets[i].index = ""+ i; 
+					
 					System.out.println("Test set " + i + ": "
 							+ testSets[i].toString());
 				}
@@ -970,13 +1037,17 @@ public class TestSetManager {
 							.getAdequacyTestSet_conventional_fixSize(
 									appClassName, c, testpool, maxTrials,
 									testSuiteSize, randomOrCriteria);
+					
+					//2009-02-24: set the index of testSets					
+					testSets[i].index = ""+ i; 
+					
 					System.out.println("Test set " + i + ": "
 							+ testSets[i].toString());
 				}
 			}
 		}
 		TestSetManager.saveTestSets(testSets, saveFile);
-
+		return testSets;
 	}
 
 	/**args[0]: the number of adequate test sets(100); args[1]:instruction(Context_Intensity);
@@ -1051,10 +1122,12 @@ public class TestSetManager {
 					+ ".txt";
 			}
 			
-			TestSetManager.getTestSets(appClassName, c, testpool,
+			testSets[0] = TestSetManager.getTestSets(appClassName, c, testpool,
 					maxTrials, testSetNum, min_CI, max_CI, oldOrNew,
 					randomOrCriterion, testSuiteSize, saveFile);
 			
+			saveFile = saveFile.substring(0, saveFile.indexOf(".txt")) + "_CI.txt";
+			TestSetManager.attachTSWithCI(testSets[0], saveFile);
 		}
 	}
 }
