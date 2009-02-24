@@ -5,8 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-import ccr.test.Logger;
-
 public class TestCFG2 extends Application {
 	
 //	private final int PATH_LEN = /*100*/100;  // Length of a random path
@@ -791,151 +789,52 @@ public class TestCFG2 extends Application {
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
 	}
 	
-	//2009-02-15
 	public int getChanges(Vector queue){
 		int changes = 0;
 		Object last = null;
 		Object previous = null;
 		if(queue.size() == 1){
 			changes = 0;
-		}else{
-			for(int i = 0; i < queue.size()-1; i ++){
-				previous = queue.get(i);
-				last = queue.get(i +1);
-				if(previous!=last)
-					changes ++;
-			}	
 		}
-		
-		return changes;
-	}
-	
-	//
-	public int getChanges(Vector queue, double error){
-		int changes = 0;
-		if(queue.size() == 1)
-			changes = 0;
-		else{
-			Coordinates previous, last;
-			for(int i = 0; i < queue.size() -1; i++){
-				previous = (Coordinates)queue.get(i);
-				last = (Coordinates)queue.get(i +1); 
-				if(Coordinates.calDist(previous, last) > error)
-					changes ++;
-			}
+		for(int i = 0; i < queue.size()-1; i ++){
+			previous = queue.get(i);
+			last = queue.get(i +1);
+			if(previous!=last)
+				changes ++;
 		}
-		
 		return changes;
 	}
 	
 	public static void main(String argv[]) {
-		//2009-02-15: get the context intensity for each test case
-//		StringBuilder sb = new StringBuilder();
-//		sb.append("TestCase" + "\t" + "length" + "\t" +"changes" + "\t" + "CI" +"\n");
-//		int start = 400000;
-//		int last = 500000;
-//		for(int i = start; i < last; i ++){
-//			String testcase = "" + i;
-//			System.out.println(testcase);
-//			TestCFG2 ins = new TestCFG2();
-//			ins.application(testcase);
-//		
-//			int changes = ins.getChanges(ins.PositionQueue);
-//			
-//			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
-//					+"\t" + (double)changes/(ins.PositionQueue.size()-1));
-//			
-////			for(int j = 0; j < ins.PositionQueue.size(); j ++){
-////				sb.append(ins.PositionQueue.get(j)+"\t");
-////			}
-//			sb.append("\n");
-//		}
-//		System.out.println(sb.toString());
-//		String saveFile = "src/ccr/experiment/Context-Intensity_backup/CI_testcase_1M_5.txt";
-//		
-//		try {
-//			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile, false));
-//			bw.write(sb.toString());
-//			bw.close();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 		
-		//2009-02-20:get the context intensity of each test case
+		//2009-02-15: get the context intensity for each test case
 		StringBuilder sb = new StringBuilder();
 		sb.append("TestCase" + "\t" + "length" + "\t" +"changes" + "\t" + "CI" +"\n");
-		int start = -10000;
-		int last = 10000;
-		long startTime = System.currentTimeMillis();
-		
-		
-		for(int i = start; i < last; i ++){
+		for(int i = -10000; i < 10000; i ++){
 			String testcase = "" + i;
-		
 			TestCFG2 ins = new TestCFG2();
 			ins.application(testcase);
+		
 			int changes = ins.getChanges(ins.PositionQueue);
+			
 			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
-					+"\t" + (double)changes/(double)(ins.PositionQueue.size()-1));
+					+"\t" + (double)(changes/ins.PositionQueue.size()-1) );
+			
+//			for(int j = 0; j < ins.PositionQueue.size(); j ++){
+//				sb.append(ins.PositionQueue.get(j)+"\t");
+//			}
 			sb.append("\n");
-			System.out.println(testcase);
 		}
-		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/Testcases_CI.txt";
+		System.out.println(sb.toString());
+		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/TestPool.txt";
 		
 		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile, true));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile, false));
 			bw.write(sb.toString());
-			bw.close();			
+			bw.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println(System.currentTimeMillis()-startTime);
-		
-		//2009-02-19: test whether the program is random one
-//		TestCFG2 ins = new TestCFG2();
-//		String testcase = "999";
-//		int loops = 10000;
-//		for(int i = 0; i < loops; i ++){
-//			ApplicationResult result = (ApplicationResult)ins.application(testcase);
-////			int changes = ins.getChanges(ins.PositionQueue);
-////			
-////			System.out.println(i + "\t"+ins.PositionQueue.size() +"\t" + changes+ "\t" + (double)changes/(ins.PositionQueue.size()-1));	
-////			changes = ins.getChanges(ins.CoordinateQueue, ins.ERR);
-////			System.out.println(i + "\t" + ins.CoordinateQueue.size() + "\t" + changes+ "\t" + (double)changes/(ins.CoordinateQueue.size()-1));
-//			if(result.moved!=12 || result.reliable !=1){
-//				System.out.println("moved: " + result.moved + " reliable: " + result.reliable);	
-//			}
-//			
-//		}
-		
-		//2009-02-20:check whether the program is a random one 
-//		StringBuilder sb = new StringBuilder();
-//		int lowerBound = -500000;
-//		int upperBound = 500000;
-//		int loops = 10000;
-//		sb.append("Non-deterministical test case is:");
-//		for(int i = lowerBound; i < upperBound; i ++){
-//			int firstMove = 0;
-//			int firstReliable = 0;
-//			for(int j = 0; j < loops; j ++){
-//				ApplicationResult result = (ApplicationResult)ins.application(""+i);
-//				
-//				if(j!=0){
-//					if(result.moved!=firstMove || result.reliable !=firstReliable){
-//						sb.append(i + "\t" + "moved: " + result.moved + " reliable: " + result.reliable+"\n");	
-//					}	
-//				}else{
-//					firstMove = result.moved;
-//					firstReliable = result.reliable;
-//				}
-//			}
-//		}
-//		
-//		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/RandomTest.txt";
-//		Logger.getInstance().setPath(saveFile, false);
-//		Logger.getInstance().write(sb.toString());
-//		Logger.getInstance().close();
 	}
 }
