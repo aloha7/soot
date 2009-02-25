@@ -165,7 +165,7 @@ public class TestManager {
 		
 		int startVersion = 1;
 		int endVersion = 141;
-		String date = "20090223";
+		String date = "20090225";
 		if(args.length==3){
 			startVersion = Integer.parseInt(args[0]);
 			endVersion = Integer.parseInt(args[1]);
@@ -173,7 +173,7 @@ public class TestManager {
 		}
 		
 		//1.generate test pool
-		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/TestPool.txt";
+		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
 		TestSet testpool = Adequacy.getTestPool(testcaseFile, true);
 
 		//2.get failure rate of each faulty versions
