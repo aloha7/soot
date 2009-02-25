@@ -29,73 +29,97 @@ public class ExecutionManager {
 						+ "<max_CI(0.9)> <directory(20090222)> <testing criteria(AllPolicies, All1ResolvedDU, All2ResolvedDU)>"
 						+ "<TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>[min_FaultyVersion][max_FaultyVersion]");
 
+		if(args.length == 11){
+			int testSetNum = Integer.parseInt(args[0]);
+			String instruction = args[1];
+			double min_CI = Double.parseDouble(args[2]);
+			double max_CI = Double.parseDouble(args[3]);
 
-		int testSetNum = Integer.parseInt(args[0]);
-		String instruction = args[1];
-		double min_CI = Double.parseDouble(args[2]);
-		double max_CI = Double.parseDouble(args[3]);
+			String date = args[4];
+			String criterion = args[5];
+			int testSuiteSize = Integer.parseInt(args[6]);
+			String oldOrNew = args[7];
+			String randomOrCriterion = args[8];
+			int start = 0;
+			int end = 140;
+			if (args.length > 8) {
+				start = Integer.parseInt(args[9]);
+				end = Integer.parseInt(args[10]);
+			}
 
-		String date = args[4];
-		String criterion = args[5];
-		int testSuiteSize = Integer.parseInt(args[6]);
-		String oldOrNew = args[7];
-		String randomOrCriterion = args[8];
-		int start = 1;
-		int end = 141;
-		if (args.length > 8) {
-			start = Integer.parseInt(args[9]);
-			end = Integer.parseInt(args[10]);
-		}
+			CFG g = new CFG(System.getProperty("user.dir")
+					+ "/src/ccr/app/TestCFG2.java");
+			Criterion c;
 
-		CFG g = new CFG(System.getProperty("user.dir")
-				+ "/src/ccr/app/TestCFG2.java");
-		Criterion c;
+			// 2009-2-21: revise the test case selection strategies: add a test case
+			// into a test set
+			// if it can increase the cumulative coverage or it has higher CI value
+			// than existing one
+			// while not decrease the coverage
 
-		// 2009-2-21: revise the test case selection strategies: add a test case
-		// into a test set
-		// if it can increase the cumulative coverage or it has higher CI value
-		// than existing one
-		// while not decrease the coverage
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestPool.txt";
+			TestSet testpool = TestSetManager.getTestPool(testPoolFile, true);
 
-		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/TestPool.txt";
-		TestSet testpool = TestSetManager.getTestPool(testPoolFile, true);
+			String testSetFile = null; 
+			int maxTrials = 2000;
+			if (instruction.equals("Context_Intensity")) {
+				Adequacy.loadTestCase(testPoolFile);
 
-		String testSetFile = null; 
-		int maxTrials = 2000;
-		if (instruction.equals("Context_Intensity")) {
+				// 2009-02-22: fix the size of test suite to be 58, using
+				// random-repetition to compensate the small test sets
+				
+				TestSet[][] testSets = new TestSet[1][];
+
+				if(testSuiteSize < 0){	
+					testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date
+						+ "/"+criterion+"TestSets_"
+						+ oldOrNew
+						+ ".txt";	
+				}else{
+					testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date
+						+ "/"+criterion+"TestSets_"
+						+ oldOrNew+"_"+randomOrCriterion + "_" + testSuiteSize
+						+ ".txt";
+				}
+			}
+			
+			TestSet testSets[][] = new TestSet[1][];
+			testSets[0] = Adequacy.getTestSets(testSetFile);
+			
+			String versionPackageName = "testversion";
+			
+			String saveFile = testSetFile.substring(0, testSetFile.indexOf(".")) + "_" + start + "_" + end + ".txt";
+			
+			TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+					saveFile, start, end);
+	
+		}else if(args.length==5){
+			int testSetNum = Integer.parseInt(args[0]);
+			int testSuiteSize = Integer.parseInt(args[1]);
+			String date = args[2];
+			int start = Integer.parseInt(args[3]);
+			int end = Integer.parseInt(args[4]);
+			
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestPool.txt";
+			TestSet testpool = TestSetManager.getTestPool(testPoolFile, true);
 			Adequacy.loadTestCase(testPoolFile);
-
-			// 2009-02-22: fix the size of test suite to be 58, using
-			// random-repetition to compensate the small test sets
+			
+			String testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/RandomTestSets_"+testSuiteSize+".txt";
 			
 			TestSet[][] testSets = new TestSet[1][];
-
-			if(testSuiteSize < 0){	
-				testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date
-					+ "/"+criterion+"TestSets_"
-					+ oldOrNew
-					+ ".txt";	
-			}else{
-				testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date
-					+ "/"+criterion+"TestSets_"
-					+ oldOrNew+"_"+randomOrCriterion + "_" + testSuiteSize
-					+ ".txt";
-			}
+			testSets[0] = Adequacy.getTestSets(testSetFile);
+			
+			String versionPackageName = "testversion";
+			String saveFile = testSetFile.substring(0, testSetFile.indexOf(".")) + "_" + start + "_" + end + ".txt";
+			TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+					saveFile, start, end);
 		}
-		
-		TestSet testSets[][] = new TestSet[1][];
-		testSets[0] = Adequacy.getTestSets(testSetFile);
-		
-		String versionPackageName = "testversion";
-		
-		String saveFile = testSetFile.substring(0, testSetFile.indexOf(".")) + "_" + start + "_" + end + ".txt";
-		
-		TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-				saveFile, start, end);
-		
+				
 	}
 
 }
