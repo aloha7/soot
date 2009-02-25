@@ -74,6 +74,20 @@ public class TestSetManager {
 		return testSets;
 	}
 
+	//2009-02-25: random test sets serve as the baseline for comparison
+	public static TestSet[] getRandomTestSets(String appClassName, TestSet testpool,
+			int testSetNum, int testSuiteSize, String saveFile){
+		TestSet[] testSets = new TestSet[testSetNum];
+		for(int i =0; i < testSetNum; i ++){
+			testSets[i] = TestSetManager.getRandomTestSet(appClassName, testpool, testSuiteSize);
+			testSets[i].index = ""+i;
+			System.out.println("Test set " + i + ": " + testSets[i].toString());
+		}
+		
+		TestSetManager.saveTestSets(testSets, saveFile);
+		return testSets;
+	}
+	
 	// 2009-02-22:
 	public static TestSet getRandomTestSet(String appClassName,
 			TestSet testpool, int testSuiteSize) {
@@ -82,7 +96,7 @@ public class TestSetManager {
 
 		while (testSet.size() < testSuiteSize) {
 			String testcase = testpool.getByRandom();
-			if (!visited.contains(testcase) && !testSet.contains(testcase)) {
+			if (!visited.contains(testcase) /*&& !testSet.contains(testcase)*/) {
 				visited.add(testcase);
 				testSet.add(testcase);
 			}
@@ -104,22 +118,6 @@ public class TestSetManager {
 		return testSet;
 	}
 
-	// public static TestSet getAdequacyTestSet_fixSize(String appClassName,
-	// Criterion c,
-	// TestSet testpool, int maxTrials, double min_CI, double max_CI,
-	// int testSuiteSize, String randomOrCriteria, String newOrOld){
-	// TestSet testSet = null;
-	// if(newOrOld.equals("new")){
-	// testSet =
-	// Adequacy_concurrent.getAdequacyTestSet_refined_fixSize(appClassName, c,
-	// testpool, maxTrials, min_CI, max_CI, testSuiteSize, randomOrCriteria);
-	// }else if(newOrOld.equals("old")){
-	// testSet =
-	// Adequacy_concurrent.getAdequacyTestSet_conventional_fixSize(appClassName,
-	// c, testpool, maxTrials);
-	// }
-	// return testSet;
-	// }
 
 	/**
 	 * 2009-02-21: revised test case selection strategy: add a test case if it
@@ -287,6 +285,7 @@ public class TestSetManager {
 						if (j == temp_uniqueTraces.size()) {
 							// replace "temp" with "testcase"
 							testcase_uniqueTraces.remove(temp.index);
+							testcase_uniqueTraces.size();
 							testcase_uniqueTraces.put(testcase,
 									temp_uniqueTraces);
 
@@ -919,9 +918,16 @@ public class TestSetManager {
 			Criterion criterion) {
 		ArrayList effectNodes = new ArrayList();
 
+		int policyNodes = 0;
 		Node trace[] = new Node[stringTrace.length];
 		for (int i = 0; i < trace.length; i++) {
 			trace[i] = NodeIndex.getInstance().get(stringTrace[i]);
+			if (stringTrace[i].contains("c122:P0")) {
+				if (trace[i] instanceof PolicyNode) {
+					policyNodes++;
+				}
+
+			}
 		}
 		boolean effective = false;
 
@@ -1139,76 +1145,99 @@ public class TestSetManager {
 				.println("USAGE: java ccr.test.TestSetManager <testSetNum(100)> <Context_Intensity> <min_CI(0.7)> "
 						+ "<max_CI(0.9)> <directory(20090222)> <testing criteria(AllPolicies, All1ResolvedDU, All2ResolvedDU)>"
 						+ "<TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>");
+		
+		String appClassName = "TestCFG2_ins";
+		
+		if(args.length == 9){ //2009-02-25: generate adequate test sets
+			int testSetNum = Integer.parseInt(args[0]);
+			String instruction = args[1];
+			double min_CI = Double.parseDouble(args[2]);
+			double max_CI = Double.parseDouble(args[3]);
 
-		int testSetNum = Integer.parseInt(args[0]);
-		String instruction = args[1];
-		double min_CI = Double.parseDouble(args[2]);
-		double max_CI = Double.parseDouble(args[3]);
+			String date = args[4];
+			String criterion = args[5];
+			int testSuiteSize = Integer.parseInt(args[6]);
+			String oldOrNew = args[7];
+			String randomOrCriterion = args[8];
 
-		String date = args[4];
-		String criterion = args[5];
-		int testSuiteSize = Integer.parseInt(args[6]);
-		String oldOrNew = args[7];
-		String randomOrCriterion = args[8];
+			CFG g = new CFG(System.getProperty("user.dir")
+					+ "/src/ccr/app/TestCFG2.java");
+			Criterion c = null;
 
-		CFG g = new CFG(System.getProperty("user.dir")
-				+ "/src/ccr/app/TestCFG2.java");
-		Criterion c = null;
+			// 2009-2-21: revise the test case selection strategies: add a test case
+			// into a test set
+			// if it can increase the cumulative coverage or it has higher CI value
+			// than existing one
+			// while not decrease the coverage
 
-		// 2009-2-21: revise the test case selection strategies: add a test case
-		// into a test set
-		// if it can increase the cumulative coverage or it has higher CI value
-		// than existing one
-		// while not decrease the coverage
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/TestPool.txt";
+			TestSet testpool = getTestPool(testPoolFile, true);
 
-		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/TestPool.txt";
-		TestSet testpool = getTestPool(testPoolFile, true);
+			int maxTrials = 20000;
 
-		int maxTrials = 2000;
+			if (instruction.equals("Context_Intensity")) {
+				Adequacy.loadTestCase(testPoolFile);
 
-		if (instruction.equals("Context_Intensity")) {
-			Adequacy.loadTestCase(testPoolFile);
+				// 2009-02-22: fix the size of test suite to be 58, using
+				// random-repetition to compensate the small test sets
+				
+				TestSet[][] testSets = new TestSet[1][];
+				String versionPackageName = "testversion";
+				String saveFile;
 
-			// 2009-02-22: fix the size of test suite to be 58, using
-			// random-repetition to compensate the small test sets
-			String appClassName = "TestCFG2_ins";
-			TestSet[][] testSets = new TestSet[1][];
-			String versionPackageName = "testversion";
-			String saveFile;
+				if (criterion.equals("AllPolicies"))
+					c = g.getAllPolicies();
+				else if (criterion.equals("All1ResolvedDU"))
+					c = g.getAllKResolvedDU(1);
+				else if (criterion.equals("All2ResolvedDU"))
+					c = g.getAllKResolvedDU(2);
 
-			if (criterion.equals("AllPolicies"))
-				c = g.getAllPolicies();
-			else if (criterion.equals("All1ResolvedDU"))
-				c = g.getAllKResolvedDU(1);
-			else if (criterion.equals("All2ResolvedDU"))
-				c = g.getAllKResolvedDU(2);
+				if (testSuiteSize < 0) {
+					saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+							+ date
+							+ "/"
+							+ criterion
+							+ "TestSets_"
+							+ oldOrNew
+							+ ".txt";
+				} else {
+					saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+							+ date
+							+ "/"
+							+ criterion
+							+ "TestSets_"
+							+ oldOrNew
+							+ "_"
+							+ randomOrCriterion + "_" + testSuiteSize + ".txt";
+				}
 
-			if (testSuiteSize < 0) {
-				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-						+ date
-						+ "/"
-						+ criterion
-						+ "TestSets_"
-						+ oldOrNew
-						+ ".txt";
-			} else {
-				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-						+ date
-						+ "/"
-						+ criterion
-						+ "TestSets_"
-						+ oldOrNew
-						+ "_"
-						+ randomOrCriterion + "_" + testSuiteSize + ".txt";
+				testSets[0] = TestSetManager.getTestSets(appClassName, c, testpool,
+						maxTrials, testSetNum, min_CI, max_CI, oldOrNew,
+						randomOrCriterion, testSuiteSize, saveFile);
+
+				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+						+ "_CI.txt";
+				TestSetManager.attachTSWithCI(testSets[0], saveFile);
+	
 			}
-
-			testSets[0] = TestSetManager.getTestSets(appClassName, c, testpool,
-					maxTrials, testSetNum, min_CI, max_CI, oldOrNew,
-					randomOrCriterion, testSuiteSize, saveFile);
-
-			saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
-					+ "_CI.txt";
+		}else if(args.length == 3){
+			int testSetNum = Integer.parseInt(args[0]);
+			int testSuiteSize = Integer.parseInt(args[1]);
+			String date = args[2];
+			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/RandomTestSets_"+testSuiteSize+".txt";
+			
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestPool.txt";
+			TestSet testpool = getTestPool(testPoolFile, true);
+			Adequacy.loadTestCase(testPoolFile);
+			
+			TestSet[][] testSets = new TestSet[1][];
+			testSets[0] = TestSetManager.getRandomTestSets(appClassName, testpool, testSetNum, testSuiteSize, saveFile);
+			
+			saveFile = saveFile.substring(0, saveFile.indexOf(".txt")) 
+				+"_CI.txt";
 			TestSetManager.attachTSWithCI(testSets[0], saveFile);
 		}
 	}
