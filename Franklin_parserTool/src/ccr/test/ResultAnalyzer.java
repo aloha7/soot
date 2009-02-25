@@ -1,6 +1,7 @@
 package ccr.test;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -11,6 +12,118 @@ import java.util.Iterator;
 public class ResultAnalyzer {
 	public static final int TESTPOOL_SIZE = 20000;
 	public static HashMap failureRate = new HashMap();
+	
+	/**2009-02-25: get the CI summary information for a given criterion
+	 * criterion + minCI + meanCI + maxCI + stdCI
+	 * 
+	 * @param srcDir
+	 * @param containHeader
+	 * @param criterion
+	 * @return
+	 */
+	public static String getCriteriaCI(String srcDir, boolean containHeader, String criterion){
+		
+		
+		File[] files = new File(srcDir).listFiles();
+		StringBuilder sb = new StringBuilder();
+		
+		for(File file: files){
+			String fileName = file.getName();
+			if(fileName.matches(criterion + "_CI.txt")){
+				double minCI = Double.MAX_VALUE;
+				double maxCI = Double.MIN_VALUE;
+				double meanCI =0.0;
+				double stdCI = 0.0;
+				
+				String str = null;
+				double sumCI = 0.0;
+				ArrayList CIs = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					if(containHeader)
+						br.readLine();
+					
+					while((str=br.readLine())!= null){
+						String[] strs = str.split("\t");
+						CIs.add(Double.parseDouble(strs[3]));
+					}
+					for(int i = 0; i < CIs.size(); i ++){
+						double CI = (Double)CIs.get(i);
+						
+						sumCI += CI;
+						if(CI > maxCI)
+							maxCI = CI;
+						else if(CI < minCI)
+							minCI = CI;
+						
+					}
+					
+					meanCI = sumCI/(double)CIs.size();
+					double tempCI = 0.0;
+					for(int i =0; i < CIs.size(); i ++){
+						double CI = (Double)CIs.get(i);
+						tempCI += (CI - meanCI) * (CI -meanCI);
+					}
+					stdCI = Math.sqrt(tempCI/(double)CIs.size());
+					
+					sb.append(criterion + "\t");
+					sb.append(minCI + "\t");
+					sb.append(meanCI + "\t");
+					sb.append(maxCI +"\t");
+					sb.append(stdCI +"\t"+"\n");
+					
+					
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return sb.toString();
+	}
+	
+	/**2009-02-24: due to the concurrent execution, we need to merge those partial results into a complete one 
+	 * 
+	 * @param srcDir
+	 * @param criteria
+	 * @param saveFile 
+	 */
+	public static void mergeTestResultFiles(String srcDir, String criteria, boolean containHeader, String saveFile){
+		File[] files = new File(srcDir).listFiles();
+		StringBuilder sb = new StringBuilder();
+		
+		for(File file: files){
+			
+			String fileName = file.getName();
+			if(fileName.matches(criteria + "\\_[0-9]+\\_[0-9]+\\.txt")){
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					String str = null;
+					if(containHeader)
+						br.readLine();
+					
+					while((str = br.readLine())!= null){
+						sb.append(str+"\n");
+					}
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+		
+	}
 	
 	/**2009-02-22: load the failure rate of each fault from the file
 	 * 
@@ -264,7 +377,8 @@ public class ResultAnalyzer {
 	 * @param containHeader
 	 * @param saveFile
 	 */
-	public static void perValidTestCaseWithinTestSet(String testSetExecutionFile, boolean containHeader, String saveFile){
+	public static HashMap perValidTestCaseWithinTestSet(String testSetExecutionFile, boolean containHeader, String saveFile){
+		HashMap fault_perValidTC = new HashMap();
 		StringBuilder sb = new StringBuilder();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(testSetExecutionFile));
@@ -308,6 +422,7 @@ public class ResultAnalyzer {
 				}
 				double std = Math.sqrt(sum/(double)perValidTestCases.size());
 				sb.append(fault + "\t" + avg+"\t" +ResultAnalyzer.failureRate.get(fault) + "\t"+ std + "\n");
+				fault_perValidTC.put(fault, avg);
 			}
 			
 			br.close();
@@ -323,67 +438,9 @@ public class ResultAnalyzer {
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
 		
+		return fault_perValidTC;
+		
 	}
-	
-//	/**2009-02-19:analysis valid test cases within a test set, percentage of validTestCase can be one dimension to compare two testing criteria
-//	 * 
-//	 * @param testSetFile: files storing adequate test sets
-//	 * @param containHeader1: whether the first row of testSetFile is a header or not
-//	 * @param testDetailFile:records of executions of test cases in the test pool
-//	 * @param containHeader2: whether the first row of detailFile is a header or not
-//	 */
-//	public static void validTestCaseWithinTestSet(String testSetFile, boolean containHeader1, String testDetailFile, boolean containHeader2,
-//			String saveFile){
-//		StringBuilder sb = new StringBuilder();
-//		sb.append("Fault" + "\t" + "PerValidTestCase" + "\n");
-//		//1.analyze the testSetFile to extract all test cases in a test set
-//		HashMap testSets = ResultAnalyzer.getTestCaseFromTestSet(testSetFile, containHeader1);//testSet-TestCases
-//		
-//		//2. analyze the testDetailFile to extract all faults a test case can expose
-//		HashMap faults = ResultAnalyzer.getFaultsWithTestCase(testDetailFile, containHeader2);
-//		
-//		//3. given a fault, analyze  percentage of valid test cases in a test set
-//		HashMap result = new HashMap();
-//	
-//		Iterator ite = faults.keySet().iterator();
-//		while(ite.hasNext()){ //for each fault
-//			String fault = (String)ite.next();
-//			ArrayList validTC = (ArrayList)faults.get(fault); //all valid test cases for this fault
-//			
-//			ArrayList perValidTC = new ArrayList();
-//			Iterator ite1 = testSets.keySet().iterator();
-//			double perValid = 0; //record the percentage of fault-exposing test cases in a test set
-//			while(ite1.hasNext()){ // for each test set
-//				String testSet = (String)ite1.next();
-//				ArrayList testCases = (ArrayList)testSets.get(testSet); 
-//				int valid = 0; //record the # of fault-exposing test cases in a test set 
-//				for(int i = 0; i < testCases.size(); i ++){ //
-//					String testCase = (String)testCases.get(i);
-//					if(validTC.contains(testCase))
-//						valid ++;
-//				}
-//				perValid = (double)valid/(double)testCases.size();
-//				perValidTC.add(perValid);	// percentage of valid test cases in a test set			
-//			}
-//			double sum = 0.0;
-//			for(int i =0 ; i < perValidTC.size(); i ++)
-//				sum += (Double)perValidTC.get(i);
-//			
-//			result.put(fault, sum/(double)perValidTC.size());			
-//		}
-//		
-//		Iterator ite2 = result.keySet().iterator();
-//		while(ite2.hasNext()){
-//			String fault = (String)ite2.next();
-//			double perValidTC = (Double)result.get(fault);
-//			sb.append(fault + "\t" + perValidTC + "\n");
-//		}
-//		
-//		Logger.getInstance().setPath(saveFile, false);
-//		Logger.getInstance().write(sb.toString());
-//		Logger.getInstance().close();
-//		
-//	}
 	
 	/**2009-02-19: analysis faults number and faults type detected by an adequate test set
 	 * the result is a table with test set as rows and faults number and types it exposed as columns
@@ -391,7 +448,8 @@ public class ResultAnalyzer {
 	 * @param containHeader
 	 * @param saveFile
 	 */
-	public static void faultsExposedByTestSet(String testSetExecutionFile, boolean containHeader, String saveFile){
+	public static HashMap faultsExposedByTestSet(String testSetExecutionFile, boolean containHeader, String saveFile){
+		HashMap testSet_fault = new HashMap();
 		StringBuilder sb = new StringBuilder();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(testSetExecutionFile));
@@ -426,7 +484,8 @@ public class ResultAnalyzer {
 			while(ite.hasNext()){
 				String testSet = (String)ite.next();
 				ArrayList faultTpes = (ArrayList)testSet_FaultType.get(testSet);
-				sb.append(testSet + "\t" + faultTpes.size() + "\n");	
+				sb.append(testSet + "\t" + faultTpes.size() + "\n");
+				testSet_fault.put(testSet, faultTpes.size());
 			}
 			
 		} catch (FileNotFoundException e) {
@@ -440,9 +499,11 @@ public class ResultAnalyzer {
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
+		return testSet_fault;
 	}
 	
-	public static void perValidTestSet(String testSetExecutionFile, boolean containHeader, String saveFile){
+	public static HashMap perValidTestSet(String testSetExecutionFile, boolean containHeader, String saveFile){
+		HashMap fault_perValidTestSet = new HashMap();
 		StringBuilder sb = new StringBuilder();
 		
 		try {
@@ -469,7 +530,9 @@ public class ResultAnalyzer {
 			}
 			br.close();
 			
-			sb.append("Fault" + "\t" + "%ValidTestSet" + "\t" + "FailureRate");
+			
+//			sb.append("Fault" + "\t" + "%ValidTestSet" + "\t" + "FailureRate" + "\n");
+			sb.append("FailureRate" + "\t" + "%ValidTestSet" + "\t" + "Fault" + "\n");
 			Iterator ite = fault_TestSets.keySet().iterator();
 			while(ite.hasNext()){
 				String fault = (String)ite.next();
@@ -480,8 +543,9 @@ public class ResultAnalyzer {
 					if(testSet.equals("1"))
 						validCounter ++;
 				}
-				
-				sb.append(fault + "\t" + (double)validCounter/(double)testSets.size() + "\t" + ResultAnalyzer.failureRate.get(fault)+"\n");				
+				double perValidTestSet = (double)validCounter/(double)testSets.size();
+				sb.append(ResultAnalyzer.failureRate.get(fault) + "\t" + perValidTestSet + "\t" + fault+"\n");
+				fault_perValidTestSet.put(fault, perValidTestSet);
 			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -494,89 +558,40 @@ public class ResultAnalyzer {
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
-		
+		return fault_perValidTestSet;
 	}
 	
-	
-	/**2009-02-19:analysis faults number and faults type detected by an adequate test set
-	 * 
-	 * @param testSetFile: files storing adequate test sets
-	 * @param containHeader1: whether the first row of testSetFile is a header or not
-	 * @param testDetailFile:records of executions of test cases in the test pool
-	 * @param containHeader2: whether the first row of detailFile is a header or not
-	 */
-//	public static void faultsExposedByTestSet(String testSetFile, boolean containHeader1, String testDetailFile, boolean containHeader2
-//			, String saveFile){
-//		
-//			StringBuilder sb = new StringBuilder();
-//			
-//			//1.analyze the testSetFile to extract all test cases in a test set
-//			HashMap testSets = ResultAnalyzer.getTestCaseFromTestSet(testSetFile, containHeader1);//testSet-TestCases
-//			
-//			
-//			//2. analyze the testDetailFile to extract all faults a test case can expose
-//			HashMap testCases = ResultAnalyzer.getTestCaseWithFaults(testDetailFile, containHeader2);
-//			
-//			//3. get all faults detected by a test set
-//			HashMap perform_TS = new HashMap(); //testSet--all faults detected by it
-//			Iterator ite = testSets.keySet().iterator();
-//			while(ite.hasNext()){
-//				String testSet = (String)ite.next();
-//				ArrayList tcs = (ArrayList)testSets.get(testSet);
-//				
-//				ArrayList faults;
-//				if(perform_TS.containsKey(testSet)){
-//					faults = (ArrayList)perform_TS.get(testSet);
-//				}else{
-//					faults = new ArrayList();
-//				}
-//				
-//				for(int i = 0; i < tcs.size(); i++){
-//					String tc = (String)tcs.get(i);
-//					ArrayList fault = (ArrayList)testCases.get(tc);
-//					if(fault!=null){//it is possible that a criteria select a test case which cannot expose any faults
-//						for(int j = 0; j < fault.size(); j++){
-//							faults.add((String)fault.get(j));
-//						}	
-//					}
-//					
-//				}
-//				perform_TS.put(testSet, faults);
-//				
-//			}
-//			
-//			//4. derive the performance of adequate test set in terms of types and numbers of faults it exposed
-//			HashMap perform_TSs = new HashMap();
-//			
-//			Iterator ite1 = perform_TS.keySet().iterator();
-//			while(ite1.hasNext()){
-//				String testSet = (String)ite1.next();
-//				ArrayList faults = (ArrayList)perform_TS.get(testSet);
-//				int num = faults.size();
-//				
-//				ArrayList temp = new ArrayList(); // keep different faults detected by a test set
-//				for(int i = 0; i < faults.size(); i ++){
-//					String fault = (String)faults.get(i);
-//					if(!temp.contains(fault)){
-//						temp.add(fault);
-//					}
-//				}
-//				int type = temp.size();
-//				perform_TSs.put(testSet, num+"\t"+type);
-//			}
-//			
-//			//5.each row of the result is "fault + fault number + fault type"
-//			Iterator ite2 = perform_TSs.keySet().iterator();
-//			sb.append("TestSet" +"\t"+ "num" + "\t" + "type" + "\n");
-//			while(ite2.hasNext()){
-//				String testSet = (String)ite2.next();
-//				sb.append(testSet + "\t" + (String)perform_TSs.get(testSet) + "\n");
-//			}
-//			
-//			Logger.getInstance().setPath(saveFile, false);
-//			Logger.getInstance().write(sb.toString());
-//			Logger.getInstance().close();
-//	}
+	public static void mergeHashMap(String[] criteria, HashMap criterion_Metric, String saveFile){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Fault" + "\t" + "FailureRate" + "\t");
+		
+		for(int i =0; i < criteria.length; i ++){
+			sb.append(criteria[i] + "\t");
+		}
+		sb.append("\n");
+		
+		//list all faults
+		Iterator ite = ResultAnalyzer.failureRate.keySet().iterator();
+		String criterion = null;
+		while(ite.hasNext()){
+			String fault = (String)ite.next();
+			sb.append(fault + "\t" + ResultAnalyzer.failureRate.get(fault)+"\t");
+			for(int i = 0; i < criteria.length; i++){
+				criterion = criteria[i];
+				HashMap metric = (HashMap)criterion_Metric.get(criterion);
+				Object item = metric.get(fault);
+				if(item == null){
+					item = metric.get(Integer.parseInt(fault) + "");
+				}
+				sb.append(item+"\t");
+			}
+			sb.append("\n");
+		}		
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
 	
 	public static void main(String[] args){
 		
@@ -584,7 +599,7 @@ public class ResultAnalyzer {
 //		String date = "20090217";
 //		String date= "20090219";
 //		String date= "20090220";
-		String date= "20090221";
+		String date= "20090226";
 //		String date= "20090222";
 		String criterion = "allPolicies";
 //		String criterion = "all1ResolvedDU";
@@ -599,12 +614,12 @@ public class ResultAnalyzer {
 		
 		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
 		
-		//2009-02-18: analysis CI distributions of validTestCase for each faulty version
+		//2009-02-18: load CI of each test case from a file
 //		long startTime = System.currentTimeMillis();
 		boolean containHeader = true;
 		Adequacy.getTestPool(testcaseFile, containHeader);
 		
-		//2009-02-22: get failure rate
+		//2009-02-22: load failure rates from a file, this
 		String failureRateFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/failureRate.txt";
 		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
 		
@@ -634,15 +649,74 @@ public class ResultAnalyzer {
 		String testSetExecutionFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+".txt";
 		boolean containHeader1 = false;
 		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+"_FaultType.txt";
-		ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader, saveFile);
+//		ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader, saveFile);
 		
 		//2009-02-19: analysis percentage of fault-exposing test cases in a test set with respect to a fault
 		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+"_perValidTestCase.txt";
-		ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader, saveFile);
+//		ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader, saveFile);
 		
 		//2009-02-22: analysis percentage of fault-exposing test sets with respect to each fault
 		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+"_perValidTestSet.txt";
-		ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader, saveFile);
+//		ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader, saveFile);
+		
+		//2009-02-24: merge files
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";
+		
+		String[] criteria = new String[]{
+				"AllPoliciesTestSets_old","AllPoliciesTestSets_new",
+				"All1ResolvedDUTestSets_old","All1ResolvedDUTestSets_new",
+				"All2ResolvedDUTestSets_old","All2ResolvedDUTestSets_new",
+				
+				"AllPoliciesTestSets_old_random_58","AllPoliciesTestSets_new_random_58",
+				"All1ResolvedDUTestSets_old_random_58","All1ResolvedDUTestSets_new_random_58",
+				"All2ResolvedDUTestSets_old_random_58","All2ResolvedDUTestSets_new_random_58",
+
+				"AllPoliciesTestSets_old_criteria_58","AllPoliciesTestSets_new_criteria_58",
+				"All1ResolvedDUTestSets_old_criteria_58","All1ResolvedDUTestSets_new_criteria_58",
+				"All2ResolvedDUTestSets_old_criteria_58","All2ResolvedDUTestSets_new_criteria_58",
+		};
+				
+//		HashMap criterion_faultNum = new HashMap();
+//		HashMap criterion_perValidTC = new HashMap();
+//		HashMap criterion_perValidTS = new HashMap();
+//		containHeader = true;
+//		for(int i = 0; i < criteria.length; i++){
+//			saveFile = srcDir + criteria[i] + "_testing.txt";
+//			ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
+//			
+//			
+//			testSetExecutionFile = saveFile;
+//			String faultTypeFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_FaultType.txt";
+//			HashMap faultNum = ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader1, faultTypeFile);
+//			criterion_faultNum.put(criteria[i], faultNum);
+//			
+//			String perValidTCFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestCase.txt";
+//			HashMap perValidTC = ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader1, perValidTCFile);
+//			criterion_perValidTC.put(criteria[i], perValidTC);
+//			
+//			String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestSet.txt";
+//			HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
+//			criterion_perValidTS.put(criteria[i], perValidTS);
+//		}
+//		
+//		//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
+//		saveFile = "C:/FaultNum.txt";
+//		ResultAnalyzer.mergeHashMap(criteria, criterion_faultNum, saveFile);
+//		saveFile = "C:/PerValidTC.txt";
+//		ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC, saveFile);
+//		saveFile = "C:/PerValidTS.txt";
+//		ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
+		
+		//2009-02-25: to explore the CI distributions of different testing criteria
+		StringBuilder sb = new StringBuilder();
+		sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t" + "maxCI" + "\t" + "stdCI" + "\n" );
+		for(int i =0; i < criteria.length; i ++){
+			sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, criteria[i]));
+		}
+		saveFile = "C:/CI.txt";
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
 		
 	}
 }
