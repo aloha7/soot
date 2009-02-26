@@ -146,7 +146,7 @@ public class TestSetManager {
 		long time = System.currentTimeMillis();
 
 		int originalSize = criterion.size();
-		while (visited.size() < maxTrials && visited.size() < testpool.size()
+		while (/*visited.size() < maxTrials && */visited.size() < testpool.size()
 				&& criterion.size() > 0) {
 			String testcase = testpool.getByRandom();
 
@@ -1179,8 +1179,9 @@ public class TestSetManager {
 					+ date + "/TestPool.txt";
 			TestSet testpool = getTestPool(testPoolFile, true);
 
-			int maxTrials = 20000;
-
+//			int maxTrials = 20000;
+			int maxTrials = Integer.MAX_VALUE;
+			
 			if (instruction.equals("Context_Intensity")) {
 				Adequacy.loadTestCase(testPoolFile);
 
