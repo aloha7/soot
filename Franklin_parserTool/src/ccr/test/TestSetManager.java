@@ -212,7 +212,6 @@ public class TestSetManager {
 							} else {
 								replaced.add(temp);
 							}
-
 						}
 					}
 
@@ -268,7 +267,6 @@ public class TestSetManager {
 					// }
 
 					// 2009-02-24:2).replace the one who has the lowest CI value
-
 					for (int i = 0; i < replaced.size(); i++) {
 						TestCase temp = (TestCase) replaced.get(i);
 						ArrayList temp_uniqueTraces = (ArrayList) testcase_uniqueTraces
@@ -292,9 +290,13 @@ public class TestSetManager {
 							testSet.remove(temp.index);
 							testSet.add(testcase);
 							replaceCounter++;
-							break;
+
+							//2009-02-25:if one test case can only replace another one, then we need "break;"
+							//otherwise, we do not need "break;" 
+//							break;
 						}
 					}
+					
 				}
 			}
 		}
@@ -483,7 +485,10 @@ public class TestSetManager {
 							testSet.remove(temp.index);
 							testSet.add(testcase);
 							replaceCounter++;
-							break;
+							
+							//2009-02-25:if one test case can only replace another one, then we need "break;"
+							//otherwise, we do not need "break;" 
+//							break;
 						}
 					}
 				}
