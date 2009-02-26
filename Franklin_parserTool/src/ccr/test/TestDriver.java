@@ -15,6 +15,9 @@ public class TestDriver {
 	public static final String APPLICATION_PACKAGE = "ccr.app";
 	public static final String VERSION_PACKAGE_NAME = "version";
 
+	//2009-02-26: keep all execution records
+	public static HashMap traceTable = new HashMap();  
+	
 	public static final String WORK_FOLDER = System.getProperty("user.dir")
 			+ File.separator + "src" + File.separator + "ccr" + File.separator
 			+ "app" + File.separator;
@@ -39,9 +42,16 @@ public class TestDriver {
 
 	public static String[] getTrace(String appClassName, String testcase) {
 
-		Trace.getInstance().initialize();
-		run(APPLICATION_PACKAGE + "." + appClassName, testcase);
-		return Trace.getInstance().getTrace();
+		if(traceTable.containsKey(testcase)){
+			return (String[])traceTable.get(testcase);
+		}else{
+			Trace.getInstance().initialize();
+			run(APPLICATION_PACKAGE + "." + appClassName, testcase);
+			String[] records =Trace.getInstance().getTrace();
+			traceTable.put(testcase, records);
+			return 	records;
+		}
+		
 	}
 
 	public static double test(String appClassName, Oracle oracle,
