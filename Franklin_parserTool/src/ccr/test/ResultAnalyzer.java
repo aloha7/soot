@@ -599,7 +599,7 @@ public class ResultAnalyzer {
 //		String date = "20090217";
 //		String date= "20090219";
 //		String date= "20090220";
-		String date= "20090226";
+		String date= "20090227";
 //		String date= "20090222";
 		String criterion = "allPolicies";
 //		String criterion = "all1ResolvedDU";

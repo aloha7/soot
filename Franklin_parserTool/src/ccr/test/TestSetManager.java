@@ -146,10 +146,11 @@ public class TestSetManager {
 		long time = System.currentTimeMillis();
 
 		int originalSize = criterion.size();
-		while (/*visited.size() < maxTrials && */visited.size() < testpool.size()
+		while (visited.size() < maxTrials && visited.size() < testpool.size()
 				&& criterion.size() > 0) {
-			String testcase = testpool.getByRandom();
-
+//			String testcase = testpool.getByRandom();
+			String testcase = testpool.getByART();
+			
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
 
@@ -293,7 +294,7 @@ public class TestSetManager {
 
 							//2009-02-25:if one test case can only replace another one, then we need "break;"
 							//otherwise, we do not need "break;" 
-//							break;
+							break;
 						}
 					}
 					
@@ -342,7 +343,9 @@ public class TestSetManager {
 		while (visited.size() < maxTrials && visited.size() < testpool.size()
 				&& criterion.size() > 0) {
 			String testcase = testpool.getByRandom();
-
+			
+//			String testcase = testpool.getByART();
+			
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
 
@@ -488,7 +491,7 @@ public class TestSetManager {
 							
 							//2009-02-25:if one test case can only replace another one, then we need "break;"
 							//otherwise, we do not need "break;" 
-//							break;
+							break;
 						}
 					}
 				}
@@ -503,8 +506,9 @@ public class TestSetManager {
 			// 2009-02-22:the stopping rule is very important here:
 			while (testSet.size() < testSuiteSize
 					&& visited.size() < testpool.size()) {
-				String testcase = testpool.getByRandom();
-
+//				String testcase = testpool.getByRandom();
+				String testcase = testpool.getByART();
+				
 				if (!visited.contains(testcase) && !testSet.contains(testcase)) {
 					String stringTrace[] = TestDriver.getTrace(appClassName,
 							testcase);
@@ -526,12 +530,14 @@ public class TestSetManager {
 				// process
 				// int trial = 0;
 				criterion = (Criterion) c.clone();
-
+				
 				while (/* trial < maxTrials && */visited.size() < testpool
 						.size()
 						&& criterion.size() > 0
 						&& testSet.size() < testSuiteSize) {
-					String testcase = testpool.getByRandom();
+//					String testcase = testpool.getByRandom();
+					String testcase = testpool.getByART();
+					
 					// trial++;
 					// just for debugging purpose
 					// TestCase testCase = (TestCase)
@@ -608,7 +614,7 @@ public class TestSetManager {
 								}
 							}
 
-							// just faciliate to compare
+							// just facilitate to compare
 							ArrayList traceList = new ArrayList();
 							for (int k = 0; k < stringTrace.length; k++)
 								traceList.add(stringTrace[k]);
@@ -701,7 +707,7 @@ public class TestSetManager {
 			} while (testSet.size() < testSuiteSize
 					&& visited.size() < testpool.size());
 		}
-		int currentSize = criterion.size();
+		int currentSize = finalCriterion.size();
 		testSet.setCoverage((float) (originalSize - currentSize)
 				/ (float) originalSize);
 		testSet.replaceCounter = replaceCounter;
@@ -1179,9 +1185,8 @@ public class TestSetManager {
 					+ date + "/TestPool.txt";
 			TestSet testpool = getTestPool(testPoolFile, true);
 
-//			int maxTrials = 20000;
-			int maxTrials = Integer.MAX_VALUE;
-			
+			int maxTrials = 2000;
+
 			if (instruction.equals("Context_Intensity")) {
 				Adequacy.loadTestCase(testPoolFile);
 

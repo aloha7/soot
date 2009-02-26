@@ -103,6 +103,29 @@ public class TestSet {
 		return get((int) (Math.random() * (double) size()));
 	}
 	
+	//2008-2-26: use ART-like test case generation algorithm to get a random value
+	public String getByART(){
+		TestSet tmp = new TestSet();
+		//randomly get a test set S containing 10 test cases 
+		do{
+			String testcase = this.getByRandom();
+			if(!tmp.contains(testcase))
+				tmp.add(testcase);
+		}while(tmp.size()< 10);
+		
+		String testCaseMaxCI = null;
+		double maxCI = 0.0;
+		for(int i = 0; i < tmp.size(); i ++){
+			TestCase temp = (TestCase) Adequacy.testCases.get((String)tmp.get(i));
+			double CI_temp = temp.CI;
+			if(CI_temp > maxCI){
+				maxCI = CI_temp;
+				testCaseMaxCI = temp.index;
+			}
+		}
+		return testCaseMaxCI;
+	}
+	
 	public String getByRandom(double min_CI, double max_CI, int maxTrial){
 		String randomTC = null;
 		double CI;
