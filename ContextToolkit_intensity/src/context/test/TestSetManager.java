@@ -119,7 +119,7 @@ public class TestSetManager {
 
 				double sumIntensity = 0;
 				for (String testCaseIndex : testCases) {
-					sumIntensity += ((ContextStream)TestSetManager.testPool.get(testCaseIndex)).CI;
+					sumIntensity += ((ContextStream)TestSetManager.testPool.get(testCaseIndex.trim())).CI;
 				}
 				double averageIntensity = sumIntensity / (double)testCases.length;
 				sb.append(str + "\t" + "CI:" + "\t" + averageIntensity + "\n");
@@ -688,6 +688,8 @@ public class TestSetManager {
 
 	public static void main(String[] args) {
 
+		System.out.println("USAGE:<date(20090226)><criteria(CA)><testSetNum(100)>");
+		
 		String date = "20090226";
 		String criteria = "CA_old";
 		int testSetNum = NUMBER_TESTSET;
@@ -710,11 +712,11 @@ public class TestSetManager {
 
 //		TestSetManager manager = new TestSetManager();
 
-		String testPoolFile = "ContextIntensity/" + date + "/TestPool_temp.txt";
+		String testPoolFile = "ContextIntensity/" + date + "/TestPool.txt";
 
 		// 1. [option]generate test pools, each test case is attached with CI
-		TestSetManager.testPool = TestSetManager.generateTestPool(events);
-		TestSetManager.saveTestArtifacts(TestSetManager.testPool, testPoolFile);
+//		TestSetManager.testPool = TestSetManager.generateTestPool(events);
+//		TestSetManager.saveTestArtifacts(TestSetManager.testPool, testPoolFile);
 		
 		// manager.generateRestrictedTestPool(events);
 //		manager.tranverseData(testPoolFile, testPoolFile.substring(0,
@@ -730,10 +732,16 @@ public class TestSetManager {
 				+ ".txt";
 		String saveFile = "ContextIntensity/" + date + "/" + criteria
 				+ "TestSets.txt";
-
-		 Vector testSets = TestSetManager.generateAllTestSetsAndSave(testSetNum,
-		 driverFile, saveFile);
-
+		
+		//4. [mandatory]generate and save adequate test sets
+		Vector testSets = TestSetManager.generateAllTestSetsAndSave(testSetNum,
+				 driverFile, saveFile);
+		
+		//5. [mandatory]attach test sets with CI
+		containHeader = false;
+		TestSetManager.attachTSWithCI(containHeader, saveFile, saveFile.substring(0, saveFile.indexOf(".txt"))+"_CI.txt");
+		System.exit(0);
+		
 		// manager.generateAdequateTestSet(driverFile);
 		// manager.generateAllTestSets(driverFile);
 		// manager.generateAllTestSetsAndSave(Constant.baseFolder
@@ -762,9 +770,8 @@ public class TestSetManager {
 		// "ContextIntensity/AdequateTestSet/TestSet_" + criteria + "_CI.txt";
 		// }
 		//	
-		containHeader = false;
-		TestSetManager.attachTSWithCI(containHeader, saveFile, saveFile.substring(0, saveFile.indexOf(".txt"))+"_CI.txt");
+		
 //		TestSetManager.attachTSWithCI(saveFile, saveFile);
-		System.exit(0);
+//		System.exit(0);
 	}
 }
