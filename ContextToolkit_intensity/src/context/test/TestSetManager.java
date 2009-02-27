@@ -33,17 +33,19 @@ public class TestSetManager {
 	public static int MAX_LENGTH_TESTCASE = 20;
 	public static int MIN_LENGTH_TESTCASE = 4;
 	public static int FIX_LENGTH_TESTCASE = -19;
-	public HashMap intensities;
+	public static HashMap intensities;
 
-	public void generateAllTestSets(String criteriaFile) {
-		this.testSets = new Vector();
+	public static Vector generateAllTestSets(String criteriaFile) {
+		Vector testSets = new Vector();
 		do {
-			Vector testSet = this.generateAdequateTestSet(criteriaFile);
+			Vector testSet = TestSetManager.generateAdequateTestSet(criteriaFile);
 			// testSets.add(testSet);
 			if (!testSets.contains(testSet)) {
 				testSets.add(testSet);
 			}
 		} while (testSets.size() < NUMBER_TESTSET);
+		
+		return testSets;
 	}
 
 	/**
@@ -56,7 +58,7 @@ public class TestSetManager {
 	 *            a record in this file: time + event sequences + intensity of
 	 *            test set
 	 */
-	public void analysisTestSets(String size_TS, String testSetFile,
+	public static void analysisTestSets(String size_TS, String testSetFile,
 			String saveFile) {
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(testSetFile));
@@ -72,7 +74,7 @@ public class TestSetManager {
 					double sumIntensity = 0;
 					for (int i = 0; i < Integer.parseInt(size); i++) {
 						String testCaseIndex = strs[i + 4];
-						sumIntensity += this.getIntensity(testCaseIndex);
+						sumIntensity += TestSetManager.getIntensity(testCaseIndex);
 						sb.append(testCaseIndex + "\t");
 					}
 					double averageIntensity = sumIntensity
@@ -100,7 +102,7 @@ public class TestSetManager {
  * @param testSetFile
  * @param saveFile
  */
-	public void attachTSWithCI(boolean containHeader, String testSetFile, String saveFile) {
+	public static void attachTSWithCI(boolean containHeader, String testSetFile, String saveFile) {
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(testSetFile));
 
@@ -172,13 +174,13 @@ public class TestSetManager {
 //		}
 	}
 
-	public double getIntensity(String testCaseIndex) {
-		if (this.intensities == null) {
+	public static double getIntensity(String testCaseIndex) {
+		if (TestSetManager.intensities == null) {
 			String testPoolFile = Constant.baseFolder
 					+ "ContextIntensity/TestPool.txt";
-			this.getIntensities(testPoolFile);
+			TestSetManager.getIntensities(testPoolFile);
 		}
-		return Double.parseDouble((String) this.intensities.get(testCaseIndex));
+		return Double.parseDouble((String) TestSetManager.intensities.get(testCaseIndex));
 	}
 
 	/**
@@ -187,7 +189,7 @@ public class TestSetManager {
 	 * @param filePath
 	 * @param savePath
 	 */
-	private void tranverseData(String filePath, String savePath) {
+	private static void tranverseData(String filePath, String savePath) {
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filePath));
 			String line = null;
@@ -216,7 +218,7 @@ public class TestSetManager {
 		}
 	}
 
-	public double getCI(Vector eventSequences){
+	public static double getCI(Vector eventSequences){
 		if(eventSequences.size() == 1){
 			return 0.0;
 		}else{
@@ -232,7 +234,7 @@ public class TestSetManager {
 		}
 	}
 	
-	public double analysisIntensity(String testCaseInstance) {
+	public static double analysisIntensity(String testCaseInstance) {
 		// 2009-02-26:
 		Vector eventSequences = new Vector();
 
@@ -240,7 +242,7 @@ public class TestSetManager {
 		for (int i = 0; i < events.length; i++) {
 			eventSequences.add(events[i]);
 		}
-		return this.getCI(eventSequences);
+		return TestSetManager.getCI(eventSequences);
 
 		// int index = testCaseInstance.indexOf("\t");
 		// while(index > -1){
@@ -267,8 +269,8 @@ public class TestSetManager {
 		// }
 	}
 
-	public HashMap getIntensities(String testPoolFile) {
-		this.intensities = new HashMap();
+	public static HashMap getIntensities(String testPoolFile) {
+		TestSetManager.intensities = new HashMap();
 //		if (testPool == null) {
 //			this.loadTestPoolFromFile(testPoolFile);
 //		}
@@ -278,24 +280,24 @@ public class TestSetManager {
 //			intensities.put("" + i, ""
 //					+ this.analysisIntensity(testCaseInstance));
 //		}
-		Iterator ite = this.testPool.values().iterator();
+		Iterator ite = TestSetManager.testPool.values().iterator();
 		while(ite.hasNext()){
 			ContextStream cs = (ContextStream)ite.next();
-			this.intensities.put(cs.ID, cs.CI);
+			TestSetManager.intensities.put(cs.ID, cs.CI);
 		}
 		
-		return this.intensities;
+		return TestSetManager.intensities;
 	}
 
-	public Vector generateAllTestSetsAndSave(int testSetNum,
+	public static Vector generateAllTestSetsAndSave(int testSetNum,
 			String criteriaFile, String saveFile) {
 
 		StringBuilder sb = new StringBuilder();
-		this.testSets = new Vector();
+		TestSetManager.testSets = new Vector();
 
 		do {
 			long start = System.currentTimeMillis();
-			Vector testSet = this.generateAdequateTestSet(criteriaFile);
+			Vector testSet = TestSetManager.generateAdequateTestSet(criteriaFile);
 
 			long enduration = System.currentTimeMillis() - start;
 
@@ -331,22 +333,31 @@ public class TestSetManager {
 		return testSets;
 	}
 
-	public Vector getAdequateTestSetsFromFile(String filePath) {
+	public static Vector getAdequateTestSetsFromFile(boolean containHeader, String filePath) {
 		Vector testSets = new Vector();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filePath));
 			String line = null;
+			if(containHeader)
+				br.readLine();
+			
 			while ((line = br.readLine()) != null) {
 				Vector testSet = new Vector();
-
-				line = line.substring(0, line.indexOf("time:"));
-				int index = line.indexOf("\t");
-				while (index > -1) {
-					String testcase = line.substring(0, index);
-					testSet.add(testcase);
-					line = line.substring(index + "\t".length());
-					index = line.indexOf("\t");
-				}
+				
+				//2009-02-27:
+				String str = line.substring(line.indexOf("[")+"[".length(), line.indexOf("]"));
+				String[] testCaseIndex =str.split(",");
+				for(int i = 0; i < testCaseIndex.length; i ++)
+					testSet.add(testCaseIndex[i].trim());
+				
+//				line = line.substring(0, line.indexOf("time:"));
+//				int index = line.indexOf("\t");
+//				while (index > -1) {
+//					String testcase = line.substring(0, index);
+//					testSet.add(testcase);
+//					line = line.substring(index + "\t".length());
+//					index = line.indexOf("\t");
+//				}
 				testSets.add(testSet);
 			}
 			br.close();
@@ -360,7 +371,7 @@ public class TestSetManager {
 		return testSets;
 	}
 
-	public Vector generateAdequateTestSet(String criteriaFile) {
+	public static Vector generateAdequateTestSet(String criteriaFile) {
 		// 2009/1/17:
 
 		Vector testSet = new Vector();
@@ -372,13 +383,18 @@ public class TestSetManager {
 
 		do {
 			// 2. random select a test case which is not in testSet
-			int testCaseIndex = this.getTestCaseIndex(testSet);
+			int testCaseIndex = TestSetManager.getTestCaseIndex(testSet);
 			// int testCaseIndex = 0;
-			ContextStream testCase = (ContextStream) this.testPool.get(""+testCaseIndex);
+			ContextStream testCase = (ContextStream) TestSetManager.testPool.get(""+testCaseIndex);
 
 			// 3.feed test case to SUT: faulty version index(must be golden
 			// version 0) + test case index
-			PositionIButton.getInstance().set(0, testCaseIndex, testCase.eventSequence);
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < testCase.eventSequence.size(); i++){
+				sb.append(((String)testCase.eventSequence.get(i)).trim()+"\t");
+			}
+			
+			PositionIButton.getInstance().set(0, testCaseIndex, sb.toString());
 			PositionIButton.getInstance().runTestCase();
 			PositionIButton.getInstance().stopRunning();
 
@@ -398,12 +414,12 @@ public class TestSetManager {
 		// are some uncovered drivers
 		long enduration = System.currentTimeMillis() - start;
 		System.err.println("Get an adequate test set (time: " + enduration
-				+ "):" + "\n" + this.toString(testSet));
+				+ "):" + "\n" + TestSetManager.toString(testSet));
 		return testSet;
 	}
 
-	public String getTestCaseInstance(int testCaseIndex) {	
-		ContextStream cs =((ContextStream)this.testPool.get(testCaseIndex));
+	public static String getTestCaseInstance(int testCaseIndex) {	
+		ContextStream cs =((ContextStream)TestSetManager.testPool.get(testCaseIndex));
 		
 		StringBuilder sb = new StringBuilder();
 		for(int i =0; i < cs.length; i ++){
@@ -413,11 +429,11 @@ public class TestSetManager {
 	}
 
 	
-	public Hashtable generateTestPool(Vector events) {
+	public static Hashtable generateTestPool(Vector events) {
 		Hashtable testPool = new Hashtable();
 		while (testPool.size() < SIZE_TESTPOOL) {
 			// generate a test case---a context stream
-			Vector eventSequences = this.generateEventSequence(events);
+			Vector eventSequences = TestSetManager.generateEventSequence(events);
 			int i = 0;
 			for(; i < testPool.size(); i ++){
 				if(((ContextStream)testPool.get(i)).equalTo(eventSequences))
@@ -425,7 +441,7 @@ public class TestSetManager {
 			}
 			if(i ==  testPool.size()){
 				// add it to the test pool if not duplicated
-				ContextStream cs = new ContextStream(testPool.size(), eventSequences.size(), this.getCI(eventSequences), eventSequences);
+				ContextStream cs = new ContextStream(testPool.size(), eventSequences.size(), TestSetManager.getCI(eventSequences), eventSequences);
 				testPool.put(cs.ID, cs);
 			}
 		}
@@ -438,19 +454,19 @@ public class TestSetManager {
 	 * @param events
 	 * @return
 	 */
-	public Vector generateRestrictedTestPool(Vector events) {
+	public static Vector generateRestrictedTestPool(Vector events) {
 		Random diffRand = new Random();
 		Random chooseRand = new Random();
 
 		Vector testPool = new Vector();
 		while (testPool.size() < SIZE_TESTPOOL) {
 			// generate a test case
-			String testCase = this.generateRestrictedTestCase(events, diffRand,
+			String testCase = TestSetManager.generateRestrictedTestCase(events, diffRand,
 					chooseRand);
 			// add it to the test pool if not duplicated
 			if (!testPool.contains(testCase)) {
 
-				double intensity = this.analysisIntensity(testCase);
+				double intensity = TestSetManager.analysisIntensity(testCase);
 				String completeTS = "intensity:\t" + intensity + "\t"
 						+ testCase + "\n";
 				// testCase += "\t" + "intensity:\t" + intensity + "\n";
@@ -463,7 +479,7 @@ public class TestSetManager {
 		return testPool;
 	}
 
-	public String generateRestrictedTestCase(Vector events, Random diffRand,
+	public static String generateRestrictedTestCase(Vector events, Random diffRand,
 			Random chooseRand) {
 
 		ArrayList testCase = new ArrayList();
@@ -476,7 +492,7 @@ public class TestSetManager {
 		} else {
 			// length of test cases:[MIN_LENGTH_TESTCASE, MAX_LENGTH_TESTCASE]
 			do {
-				length_TS = rand.nextInt(this.MAX_LENGTH_TESTCASE);
+				length_TS = rand.nextInt(TestSetManager.MAX_LENGTH_TESTCASE);
 			} while (length_TS < MIN_LENGTH_TESTCASE);
 		}
 
@@ -510,14 +526,14 @@ public class TestSetManager {
 		return sb.toString();
 	}
 
-	public String generateRestrictedTestCase(Vector events) {
+	public static String generateRestrictedTestCase(Vector events) {
 		StringBuilder sb = new StringBuilder();
 		Random rand = new Random();
 		int length_TS;
 
 		// length of test cases:[MIN_LENGTH_TESTCASE, MAX_LENGTH_TESTCASE]
 		do {
-			length_TS = rand.nextInt(this.MAX_LENGTH_TESTCASE);
+			length_TS = rand.nextInt(TestSetManager.MAX_LENGTH_TESTCASE);
 		} while (length_TS < MIN_LENGTH_TESTCASE);
 
 		for (int i = 0; i < events.size(); i++) {
@@ -533,7 +549,7 @@ public class TestSetManager {
 		return sb.toString();
 	}
 
-	public Vector generateEventSequence(Vector events) {
+	public static Vector generateEventSequence(Vector events) {
 		Vector eventSequences = new Vector();
 		
 		Random rand = new Random();
@@ -558,7 +574,7 @@ public class TestSetManager {
 	 * @param testSet
 	 * @return
 	 */
-	public String getTestCase(Vector testSet) {
+	public static String getTestCase(Vector testSet) {
 		String testCase;
 		do {
 			testCase = (String) testPool.get((new Random()).nextInt(testPool
@@ -574,7 +590,7 @@ public class TestSetManager {
 	 * @param testSet
 	 * @return
 	 */
-	public int getTestCaseIndex(Vector testSet) {
+	public static int getTestCaseIndex(Vector testSet) {
 		int testCaseIndex;
 		ContextStream testCase;
 		Random rand = new Random();
@@ -587,7 +603,7 @@ public class TestSetManager {
 		return testCaseIndex;
 	}
 
-	public void saveTestArtifacts(Hashtable data, String saveFile){
+	public static  void saveTestArtifacts(Hashtable data, String saveFile){
 		StringBuilder sb = new StringBuilder();
 		sb.append("TestCase" + "\t" + "Length" + "\t" + "CI" + "\t" + "Sequences" + "\n");
 		
@@ -602,17 +618,17 @@ public class TestSetManager {
 		Logger.getInstance().close();
 	}
 	
-	public void saveTestArtifacts(String path, Vector data) {
+	public static void saveTestArtifacts(String path, Vector data) {
 		Logger.getInstance().setPath(path, false);
-		Logger.getInstance().write(this.toString(data));
+		Logger.getInstance().write(TestSetManager.toString(data));
 		Logger.getInstance().close();
 	}
 
-	private String toString(Vector data) {
+	private static String toString(Vector data) {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < data.size(); i++) {
 			if (data.get(i) instanceof Vector) {
-				sb.append(this.toString((Vector) data.get(i)));
+				sb.append(TestSetManager.toString((Vector) data.get(i)));
 			} else {
 				sb.append(data.get(i) + "\t");
 			}
@@ -620,7 +636,7 @@ public class TestSetManager {
 		return sb.toString();
 	}
 
-	public Hashtable loadTestPoolFromFile(boolean containHeader, String testPoolFile){
+	public static Hashtable loadTestPoolFromFile(boolean containHeader, String testPoolFile){
 		Hashtable testpool = new Hashtable();
 		
 		try {
@@ -652,7 +668,7 @@ public class TestSetManager {
 		return testpool;
 	}
 	
-//	public void loadTestPoolFromFile(String testPoolFile) {
+//	public void loadTestPoolFromFile(String t estPoolFile) {
 //		try {
 //			BufferedReader br = new BufferedReader(new FileReader(testPoolFile));
 //			String testCase = null;
@@ -673,7 +689,7 @@ public class TestSetManager {
 	public static void main(String[] args) {
 
 		String date = "20090226";
-		String criteria = "CA";
+		String criteria = "CA_old";
 		int testSetNum = NUMBER_TESTSET;
 		if (args.length == 1) {
 			date = args[0];
@@ -692,13 +708,13 @@ public class TestSetManager {
 		events.add(WTourDemo.VISIT);
 		events.add(WTourEnd.END);
 
-		TestSetManager manager = new TestSetManager();
+//		TestSetManager manager = new TestSetManager();
 
 		String testPoolFile = "ContextIntensity/" + date + "/TestPool_temp.txt";
 
 		// 1. [option]generate test pools, each test case is attached with CI
-//		TestSetManager.testPool = manager.generateTestPool(events);
-//		manager.saveTestArtifacts(manager.testPool, testPoolFile);
+		TestSetManager.testPool = TestSetManager.generateTestPool(events);
+		TestSetManager.saveTestArtifacts(TestSetManager.testPool, testPoolFile);
 		
 		// manager.generateRestrictedTestPool(events);
 //		manager.tranverseData(testPoolFile, testPoolFile.substring(0,
@@ -707,7 +723,7 @@ public class TestSetManager {
 
 		// 2. [mandatory]load test pools from files
 		boolean containHeader = true;
-		TestSetManager.testPool = manager.loadTestPoolFromFile(containHeader, testPoolFile);
+		TestSetManager.testPool = TestSetManager.loadTestPoolFromFile(containHeader, testPoolFile);
 
 		// 3. [mandatory]get adequacy test sets
 		String driverFile = "ContextIntensity/" + date + "/Drivers_" + criteria
@@ -715,7 +731,7 @@ public class TestSetManager {
 		String saveFile = "ContextIntensity/" + date + "/" + criteria
 				+ "TestSets.txt";
 
-		 Vector testSets = manager.generateAllTestSetsAndSave(testSetNum,
+		 Vector testSets = TestSetManager.generateAllTestSetsAndSave(testSetNum,
 		 driverFile, saveFile);
 
 		// manager.generateAdequateTestSet(driverFile);
@@ -747,8 +763,8 @@ public class TestSetManager {
 		// }
 		//	
 		containHeader = false;
-		manager.attachTSWithCI(containHeader, saveFile, saveFile.substring(0, saveFile.indexOf(".txt"))+"_CI.txt");
-//		manager.attachTSWithCI(saveFile, saveFile);
+		TestSetManager.attachTSWithCI(containHeader, saveFile, saveFile.substring(0, saveFile.indexOf(".txt"))+"_CI.txt");
+//		TestSetManager.attachTSWithCI(saveFile, saveFile);
 		System.exit(0);
 	}
 }
