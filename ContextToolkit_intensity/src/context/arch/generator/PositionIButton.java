@@ -82,6 +82,14 @@ public class PositionIButton {
 		this.testCase = testCaseInstance;
 	}
 	
+	public void set(int versionNumber, int testCaseNumber, Vector testCase){
+		StringBuilder sb = new StringBuilder();
+		for(int i = 0; i < testCase.size(); i ++){
+			sb.append(testCase.get(i) + "\t");
+		}
+		this.set(versionNumber, testCaseNumber, sb.toString());
+	}
+	
 	//2009/1/17: by this way, we can get adequate test sets without Ant
 	public void runTestCase(){
 		int versionNumber = this.mutantVersion;
@@ -219,18 +227,23 @@ public class PositionIButton {
 	
 	private void startSimulate(int serverPort, String testCase) {
 		//2009/1/18:
-		int index = testCase.indexOf("\t");
-		while(index > -1){
-			String event = testCase.substring(0, index);
-			//2009/1/19: not use thread to save port resources and memory resources
-//			new TestCaseFeedThread(this.sender, event, data, "127.0.0.1", serverPort).run();
-			this.sendTestCase(event, data, "127.0.0.1", serverPort);
-			testCase = testCase.substring(index + "\t".length());
-			index = testCase.indexOf("\t");
-		}
-		if(testCase.length() > 0){			
-			this.sendTestCase(testCase, data, "127.0.0.1", serverPort);
-//			new TestCaseFeedThread(this.sender, testCase, data, "127.0.0.1", serverPort).run();
+//		int index = testCase.indexOf("\t");
+//		while(index > -1){
+//			String event = testCase.substring(0, index);
+//			//2009/1/19: do not use thread to save port resources and memory resources
+////			new TestCaseFeedThread(this.sender, event, data, "127.0.0.1", serverPort).run();
+//			this.sendTestCase(event, data, "127.0.0.1", serverPort);
+//			testCase = testCase.substring(index + "\t".length());
+//			index = testCase.indexOf("\t");
+//		}
+//		if(testCase.length() > 0){			
+//			this.sendTestCase(testCase, data, "127.0.0.1", serverPort);
+////			new TestCaseFeedThread(this.sender, testCase, data, "127.0.0.1", serverPort).run();
+//		}
+		//2009-02-27:
+		String[] events = testCase.split("\t");
+		for(int i = 0; i < events.length; i ++){
+			this.sendTestCase(events[i], data, "127.0.0.1", serverPort);
 		}
 	}
 	
