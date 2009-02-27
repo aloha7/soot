@@ -30,13 +30,6 @@ public class ExecutionManager {
 		for(int i =  testSet_Index; i < testSets.size(); i ++){
 			ExecutionManager.getOutputWithDrivers(min_fault, (Vector)testSets.get(i), 
 					i, testCase_Index, testpool, date, criteria, iteration);
-			if(min_fault!=0){ // at the same time we need to run
-								// golden version multiple times to
-								// 	derive oracles
-				ExecutionManager.getOutputWithDrivers(0, (Vector) testSets
-							.get(i), i, testCase_Index, testpool, date,
-							criteria, 100);
-			}
 		}
 		
 		
@@ -49,13 +42,6 @@ public class ExecutionManager {
 						(Vector) testSets.get(i), i, testCase_Index, testpool,
 						date, criteria, iteration);
 
-				if (versionNumber != 0) { // at the same time we need to run
-											// golden version multiple times to
-											// derive oracles
-					ExecutionManager.getOutputWithDrivers(0, (Vector) testSets
-							.get(i), i, testCase_Index, testpool, date,
-							criteria, 100);
-				}
 			}
 		}
 
@@ -63,7 +49,8 @@ public class ExecutionManager {
 	
 	
 	/**
-	 * 2009-02-27: start to execute from a test case in a test set
+	 * 2009-02-27: start to execute from a test case in a test set. For golden versions, do not execute 
+	 * them if they exists 
 	 * 
 	 * @param faultyVersion
 	 * @param testSet
@@ -107,6 +94,7 @@ public class ExecutionManager {
 				// output in a Hashtable, then the result will be improved
 				saveFile += criteria + "_" + testSetIndex + "_" + testCaseID
 						+ ".txt";
+				
 				try {
 					FileOutputStream outStr = new FileOutputStream(saveFile,
 							true);
@@ -245,13 +233,6 @@ public class ExecutionManager {
 						(Vector) testSets.get(i), i, testCase_Index, testpool,
 						date, criteria, iteration);
 
-				if (versionNumber != 0) { // at the same time we need to run
-											// golden version multiple times to
-											// derive oracles
-					ExecutionManager.getOutputWithDrivers(0, (Vector) testSets
-							.get(i), i, testCase_Index, testpool, date,
-							criteria, 100);
-				}
 			}
 		}
 
@@ -266,22 +247,6 @@ public class ExecutionManager {
 				testSet_Index, testCase_Index, testpool, date, criteria,
 				iteration);
 
-		// for (int versionNumber = min_fault; versionNumber < max_fault;
-		// versionNumber++) {
-		// // for each faulty version, we run all test cases in testSets to
-		// // generate output
-		// for(int i = 0; i < testSets.size(); i ++){
-		// ExecutionManager.getOutputWithDrivers(versionNumber,
-		// (Vector)testSets.get(i),
-		// i, testpool, date, criteria, iteration);
-		//				
-		// if(versionNumber != 0){ // at the same time we need to run golden
-		// version multiple times to derive oracles
-		// ExecutionManager.getOutputWithDrivers(0, (Vector)testSets.get(i),
-		// i, testpool, date, criteria, 100);
-		// }
-		// }
-		// }
 	}
 
 	/**
