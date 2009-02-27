@@ -22,66 +22,64 @@ public class ExecutionManager {
 	public TestSetManager manager_TS;
 	public Manipulator manager;
 
-	/**2009-02-27:
+	/**
+	 * 2009-02-27: start to execute from a test case in a test set
 	 * 
-	 * @param testSet:a test set only contains the index of a test case.
-	 * @param testpool
-	 * @param driverFile
-	 * @param iteration
-	 */
-	public static void getOracleWithDrivers(Vector testSets, Hashtable testpool, String date, String criteria, int iteration){
-		for(int i = 0; i < testSets.size(); i ++){
-			System.out.println("Test Set " + i + " has been executed!");
-			ExecutionManager.getOracleWithDrivers((Vector)testSets.get(i), i, testpool, date, criteria, iteration);	
-		}
-	}
-	
-	
-	
-	/**20090227: get the oracle of the golden versions when drivers are available, we need to run it
-	 * multiple times to iterate all its output
-	 * 
+	 * @param faultyVersion
 	 * @param testSet
 	 * @param testSetIndex
+	 * @param testCaseIndex
 	 * @param testpool
 	 * @param date
 	 * @param criteria
 	 * @param iteration
 	 */
-	public static void getOracleWithDrivers(Vector testSet, int testSetIndex, Hashtable testpool, String date, String criteria, int iteration ){
-		
+	public static void getOutputWithDrivers(int faultyVersion, Vector testSet,
+			int testSetIndex, int testCaseIndex, Hashtable testpool,
+			String date, String criteria, int iteration) {
+
 		// 1.load all drivers for a specified criteria
-		String driverFile =  "ContextIntensity/" + date + "/Drivers_" + criteria + ".txt";
+		String driverFile = "ContextIntensity/" + date + "/Drivers_" + criteria
+				+ ".txt";
 		Manipulator manager = Manipulator.getInstance(driverFile);
 		Vector drivers = manager.getAllUncoveredDrivers();
 		Vector leftDrivers;
 
-		for(int i = 0; i < testSet.size(); i ++){
-			String testCaseIndex = (String)testSet.get(i);
-			ContextStream testCase = (ContextStream)testpool.get(testCaseIndex);
-			StringBuilder sb = new StringBuilder();
-			
-			for(int k = 0; k < testCase.eventSequence.size(); k ++){
-				sb.append(((String)testCase.eventSequence.get(k)).trim() + "\t");
-			}
-			
-			for(int j = 0; j < iteration; j ++){
-				String saveFile = "ContextIntensity/" + date + "/Output/0/";
-				if(!new File(saveFile).exists()){
+		for (int j = 0; j < iteration; j++) {
+			for (int i = testCaseIndex; i < testSet.size(); i++) {
+				String testCaseID = (String) testSet.get(i);
+				ContextStream testCase = (ContextStream) testpool
+						.get(testCaseID);
+				StringBuilder sb = new StringBuilder();
+
+				for (int k = 0; k < testCase.eventSequence.size(); k++) {
+					sb.append(((String) testCase.eventSequence.get(k)).trim()
+							+ "\t");
+				}
+
+				String saveFile = "ContextIntensity/" + date + "/Output/"
+						+ faultyVersion + "/";
+				if (!new File(saveFile).exists()) {
 					new File(saveFile).mkdirs();
 				}
-				
-				//we do not keep intermediate results dynamically, if we keep output in a Hashtable, then the result will be improved
-				saveFile += testSetIndex + "_" + testCaseIndex + ".txt";
+
+				// we do not keep intermediate results dynamically, if we keep
+				// output in a Hashtable, then the result will be improved
+				saveFile += criteria + "_" + testSetIndex + "_" + testCaseID
+						+ ".txt";
 				try {
-					FileOutputStream outStr = new FileOutputStream(saveFile, true);
-					BufferedOutputStream bufStr = new BufferedOutputStream(outStr);
+					FileOutputStream outStr = new FileOutputStream(saveFile,
+							true);
+					BufferedOutputStream bufStr = new BufferedOutputStream(
+							outStr);
 					PrintStream ps = new PrintStream(bufStr);
 					System.setOut(ps);
 					System.setErr(ps);
 					// 6. execute the test case
-					int versionNumber = 0; //golden version
-					PositionIButton.getInstance().set(versionNumber, Integer.parseInt(testCaseIndex), sb.toString());
+					// int versionNumber = 0; // golden version
+					int versionNumber = faultyVersion;
+					PositionIButton.getInstance().set(versionNumber,
+							Integer.parseInt(testCaseID), sb.toString());
 					PositionIButton.getInstance().runTestCase();
 					PositionIButton.getInstance().stopRunning();
 
@@ -96,17 +94,177 @@ public class ExecutionManager {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
-				manager.setDrivers(drivers); // reset the drivers
+			}
+			manager.setDrivers(drivers); // reset the drivers after one round of execution instead of after one test case execution
+		}
+	}
+
+	/**
+	 * 2009-02-27: start from a test set for a specified faulty version
+	 * 
+	 * @param faultyVersion
+	 * @param testSet
+	 * @param testSetIndex
+	 * @param testpool
+	 * @param date
+	 * @param criteria
+	 * @param iteration
+	 */
+	public static void getOutputWithDrivers(int faultyVersion, Vector testSet,
+			int testSetIndex, Hashtable testpool, String date, String criteria,
+			int iteration) {
+
+		int testCaseIndex = 0;
+		ExecutionManager.getOutputWithDrivers(faultyVersion, testSet,
+				testSetIndex, testCaseIndex, testpool, date, criteria,
+				iteration);
+		// // 1.load all drivers for a specified criteria
+		// String driverFile = "ContextIntensity/" + date + "/Drivers_" +
+		// criteria
+		// + ".txt";
+		// Manipulator manager = Manipulator.getInstance(driverFile);
+		// Vector drivers = manager.getAllUncoveredDrivers();
+		// Vector leftDrivers;
+		//
+		// for (int i = 0; i < testSet.size(); i++) {
+		// String testCaseIndex = (String) testSet.get(i);
+		// ContextStream testCase = (ContextStream) testpool
+		// .get(testCaseIndex);
+		// StringBuilder sb = new StringBuilder();
+		//
+		// for (int k = 0; k < testCase.eventSequence.size(); k++) {
+		// sb.append(((String) testCase.eventSequence.get(k)).trim()
+		// + "\t");
+		// }
+		//
+		// for (int j = 0; j < iteration; j++) {
+		// String saveFile = "ContextIntensity/" + date + "/Output/"
+		// + faultyVersion + "/";
+		// if (!new File(saveFile).exists()) {
+		// new File(saveFile).mkdirs();
+		// }
+		//
+		// // we do not keep intermediate results dynamically, if we keep
+		// // output in a Hashtable, then the result will be improved
+		// saveFile += criteria+"_"+testSetIndex + "_" + testCaseIndex + ".txt";
+		// try {
+		// FileOutputStream outStr = new FileOutputStream(saveFile,
+		// true);
+		// BufferedOutputStream bufStr = new BufferedOutputStream(
+		// outStr);
+		// PrintStream ps = new PrintStream(bufStr);
+		// System.setOut(ps);
+		// System.setErr(ps);
+		// // 6. execute the test case
+		// int versionNumber = 0; // golden version
+		// PositionIButton.getInstance().set(versionNumber,
+		// Integer.parseInt(testCaseIndex), sb.toString());
+		// PositionIButton.getInstance().runTestCase();
+		// PositionIButton.getInstance().stopRunning();
+		//
+		// // 7. close the output
+		// outStr.close();
+		// bufStr.close();
+		// ps.close();
+		// } catch (FileNotFoundException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		//
+		// manager.setDrivers(drivers); // reset the drivers
+		// }
+		// }
+	}
+
+	/**
+	 * 2009-02-27: start from a close range of faulty versions, and a specified
+	 * fault start from a test case of a test set
+	 * 
+	 * @param min_fault
+	 * @param max_fault
+	 * @param testSets
+	 * @param testSet_Index
+	 * @param testCase_Index
+	 * @param testpool
+	 * @param date
+	 * @param criteria
+	 * @param iteration
+	 */
+	public static void getOutputWithDrivers(int min_fault, int max_fault,
+			Vector testSets, int testSet_Index, int testCase_Index,
+			Hashtable testpool, String date, String criteria, int iteration) {
+
+		for (int versionNumber = min_fault; versionNumber < max_fault; versionNumber++) {
+			// for each faulty version, we run all test cases in testSets to
+			// generate output
+			for (int i = testSet_Index; i < testSets.size(); i++) {
+				ExecutionManager.getOutputWithDrivers(versionNumber,
+						(Vector) testSets.get(i), i, testCase_Index, testpool,
+						date, criteria, iteration);
+
+				if (versionNumber != 0) { // at the same time we need to run
+											// golden version multiple times to
+											// derive oracles
+					ExecutionManager.getOutputWithDrivers(0, (Vector) testSets
+							.get(i), i, testCase_Index, testpool, date,
+							criteria, 100);
+				}
 			}
 		}
-		
+
 	}
-	
-	
+
+	public static void getOutputWithDrivers(int min_fault, int max_fault,
+			Vector testSets, Hashtable testpool, String date, String criteria,
+			int iteration) {
+		int testSet_Index = 0;
+		int testCase_Index = 0;
+		ExecutionManager.getOutputWithDrivers(min_fault, max_fault, testSets,
+				testSet_Index, testCase_Index, testpool, date, criteria,
+				iteration);
+
+		// for (int versionNumber = min_fault; versionNumber < max_fault;
+		// versionNumber++) {
+		// // for each faulty version, we run all test cases in testSets to
+		// // generate output
+		// for(int i = 0; i < testSets.size(); i ++){
+		// ExecutionManager.getOutputWithDrivers(versionNumber,
+		// (Vector)testSets.get(i),
+		// i, testpool, date, criteria, iteration);
+		//				
+		// if(versionNumber != 0){ // at the same time we need to run golden
+		// version multiple times to derive oracles
+		// ExecutionManager.getOutputWithDrivers(0, (Vector)testSets.get(i),
+		// i, testpool, date, criteria, 100);
+		// }
+		// }
+		// }
+	}
+
 	/**
-	 * 2009-02-27: get the oracle of the golden versions when no drivers are available, we need to run it
-	 * multiple times to iterate all its output
+	 * 2009-02-27:
+	 * 
+	 * @param testSet:a
+	 *            test set only contains the index of a test case.
+	 * @param testpool
+	 * @param driverFile
+	 * @param iteration
+	 */
+	public static void getOracleWithDrivers(Vector testSets,
+			Hashtable testpool, String date, String criteria, int iteration) {
+		for (int i = 0; i < testSets.size(); i++) {
+			// System.out.println("Test Set " + i + " has been executed!");
+			ExecutionManager.getOutputWithDrivers(0, (Vector) testSets.get(i),
+					i, testpool, date, criteria, iteration);
+		}
+	}
+
+	/**
+	 * 2009-02-27: get the oracle of the golden versions when no drivers are
+	 * available, we need to run it multiple times to iterate all its output
 	 * 
 	 * @param testpool
 	 * @param min_TestCase
@@ -136,32 +294,34 @@ public class ExecutionManager {
 
 		// 2009/2/11: when deriving oracles, it needs not to separate
 		// different executions
-		for(int i = 0; i < events.size(); i ++){
-			String testCaseInstance = (String)events.get(i);
-			String file = directory + "/" + (min_TestCase + i) + ".txt";	
-			
-			long start = System.currentTimeMillis();
-			
-			try {
-				for(int k = 0; k < iteration; k ++){
-						FileOutputStream outStr = new FileOutputStream(file, false);
-						BufferedOutputStream bufStr = new BufferedOutputStream(outStr);
-						PrintStream ps = new PrintStream(bufStr);
-						System.setOut(ps);
-						System.setErr(ps);
-						// 6. execute the test case
-						PositionIButton.getInstance().set(0, i,
-								testCaseInstance);
-						PositionIButton.getInstance().runTestCase();
-						PositionIButton.getInstance().stopRunning();
+		for (int i = 0; i < events.size(); i++) {
+			String testCaseInstance = (String) events.get(i);
+			String file = directory + "/" + (min_TestCase + i) + ".txt";
 
-						// 7. close the output
-						outStr.close();
-						bufStr.close();
-						ps.close();
+			long start = System.currentTimeMillis();
+
+			try {
+				for (int k = 0; k < iteration; k++) {
+					FileOutputStream outStr = new FileOutputStream(file, false);
+					BufferedOutputStream bufStr = new BufferedOutputStream(
+							outStr);
+					PrintStream ps = new PrintStream(bufStr);
+					System.setOut(ps);
+					System.setErr(ps);
+					// 6. execute the test case
+					PositionIButton.getInstance().set(0, i, testCaseInstance);
+					PositionIButton.getInstance().runTestCase();
+					PositionIButton.getInstance().stopRunning();
+
+					// 7. close the output
+					outStr.close();
+					bufStr.close();
+					ps.close();
 				}
 				// 2009/2/11: for debugging purpose
-				 System.out.println("Test case:" + (min_TestCase + i) + " has been executed in (" + (System.currentTimeMillis()-start) + ")");
+				System.out.println("Test case:" + (min_TestCase + i)
+						+ " has been executed in ("
+						+ (System.currentTimeMillis() - start) + ")");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -414,35 +574,53 @@ public class ExecutionManager {
 	 */
 
 	public static void main(String[] args) {
-		
-		//2009-02-27:
+
+		// 2009-02-27:
 		System.out
-				.println("USAGE:<Date(20090227)><MinFaultyVersion(0)><MaxFaultyVersion(237)><ExecutionTimes(100)><Criteria(CA)>");
+				.println("USAGE:<Date(20090227)><MinFaultyVersion(1)><MaxFaultyVersion(237)>" +
+						"<ExecutionTimes(100)><Criteria(CA)>[TestSetStarter(0)][TestCaseStarter(0)]");
 
 		String date = args[0];
-		int min_TestCase = Integer.parseInt(args[1]);
-		int max_TestCase = Integer.parseInt(args[2]);
+		int start_Version = Integer.parseInt(args[1]);
+		int end_Version = Integer.parseInt(args[2]);
 		int iteration = Integer.parseInt(args[3]);
 		String criteria = args[4];
-		
 
 		String testPoolFile = "ContextIntensity/" + date + "/TestPool.txt";
 		boolean containHeader = true;
 		Hashtable testpool = TestSetManager.loadTestPoolFromFile(containHeader,
 				testPoolFile);
-		
-		//1. get oracles of golden versions under the condition when no drivers are available
-		String testDriverFile = "ContextIntensity/" + date + "";
-//		TestManagers.getOracle(testpool, min_TestCase, max_TestCase, iteration);
 
-		//2. get oracles of golden versions under the condition that drivers are present
-		String testSetFile = "ContextIntensity/" + date + "/" + criteria + "TestSets.txt";
+		// 1. get oracles of golden versions under the condition when no drivers
+		// are available
+		String testDriverFile = "ContextIntensity/" + date + "";
+		// TestManagers.getOracle(testpool, min_TestCase, max_TestCase,
+		// iteration);
+
+		// 2. get oracles of golden versions under the condition that drivers
+		// are present
+		String testSetFile = "ContextIntensity/" + date + "/" + criteria
+				+ "TestSets.txt";
 		containHeader = false;
-		Vector testSets = TestSetManager.getAdequateTestSetsFromFile(containHeader, testSetFile);
-		ExecutionManager.getOracleWithDrivers(testSets, testpool, date, criteria, iteration);
-		
-		
-//		test.getOutput(min_Version, max_Version, testpool, iteration);
+		Vector testSets = TestSetManager.getAdequateTestSetsFromFile(
+				containHeader, testSetFile);
+
+		int testSet_Index, testCase_Index;
+		if (args.length == 7) {
+			testSet_Index = Integer.parseInt(args[5]);
+			testCase_Index = Integer.parseInt(args[6]);
+			ExecutionManager.getOutputWithDrivers(start_Version, end_Version,
+					testSets, testSet_Index, testCase_Index, testpool, date,
+					criteria, iteration);
+		} else if (args.length == 5) {
+			ExecutionManager.getOutputWithDrivers(start_Version, end_Version,
+					testSets, testpool, date, criteria, iteration);
+		}
+
+		// ExecutionManager.getOracleWithDrivers(testSets, testpool, date,
+		// criteria, iteration);
+
+		// test.getOutput(min_Version, max_Version, testpool, iteration);
 
 		// // //1. 2009/2/11: get output for all faulty versions
 		// String testPoolFile = Constant.baseFolder
@@ -511,9 +689,9 @@ public class ExecutionManager {
 		// if (args.length == 2) {
 		// min_Version = Integer.parseInt(args[0]);
 		// max_Version = Integer.parseInt(args[1]);
-		//		}
-		//		test.executeTestSets(min_Version, max_Version, criteria, testSets);
-				System.exit(0);
+		// }
+		// test.executeTestSets(min_Version, max_Version, criteria, testSets);
+		System.exit(0);
 	}
 
 }
