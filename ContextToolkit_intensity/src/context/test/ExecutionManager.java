@@ -22,6 +22,46 @@ public class ExecutionManager {
 	public TestSetManager manager_TS;
 	public Manipulator manager;
 
+	public static void continueGetOutputWithDrivers(int min_fault, int max_fault,
+			Vector testSets, int testSet_Index, int testCase_Index,
+			Hashtable testpool, String date, String criteria, int iteration) {
+
+		//for the first faulty version, we should start from a specified test set
+		for(int i =  testSet_Index; i < testSets.size(); i ++){
+			ExecutionManager.getOutputWithDrivers(min_fault, (Vector)testSets.get(i), 
+					i, testCase_Index, testpool, date, criteria, iteration);
+			if(min_fault!=0){ // at the same time we need to run
+								// golden version multiple times to
+								// 	derive oracles
+				ExecutionManager.getOutputWithDrivers(0, (Vector) testSets
+							.get(i), i, testCase_Index, testpool, date,
+							criteria, 100);
+			}
+		}
+		
+		
+		//for the other faulty versions, we should start from the first test set.
+		for (int versionNumber = min_fault + 1; versionNumber < max_fault; versionNumber++) {
+			// for each faulty version, we run all test cases in testSets to
+			// generate output
+			for (int i = 0; i < testSets.size(); i++) {
+				ExecutionManager.getOutputWithDrivers(versionNumber,
+						(Vector) testSets.get(i), i, testCase_Index, testpool,
+						date, criteria, iteration);
+
+				if (versionNumber != 0) { // at the same time we need to run
+											// golden version multiple times to
+											// derive oracles
+					ExecutionManager.getOutputWithDrivers(0, (Vector) testSets
+							.get(i), i, testCase_Index, testpool, date,
+							criteria, 100);
+				}
+			}
+		}
+
+	}
+	
+	
 	/**
 	 * 2009-02-27: start to execute from a test case in a test set
 	 * 
@@ -609,9 +649,14 @@ public class ExecutionManager {
 		if (args.length == 7) {
 			testSet_Index = Integer.parseInt(args[5]);
 			testCase_Index = Integer.parseInt(args[6]);
-			ExecutionManager.getOutputWithDrivers(start_Version, end_Version,
-					testSets, testSet_Index, testCase_Index, testpool, date,
+			ExecutionManager.continueGetOutputWithDrivers(start_Version, end_Version, 
+					testSets, testSet_Index, testCase_Index, testpool, date, 
 					criteria, iteration);
+			
+			
+//			ExecutionManager.getOutputWithDrivers(start_Version, end_Version,
+//					testSets, testSet_Index, testCase_Index, testpool, date,
+//					criteria, iteration);
 		} else if (args.length == 5) {
 			ExecutionManager.getOutputWithDrivers(start_Version, end_Version,
 					testSets, testpool, date, criteria, iteration);
