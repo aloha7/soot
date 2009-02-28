@@ -41,6 +41,57 @@ public class TestSetManager {
 		} while (testSets.size() < NUMBER_TESTSET);
 	}
 	
+	
+	/**2009-02-27:interprete the CI of adequate test sets
+	 * 
+	 * @param containHeader
+	 * @param testSetFile
+	 * @param saveFile
+	 */
+		public void attachTSWithCI(boolean containHeader, String testSetFile, String saveFile) {
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(testSetFile));
+
+				String str = null;
+				StringBuilder sb = new StringBuilder();
+				if(containHeader)
+					br.readLine();
+				
+				while ((str = br.readLine()) != null) {
+					String temp = str;
+					
+					String[] testCases = temp.substring(
+							0, temp.indexOf("time:"))
+							.split("\t");
+					
+					String events = temp.substring(0, temp.indexOf("time:")).trim();
+					String time = temp.substring(temp.indexOf("time:")+"time:".length()).trim();
+					
+					
+					double sumIntensity = 0;
+					for (String testCaseIndex : testCases) {
+						sumIntensity += this.getIntensity(testCaseIndex);
+					}
+					double averageIntensity = sumIntensity / (double)testCases.length;
+					sb.append("Length:\t"+ testCases.length+"\tCI:\t" + averageIntensity + "\ttime:\t" +time+"\t"+ events+ "\n");
+				}
+				br.close();
+
+				Logger.getInstance().setPath(saveFile, false);
+				Logger.getInstance().write(sb.toString());
+				Logger.getInstance().close();
+
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+		}
+	
 	/**select same sized test sets to be a candidate
 	 * 
 	 * @param size: the size of candidate test set
@@ -197,7 +248,7 @@ public class TestSetManager {
 		// 3. save testSets into files
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(savePath,
-					true));
+					false));
 			bw.write(sb.toString());
 			bw.close();
 		} catch (IOException e) {
@@ -476,11 +527,21 @@ public class TestSetManager {
 	public void loadTestPoolFromFile(String testPoolFile) {
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(testPoolFile));
-			String testCase = null;
+			String line = null;
+			
 			this.testPool = new Vector();
-			while ((testCase = br.readLine()) != null) {
-				testCase = testCase.substring(0, testCase.indexOf("intensity"));
+			this.intensities = new HashMap();
+			
+			int i = 0;
+			while ((line = br.readLine()) != null) {
+				
+				String testCase = line.substring(0, line.indexOf("intensity:\t"));
 				this.testPool.add(testCase);
+
+				String intensity = line.substring(line.indexOf("intensity:\t")+"intensity:\t".length()); 
+				//2009-02-28:also load the intensity information 
+				this.intensities.put(""+i, intensity);
+				i++;
 			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -494,7 +555,7 @@ public class TestSetManager {
 	public static void main(String[] args) {
 
 		String date = "20090226";
-		String criteria = "Stoc1";
+		String criteria = "CA";
 		
 		Vector events = new Vector();
 		events.add(WTourRegistration.UPDATE);
@@ -505,15 +566,15 @@ public class TestSetManager {
 		TestSetManager manager = new TestSetManager();
 
 		// 1. [option]generate test pools
-		 manager.generateTestPool(events);
+//		 manager.generateTestPool(events);
 //		 manager.generateRestrictedTestPool(events);
 		 
 		 String testpoolFile = Constant.baseFolder +
 		 "ContextIntensity/"+date+"/TestPool.txt";
-		 manager.saveTestArtifacts(testpoolFile, manager.testPool);
+//		 manager.saveTestArtifacts(testpoolFile, manager.testPool);
 
 		 String traverseFile = testpoolFile.substring(0, testpoolFile.indexOf(".txt"))+"_traverse.txt";
-		 manager.tranverseData(testpoolFile, traverseFile);
+//		 manager.tranverseData(testpoolFile, traverseFile);
 		 
 		// 2. [mandatory]load test pools from files
 		manager.loadTestPoolFromFile(traverseFile);
@@ -521,18 +582,19 @@ public class TestSetManager {
 
 		
 		// 3. [mandatory]get adequacy test sets
-//		 manager.generateAdequateTestSet(Constant.baseFolder +
-//		 "ContextIntensity/Drivers/Drivers_CA.txt");
-		// manager.generateAllTestSets(Constant.baseFolder +
-		// "ContetIntensity/Drivers/Drivers_CA.txt");
 		String driverFile = Constant.baseFolder
 		+ "ContextIntensity/"+date+"/Drivers_"+criteria+".txt";
 		
 		String testSetFile =Constant.baseFolder
 		+ "ContextIntensity/"+date+"/TestSet_"+criteria+".txt";
 		
-		manager.generateAllTestSetsAndSave( driverFile, testSetFile);
+//		manager.generateAllTestSetsAndSave( driverFile, testSetFile);
 
+		//4.[mandatory]get CI of test sets
+		boolean containHeader = false;
+		String saveFile =  testSetFile.substring(0, testSetFile.indexOf(".txt")) + "_CI.txt";
+		manager.attachTSWithCI(containHeader, testSetFile, saveFile);
+		
 //		manager.generateAllTestSetsAndSave(Constant.baseFolder
 //				+ "ContextIntensity/Drivers/Drivers_Stoc1.txt",
 //				Constant.baseFolder
