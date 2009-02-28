@@ -7,10 +7,13 @@ import java.util.StringTokenizer;
 public class TestCase extends Vector{	
 	//Test case is a Vector to keep ContextEvent	
 	public int length;
-		
+	public double CI; 
+	
 	public TestCase(){	
 		length = 0;
 	}
+	
+	
 	
 	public TestCase(String testCase){
 		StringTokenizer token = new StringTokenizer(testCase, Constant.SEPERATOR);

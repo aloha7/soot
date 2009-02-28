@@ -8,8 +8,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Random;
 import java.util.Vector;
+
+import ccr.test.TestCase;
 
 import context.arch.generator.PositionIButton;
 import context.arch.widget.WTourDemo;
@@ -21,19 +24,19 @@ import context.test.util.Logger;
 
 public class TestSetManager {
 
-	public Vector testPool;
-	public Vector testSets;
+	public Vector testPool; // event sequences
+	public Vector testSets; // test case index
 	public int SIZE_TESTPOOL = 1000;
 	public int NUMBER_TESTSET = 100; //2009/1/19: this number must be big enough to get equal-sized test sets
 	public int MAX_LENGTH_TESTCASE = 20;
 	public int MIN_LENGTH_TESTCASE = 4;
 	public int FIX_LENGTH_TESTCASE = -19;
-	public HashMap intensities;
+	public HashMap intensities; //test case index(String)->CI(String)
 	
-	public void generateAllTestSets(String criteriaFile) {
+	public void generateAllTestSets(String criteriaFile, int maxTrial) {
 		this.testSets = new Vector();
 		do {
-			Vector testSet = this.generateAdequateTestSet(criteriaFile);
+			Vector testSet = this.generateAdequateTestSet(criteriaFile, maxTrial);
 			// testSets.add(testSet);
 			if (!testSets.contains(testSet)) {
 				testSets.add(testSet);
@@ -212,14 +215,16 @@ public class TestSetManager {
 		
 	}
 	
-	public void generateAllTestSetsAndSave(String criteriaFile, String savePath) {
+
+	
+	public void generateAllTestSetsAndSave(String criteriaFile, String savePath, int maxTrial) {
 
 		StringBuilder sb = new StringBuilder();
 		this.testSets = new Vector();
 
 		do {
 			long start = System.currentTimeMillis();
-			Vector testSet = this.generateAdequateTestSet(criteriaFile);
+			Vector testSet = this.generateAdequateTestSet(criteriaFile, maxTrial);
 
 			long enduration = System.currentTimeMillis() - start;
 
@@ -286,9 +291,100 @@ public class TestSetManager {
 		return testSets;
 	}
 	
-	public Vector generateAdequateTestSet(String criteriaFile) {
-		// 2009/1/17:
+	public Vector generateAdequateTestSet_refined(String criteriaFile, int maxTrial){
+		Vector testSet = new Vector();
+		long start = System.currentTimeMillis();
+		// 1.load all drivers for a specified criteria
+		Manipulator manager = Manipulator.getInstance(criteriaFile);
+		Vector drivers = manager.getAllUncoveredDrivers();
+		Vector leftDrivers;
+		Hashtable tc_drivers = new Hashtable(); //keep all drivers  covered by a test case
+		
+		int trial = 0;
+		int replaceCounter = 0;
+		
+		do {
+			trial ++;
+			// 2. random select a test case which is not in testSet
+			int testCaseIndex = this.getTestCaseIndex(testSet);
+			// int testCaseIndex = 0;
+			String testCase = (String) this.testPool.get(testCaseIndex);
+			
+			PositionIButton.getInstance().set(0, testCaseIndex, testCase);
+			PositionIButton.getInstance().runTestCase();
+			PositionIButton.getInstance().stopRunning();
 
+			// 4.judge whether this test case increases the coverage
+			leftDrivers = manager.getAllUncoveredDrivers();
+			if (leftDrivers.size() < drivers.size()
+					&& !testSet.contains(testCaseIndex)) {
+				// testSet.add(testCase);
+				// 2009/1/18: it is better to keep index instead of contents
+				testSet.add(testCaseIndex);
+				
+				Vector coveredDrivers = new Vector();
+				for(int i = 0; i < drivers.size(); i ++){
+					if(!leftDrivers.contains(drivers.get(i))){
+						coveredDrivers.add(drivers.get(i)); 
+					}
+				}
+				tc_drivers.put(testCaseIndex, coveredDrivers);
+			} else if(!testSet.contains(testCaseIndex)){
+				double testCase_CI = (Double) this.intensities.get(""+testCaseIndex);
+				//do not increase the coverage, replace the one has the lowest CI values
+				Vector replaced = new Vector();
+				for(int i = 0; i < testSet.size(); i ++){
+					
+					int temp = (Integer)testSet.get(i);
+					double temp_CI = this.getIntensity(""+temp);
+					
+					if(temp_CI < testCase_CI){//add "temp" since it has a lower CI value
+						if (replaced.size() > 0) {
+							int j = 0;
+							boolean added = false;
+							for (; j < replaced.size(); j++) {
+								int replacedTC = (Integer) replaced
+										.get(j);
+								double CI_replacedTC = this.getIntensity(""+replacedTC);
+								if (CI_replacedTC > temp_CI) {
+									// it is a correct place to insert
+									// current test case(ascending order):
+									// temp
+									replaced.add(j, temp);
+									added = true;
+									break;
+								}
+							}
+							if (!added) { // add it to the end if it has not been add
+								replaced.add(temp);
+							}
+						} else {
+							replaced.add(temp);
+						}
+					}
+				}
+				
+				if(replaced.size() > 0){
+					int testCase_replace =  (Integer)replaced.get(0);
+					testSet.remove(testCase_replace);
+					testSet.add(testCaseIndex);
+				}
+			}
+
+			// 5.re-initial the Manipulator
+			drivers = leftDrivers;
+			manager.setDrivers(drivers);
+		} while (leftDrivers.size() > 0 ||trial < maxTrial);// 6.feed more test cases if there
+		// are some uncovered drivers
+		long enduration = System.currentTimeMillis() - start;
+		System.err.println("Get an adequate test set (time: " + enduration
+				+ "):" + "\n" + this.toString(testSet) + " replaced:" + replaceCounter);
+		return testSet;
+	}
+	
+	public Vector generateAdequateTestSet_fixedSize(String criteriaFile, 
+			int testSuiteSize, String randomOrCriteria, int maxTrial){
+		
 		Vector testSet = new Vector();
 		long start = System.currentTimeMillis();
 		// 1.load all drivers for a specified criteria
@@ -296,7 +392,9 @@ public class TestSetManager {
 		Vector drivers = manager.getAllUncoveredDrivers();
 		Vector leftDrivers;
 
+		int trial = 0;
 		do {
+			trial ++;
 			// 2. random select a test case
 			int testCaseIndex = this.getTestCaseIndex(testSet);
 			// int testCaseIndex = 0;
@@ -319,8 +417,115 @@ public class TestSetManager {
 			// 5.re-initial the Manipulator
 			drivers = leftDrivers;
 			manager.setDrivers(drivers);
-		} while (leftDrivers.size() > 0);// 6.feed more test cases if there
+		} while (leftDrivers.size() > 0 && trial < maxTrial);
+		// 6.feed more test cases if there are some uncovered drivers
+		
+		Vector finalDrivers = leftDrivers;
+		if(randomOrCriteria.equals("criteria")){
+			while(trial < maxTrial &&  testSet.size()<testSuiteSize){
+				
+				//reinitialize the drivers
+				if(leftDrivers.size() ==0){
+					manager = Manipulator.getInstance(criteriaFile);
+					drivers = manager.getAllUncoveredDrivers();
+					finalDrivers = leftDrivers;
+				}else{
+					drivers = manager.getAllUncoveredDrivers();
+				}
+				
+				manager.setDrivers(drivers);
+				do {
+					trial ++;
+					// 2. random select a test case
+					int testCaseIndex = this.getTestCaseIndex(testSet);
+					// int testCaseIndex = 0;
+					String testCase = (String) this.testPool.get(testCaseIndex);
+
+					// 3.feed test case to SUT: faulty version index(must be golden
+					// version 0) + test case index
+					PositionIButton.getInstance().set(0, testCaseIndex, testCase);
+					PositionIButton.getInstance().runTestCase();
+					PositionIButton.getInstance().stopRunning();
+
+					// 4.judge whether this test case increases the coverage
+					leftDrivers = manager.getAllUncoveredDrivers();
+					if (leftDrivers.size() < drivers.size() && !testSet.contains(testCaseIndex)) {
+						testSet.add(testCaseIndex);
+					}
+
+					// 5.re-initial the Manipulator
+					drivers = leftDrivers;
+					manager.setDrivers(drivers);
+				} while (leftDrivers.size() > 0 && trial < maxTrial);
+			}
+		}else if(randomOrCriteria.equals("random")){
+			while(trial < maxTrial && testSet.size() < testSuiteSize){
+				int testCaseIndex = this.getTestCaseIndex(testSet);
+				if(!testSet.contains(testCaseIndex)){
+					testSet.add(testCaseIndex);
+				}
+				if(finalDrivers.size() > 0){
+					//some drivers have not been covered
+					String testCase = (String) this.testPool.get(testCaseIndex);
+					PositionIButton.getInstance().set(0, testCaseIndex, testCase);
+					PositionIButton.getInstance().runTestCase();
+					PositionIButton.getInstance().stopRunning();
+					finalDrivers = manager.getAllUncoveredDrivers();
+				}
+			}
+		}
+		
+		double coverage = (double)finalDrivers.size()/((double)Manipulator.getInstance(criteriaFile).getAllUncoveredDrivers().size());
+		
+		long enduration = System.currentTimeMillis() - start;
+		System.err.println("Get an adequate test set (time: " + enduration
+				+ "):" + "\n" + this.toString(testSet));
+		return testSet;
+		
+				
+	}
+	
+	public Vector generateAdequateTestSet(String criteriaFile, int maxTrial) {
+		// 2009/1/17:
+
+		Vector testSet = new Vector();
+		long start = System.currentTimeMillis();
+		// 1.load all drivers for a specified criteria
+		Manipulator manager = Manipulator.getInstance(criteriaFile);
+		Vector drivers = manager.getAllUncoveredDrivers();
+		Vector leftDrivers;
+
+		int trial = 0;
+		do {
+			trial ++;
+			// 2. random select a test case
+			int testCaseIndex = this.getTestCaseIndex(testSet);
+			// int testCaseIndex = 0;
+			String testCase = (String) this.testPool.get(testCaseIndex);
+
+			// 3.feed test case to SUT: faulty version index(must be golden
+			// version 0) + test case index
+			PositionIButton.getInstance().set(0, testCaseIndex, testCase);
+			PositionIButton.getInstance().runTestCase();
+			PositionIButton.getInstance().stopRunning();
+
+			// 4.judge whether this test case increases the coverage
+			leftDrivers = manager.getAllUncoveredDrivers();
+			if (leftDrivers.size() < drivers.size() && !testSet.contains(testCaseIndex)) {
+				// testSet.add(testCase);
+				// 2009/1/18: it is better to keep index instead of contents
+				testSet.add(testCaseIndex);
+			}
+
+			// 5.re-initial the Manipulator
+			drivers = leftDrivers;
+			manager.setDrivers(drivers);
+		} while (leftDrivers.size() > 0 && trial < maxTrial);// 6.feed more test cases if there
 											// are some uncovered drivers
+		
+		
+		double coverage = (double)leftDrivers.size()/(double)Manipulator.getInstance(criteriaFile).getAllUncoveredDrivers().size();
+		
 		long enduration = System.currentTimeMillis() - start;
 		System.err.println("Get an adequate test set (time: " + enduration
 				+ "):" + "\n" + this.toString(testSet));
@@ -554,6 +759,7 @@ public class TestSetManager {
 
 	public static void main(String[] args) {
 
+		int maxTrial = 100;
 		String date = "20090226";
 		String criteria = "CA";
 		
@@ -588,7 +794,7 @@ public class TestSetManager {
 		String testSetFile =Constant.baseFolder
 		+ "ContextIntensity/"+date+"/TestSet_"+criteria+".txt";
 		
-//		manager.generateAllTestSetsAndSave( driverFile, testSetFile);
+		manager.generateAllTestSetsAndSave( driverFile, testSetFile, maxTrial);
 
 		//4.[mandatory]get CI of test sets
 		boolean containHeader = false;

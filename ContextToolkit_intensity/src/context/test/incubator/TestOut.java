@@ -10,11 +10,11 @@ public class TestOut {
 	
 	public static void main(String[] args){
 		try {
-			PrintStream ps =new PrintStream(new BufferedOutputStream(new FileOutputStream("c:\\a.txt"))); 
+			PrintStream ps =new PrintStream(new BufferedOutputStream(new FileOutputStream("c:\\a.txt", true))); 
 			System.setOut(ps);
 			System.setErr(ps);
-			System.out.println("abcdse");
-			Reflection ref = new Reflection();
+			System.out.println("GoodMorning");
+			
 			ps.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
