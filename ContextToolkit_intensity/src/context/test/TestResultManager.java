@@ -17,6 +17,20 @@ import context.test.util.Logger;
 
 public class TestResultManager {
 
+	/**2009-02-27: when comparing whether faultyOutput is consistent with golden one,
+	 * we make such a strategy: if the former is contained in the latter, then no fault
+	 * is detected, otherwise a fault is detected
+	 * 
+	 * @param faultOutput
+	 * @param goldenOutput
+	 * @return
+	 */
+	public boolean compareResult(String faultOutput, String goldenOutput){
+		boolean fail = false;
+		
+		return fail;
+	}
+	
 	/**
 	 * 2009/2/12:list the faulty version, failure rate, fault-exposing test
 	 * cases, and total valid test cases
