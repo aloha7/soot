@@ -13,10 +13,7 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Vector;
 
-import ccr.stat.Criterion;
-import ccr.test.TestDriver;
-import ccr.test.TestSet;
-import ccr.test.TestSetManager;
+
 
 import context.arch.generator.PositionIButton;
 import context.arch.widget.WTourDemo;
@@ -1000,7 +997,7 @@ public class TestSetManager {
 			saveFile = "ContextIntensity/" + date + "/" + criteria
 			+"TestSets_"+ oldOrNew+"_"+ randomOrCriteria + "_"+ testSuiteSize + ".txt";
 		}
-		Vector testSets = TestSetManager.
+
 		//4. [mandatory]generate and save adequate test sets
 		Vector testSets = TestSetManager.generateAllTestSetsAndSave(testSetNum,
 				 driverFile, saveFile);
