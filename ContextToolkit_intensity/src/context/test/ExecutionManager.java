@@ -96,6 +96,7 @@ public class ExecutionManager {
 						+ ".txt";
 				
 				try {
+					
 					FileOutputStream outStr = new FileOutputStream(saveFile,
 							true);
 					BufferedOutputStream bufStr = new BufferedOutputStream(
@@ -110,7 +111,7 @@ public class ExecutionManager {
 							Integer.parseInt(testCaseID), sb.toString());
 					PositionIButton.getInstance().runTestCase();
 					PositionIButton.getInstance().stopRunning();
-
+					System.out.println("HelloWorld");
 					// 7. close the output
 					outStr.close();
 					bufStr.close();
@@ -123,7 +124,8 @@ public class ExecutionManager {
 					e.printStackTrace();
 				}
 			}
-			manager.setDrivers(drivers); // reset the drivers after one round of execution instead of after one test case execution
+			manager = Manipulator.getInstance(driverFile);
+			// reset the drivers after one round of execution instead of after one test case execution
 		}
 	}
 
@@ -372,7 +374,7 @@ public class ExecutionManager {
 			// Logger.getInstance().delete(directory);
 			if (!new File(directory).exists()) {
 				new File(directory).mkdirs();
-			}
+			}  
 
 			// 2009/2/11: when deriving oracles, it needs not to separate
 			// different executions
