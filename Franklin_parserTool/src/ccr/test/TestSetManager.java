@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
@@ -22,6 +23,42 @@ import ccr.stat.VariableSet;
 
 public class TestSetManager {
 	public static HashMap testCases = new HashMap();
+
+	/**
+	 * 2009-03-03: investigate the correlation between CI and coverage
+	 * 
+	 * @param appClassName
+	 * @param testpool
+	 * @param c
+	 * @param iterations
+	 * @param saveFile
+	 */
+	public static void checkCorrelation( String appClassName, TestSet testpool, Vector testCases, Criterion c,
+			 int iterations, String saveFile) {
+		HashMap testcase_Covered = new HashMap();
+
+		for (int i = 0; i < testCases.size(); i++) {
+			String testcase = (String) testCases.get(i);
+			Criterion criterion = (Criterion) c.clone();
+			String stringTrace[] = TestDriver.getTrace(appClassName, testcase);
+			ArrayList uniqueCover = increaseCoverage(stringTrace, criterion);
+			testcase_Covered.put(testcase, uniqueCover.size());
+		}
+		
+		StringBuilder sb = new StringBuilder();
+		Iterator ite = testcase_Covered.keySet().iterator();
+		sb.append("TestCase\t" + "CI\t" + "Covered(" +c.size()+ ")\t\n");
+		while (ite.hasNext()) {
+			String testcase = (String) ite.next();
+			double CI_testcase = ((TestCase) Adequacy.testCases.get(testcase)).CI;
+			int covered = (Integer) testcase_Covered.get(testcase);
+			sb.append(testcase + "\t" + CI_testcase + "\t" + covered + "\t\n");
+		}
+
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
 
 	public static void attachTSWithCI(TestSet[] testSets, String saveFile) {
 		StringBuilder sb = new StringBuilder();
@@ -74,20 +111,21 @@ public class TestSetManager {
 		return testSets;
 	}
 
-	//2009-02-25: random test sets serve as the baseline for comparison
-	public static TestSet[] getRandomTestSets(String appClassName, TestSet testpool,
-			int testSetNum, int testSuiteSize, String saveFile){
+	// 2009-02-25: random test sets serve as the baseline for comparison
+	public static TestSet[] getRandomTestSets(String appClassName,
+			TestSet testpool, int testSetNum, int testSuiteSize, String saveFile) {
 		TestSet[] testSets = new TestSet[testSetNum];
-		for(int i =0; i < testSetNum; i ++){
-			testSets[i] = TestSetManager.getRandomTestSet(appClassName, testpool, testSuiteSize);
-			testSets[i].index = ""+i;
+		for (int i = 0; i < testSetNum; i++) {
+			testSets[i] = TestSetManager.getRandomTestSet(appClassName,
+					testpool, testSuiteSize);
+			testSets[i].index = "" + i;
 			System.out.println("Test set " + i + ": " + testSets[i].toString());
 		}
-		
+
 		TestSetManager.saveTestSets(testSets, saveFile);
 		return testSets;
 	}
-	
+
 	// 2009-02-22:
 	public static TestSet getRandomTestSet(String appClassName,
 			TestSet testpool, int testSuiteSize) {
@@ -96,7 +134,7 @@ public class TestSetManager {
 
 		while (testSet.size() < testSuiteSize) {
 			String testcase = testpool.getByRandom();
-			if (!visited.contains(testcase) /*&& !testSet.contains(testcase)*/) {
+			if (!visited.contains(testcase) /* && !testSet.contains(testcase) */) {
 				visited.add(testcase);
 				testSet.add(testcase);
 			}
@@ -117,7 +155,6 @@ public class TestSetManager {
 		}
 		return testSet;
 	}
-
 
 	/**
 	 * 2009-02-21: revised test case selection strategy: add a test case if it
@@ -148,9 +185,9 @@ public class TestSetManager {
 		int originalSize = criterion.size();
 		while (visited.size() < maxTrials && visited.size() < testpool.size()
 				&& criterion.size() > 0) {
-//			String testcase = testpool.getByRandom();
+			// String testcase = testpool.getByRandom();
 			String testcase = testpool.getByART();
-			
+
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
 
@@ -292,12 +329,13 @@ public class TestSetManager {
 							testSet.add(testcase);
 							replaceCounter++;
 
-							//2009-02-25:if one test case can only replace another one, then we need "break;"
-							//otherwise, we do not need "break;" 
+							// 2009-02-25:if one test case can only replace
+							// another one, then we need "break;"
+							// otherwise, we do not need "break;"
 							break;
 						}
 					}
-					
+
 				}
 			}
 		}
@@ -343,9 +381,9 @@ public class TestSetManager {
 		while (visited.size() < maxTrials && visited.size() < testpool.size()
 				&& criterion.size() > 0) {
 			String testcase = testpool.getByRandom();
-			
-//			String testcase = testpool.getByART();
-			
+
+			// String testcase = testpool.getByART();
+
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
 
@@ -488,9 +526,10 @@ public class TestSetManager {
 							testSet.remove(temp.index);
 							testSet.add(testcase);
 							replaceCounter++;
-							
-							//2009-02-25:if one test case can only replace another one, then we need "break;"
-							//otherwise, we do not need "break;" 
+
+							// 2009-02-25:if one test case can only replace
+							// another one, then we need "break;"
+							// otherwise, we do not need "break;"
 							break;
 						}
 					}
@@ -506,9 +545,9 @@ public class TestSetManager {
 			// 2009-02-22:the stopping rule is very important here:
 			while (testSet.size() < testSuiteSize
 					&& visited.size() < testpool.size()) {
-//				String testcase = testpool.getByRandom();
+				// String testcase = testpool.getByRandom();
 				String testcase = testpool.getByART();
-				
+
 				if (!visited.contains(testcase) && !testSet.contains(testcase)) {
 					String stringTrace[] = TestDriver.getTrace(appClassName,
 							testcase);
@@ -530,14 +569,14 @@ public class TestSetManager {
 				// process
 				// int trial = 0;
 				criterion = (Criterion) c.clone();
-				
+
 				while (/* trial < maxTrials && */visited.size() < testpool
 						.size()
 						&& criterion.size() > 0
 						&& testSet.size() < testSuiteSize) {
-//					String testcase = testpool.getByRandom();
+					// String testcase = testpool.getByRandom();
 					String testcase = testpool.getByART();
-					
+
 					// trial++;
 					// just for debugging purpose
 					// TestCase testCase = (TestCase)
@@ -623,56 +662,58 @@ public class TestSetManager {
 							// and replace it randomly;
 							// 2).replace the one who has the lowest CI value
 							// 1).select one and replace it randomly
-//							ArrayList checked = new ArrayList(); // keep all
-//							// checked
-//							// test
-//							// cases in
-//							// replace
-//							// queue
-//
-//							Random rand = new Random();
-//							int index = -1;
-//							while (checked.size() < replaced.size()) {
-//
-//								// random select a index which has not been
-//								// checked
-//								do {
-//									index = rand.nextInt(replaced.size());
-//								} while (checked.contains(index));
-//
-//								TestCase temp = (TestCase) replaced.get(index);
-//								ArrayList temp_uniqueTraces = (ArrayList) testcase_uniqueTraces
-//										.get(temp.index);
-//
-//								// if a "testcase" contains all unique
-//								// statements
-//								// covered by "temp",
-//								// then we can safely replace "temp" with
-//								// "testcase"
-//
-//								int j = 0;
-//								for (; j < temp_uniqueTraces.size(); j++) {
-//									String unique = (String) temp_uniqueTraces
-//											.get(j);
-//									if (!traceList.contains(unique))
-//										break;
-//								}
-//								if (j == temp_uniqueTraces.size()) {
-//									// replace "temp" with "testcase"
-//									testcase_uniqueTraces.remove(temp.index);
-//									testcase_uniqueTraces.put(testcase,
-//											temp_uniqueTraces);
-//
-//									testSet.remove(temp.index);
-//									testSet.add(testcase);
-//									replaceCounter++;
-//									break;
-//								}
-//
-//								checked.add(index);
-//							}
+							// ArrayList checked = new ArrayList(); // keep all
+							// // checked
+							// // test
+							// // cases in
+							// // replace
+							// // queue
+							//
+							// Random rand = new Random();
+							// int index = -1;
+							// while (checked.size() < replaced.size()) {
+							//
+							// // random select a index which has not been
+							// // checked
+							// do {
+							// index = rand.nextInt(replaced.size());
+							// } while (checked.contains(index));
+							//
+							// TestCase temp = (TestCase) replaced.get(index);
+							// ArrayList temp_uniqueTraces = (ArrayList)
+							// testcase_uniqueTraces
+							// .get(temp.index);
+							//
+							// // if a "testcase" contains all unique
+							// // statements
+							// // covered by "temp",
+							// // then we can safely replace "temp" with
+							// // "testcase"
+							//
+							// int j = 0;
+							// for (; j < temp_uniqueTraces.size(); j++) {
+							// String unique = (String) temp_uniqueTraces
+							// .get(j);
+							// if (!traceList.contains(unique))
+							// break;
+							// }
+							// if (j == temp_uniqueTraces.size()) {
+							// // replace "temp" with "testcase"
+							// testcase_uniqueTraces.remove(temp.index);
+							// testcase_uniqueTraces.put(testcase,
+							// temp_uniqueTraces);
+							//
+							// testSet.remove(temp.index);
+							// testSet.add(testcase);
+							// replaceCounter++;
+							// break;
+							// }
+							//
+							// checked.add(index);
+							// }
 
-							// 2009-02-24: 2).replace the one who has the lowest CI value
+							// 2009-02-24: 2).replace the one who has the lowest
+							// CI value
 							for (int i = 0; i < replaced.size(); i++) {
 								TestCase temp = (TestCase) replaced.get(i);
 								ArrayList temp_uniqueTraces = (ArrayList) testcase_uniqueTraces
@@ -966,11 +1007,16 @@ public class TestSetManager {
 				// the DU-pair
 				for (int j = i + 1; j < trace.length; j++) {
 					if (criterion.remove(trace[i], trace[j])) {
-						if (!effectNodes.contains(trace[i])) {
-							effectNodes.add(stringTrace[i]);
-						}
-						if (!effectNodes.contains(trace[j])) {
-							effectNodes.add(stringTrace[j]);
+//						if (!effectNodes.contains(trace[i])) {
+//							effectNodes.add(stringTrace[i]);
+//						}
+//						if (!effectNodes.contains(trace[j])) {
+//							effectNodes.add(stringTrace[j]);
+//						}
+						
+						//2009-03-03: check the correlations between CI and coverage
+						if(!effectNodes.contains(trace[i]+ ":" + trace[j])){
+							effectNodes.add(trace[i]+":"+trace[j]);
 						}
 						effective = true;
 					}
@@ -1156,10 +1202,10 @@ public class TestSetManager {
 				.println("USAGE: java ccr.test.TestSetManager <testSetNum(100)> <Context_Intensity> <min_CI(0.7)> "
 						+ "<max_CI(0.9)> <directory(20090222)> <testing criteria(AllPolicies, All1ResolvedDU, All2ResolvedDU)>"
 						+ "<TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>");
-		
+
 		String appClassName = "TestCFG2_ins";
-		
-		if(args.length == 9){ //2009-02-25: generate adequate test sets
+
+		if (args.length == 9) { // 2009-02-25: generate adequate test sets
 			int testSetNum = Integer.parseInt(args[0]);
 			String instruction = args[1];
 			double min_CI = Double.parseDouble(args[2]);
@@ -1175,9 +1221,11 @@ public class TestSetManager {
 					+ "/src/ccr/app/TestCFG2.java");
 			Criterion c = null;
 
-			// 2009-2-21: revise the test case selection strategies: add a test case
+			// 2009-2-21: revise the test case selection strategies: add a test
+			// case
 			// into a test set
-			// if it can increase the cumulative coverage or it has higher CI value
+			// if it can increase the cumulative coverage or it has higher CI
+			// value
 			// than existing one
 			// while not decrease the coverage
 
@@ -1192,7 +1240,7 @@ public class TestSetManager {
 
 				// 2009-02-22: fix the size of test suite to be 58, using
 				// random-repetition to compensate the small test sets
-				
+
 				TestSet[][] testSets = new TestSet[1][];
 				String versionPackageName = "testversion";
 				String saveFile;
@@ -1220,36 +1268,86 @@ public class TestSetManager {
 							+ "TestSets_"
 							+ oldOrNew
 							+ "_"
-							+ randomOrCriterion + "_" + testSuiteSize + ".txt";
+							+ randomOrCriterion
+							+ "_"
+							+ testSuiteSize
+							+ ".txt";
 				}
 
-				testSets[0] = TestSetManager.getTestSets(appClassName, c, testpool,
-						maxTrials, testSetNum, min_CI, max_CI, oldOrNew,
-						randomOrCriterion, testSuiteSize, saveFile);
+				testSets[0] = TestSetManager.getTestSets(appClassName, c,
+						testpool, maxTrials, testSetNum, min_CI, max_CI,
+						oldOrNew, randomOrCriterion, testSuiteSize, saveFile);
 
 				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
 						+ "_CI.txt";
 				TestSetManager.attachTSWithCI(testSets[0], saveFile);
-	
+
 			}
-		}else if(args.length == 3){
+		} else if (args.length == 3) { // get random test sets
 			int testSetNum = Integer.parseInt(args[0]);
 			int testSuiteSize = Integer.parseInt(args[1]);
 			String date = args[2];
 			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/RandomTestSets_"+testSuiteSize+".txt";
-			
+					+ date + "/RandomTestSets_" + testSuiteSize + ".txt";
+
 			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/TestPool.txt";
+					+ date + "/TestPool.txt";
 			TestSet testpool = getTestPool(testPoolFile, true);
 			Adequacy.loadTestCase(testPoolFile);
-			
+
 			TestSet[][] testSets = new TestSet[1][];
-			testSets[0] = TestSetManager.getRandomTestSets(appClassName, testpool, testSetNum, testSuiteSize, saveFile);
-			
-			saveFile = saveFile.substring(0, saveFile.indexOf(".txt")) 
-				+"_CI.txt";
+			testSets[0] = TestSetManager.getRandomTestSets(appClassName,
+					testpool, testSetNum, testSuiteSize, saveFile);
+
+			saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+					+ "_CI.txt";
 			TestSetManager.attachTSWithCI(testSets[0], saveFile);
+		} else if (args.length == 2) {
+			String date = args[0];
+			int iterations = Integer.parseInt(args[1]);
+			
+			CFG g = new CFG(System.getProperty("user.dir")
+					+ "/src/ccr/app/TestCFG2.java");
+
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/TestPool.txt";
+			TestSet testpool = getTestPool(testPoolFile, true);
+			Adequacy.loadTestCase(testPoolFile);
+
+			Vector testCases = new Vector(); // get random test sets
+//			for (int i = 0; i < 10; i++) {
+//				for (int j = 0; j < iterations; j++)
+//					testCases.add(testpool.getByART(i));
+//			}
+			
+			Iterator ite = Adequacy.testCases.keySet().iterator();
+			while(ite.hasNext()){
+				testCases.add((String)ite.next());
+			}
+			
+			Criterion c = g.getAllPolicies();
+			System.out.println(c.size());
+			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date
+				+ "/"
+				+ "AllPolicy_CICoverage.txt";
+			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
+			
+			c = g.getAllKResolvedDU(1);
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date
+				+ "/"
+				+ "All1Service_CICoverage.txt";
+			System.out.println(c.size());
+//			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
+			
+			c = g.getAllKResolvedDU(2);
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date
+				+ "/"
+				+ "All2Service_CICoverage.txt";
+			System.out.println(c.size());
+//			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
 		}
 	}
 }
