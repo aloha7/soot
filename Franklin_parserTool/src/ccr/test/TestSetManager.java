@@ -1302,7 +1302,7 @@ public class TestSetManager {
 			saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
 					+ "_CI.txt";
 			TestSetManager.attachTSWithCI(testSets[0], saveFile);
-		} else if (args.length == 2) {
+		} else if (args.length == 2) { //2009-03-03: add this to study correlations between CI and covered elements
 			String date = args[0];
 			int iterations = Integer.parseInt(args[1]);
 			
@@ -1339,7 +1339,7 @@ public class TestSetManager {
 				+ "/"
 				+ "All1Service_CICoverage.txt";
 			System.out.println(c.size());
-//			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
+			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
 			
 			c = g.getAllKResolvedDU(2);
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
@@ -1347,7 +1347,7 @@ public class TestSetManager {
 				+ "/"
 				+ "All2Service_CICoverage.txt";
 			System.out.println(c.size());
-//			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
+			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
 		}
 	}
 }
