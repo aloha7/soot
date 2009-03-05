@@ -163,9 +163,9 @@ public class TestManager {
 	//2009-02-23: get failure rate 
 	public static void main(String[] args) {
 		
-		int startVersion = 1;
-		int endVersion = 141;
-		String date = "20090225";
+		int startVersion = 0;
+		int endVersion = 140;
+		String date = "20090226";
 		if(args.length==3){
 			startVersion = Integer.parseInt(args[0]);
 			endVersion = Integer.parseInt(args[1]);
