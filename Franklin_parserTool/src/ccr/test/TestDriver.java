@@ -25,6 +25,8 @@ public class TestDriver {
 			+ File.separator + "src" + File.separator + "ccr" + File.separator
 			+ "app" + File.separator;
 
+	
+	
 	public static Object run(Application app, String testcase) {
 
 		return app.application(testcase);
@@ -298,6 +300,125 @@ public class TestDriver {
 		}
 	}
 
+	/**2009-03-05: To speed up the testing process, we did not run the test case on the faulty version 
+	 * any more, we just retrieve the P/F information from execHistory which is generated when examining 
+	 * failure rates of faults.
+	 * @param testSets
+	 * @param faultList
+	 * @param execHistory: faultVersion->(testcase ->P/F)+
+	 * @param reportFile
+	 */
+	public static void test(TestSet ts_Set[][], ArrayList faultList, HashMap execHistory, String reportFile){
+		StringBuilder sb = new StringBuilder();
+		sb.append("FaultyVersion" + "\t" + "TestSet" + "\t" + "#TestCase"
+				+ "\t" + "#ValidTestCase" + "\t" + "%ValidTestCase" + "\t"
+				+ "\t" + "#ValidTestSet" + "\t" + "#TestSet" + "\n");
+		
+		for(int k = 0 ; k < faultList.size(); k ++){
+			String fault = (String)faultList.get(k); //for each faulty version
+			
+			for(int t = 0; t < ts_Set.length; t ++){ // for each testing criterion
+				TestSet[] testSets = ts_Set[t];	
+				
+				for (int i = 0; i < testSets.length; i++) { //for each test set
+					int validTestCase = 0;
+					TestSet testSet = testSets[i];
+					int size_TestSet = testSets[i].size();
+					for (int j = 0; j < size_TestSet; j++) { // for each test case
+						String testcase = testSet.get(j);
+						
+						HashMap tc_PFs = (HashMap)execHistory.get(fault);
+						
+						String POrF = (String)tc_PFs.get(testcase);
+						if(POrF.equals("F")){
+							validTestCase ++;
+						}
+					}
+					String line = fault
+							+ "\t"
+							+ testSet.index
+							+ "\t"
+							+ size_TestSet
+							+ "\t"
+							+ validTestCase
+							+ "\t"
+							+ (double) validTestCase
+							/ (double) size_TestSet + "\t";
+
+					if (validTestCase > 0)
+						line += "1" + "\t";
+					else
+						line += "0" + "\t";
+					line += "1" + "\n";
+					System.out.print(line);
+					sb.append(line);
+			}
+		}
+
+		Logger.getInstance().setPath(reportFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+		}
+	}
+	
+	/** 2009-03-05: test faults listed in a fault list
+	 * 
+	 * @param versionPackageName
+	 * @param oracleClassName
+	 * @param testSets
+	 * @param reportFile
+	 * @param faultList
+	 */
+	public static void test(String versionPackageName, String oracleClassName, 
+			TestSet testSets[][], String reportFile, ArrayList faultList){
+
+		try {
+				BufferedWriter bw = new BufferedWriter(new FileWriter(reportFile));
+
+				String versionFolder = APPLICATION_FOLDER + "/"
+						+ versionPackageName;
+				File versions = new File(versionFolder);
+				int versionCounter = 0;
+
+				// 2009-2-15
+				StringBuilder sb = new StringBuilder();
+				sb.append("FaultyVersion" + "\t" + "TestSet" + "\t" + "#TestCase"
+						+ "\t" + "#ValidTestCase" + "\t" + "%ValidTestCase" + "\t"
+						+ "\t" + "#ValidTestSet" + "\t" + "#TestSet" + "\n");
+
+				for (int i = 0; i <versions.listFiles().length; i++) {				
+					if (versions.listFiles()[i].isFile()) {
+						versionCounter++;
+						String appClassName = versions.list()[i];
+						appClassName = APPLICATION_PACKAGE
+								+ "."
+								+ versionPackageName
+								+ "."
+								+ appClassName.substring(0, appClassName
+										.indexOf(".java"));
+						int faultyVersion =Integer.parseInt(appClassName.substring(appClassName.indexOf("_")+"_".length())); 
+						if(!faultList.contains(""+faultyVersion))
+							continue;
+						
+
+						// 2009-2-15: re-generate the forms of outputs
+						for (int j = 0; j < testSets.length; j++) { // the length is
+																	// 50
+							long startTime = System.currentTimeMillis();
+							// 2009-2-15:context intensity
+							String criteria = new File(reportFile).getPath();
+							criteria = criteria.substring(0, criteria.indexOf("."));
+							sb.append(test(appClassName, APPLICATION_PACKAGE + "."
+									+ oracleClassName, criteria, testSets[j]));
+						}
+					}
+				}
+				bw.write(sb.toString());
+				bw.close();
+			} catch (IOException e) {
+				System.out.println(e);
+			}
+	}
 	
 	// 2009-1-6: for context-intensity
 	//2009-2-22: for concurrent purpose

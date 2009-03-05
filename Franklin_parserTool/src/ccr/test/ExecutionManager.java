@@ -1,9 +1,12 @@
 package ccr.test;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import ccr.app.Application;
 import ccr.app.ApplicationResult;
@@ -42,7 +45,7 @@ public class ExecutionManager {
 			String randomOrCriterion = args[8];
 			int start = 0;
 			int end = 140;
-			if (args.length > 8) {
+			if (args.length > 8 && instruction.equals("Context_Intensity")) {
 				start = Integer.parseInt(args[9]);
 				end = Integer.parseInt(args[10]);
 			}
@@ -63,40 +66,65 @@ public class ExecutionManager {
 
 			String testSetFile = null; 
 			int maxTrials = 2000;
-			if (instruction.equals("Context_Intensity")) {
-				Adequacy.loadTestCase(testPoolFile);
 
-				// 2009-02-22: fix the size of test suite to be 58, using
-				// random-repetition to compensate the small test sets
-				
-				TestSet[][] testSets = new TestSet[1][];
+			Adequacy.loadTestCase(testPoolFile);
 
-				if(testSuiteSize < 0){	
-					testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			// 2009-02-22: fix the size of test suite to be 58, using
+			// random-repetition to compensate the small test sets
+			if (testSuiteSize < 0) {
+				testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 						+ date
-						+ "/"+criterion+"TestSets_"
+						+ "/"
+						+ criterion
+						+ "TestSets_"
 						+ oldOrNew
-						+ ".txt";	
-				}else{
-					testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-						+ date
-						+ "/"+criterion+"TestSets_"
-						+ oldOrNew+"_"+randomOrCriterion + "_" + testSuiteSize
 						+ ".txt";
-				}
+			} else {
+				testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date
+						+ "/"
+						+ criterion
+						+ "TestSets_"
+						+ oldOrNew
+						+ "_"
+						+ randomOrCriterion + "_" + testSuiteSize + ".txt";
 			}
+
 			
 			TestSet testSets[][] = new TestSet[1][];
 			testSets[0] = Adequacy.getTestSets(testSetFile);
 			
 			String versionPackageName = "testversion";
 			
-			String saveFile = testSetFile.substring(0, testSetFile.indexOf(".")) + "_" + start + "_" + end + ".txt";
-			
-			TestDriver.test(versionPackageName, "TestCFG2", testSets, 
-					saveFile, start, end);
-	
-		}else if(args.length==5){
+			if(instruction.equals("Context_Intensity")){
+				String saveFile = testSetFile.substring(0, testSetFile.indexOf(".")) + "_" + start + "_" + end + ".txt";
+				
+				TestDriver.test(versionPackageName, "TestCFG2", testSets, 
+						saveFile, start, end);	
+			}else if(instruction.equals("limited")){ 
+				//2009-03-05: load the testing result from execution history, and only interest in several fault
+				String saveFile = testSetFile.substring(0, testSetFile.indexOf(".")) + "_limited.txt";
+				
+				String faultListFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+ date 
+				+ "FaultList";
+				
+				//1. load the fault list
+				ArrayList faultList = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(faultListFile));
+					String line = null;
+					while((line = br.readLine())!= null){
+						faultList.add(line.trim());
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				//2.run the test
+				TestDriver.test(versionPackageName, "TestCFG2", testSets, saveFile, faultList);
+			}
+		}else if(args.length==5){ // Test the random test set
 			int testSetNum = Integer.parseInt(args[0]);
 			int testSuiteSize = Integer.parseInt(args[1]);
 			String date = args[2];
@@ -119,7 +147,6 @@ public class ExecutionManager {
 			TestDriver.test(versionPackageName, "TestCFG2", testSets, 
 					saveFile, start, end);
 		}
-				
 	}
 
 }
