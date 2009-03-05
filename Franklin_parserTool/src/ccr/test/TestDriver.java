@@ -34,47 +34,47 @@ public class TestDriver {
 		Object result = null;
 		
 		//2009-02-26:keep all the execution results of a test case with respect to a faulty version
-		if(!resultTable.containsKey(appClassName)){ // the appClassName has not been executed
-			try {
-				Application app = (Application) Class.forName(appClassName)
-						.newInstance();
-				result = run(app, testcase);
-				
-				
-			} catch (Exception e) {
-				System.out.println(e);
-			}
-			HashMap testcase_result = new HashMap();
-			testcase_result.put(testcase, result);
-			resultTable.put(appClassName, testcase_result);
-			
-		}else if(!((HashMap)resultTable.get(appClassName)).containsKey(testcase)){
-			// the test case has not been applied to the faulty version
-			try {
-				Application app = (Application) Class.forName(appClassName)
-						.newInstance();
-				result = run(app, testcase);
-			} catch (Exception e) {
-				System.out.println(e);
-			}
-			
-			HashMap testcase_result = (HashMap)resultTable.get(appClassName);
-			testcase_result.put(testcase, result);
-			resultTable.put(appClassName, testcase_result);
-		}else{ // if this test case has been executed on this faulty version, retrieve the result
-			HashMap testcase_result = (HashMap)resultTable.get(appClassName);
-			result = testcase_result.get(testcase);
-		}
-		
-//		try {
-//			Application app = (Application) Class.forName(appClassName)
-//					.newInstance();
-//			result = run(app, testcase);
+//		if(!resultTable.containsKey(appClassName)){ // the appClassName has not been executed
+//			try {
+//				Application app = (Application) Class.forName(appClassName)
+//						.newInstance();
+//				result = run(app, testcase);
+//				
+//				
+//			} catch (Exception e) {
+//				System.out.println(e);
+//			}
+//			HashMap testcase_result = new HashMap();
+//			testcase_result.put(testcase, result);
+//			resultTable.put(appClassName, testcase_result);
 //			
+//		}else if(!((HashMap)resultTable.get(appClassName)).containsKey(testcase)){
+//			// the test case has not been applied to the faulty version
+//			try {
+//				Application app = (Application) Class.forName(appClassName)
+//						.newInstance();
+//				result = run(app, testcase);
+//			} catch (Exception e) {
+//				System.out.println(e);
+//			}
 //			
-//		} catch (Exception e) {
-//			System.out.println(e);
+//			HashMap testcase_result = (HashMap)resultTable.get(appClassName);
+//			testcase_result.put(testcase, result);
+//			resultTable.put(appClassName, testcase_result);
+//		}else{ // if this test case has been executed on this faulty version, retrieve the result
+//			HashMap testcase_result = (HashMap)resultTable.get(appClassName);
+//			result = testcase_result.get(testcase);
 //		}
+		
+		try {
+			Application app = (Application) Class.forName(appClassName)
+					.newInstance();
+			result = run(app, testcase);
+			
+			
+		} catch (Exception e) {
+			System.out.println(e);
+		}
 		
 		return result;
 	}
