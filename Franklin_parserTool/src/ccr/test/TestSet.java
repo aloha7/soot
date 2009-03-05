@@ -103,6 +103,38 @@ public class TestSet {
 		return get((int) (Math.random() * (double) size()));
 	}
 	
+	/**return the test case who has the ith-largest CI value 
+	 * 
+	 * @param i
+	 * @return
+	 */
+	public String getByART(int i){
+		Vector tmp = new Vector();
+		//randomly get a test set S containing 10 test cases 
+		do{
+			String testcase = this.getByRandom();
+			if(!tmp.contains(testcase)){
+				//sort test cases in tmp
+				double CI_testcase = ((TestCase)Adequacy.testCases.get(testcase)).CI;
+				if(tmp.size()!=0){
+					for(int k = 0; k < tmp.size(); k ++){
+						TestCase temp = (TestCase)tmp.get(k);
+						double CI_temp = temp.CI;
+						if(CI_temp < CI_testcase){//right place to insert CI
+							tmp.add(k, (TestCase)Adequacy.testCases.get(testcase));
+							break;
+						}
+					}
+				}else{
+					tmp.add((TestCase)Adequacy.testCases.get(testcase));
+				}
+			}
+		}while(tmp.size()< 10);
+		
+		return ((TestCase)tmp.get(i)).index;
+		
+	}
+	
 	//2008-2-26: use ART-like test case generation algorithm to get a random value
 	public String getByART(){
 		TestSet tmp = new TestSet();
