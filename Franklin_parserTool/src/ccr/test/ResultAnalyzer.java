@@ -599,7 +599,7 @@ public class ResultAnalyzer {
 //		String date = "20090217";
 //		String date= "20090219";
 //		String date= "20090220";
-		String date= "20090227";
+		String date= "20090226";
 //		String date= "20090222";
 		String criterion = "allPolicies";
 //		String criterion = "all1ResolvedDU";
@@ -674,38 +674,43 @@ public class ResultAnalyzer {
 				"AllPoliciesTestSets_old_criteria_58","AllPoliciesTestSets_new_criteria_58",
 				"All1ResolvedDUTestSets_old_criteria_58","All1ResolvedDUTestSets_new_criteria_58",
 				"All2ResolvedDUTestSets_old_criteria_58","All2ResolvedDUTestSets_new_criteria_58",
+				
+				"RandomTestSets_21",
+				"RandomTestSets_39",
+				"RandomTestSets_47",
+				"RandomTestSets_58",
+				
 		};
 				
-//		HashMap criterion_faultNum = new HashMap();
-//		HashMap criterion_perValidTC = new HashMap();
-//		HashMap criterion_perValidTS = new HashMap();
-//		containHeader = true;
-//		for(int i = 0; i < criteria.length; i++){
-//			saveFile = srcDir + criteria[i] + "_testing.txt";
-//			ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
-//			
-//			
-//			testSetExecutionFile = saveFile;
-//			String faultTypeFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_FaultType.txt";
-//			HashMap faultNum = ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader1, faultTypeFile);
-//			criterion_faultNum.put(criteria[i], faultNum);
-//			
-//			String perValidTCFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestCase.txt";
-//			HashMap perValidTC = ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader1, perValidTCFile);
-//			criterion_perValidTC.put(criteria[i], perValidTC);
-//			
-//			String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestSet.txt";
-//			HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
-//			criterion_perValidTS.put(criteria[i], perValidTS);
-//		}
-//		
-//		//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
-//		saveFile = "C:/FaultNum.txt";
-//		ResultAnalyzer.mergeHashMap(criteria, criterion_faultNum, saveFile);
-//		saveFile = "C:/PerValidTC.txt";
-//		ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC, saveFile);
-//		saveFile = "C:/PerValidTS.txt";
-//		ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
+		HashMap criterion_faultNum = new HashMap();
+		HashMap criterion_perValidTC = new HashMap();
+		HashMap criterion_perValidTS = new HashMap();
+		containHeader = true;
+		for(int i = 0; i < criteria.length; i++){
+			saveFile = srcDir + criteria[i] + "_testing.txt";
+			ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
+			
+			testSetExecutionFile = saveFile;
+			String faultTypeFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_FaultType.txt";
+			HashMap faultNum = ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader1, faultTypeFile);
+			criterion_faultNum.put(criteria[i], faultNum);
+			
+			String perValidTCFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestCase.txt";
+			HashMap perValidTC = ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader1, perValidTCFile);
+			criterion_perValidTC.put(criteria[i], perValidTC);
+			
+			String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestSet.txt";
+			HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
+			criterion_perValidTS.put(criteria[i], perValidTS);
+		}
+		
+		//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
+		saveFile = "C:/FaultNum.txt";
+		ResultAnalyzer.mergeHashMap(criteria, criterion_faultNum, saveFile);
+		saveFile = "C:/PerValidTC.txt";
+		ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC, saveFile);
+		saveFile = "C:/PerValidTS.txt";
+		ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
 		
 		//2009-02-25: to explore the CI distributions of different testing criteria
 		StringBuilder sb = new StringBuilder();
