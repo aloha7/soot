@@ -35,39 +35,6 @@ public class TestDriver {
 	public static Object run(String appClassName, String testcase) {
 		Object result = null;
 		
-		//2009-02-26:keep all the execution results of a test case with respect to a faulty version
-//		if(!resultTable.containsKey(appClassName)){ // the appClassName has not been executed
-//			try {
-//				Application app = (Application) Class.forName(appClassName)
-//						.newInstance();
-//				result = run(app, testcase);
-//				
-//				
-//			} catch (Exception e) {
-//				System.out.println(e);
-//			}
-//			HashMap testcase_result = new HashMap();
-//			testcase_result.put(testcase, result);
-//			resultTable.put(appClassName, testcase_result);
-//			
-//		}else if(!((HashMap)resultTable.get(appClassName)).containsKey(testcase)){
-//			// the test case has not been applied to the faulty version
-//			try {
-//				Application app = (Application) Class.forName(appClassName)
-//						.newInstance();
-//				result = run(app, testcase);
-//			} catch (Exception e) {
-//				System.out.println(e);
-//			}
-//			
-//			HashMap testcase_result = (HashMap)resultTable.get(appClassName);
-//			testcase_result.put(testcase, result);
-//			resultTable.put(appClassName, testcase_result);
-//		}else{ // if this test case has been executed on this faulty version, retrieve the result
-//			HashMap testcase_result = (HashMap)resultTable.get(appClassName);
-//			result = testcase_result.get(testcase);
-//		}
-		
 		try {
 			Application app = (Application) Class.forName(appClassName)
 					.newInstance();
@@ -240,39 +207,6 @@ public class TestDriver {
 							+ "."
 							+ appClassName.substring(0, appClassName
 									.indexOf(".java"));
-					// 1/14/2008 Martin
-					// for (int j = 0; j < testSets.length; j++) { //the length
-					// is 50
-					// String line = appClassName + "\tFault detection rate";
-					// System.out.println("");
-					// long startTime = System.currentTimeMillis();
-					//						
-					// //2009-1-6:context intensity
-					// // line = line + "\t" + test(
-					// // appClassName, APPLICATION_PACKAGE + "." +
-					// // oracleClassName, testSets[j]);
-					// String criteria = new File(reportFile).getPath();
-					// criteria = criteria.substring(0, criteria.indexOf("."));
-					// line = line + "\t" + test(
-					// appClassName, APPLICATION_PACKAGE + "." +
-					// oracleClassName, criteria, testSets[j]);
-					// // System.out.println(System.currentTimeMillis() -
-					// startTime);
-					// line = line + "\t" + "time\t" +
-					// String.valueOf((System.currentTimeMillis() - startTime));
-					//						
-					// System.out.println(line);
-					// bw.write(line);
-					// // 1/14/2008 Martin
-					// bw.flush();
-					// bw.newLine();
-					//						
-					// }
-
-					/*
-					 * //1/14/2008:Martin System.out.println(line);
-					 * bw.write(line); bw.newLine();
-					 */
 
 					// 2009-2-15: re-generate the forms of outputs
 					for (int j = 0; j < testSets.length; j++) { // the length is
@@ -288,13 +222,7 @@ public class TestDriver {
 				}
 			}
 			bw.write(sb.toString());
-			
 			bw.close();
-
-			// System.out.println("faulty versions number:" +
-			// versions.list().length );
-			// System.out.println("test sets size:" + testSets.length);
-
 		} catch (IOException e) {
 			System.out.println(e);
 		}
@@ -418,7 +346,7 @@ public class TestDriver {
 			}
 	}
 	
-	// 2009-1-6: for context-intensity
+	//2009-1-6: for context-intensity
 	//2009-2-22: for concurrent purpose
 	public static void test(String versionPackageName, String oracleClassName,
 			TestSet testSets[][], String reportFile, int startVersion, int endVersion ) {
@@ -464,12 +392,7 @@ public class TestDriver {
 				}
 			}
 			bw.write(sb.toString());
-			
 			bw.close();
-
-			// System.out.println("faulty versions number:" +
-			// versions.list().length );
-			// System.out.println("test sets size:" + testSets.length);
 
 		} catch (IOException e) {
 			System.out.println(e);
@@ -604,211 +527,10 @@ public class TestDriver {
 		} catch (IOException e) {
 			System.out.println(e);
 		}
-
 	}
 	
-	// 2009-1-5: for context-intensity experiment
-//	public static void getFailureRate(String versionPackageName,
-//			String oracleClassName, TestSet testpool, String reportDir) {
-//
-//		try {
-//			Oracle oracle = new Oracle(APPLICATION_PACKAGE + "."
-//					+ oracleClassName, testpool);
-//			String versionFolder = APPLICATION_FOLDER + "/"
-//					+ versionPackageName;
-//			File versions = new File(versionFolder);
-//			long startTime = System.currentTimeMillis();
-//			for (int i = 0; i < versions.list().length; i++) {
-//				if (versions.listFiles()[i].isFile()) {
-//
-//					String appClassName = versions.list()[i];
-//					appClassName = APPLICATION_PACKAGE
-//							+ "."
-//							+ versionPackageName
-//							+ "."
-//							+ appClassName.substring(0, appClassName
-//									.indexOf(".java"));
-//					int detected = 0;
-//					String line = "TestCase\t" + "Changes\t" + "Length\t"
-//							+ "Time\t" + "Pass/Fail\n";
-//					for (int j = 0; j < testpool.size(); j++) {
-//						long startTime1 = System.currentTimeMillis();
-//						ApplicationResult result = (ApplicationResult) run(
-//								appClassName, testpool.get(j));
-//						long last = System.currentTimeMillis() - startTime1;
-//						line += "" + testpool.get(j) + "\t" + result.moved
-//								+ "\t" + result.counter + "\t" + last + "\t";
-//						if (!result.equals(oracle.getOutcome(testpool.get(j)))) {
-//							detected = detected + 1;
-//							line += "F\n";
-//						} else
-//							line += "P\n";
-//					}
-//					line += appClassName
-//							+ "\tFailure rate\t"
-//							+ ((double) detected / (double) testpool.size()
-//									+ "\tTime:" + String.valueOf(System
-//									.currentTimeMillis()
-//									- startTime));
-//					System.out.println(line);
-//					BufferedWriter bw = new BufferedWriter(new FileWriter(
-//							reportDir + File.separator + appClassName + ".txt"));
-//					bw.write(line);
-//					bw.newLine();
-//					bw.flush();
-//					bw.close();
-//				}
-//			}
-//
-//		} catch (IOException e) {
-//			System.out.println(e);
-//		}
-//	}
 
-	// 2009-1-5: for context-intensity experiment
-	/*
-	 * public static void getFailureRate( String versionPackageName, String
-	 * oracleClassName, TestSet testpool, String reportFile) {
-	 * 
-	 * try { Oracle oracle = new Oracle(APPLICATION_PACKAGE + "." +
-	 * oracleClassName, testpool); BufferedWriter bw = new BufferedWriter(new
-	 * FileWriter(reportFile)); String versionFolder = APPLICATION_FOLDER + "/" +
-	 * versionPackageName; File versions = new File(versionFolder); long
-	 * startTime; for (int i = 0; i < versions.list().length; i++) { startTime =
-	 * System.currentTimeMillis(); String appClassName = versions.list()[i];
-	 * appClassName = APPLICATION_PACKAGE + "." + versionPackageName + "." +
-	 * appClassName.substring(0, appClassName.indexOf(".java")); int detected =
-	 * 0; for (int j = 0; j < testpool.size(); j++) {
-	 *  // if (!run(appClassName, testpool.get(j)).equals( //
-	 * run(APPLICATION_PACKAGE + "." + // oracleClassName, testpool.get(j)))) {
-	 * if (!run(appClassName, testpool.get(j)).equals(
-	 * oracle.getOutcome(testpool.get(j)))) { detected = detected + 1; } }
-	 * String line = appClassName + "\tFailure rate\t" + ((double) detected /
-	 * (double) testpool.size() + "\tTime:" +
-	 * String.valueOf(System.currentTimeMillis()-startTime));
-	 * System.out.println(line); bw.write(line); bw.newLine(); bw.flush(); }
-	 * 
-	 * bw.close(); } catch (IOException e) { System.out.println(e); } }
-	 */
 	public static void main(String argv[]) {
-
-		/*
-		 * TestSet testpool = new TestSet(); for (int i = 0; i < 10000; i++) { //
-		 * A test set is a vector testpool.add("" + i); } // Oracle oracle = new
-		 * Oracle("ccr.app.TestCFG2", testpool); //apply all test cases in test
-		 * pools to get oracles // TestSet testSets[] =
-		 * Adequacy.getTestSets("experiment/testsets.txt"); //
-		 * System.out.println("Fault detection rate: " + test("TestCFG2",
-		 * oracle, testSets));
-		 */
-		// TestSet testSets[] = Adequacy.getTestSets("experiment/testsets.txt");
-		// System.out.println(
-		// "Fault detection rate: " + test("TestCFG2", "TestCFG2_ins",
-		// testSets));
-		// TestSet testSets[] = Adequacy.getTestSets("experiment/testsets.txt");
-		// test("src/ccr/app/version", "TestCFG2", testSets,
-		// "experiment/report.txt");
-		/*
-		 * TestSet testSets[] =
-		 * Adequacy.getTestSets("result/allUsesTestSet.txt");
-		 * test("src/ccr/app/version", "TestCFG2", testSets,
-		 * "experiment/allUsesReport.txt");
-		 * 
-		 * testSets = Adequacy.getTestSets("result/allPoliciesTestSet.txt");
-		 * test("src/ccr/app/version", "TestCFG2", testSets,
-		 * "experiment/allPoliciesReport.txt");
-		 * 
-		 * testSets = Adequacy.getTestSets("result/all1ResolvedDUTestSet.txt");
-		 * test("src/ccr/app/version", "TestCFG2", testSets,
-		 * "experiment/all1ResolvedDUReport.txt");
-		 * 
-		 * testSets = Adequacy.getTestSets("result/all2ResolvedDUTestSet.txt");
-		 * test("src/ccr/app/version", "TestCFG2", testSets,
-		 * "experiment/all2ResolvedDUReport.txt");
-		 * 
-		 * testSets =
-		 * Adequacy.getTestSets("result/allFullResolvedDUTestSet.txt");
-		 * test("src/ccr/app/version", "TestCFG2", testSets,
-		 * "experiment/allFullResolvedDUReport.txt");
-		 */
-
-		// String[] traces = TestDriver.getTrace("TestCFG2_ins", "-1782");
-		// System.out.print("b");
-		// System.out.println(TestDriver.run("ccr.app.testversion.TestCFG2_01",
-		// "5"));
-		// System.out.println(TestDriver.run("ccr.app.testversion.TestCFG2",
-		// "100"));
-		/*
-		 * TestSet testSets[][] = new TestSet[5][]; testSets[0] =
-		 * Adequacy.getTestSets("src/ccr/experiment/allUsesTestSets.txt");
-		 * testSets[1] =
-		 * Adequacy.getTestSets("src/ccr/experiment/allPoliciesTestSets.txt");
-		 * testSets[2] =
-		 * Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets.txt");
-		 * testSets[3] =
-		 * Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets.txt");
-		 * testSets[4] =
-		 * Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets.txt"); //
-		 * long startTime = System.currentTimeMillis(); String
-		 * versionPackageName = "testversion"; test(versionPackageName,
-		 * "TestCFG2", testSets, "src/ccr/experiment/test-report-" +
-		 * versionPackageName + ".txt"); //
-		 * System.out.println(System.currentTimeMillis() - startTime);
-		 */
-
-		// TestSet testSets[][] = new TestSet[1][];
-		// testSets[0] =
-		// Adequacy.getTestSets("src/ccr/experiment/allUsesTestSets.txt");
-		// testSets[1] =
-		// Adequacy.getTestSets("src/ccr/experiment/allPoliciesTestSets_noOrdinary.txt");
-		// testSets[2] =
-		// Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets_noOrdinary.txt");
-		// testSets[3] =
-		// Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets_noOrdinary.txt");
-		// testSets[4] =
-		// Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets_noOrdinary.txt");
-
-		// long startTime = System.currentTimeMillis();
-		// String versionPackageName = "testversion";
-		// test(versionPackageName, "TestCFG2", testSets,
-		// "src/ccr/experiment/test-report-" + versionPackageName + ".txt");
-		/*
-		 * TestSet testSets[][] = new TestSet[5][]; testSets[0] =
-		 * Adequacy.getTestSets("src/ccr/experiment/allUsesTestSets.txt");
-		 * testSets[1] =
-		 * Adequacy.getTestSets("src/ccr/experiment/allPoliciesTestSets.txt");
-		 * testSets[2] =
-		 * Adequacy.getTestSets("src/ccr/experiment/all1ResolvedDUTestSets.txt");
-		 * testSets[3] =
-		 * Adequacy.getTestSets("src/ccr/experiment/all2ResolvedDUTestSets.txt");
-		 * testSets[4] =
-		 * Adequacy.getTestSets("src/ccr/experiment/allFullResolvedDUTestSets.txt"); //
-		 * test("version", "TestCFG2", testSets, "experiment/test-report.txt");
-		 * long startTime = System.currentTimeMillis(); // TestSet testSets[][] =
-		 * new TestSet[2][]; // testSets[0] =
-		 * Adequacy.getTestSets("experiment/allUsesTestSet.txt"); // testSets[1] =
-		 * Adequacy.getTestSets("experiment/allPoliciesTestSet.txt"); String
-		 * versionPackageName = "testversion"; test(versionPackageName,
-		 * "TestCFG2", testSets, "src/ccr/experiment/test-report-" +
-		 * versionPackageName + ".txt");
-		 * System.out.println(System.currentTimeMillis() - startTime);
-		 */
-		// 1. Get the failure rate of 140 faulty versions, test pool contains
-		// 10000 test cases, each runs 2 mins(in server).
-		long startTime = System.currentTimeMillis();
-		// getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(
-		//				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
-		//				"src/ccr/experiment/failurerate.txt");			
-//		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(
-//				TestDriver.TEST_POOL_START_LABEL, TestDriver.TEST_POOL_SIZE),
-//				"src/ccr/experiment/RQ3");
-//		System.out.println(System.currentTimeMillis() - startTime);
-		
-		//2009-02-16: we re-generate all test pools such that it ensures  CI of all test cases
-		// are evenly distributed from 0.0 to 1.0
-//		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/TestPool_20090216.txt";
-//		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
-//				"src/ccr/experiment/Context-Intensity_backup/TestHarness/");
 		
 		//2009-02-21:
 		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/TestPool.txt";

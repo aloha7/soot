@@ -32,7 +32,7 @@ public class ExecutionManager {
 		// TODO Auto-generated method stub
 
 		System.out
-				.println("USAGE: java ccr.test.ExecutionManager <testSetNum(100)> <Context_Intensity> <min_CI(0.7)> "
+				.println("USAGE: java ccr.test.ExecutionManager <testSetNum(100)> <Context_Intensity,Limited,Load> <min_CI(0.7)> "
 						+ "<max_CI(0.9)> <directory(20090222)> <testing criteria(AllPolicies, All1ResolvedDU, All2ResolvedDU)>"
 						+ "<TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>[min_FaultyVersion][max_FaultyVersion]");
 
@@ -173,12 +173,12 @@ public class ExecutionManager {
 					
 					while ((line = br.readLine()) != null) {
 						String[] strs = line.split("\t");
-						int fault = Integer.parseInt(strs[0].trim());
+						String fault = strs[0].trim();
 						
-						if(!faultList.contains(""+fault)) // this can save memory significantly
+						if(!faultList.contains(fault)) // this can save memory significantly
 							continue;
 						
-						int testcase = Integer.parseInt(strs[1].trim());
+						String testcase = strs[1].trim();
 						String POrF = strs[2].trim();
 						
 						//save data into execHistory
@@ -190,8 +190,8 @@ public class ExecutionManager {
 						}
 						
 //						if(!tc_pf.containsKey(""+testcase))//this is not necessary since it never happens
-							tc_pf.put(""+testcase, POrF); 
-						execHistory.put(""+fault, tc_pf);
+							tc_pf.put(testcase, POrF); 
+						execHistory.put(fault, tc_pf);
 					}
 				} catch (NumberFormatException e) {
 					// TODO Auto-generated catch block

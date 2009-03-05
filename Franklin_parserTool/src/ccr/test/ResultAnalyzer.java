@@ -594,134 +594,157 @@ public class ResultAnalyzer {
 	}
 	
 	public static void main(String[] args){
-		
-//		String date = "20090216";
-//		String date = "20090217";
-//		String date= "20090219";
-//		String date= "20090220";
-		String date= "20090226";
-//		String date= "20090222";
-		String criterion = "allPolicies";
-//		String criterion = "all1ResolvedDU";
-//		String criterion = "all2ResolvedDU";
-//		String criterion = "allFullResolvedDU";
-		
-		//2009-02-22:
-//		String criterion = "allPolicies_old";
-//		String criterion = "all1ResolvedDU_old";
-//		String criterion = "all2ResolvedDU_old";
-//		String criterion = "allFullResolvedDU_old";
+		System.out
+		.println("USAGE: java ccr.test.ResultAnalyzer <Context_Intensity,Limited,Load>"
+				+ "<directory(20090305)>");
+
+		String instruction = args[0];
+		String date = args[1];
 		
 		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
 		
 		//2009-02-18: load CI of each test case from a file
-//		long startTime = System.currentTimeMillis();
 		boolean containHeader = true;
 		Adequacy.getTestPool(testcaseFile, containHeader);
 		
 		//2009-02-22: load failure rates from a file, this
 		String failureRateFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/failureRate.txt";
 		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
-		
-//		String detailFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/detailed.txt";
-//		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090217/detailed_faults.txt";
-//		ResultAnalyzer.translateFormat(detailFile, saveFile, containHeader);
-//		System.out.println(System.currentTimeMillis() - startTime);
 
-		//2009-02-19: get the failure rate of each fault
-		String testDetailFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/detailed.txt";
-		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/FailureRate_temp.txt";		
-//		ResultAnalyzer.getFailureRate(testDetailFile, containHeader, saveFile);
-		
-		//2009-02-19: analysis faults number and faults type detected by an adequate test set
-//		String testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion +"TestSets.txt";
-//		String testSetExecutionFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+".txt";
-//		boolean containHeader1 = false;
-//		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+"_FaultType.txt";
-//		boolean containHeader2 = true;
-
-//		ResultAnalyzer.faultsExposedByTestSet(testSetFile, containHeader1, testSetExecutionFile, containHeader2, saveFile);
-		
-//		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/all1ResolvedDU_PerValidTestCase.txt";
-//		ResultAnalyzer.validTestCaseWithinTestSet(testSetFile, containHeader1, testSetExecutionFile, containHeader2, saveFile);
-		
-		//2009-02-19: analysis faults number and faults type detected by an adequate test set
-		String testSetExecutionFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+".txt";
-		boolean containHeader1 = false;
-		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+"_FaultType.txt";
-//		ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader, saveFile);
-		
-		//2009-02-19: analysis percentage of fault-exposing test cases in a test set with respect to a fault
-		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+"_perValidTestCase.txt";
-//		ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader, saveFile);
-		
-		//2009-02-22: analysis percentage of fault-exposing test sets with respect to each fault
-		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/"+criterion+"_perValidTestSet.txt";
-//		ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader, saveFile);
-		
 		//2009-02-24: merge files
 		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";
 		
 		String[] criteria = new String[]{
-				"AllPoliciesTestSets_old","AllPoliciesTestSets_new",
-				"All1ResolvedDUTestSets_old","All1ResolvedDUTestSets_new",
-				"All2ResolvedDUTestSets_old","All2ResolvedDUTestSets_new",
-				
-				"AllPoliciesTestSets_old_random_58","AllPoliciesTestSets_new_random_58",
-				"All1ResolvedDUTestSets_old_random_58","All1ResolvedDUTestSets_new_random_58",
-				"All2ResolvedDUTestSets_old_random_58","All2ResolvedDUTestSets_new_random_58",
-
-				"AllPoliciesTestSets_old_criteria_58","AllPoliciesTestSets_new_criteria_58",
-				"All1ResolvedDUTestSets_old_criteria_58","All1ResolvedDUTestSets_new_criteria_58",
-				"All2ResolvedDUTestSets_old_criteria_58","All2ResolvedDUTestSets_new_criteria_58",
-				
-				"RandomTestSets_21",
-				"RandomTestSets_39",
-				"RandomTestSets_47",
-				"RandomTestSets_58",
+				"AllPoliciesTestSets_old",
+//				"AllPoliciesTestSets_new",
+//				"All1ResolvedDUTestSets_old","All1ResolvedDUTestSets_new",
+//				"All2ResolvedDUTestSets_old","All2ResolvedDUTestSets_new",
+//				
+//				"AllPoliciesTestSets_old_random_58","AllPoliciesTestSets_new_random_58",
+//				"All1ResolvedDUTestSets_old_random_58","All1ResolvedDUTestSets_new_random_58",
+//				"All2ResolvedDUTestSets_old_random_58","All2ResolvedDUTestSets_new_random_58",
+//
+//				"AllPoliciesTestSets_old_criteria_58","AllPoliciesTestSets_new_criteria_58",
+//				"All1ResolvedDUTestSets_old_criteria_58","All1ResolvedDUTestSets_new_criteria_58",
+//				"All2ResolvedDUTestSets_old_criteria_58","All2ResolvedDUTestSets_new_criteria_58",
+//				
+//				"RandomTestSets_21",
+//				"RandomTestSets_39",
+//				"RandomTestSets_47",
+//				"RandomTestSets_58",
 				
 		};
+		
+		if(instruction.equals("Context_Intensity")){
+//			HashMap criterion_faultNum = new HashMap();
+//			HashMap criterion_perValidTC = new HashMap();
+			HashMap criterion_perValidTS = new HashMap();
+
+			String saveFile;
+			for(int i = 0; i < criteria.length; i++){
+				saveFile = srcDir + criteria[i] + "_testing.txt";
+				ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
 				
-		HashMap criterion_faultNum = new HashMap();
-		HashMap criterion_perValidTC = new HashMap();
-		HashMap criterion_perValidTS = new HashMap();
-		containHeader = true;
-		for(int i = 0; i < criteria.length; i++){
-			saveFile = srcDir + criteria[i] + "_testing.txt";
-			ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
+				String testSetExecutionFile = saveFile;
+				boolean containHeader1 = false;
+				
+//				String faultTypeFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_FaultType.txt";
+//				HashMap faultNum = ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader1, faultTypeFile);
+//				criterion_faultNum.put(criteria[i], faultNum);
+//				
+//				String perValidTCFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestCase.txt";
+//				HashMap perValidTC = ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader1, perValidTCFile);
+//				criterion_perValidTC.put(criteria[i], perValidTC);
+				
+				String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestSet.txt";
+				HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
+				criterion_perValidTS.put(criteria[i], perValidTS);
+			}
 			
-			testSetExecutionFile = saveFile;
-			String faultTypeFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_FaultType.txt";
-			HashMap faultNum = ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader1, faultTypeFile);
-			criterion_faultNum.put(criteria[i], faultNum);
+			//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
+//			saveFile = "C:/FaultNum.txt";
+//			ResultAnalyzer.mergeHashMap(criteria, criterion_faultNum, saveFile);
+//			saveFile = "C:/PerValidTC.txt";
+//			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC, saveFile);
+			saveFile = "C:/PerValidTS.txt";
+			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
 			
-			String perValidTCFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestCase.txt";
-			HashMap perValidTC = ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader1, perValidTCFile);
-			criterion_perValidTC.put(criteria[i], perValidTC);
+			//2009-02-25: to explore the CI distributions of different testing criteria
+			StringBuilder sb = new StringBuilder();
+			sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t" + "maxCI" + "\t" + "stdCI" + "\n" );
+			for(int i =0; i < criteria.length; i ++){
+				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, criteria[i]));
+			}
+			saveFile = "C:/CI.txt";
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		}else if(instruction.equals("Limited")){
 			
-			String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestSet.txt";
-			HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
-			criterion_perValidTS.put(criteria[i], perValidTS);
+			HashMap criterion_perValidTS = new HashMap();
+
+			String saveFile;
+			for(int i = 0; i < criteria.length; i++){
+				saveFile = srcDir + criteria[i] + "_limited.txt";
+				ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
+				
+				String testSetExecutionFile = saveFile;
+				boolean containHeader1 = true;
+				
+				String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestSet.txt";
+				HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
+				criterion_perValidTS.put(criteria[i], perValidTS);
+			}
+			
+			//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
+			saveFile = "C:/PerValidTS.txt";
+			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
+			
+			//2009-02-25: to explore the CI distributions of different testing criteria
+			StringBuilder sb = new StringBuilder();
+			sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t" + "maxCI" + "\t" + "stdCI" + "\n" );
+			for(int i =0; i < criteria.length; i ++){
+				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, criteria[i]));
+			}
+			saveFile = "C:/CI.txt";
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			
+		}else if(instruction.equals("Load")){ // the fast way to derive the fault detection rate of a specified testing criterion
+			HashMap criterion_perValidTS = new HashMap();
+
+			String saveFile;
+			for(int i = 0; i < criteria.length; i++){
+				saveFile = srcDir + criteria[i] + "_limited_load.txt"; 
+				
+				//it is not necessary to merge yet
+//				ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
+				
+				String testSetExecutionFile = saveFile;
+				boolean containHeader1 = true;
+				
+				String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_limited_load.txt")) + "_PerValidTestSet.txt";
+				HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
+				criterion_perValidTS.put(criteria[i], perValidTS);
+			}
+			
+			//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
+			saveFile = "C:/PerValidTS.txt";
+			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
+			
+			//2009-02-25: to explore the CI distributions of different testing criteria
+			StringBuilder sb = new StringBuilder();
+			sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t" + "maxCI" + "\t" + "stdCI" + "\n" );
+			for(int i =0; i < criteria.length; i ++){
+				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, criteria[i]));
+			}
+			saveFile = "C:/CI.txt";
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			
 		}
-		
-		//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
-		saveFile = "C:/FaultNum.txt";
-		ResultAnalyzer.mergeHashMap(criteria, criterion_faultNum, saveFile);
-		saveFile = "C:/PerValidTC.txt";
-		ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC, saveFile);
-		saveFile = "C:/PerValidTS.txt";
-		ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
-		
-		//2009-02-25: to explore the CI distributions of different testing criteria
-		StringBuilder sb = new StringBuilder();
-		sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t" + "maxCI" + "\t" + "stdCI" + "\n" );
-		for(int i =0; i < criteria.length; i ++){
-			sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, criteria[i]));
-		}
-		saveFile = "C:/CI.txt";
-		Logger.getInstance().setPath(saveFile, false);
-		Logger.getInstance().write(sb.toString());
-		Logger.getInstance().close();
 		
 	}
 }
