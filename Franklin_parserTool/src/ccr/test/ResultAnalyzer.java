@@ -22,8 +22,6 @@ public class ResultAnalyzer {
 	 * @return
 	 */
 	public static String getCriteriaCI(String srcDir, boolean containHeader, String criterion){
-		
-		
 		File[] files = new File(srcDir).listFiles();
 		StringBuilder sb = new StringBuilder();
 		
@@ -502,6 +500,81 @@ public class ResultAnalyzer {
 		return testSet_fault;
 	}
 	
+	/**return the size_averagePerValidTestSet for a given testing criteria
+	 * 
+	 * @param testSetExecutionFile
+	 * @param containHeader
+	 * @param saveFile
+	 * @return
+	 */
+	public static HashMap getTSPerValidTestSet(String srcDir, String criterion, boolean containHeader){
+		HashMap size_perValidTestSet = new HashMap();
+		
+		File[] files = new File(srcDir).listFiles();
+		
+		for(File file: files){
+			String fileName = file.getName();
+			if(fileName.matches(criterion + "\\_[0-9]+\\_limited_load.txt")){
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					String str = null;
+					if(containHeader)
+						br.readLine();
+					
+					//get fault-test sets pair
+					HashMap fault_TestSets = new HashMap(); 
+					while((str = br.readLine())!= null){
+						String[] strs = str.split("\t");
+						String fault = strs[0];
+						String validTestSet = strs[5];
+						
+						ArrayList testSets;
+						if(fault_TestSets.containsKey(fault))
+							testSets = (ArrayList)fault_TestSets.get(fault);
+						else
+							testSets = new ArrayList();
+						
+						testSets.add(validTestSet);
+						fault_TestSets.put(fault, testSets);
+					}
+					br.close();
+					
+					//count the valid test sets for each fault
+					double sum_perValidTestSet = 0.0;
+					Iterator ite = fault_TestSets.keySet().iterator();
+					while(ite.hasNext()){ // for each fault
+						String fault = (String)ite.next();
+						ArrayList testSets = (ArrayList)fault_TestSets.get(fault);
+						int validCounter = 0;
+						for(int i = 0; i < testSets.size(); i ++){
+							String testSet = (String)testSets.get(i);
+							if(testSet.equals("1"))
+								validCounter ++;
+						}
+						sum_perValidTestSet += (double)validCounter/(double)testSets.size();
+					}
+					double mean_perValidTestSet = sum_perValidTestSet/(double)fault_TestSets.size();
+					String size = fileName.substring(((String)(criterion+"_")).length(), fileName.indexOf("_limited_load.txt"));
+					size_perValidTestSet.put(size, mean_perValidTestSet);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		return size_perValidTestSet;
+	}
+	
+	/**return the fault-perValidTestSet for a given testing criterion
+	 * 
+	 * @param testSetExecutionFile
+	 * @param containHeader
+	 * @param saveFile
+	 * @return
+	 */
 	public static HashMap perValidTestSet(String testSetExecutionFile, boolean containHeader, String saveFile){
 		HashMap fault_perValidTestSet = new HashMap();
 		StringBuilder sb = new StringBuilder();
@@ -591,6 +664,46 @@ public class ResultAnalyzer {
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
+	}
+	
+	public static void getCorrelationTSPeformance(HashMap criterion_size_performance, String saveFile){
+
+		//1.get all criteria
+		Iterator ite = criterion_size_performance.keySet().iterator();
+		ArrayList criteria = new ArrayList();
+		while(ite.hasNext()){
+			criteria.add(ite.next());
+		}
+		
+		//2. Header, keeping the order
+		StringBuilder sb = new StringBuilder();
+		sb.append("Size" + "\t");
+		for(int i = 0; i < criteria.size(); i ++){
+			sb.append((String)criteria.get(i) + "\t");
+		}
+		sb.append("\n");
+		
+		String criterion = (String)criteria.get(0); // standard criterion
+		HashMap size_performance = (HashMap)criterion_size_performance.get(criterion);
+		
+		//3.summary all results
+		Iterator it1 = size_performance.keySet().iterator();
+		while(it1.hasNext()){
+			String size = (String)it1.next();
+			sb.append(size + "\t");
+			
+			ArrayList criterion_performance = new ArrayList(); 
+			for(int i = 0; i < criteria.size(); i ++){
+				double performance = (Double)((HashMap)criterion_size_performance.get(criteria.get(i))).get(size);
+				sb.append(performance + "\t");
+			}
+			sb.append("\n");
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+		
 	}
 	
 	public static void main(String[] args){
@@ -744,6 +857,18 @@ public class ResultAnalyzer {
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
 			
+		}else if(instruction.equals("getSizePerformance")){
+			//2009-03-06: get the correlations between test set size and fault detection rate of each criterion
+			HashMap criterion_sizePerformance = new HashMap();
+			
+			String saveFile = "C:/Size_Performance.txt";
+			for(int i = 0; i < criteria.length; i ++){
+				String criterion = criteria[i];
+				containHeader = true;
+				criterion_sizePerformance.put(criteria[i], ResultAnalyzer.getTSPerValidTestSet(srcDir, criterion, containHeader));
+			}
+			
+			ResultAnalyzer.getCorrelationTSPeformance(criterion_sizePerformance, saveFile);
 		}
 		
 	}
