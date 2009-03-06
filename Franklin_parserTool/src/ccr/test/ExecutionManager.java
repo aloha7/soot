@@ -36,7 +36,7 @@ public class ExecutionManager {
 						+ "<max_CI(0.9)> <directory(20090222)> <testing criteria(AllPolicies, All1ResolvedDU, All2ResolvedDU)>"
 						+ "<TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>[min_FaultyVersion][max_FaultyVersion]");
 
-		if (args.length == 11) {
+		if (args.length >= 9) {
 			int testSetNum = Integer.parseInt(args[0]);
 			String instruction = args[1];
 			double min_CI = Double.parseDouble(args[2]);
@@ -49,7 +49,7 @@ public class ExecutionManager {
 			String randomOrCriterion = args[8];
 			int start = 0;
 			int end = 140;
-			if (args.length > 8 && instruction.equals("Context_Intensity")) {
+			if (args.length == 11 && instruction.equals("Context_Intensity")) {
 				start = Integer.parseInt(args[9]);
 				end = Integer.parseInt(args[10]);
 			}
@@ -71,7 +71,6 @@ public class ExecutionManager {
 			TestSet testpool = TestSetManager.getTestPool(testPoolFile, true);
 
 			String testSetFile = null;
-			int maxTrials = 2000;
 
 			Adequacy.loadTestCase(testPoolFile);
 
@@ -157,7 +156,7 @@ public class ExecutionManager {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 				boolean containHeader = true;
 				// 2. load the test result from history
 				HashMap execHistory = new HashMap();
@@ -167,30 +166,131 @@ public class ExecutionManager {
 					BufferedReader br = new BufferedReader(new FileReader(
 							historyFile));
 					String line = null;
-				
-					if(containHeader)
+
+					if (containHeader)
 						br.readLine();
-					
+
 					while ((line = br.readLine()) != null) {
 						String[] strs = line.split("\t");
 						String fault = strs[0].trim();
-						
-						if(!faultList.contains(fault)) // this can save memory significantly
+
+						if (!faultList.contains(fault)) // this can save memory
+														// significantly
 							continue;
-						
+
 						String testcase = strs[1].trim();
 						String POrF = strs[2].trim();
-						
-						//save data into execHistory
+
+						// save data into execHistory
 						HashMap tc_pf;
-						if(execHistory.containsKey(""+fault)){
-							tc_pf = (HashMap)execHistory.get(""+fault);
-						}else{
+						if (execHistory.containsKey("" + fault)) {
+							tc_pf = (HashMap) execHistory.get("" + fault);
+						} else {
 							tc_pf = new HashMap();
 						}
-						
-//						if(!tc_pf.containsKey(""+testcase))//this is not necessary since it never happens
-							tc_pf.put(testcase, POrF); 
+
+						// if(!tc_pf.containsKey(""+testcase))//this is not
+						// necessary since it never happens
+						tc_pf.put(testcase, POrF);
+						execHistory.put(fault, tc_pf);
+					}
+				} catch (NumberFormatException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				// 3. test the specified faults
+				TestDriver
+						.test_load(testSets, faultList, execHistory, saveFile);
+
+			}
+		} else if (args.length == 3) { 
+			// Test the random test set
+			String instruction = args[0];
+			int testSuiteSize = Integer.parseInt(args[1]);
+			String date = args[2];
+			
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestPool.txt";
+			TestSet testpool = TestSetManager.getTestPool(testPoolFile, true);
+
+
+			Adequacy.loadTestCase(testPoolFile);
+			
+			String testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date
+				+ "/RandomTestSets_"
+				+  testSuiteSize
+				+ ".txt";
+			TestSet testSets[][] = new TestSet[1][];
+			testSets[0] = Adequacy.getTestSets(testSetFile);
+			
+			
+			
+			String saveFile = testSetFile.substring(0, testSetFile
+					.indexOf(".txt"))
+					+ "_limited_load.txt";
+			
+			if(instruction.equals("Load")){
+				
+				String faultListFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/FaultList.txt";
+
+				// 1. load the fault list
+				ArrayList faultList = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(
+							faultListFile));
+					String line = null;
+					while ((line = br.readLine()) != null) {
+						faultList.add(line.trim());
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				// 2. load the test result from history
+				boolean containHeader = true;
+				HashMap execHistory = new HashMap();
+				String historyFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date + "/detailed.txt";
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(
+							historyFile));
+					String line = null;
+
+					if (containHeader)
+						br.readLine();
+
+					while ((line = br.readLine()) != null) {
+						String[] strs = line.split("\t");
+						String fault = strs[0].trim();
+
+						if (!faultList.contains(fault)) // this can save memory
+														// significantly
+							continue;
+
+						String testcase = strs[1].trim();
+						String POrF = strs[2].trim();
+
+						// save data into execHistory
+						HashMap tc_pf;
+						if (execHistory.containsKey("" + fault)) {
+							tc_pf = (HashMap) execHistory.get("" + fault);
+						} else {
+							tc_pf = new HashMap();
+						}
+
+						// if(!tc_pf.containsKey(""+testcase))//this is not
+						// necessary since it never happens
+						tc_pf.put(testcase, POrF);
 						execHistory.put(fault, tc_pf);
 					}
 				} catch (NumberFormatException e) {
@@ -206,33 +306,8 @@ public class ExecutionManager {
 
 				// 3. test the specified faults
 				TestDriver.test_load(testSets, faultList, execHistory, saveFile);
-
+				
 			}
-		} else if (args.length == 5) { // Test the random test set
-			int testSetNum = Integer.parseInt(args[0]);
-			int testSuiteSize = Integer.parseInt(args[1]);
-			String date = args[2];
-			int start = Integer.parseInt(args[3]);
-			int end = Integer.parseInt(args[4]);
-
-			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date + "/TestPool.txt";
-			TestSet testpool = TestSetManager.getTestPool(testPoolFile, true);
-			Adequacy.loadTestCase(testPoolFile);
-
-			String testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date + "/RandomTestSets_" + testSuiteSize + ".txt";
-
-			TestSet[][] testSets = new TestSet[1][];
-			testSets[0] = Adequacy.getTestSets(testSetFile);
-
-			String versionPackageName = "testversion";
-			String saveFile = testSetFile
-					.substring(0, testSetFile.indexOf("."))
-					+ "_" + start + "_" + end + ".txt";
-			TestDriver.test(versionPackageName, "TestCFG2", testSets, saveFile,
-					start, end);
 		}
 	}
-
 }
