@@ -208,12 +208,12 @@ public class TestSetManager {
 					testcase_traces.put(testcase, traces);
 				} else {
 					//2009-03-06:
-					testSet = replace_CI_ordering(testSet,
-							testcase_uniqueCovers, testcase, stringTrace);
+//					testSet = replace_CI_ordering(testSet,
+//							testcase_uniqueCovers, testcase, stringTrace);
 					
 					//2009-03-07:
-//					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
-//							testcase_traces, testcase, stringTrace);
+					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+							testcase_traces, testcase, stringTrace);
 				}			
 			}
 		}
@@ -525,7 +525,8 @@ public class TestSetManager {
 		TestSet testSet = new TestSet();
 		TestSet visited = new TestSet();
 		HashMap testcase_uniqueCovers = new HashMap();
-
+		HashMap testcase_traces = new HashMap();
+		
 		long time = System.currentTimeMillis();
 
 		int originalSize = criterion.size();
@@ -547,10 +548,20 @@ public class TestSetManager {
 				if (uniqueCover.size() > 0) {
 					testcase_uniqueCovers.put(testcase, uniqueCover);
 					testSet.add(testcase);
+					
+					ArrayList traces = new ArrayList();
+					for(int i = 0; i < stringTrace.length; i++)
+						traces.add(stringTrace[i]);
+					
+					testcase_traces.put(testcase, traces);
+					
 				} else {
 					//2009-03-07: wrap the replacement strategy as a method
-					testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
+//					testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
 					
+					//2009-03-07:
+					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+							testcase_traces, testcase, stringTrace);
 				}
 			}
 		}
@@ -614,11 +625,21 @@ public class TestSetManager {
 						if (uniqueCover.size() > 0) {
 							testcase_uniqueCovers.put(testcase, uniqueCover);
 							testSet.add(testcase);
-
+							
+							ArrayList traces = new ArrayList();
+							for(int i = 0; i < stringTrace.length; i++)
+								traces.add(stringTrace[i]);
+							
+							testcase_traces.put(testcase, traces);
+							
 							checkCoverage(stringTrace, finalCriterion);
 						} else {
 							//2009-03-07:
-							testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
+//							testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
+							
+							//2009-03-07:
+							testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+									testcase_traces, testcase, stringTrace);
 						}
 					}
 				}
