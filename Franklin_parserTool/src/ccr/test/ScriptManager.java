@@ -17,17 +17,36 @@ public class ScriptManager {
 	
 	public static String exeRandomTS_Script(int min_TestSuiteSize, int max_TestSuiteSize,
 			String date){
+		int interval = 18;
+		int sleep_sed = 60; // sleep time in terms of seconds
+		int incremental = 30;
+		int total = 0;
 		
 		StringBuilder sb = new StringBuilder();
 		for(int testSuiteSize = min_TestSuiteSize; testSuiteSize < max_TestSuiteSize; testSuiteSize ++){
 			sb.append("java ccr.test.ExecutionManager Load "+ testSuiteSize + " " + date + " &\n");
-		}		
+			if (testSuiteSize % interval == 0) { // sleep a fixed time if a specified
+				// interval is reached
+				sb.append("sleep " + sleep_sed + "\n");
+				total += sleep_sed;
+				sleep_sed += incremental;
+				
+			}
+		}	
+		
+		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
 		return sb.toString();
 	}
 	
 	public static String exeAdequateTS_Script(int testSetNum, String instruction, double min_CI,
 			double max_CI, String date, int min_TestSuiteSize, int max_TestSuiteSize){
 
+		int interval = 18;
+		int sleep_sed = 180; // sleep time in terms of seconds(60, 5 for [1, 130]->118min, 180, 10 for[130, 200]->112min)
+		int incremental = 10;
+		int counter = 0; 
+		int total = 0;
+		
 		String[] criteria = new String[] { 
 				"AllPolicies_old_random",  
 				
@@ -62,12 +81,29 @@ public class ScriptManager {
 				String oldOrNew = strs[1];
 				String randomOrCriterion = strs[2];
 				
+				// 2009-03-07: have a parameter: sleep time to fix, thus it is not a good idea
+//				sb.append("java ccr.test.ExecutionManager "+ testSetNum + " Load " 
+//						+ min_CI + " " + max_CI + " " + date + " " + criterion + " " + testSuiteSize
+//						+" " + oldOrNew + " " + randomOrCriterion +" &\n");
+//				
+//				counter ++;
+//				if (counter % interval == 0) { // sleep a fixed time when reaching a interval
+//					// interval is reached
+//					sb.append("sleep " + sleep_sed + "\n");
+//					total += sleep_sed;
+//					sleep_sed += incremental;
+//					
+//				}
+				
+				//2009-03-07: have no parameters to fix, but we need 20 shells to run at the same time
+				//and for each shell, all commands should execute sequentially.
 				sb.append("java ccr.test.ExecutionManager "+ testSetNum + " Load " 
 						+ min_CI + " " + max_CI + " " + date + " " + criterion + " " + testSuiteSize
-						+" " + oldOrNew + " " + randomOrCriterion +" &\n");	
+						+" " + oldOrNew + " " + randomOrCriterion +" \n");
 			}
 		}
 		
+//		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
 	  return sb.toString();
 	}
 	
@@ -82,25 +118,24 @@ public class ScriptManager {
 	 */
 	public static String genRandomTS_Script(int testSetNum,
 			int min_TestSuiteSize, int max_TestSuiteSize, String date) {
-//		int interval = 18;
-//		int sleep_sed = 10; // sleep time in terms of seconds
-//		int incremental = 5;
-//		int total = 0;
+		int interval = 18;
+		int sleep_sed = 10; // sleep time in terms of seconds
+		int incremental = 5;
+		int total = 0;
 		StringBuilder sb = new StringBuilder();
 		
 		for (int i = min_TestSuiteSize; i < max_TestSuiteSize; i++) {
-//			sb.append("echo " + i +"\n");
 			sb.append("java ccr.test.TestSetManager " + testSetNum + " " + i
 					+ " " + date + " &\n");
-//			if (i % interval == 0) { // sleep a fixed time if a specified
-//				// interval is reached
-//				sb.append("sleep " + sleep_sed + "\n");
-//				total += sleep_sed;
-//				sleep_sed += incremental;
-//				
-//			}
+			if (i % interval == 0) { // sleep a fixed time if a specified
+				// interval is reached
+				sb.append("sleep " + sleep_sed + "\n");
+				total += sleep_sed;
+				sleep_sed += incremental;
+				
+			}
 		}
-//		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
+		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
 		return sb.toString();
 	}
 
@@ -121,35 +156,35 @@ public class ScriptManager {
 			int max_TestSuiteSize) {
 
 		int interval = 24;
-		int sleep_sed = 40*60; // sleep time in terms of seconds
+		int sleep_sed = 90; // sleep time in terms of seconds(90 , 10 for [1, 130]->130min, 360, 10 for [130, 200]->124 mins)
 		int incremental = 10;
 		int counter = 0; 
 		int total = 0;
 		
 		String[] criteria = new String[] { 
-				"AllPolicies_old_random",  
+//				"AllPolicies_old_random",  
+//				
+//				"All1ResolvedDU_old_random",  
+//				
+//				"All2ResolvedDU_old_random", 
+//
+//				"AllPolicies_old_criteria", 
+//		
+//				"All1ResolvedDU_old_criteria", 
+//				
+//				"All2ResolvedDU_old_criteria", 
 				
-				"All1ResolvedDU_old_random",  
+				"AllPolicies_new_random",
 				
-				"All2ResolvedDU_old_random", 
-
-				"AllPolicies_old_criteria", 
-		
-				"All1ResolvedDU_old_criteria", 
+				"AllPolicies_new_criteria",
 				
-				"All2ResolvedDU_old_criteria", 
+				"All1ResolvedDU_new_random",
 				
-//				"AllPolicies_new_random",
-//				
-//				"AllPolicies_new_criteria",
-//				
-//				"All1ResolvedDU_new_random",
-//				
-//				"All1ResolvedDU_new_criteria",
-//				
-//				"All2ResolvedDU_new_random",
-//				
-//				"All2ResolvedDU_new_criteria",
+				"All1ResolvedDU_new_criteria",
+				
+				"All2ResolvedDU_new_random",
+				
+				"All2ResolvedDU_new_criteria",
 		};
 		
 		StringBuilder sb = new StringBuilder();
@@ -161,22 +196,32 @@ public class ScriptManager {
 				// All2ResolvedDU
 				String oldOrNew = strs[1];
 				String randomOrCriterion = strs[2];
-
+				
+				// 2009-03-07: have a parameter: sleep time to fix, thus it is not a good idea 
+//				sb.append("java ccr.test.TestSetManager " + testSetNum
+//						+ " Context_Intensity " + min_CI + " " + max_CI + " "
+//						+ date + " " + criterion + " " + i + " " + oldOrNew
+//						+ " " + randomOrCriterion + " &\n");
+//				
+//				counter ++;
+//				if (counter % interval == 0) { // sleep a fixed time when reaching a interval
+//					// interval is reached
+//					sb.append("sleep " + sleep_sed + "\n");
+//					total += sleep_sed;
+//					sleep_sed += incremental;
+//					
+//				}
+				
+				//2009-03-07: have no parameters to fix, but we need 20 shells to run at the same time
+				//and for each shell, all commands should execute sequentially.
 				sb.append("java ccr.test.TestSetManager " + testSetNum
 						+ " Context_Intensity " + min_CI + " " + max_CI + " "
 						+ date + " " + criterion + " " + i + " " + oldOrNew
-						+ " " + randomOrCriterion + " &\n");
-				counter ++;
-				if (counter % interval == 0) { // sleep a fixed time when reaching a interval
-					// interval is reached
-					sb.append("sleep " + sleep_sed + "\n");
-					total += sleep_sed;
-					sleep_sed += incremental;
-					
-				}
+						+ " " + randomOrCriterion + " \n");
+				
 			}
 		}
-		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
+//		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
 		return sb.toString();
 	}
 
