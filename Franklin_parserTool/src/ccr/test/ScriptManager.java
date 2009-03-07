@@ -48,29 +48,29 @@ public class ScriptManager {
 		int total = 0;
 		
 		String[] criteria = new String[] { 
-				"AllPolicies_old_random",  
+//				"AllPolicies_old_random",  
+//				
+//				"All1ResolvedDU_old_random",  
+//				
+//				"All2ResolvedDU_old_random", 
+//
+//				"AllPolicies_old_criteria", 
+//		
+//				"All1ResolvedDU_old_criteria", 
+//				
+//				"All2ResolvedDU_old_criteria", 
 				
-				"All1ResolvedDU_old_random",  
+				"AllPolicies_new_random",
 				
-				"All2ResolvedDU_old_random", 
-
-				"AllPolicies_old_criteria", 
-		
-				"All1ResolvedDU_old_criteria", 
+				"AllPolicies_new_criteria",
 				
-				"All2ResolvedDU_old_criteria", 
+				"All1ResolvedDU_new_random",
 				
-//				"AllPolicies_new_random",
-//				
-//				"AllPolicies_new_criteria",
-//				
-//				"All1ResolvedDU_new_random",
-//				
-//				"All1ResolvedDU_new_criteria",
-//				
-//				"All2ResolvedDU_new_random",
-//				
-//				"All2ResolvedDU_new_criteria",
+				"All1ResolvedDU_new_criteria",
+				
+				"All2ResolvedDU_new_random",
+				
+				"All2ResolvedDU_new_criteria",
 		};
 		StringBuilder sb = new StringBuilder();
 		for(int testSuiteSize = min_TestSuiteSize; testSuiteSize < max_TestSuiteSize; testSuiteSize ++){
@@ -274,20 +274,30 @@ public class ScriptManager {
 			
 		}else if(instruction.equals("AllInOne")){
 			//generate all random, adequate test sets, then execute them and analyze them
-			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/Script/AllInOne.sh";
+			//2009-03-07: we set a interval to separate all tasks into several shells
+			int interval = 20;
 			
-			StringBuilder sb = new StringBuilder();
-			sb.append(genRandomTS_Script(testSetNum, min_TestSuiteSize,
-					max_TestSuiteSize, date));
-			sb.append(exeRandomTS_Script(min_TestSuiteSize, 
-					max_TestSuiteSize, date));
-			sb.append(genAdequateTS_Script(testSetNum, min_CI, max_CI,
-					date, min_TestSuiteSize, max_TestSuiteSize));
-			sb.append(exeAdequateTS_Script(testSetNum, instruction, min_CI, max_CI, 
-					date, min_TestSuiteSize, max_TestSuiteSize));
-			
-			ScriptManager.save(sb.toString(), saveFile);
+			for(int i = 1; i < 200; i = i + interval){
+				min_TestSuiteSize = i;
+				max_TestSuiteSize = i + interval;
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/Script/AllInOne_"+min_TestSuiteSize
+					+"_"+max_TestSuiteSize+".sh";
+				
+				
+				StringBuilder sb = new StringBuilder();
+//				sb.append(genRandomTS_Script(testSetNum, min_TestSuiteSize,
+//						max_TestSuiteSize, date));
+//				sb.append(exeRandomTS_Script(min_TestSuiteSize, 
+//						max_TestSuiteSize, date));
+				sb.append(genAdequateTS_Script(testSetNum, min_CI, max_CI,
+						date, min_TestSuiteSize, max_TestSuiteSize));
+				sb.append(exeAdequateTS_Script(testSetNum, instruction, min_CI, max_CI, 
+						date, min_TestSuiteSize, max_TestSuiteSize));
+				
+				ScriptManager.save(sb.toString(), saveFile);
+
+			}
 		}
 	}
 }
