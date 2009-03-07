@@ -22,6 +22,7 @@ import ccr.stat.PolicyNode;
 import ccr.stat.VariableSet;
 
 public class TestSetManager {
+	
 	public static HashMap testCases = new HashMap();
 
 	/**
@@ -174,180 +175,331 @@ public class TestSetManager {
 			Criterion c, TestSet testpool, int maxTrials, double min_CI,
 			double max_CI) {
 
-		int replaceCounter = 0; // record the replace times
 		Criterion criterion = (Criterion) c.clone();
 		TestSet testSet = new TestSet();
 		TestSet visited = new TestSet();
-		HashMap testcase_uniqueTraces = new HashMap();
-
+		HashMap testcase_uniqueCovers = new HashMap();
+		HashMap testcase_traces = new HashMap();
+		
 		long time = System.currentTimeMillis();
 
 		int originalSize = criterion.size();
 		while (visited.size() < maxTrials && visited.size() < testpool.size()
 				&& criterion.size() > 0) {
 			// String testcase = testpool.getByRandom();
-			String testcase = testpool.getByART();
+			String testcase = testpool.getByART(); //more likely to sample test cases with high CI
 
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
-
 			if (!visited.contains(testcase)) {
 				visited.add(testcase);
 				String stringTrace[] = TestDriver.getTrace(appClassName,
 						testcase);
-
+				
 				ArrayList uniqueCover = increaseCoverage(stringTrace, criterion);
 				if (uniqueCover.size() > 0) {
-					testcase_uniqueTraces.put(testcase, uniqueCover);
+					testcase_uniqueCovers.put(testcase, uniqueCover);
 					testSet.add(testcase);
+					
+					ArrayList traces = new ArrayList();
+					for(int i = 0; i < stringTrace.length; i++)
+						traces.add(stringTrace[i]);
+					
+					testcase_traces.put(testcase, traces);
 				} else {
-					// 2009-2-21: if the test case does not increase the
-					// coverage
-					double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
-
-					Vector testcases = testSet.testcases;
-					ArrayList replaced = new ArrayList(); // keep all test
-					// cases in the test
-					// set that has
-					// lower CI values
-					// in ascending
-					// orders
-
-					for (int i = 0; i < testcases.size(); i++) { // check
-						// whether
-						// some test
-						// cases
-						// have
-						// lower CI
-						// than
-						// current
-						// ones.
-						TestCase temp = (TestCase) Adequacy.testCases
-								.get((String) testcases.get(i));
-						double CI_temp = temp.CI;
-						if (CI_temp < CI) { // add temp to replace queue which
-							// is sorted by ascending order of
-							// CI
-							if (replaced.size() > 0) {
-								int j = 0;
-								boolean added = false;
-								for (; j < replaced.size(); j++) {
-									TestCase replacedTC = (TestCase) replaced
-											.get(j);
-									double CI_replacedTC = replacedTC.CI;
-									if (CI_replacedTC > CI_temp) {
-										// it is a correct place to insert
-										// current test case(ascending order):
-										// temp
-										replaced.add(j, temp);
-										added = true;
-										break;
-									}
-								}
-								if (!added) { // add it if it has not
-									replaced.add(temp);
-								}
-							} else {
-								replaced.add(temp);
-							}
-						}
-					}
-
-					// just faciliate to compare
-					ArrayList traceList = new ArrayList();
-					for (int k = 0; k < stringTrace.length; k++)
-						traceList.add(stringTrace[k]);
-
-					// 2009-02-22: two strategies here: 1).select one and
-					// replace it randomly;
-					// 2).replace the one who has the lowest CI value
-					// 1).select one and replace it randomly
-					// ArrayList checked = new ArrayList(); //keep all checked
-					// test cases in replace queue
-					//
-					// Random rand = new Random();
-					// int index = -1;
-					// while (checked.size() < replaced.size()) {
-					//
-					// //random select a index which has not been checked
-					// do {
-					// index = rand.nextInt(replaced.size());
-					// } while (checked.contains(index));
-					//
-					// TestCase temp = (TestCase) replaced.get(index);
-					// ArrayList temp_uniqueTraces = (ArrayList)
-					// testcase_uniqueTraces
-					// .get(temp.index);
-					//
-					// // if a "testcase" contains all unique statements
-					// // covered by "temp",
-					// // then we can safely replace "temp" with "testcase"
-					//
-					// int j = 0;
-					// for (; j < temp_uniqueTraces.size(); j++) {
-					// String unique = (String) temp_uniqueTraces.get(j);
-					// if (!traceList.contains(unique))
-					// break;
-					// }
-					// if (j == temp_uniqueTraces.size()) {
-					// // replace "temp" with "testcase"
-					// testcase_uniqueTraces.remove(temp.index);
-					// testcase_uniqueTraces.put(testcase,
-					// temp_uniqueTraces);
-					//
-					// testSet.remove(temp.index);
-					// testSet.add(testcase);
-					// replaceCounter++;
-					// break;
-					// }
-					//
-					// checked.add(index);
-					// }
-
-					// 2009-02-24:2).replace the one who has the lowest CI value
-					for (int i = 0; i < replaced.size(); i++) {
-						TestCase temp = (TestCase) replaced.get(i);
-						ArrayList temp_uniqueTraces = (ArrayList) testcase_uniqueTraces
-								.get(temp.index);
-						// if a "testcase" contains all unique statements
-						// covered by "temp",
-						// then we can safely replace "temp" with "testcase"
-						int j = 0;
-						for (; j < temp_uniqueTraces.size(); j++) {
-							String unique = (String) temp_uniqueTraces.get(j);
-							if (!traceList.contains(unique))
-								break;
-						}
-						if (j == temp_uniqueTraces.size()) {
-							// replace "temp" with "testcase"
-							testcase_uniqueTraces.remove(temp.index);
-							testcase_uniqueTraces.size();
-							testcase_uniqueTraces.put(testcase,
-									temp_uniqueTraces);
-
-							testSet.remove(temp.index);
-							testSet.add(testcase);
-							replaceCounter++;
-
-							// 2009-02-25:if one test case can only replace
-							// another one, then we need "break;"
-							// otherwise, we do not need "break;"
-							break;
-						}
-					}
-
-				}
+					//2009-03-06:
+					testSet = replace_CI_ordering(testSet,
+							testcase_uniqueCovers, testcase, stringTrace);
+					
+					//2009-03-07:
+//					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+//							testcase_traces, testcase, stringTrace);
+				}			
 			}
 		}
-
 		int currentSize = criterion.size();
 		testSet.setCoverage((float) (originalSize - currentSize)
 				/ (float) originalSize);
-		testSet.replaceCounter = replaceCounter;
 		testSet.geneTime = System.currentTimeMillis() - time;
+		return testSet;
+		
+	}
+
+	
+	/**2009-03-06: using random strategy to replace existing test case temp in test set with testcase if
+	 * testcase has larger CI than temp while this replacement does not decrease the
+	 * coverage
+	 * 
+	 * @param testSet
+	 * @param testcase
+	 * @return
+	 */
+	public static TestSet replace_CI_random(TestSet testSet, HashMap testcase_uniqueCovers, String testcase, String[] stringTrace){
+		// 2009-02-22: two strategies here: 1).select one and
+		// replace it randomly;
+		// 2).replace the one who has the lowest CI value
+		// 1).select one and replace it randomly
+		
+		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
+		Vector testcases = testSet.testcases;
+		ArrayList replaced = new ArrayList();
+		// keep all test cases in the test set that has lower CI values in
+		// ascending orders
+
+		for (int i = 0; i < testcases.size(); i++) {
+			// check whether some test cases have lower CI than current ones
+			TestCase temp = (TestCase) Adequacy.testCases
+					.get((String) testcases.get(i));
+			double CI_temp = temp.CI;
+			if (CI_temp < CI) {
+				if (replaced.size() > 0) {
+					int j = 0;
+					boolean added = false;
+					for (; j < replaced.size(); j++) {
+						TestCase replacedTC = (TestCase) replaced.get(j);
+						double CI_replacedTC = replacedTC.CI;
+						if (CI_replacedTC > CI_temp) {
+							replaced.add(j, temp);
+							added = true;
+							break;
+						}
+					}
+					if (!added) { // add it if it has not
+						replaced.add(temp);
+					}
+				} else {
+					replaced.add(temp);
+				}
+
+			}
+		}
+
+		// just faciliate to compare
+		ArrayList traceList = new ArrayList();
+		for (int k = 0; k < stringTrace.length; k++)
+			traceList.add(stringTrace[k]);
+
+		ArrayList checked = new ArrayList();
+		// keep all checked test cases in replace queue
+
+		Random rand = new Random();
+		int index = -1;
+		while (checked.size() < replaced.size()) {
+			// random select a index which has not been checked
+			do {
+				index = rand.nextInt(replaced.size());
+			} while (checked.contains(index));
+
+			TestCase temp = (TestCase) replaced.get(index);
+			ArrayList temp_uniqueCover = (ArrayList) testcase_uniqueCovers
+					.get(temp.index);
+
+			// if a "testcase" contains all unique statements
+			// covered by "temp",
+			// then we can safely replace "temp" with "testcase"
+
+			int j = 0;
+			for (; j < temp_uniqueCover.size(); j++) {
+				String unique = (String) temp_uniqueCover.get(j);
+				if (!traceList.contains(unique))
+					break;
+			}
+			if (j == temp_uniqueCover.size()) {
+				// replace "temp" with "testcase"
+				testcase_uniqueCovers.remove(temp.index);
+				testcase_uniqueCovers.put(testcase, temp_uniqueCover);
+				testSet.remove(temp.index);
+				testSet.add(testcase);
+				testSet.replaceCounter++;
+				break;
+			}
+
+			checked.add(index);
+		}
+		return testSet;
+	}
+	
+	
+	/**
+	 * 2009-03-06: replace existing test case temp in test set with testcase if
+	 * t has larger CI than temp while this replacement does not decrease the
+	 * coverage, favor to replace temp with lowerest CI
+	 * 
+	 * @param testSet
+	 * @param testcase_uniqueCover:
+	 *            test case- unique cover elements
+	 * @param testcase
+	 * @param stringTrace:
+	 *            traces of test case
+	 * @return
+	 */
+	public static TestSet replace_CI_ordering(TestSet testSet, HashMap testcase_uniqueCovers, String testcase, String[] stringTrace){
+		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
+		
+		Vector testcases = testSet.testcases;
+		ArrayList replaced = new ArrayList(); // keep all test cases in the test set that has lower CI in ascending orders 
+
+		for (int i = 0; i < testcases.size(); i++) {
+			TestCase temp = (TestCase) Adequacy.testCases
+					.get((String) testcases.get(i));
+			double CI_temp = temp.CI;
+			if (CI_temp < CI) {
+				// add temp to replace queue which is sorted by ascending order of CI 
+				if (replaced.size() > 0) {
+					int j = 0;
+					boolean added = false;
+					for (; j < replaced.size(); j++) {
+						TestCase replacedTC = (TestCase) replaced
+								.get(j);
+						double CI_replacedTC = replacedTC.CI;
+						if (CI_replacedTC > CI_temp) {
+							replaced.add(j, temp);
+							added = true;
+							break;
+						}
+					}
+					if (!added) { // add it if it has not
+						replaced.add(temp);
+					}
+				} else {
+					replaced.add(temp);
+				}
+
+			}
+		}
+
+		// just faciliate to compare
+		ArrayList traceList = new ArrayList();
+		for (int k = 0; k < stringTrace.length; k++)
+			traceList.add(stringTrace[k]);
+
+
+		// 2009-02-24: replace the one who has the lowest CI value while keeping coverage not decrease
+		for (int i = 0; i < replaced.size(); i++) {
+			TestCase temp = (TestCase) replaced.get(i);
+			ArrayList temp_uniqueCover = (ArrayList) testcase_uniqueCovers
+					.get(temp.index);
+			// if a "testcase" contains all unique statements
+			// covered by "temp",
+			// then we can safely replace "temp" with "testcase"
+			int j = 0;
+			for (; j < temp_uniqueCover.size(); j++) {
+				String unique = (String) temp_uniqueCover.get(j);
+				if (!traceList.contains(unique))
+					break;
+			}
+			if (j == temp_uniqueCover.size()) {
+				// replace "temp" with "testcase"
+				testcase_uniqueCovers.remove(temp.index);
+				testcase_uniqueCovers.put(testcase,
+						temp_uniqueCover);
+
+				testSet.remove(temp.index);
+				testSet.add(testcase);
+				testSet.replaceCounter ++;
+
+				// 2009-02-25:if one test case can only replace
+				// another one, then we need "break;"
+				// otherwise, we do not need "break;"
+				break;
+			}
+		}
+		
 		return testSet;
 	}
 
+	/**2009-03-07:
+	 * 
+	 * @param testSet
+	 * @param testcase_traces
+	 * @param testcase
+	 * @param stringTrace
+	 * @return
+	 */
+	public static TestSet replace_CI_ordering_refine(TestSet testSet, HashMap testcase_traces, 
+			String testcase, String[] stringTrace){
+		
+		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
+		
+		Vector testcases = testSet.testcases;
+		ArrayList replaced = new ArrayList(); // keep all test cases in the test set that has lower CI in ascending orders 
+
+		for (int i = 0; i < testcases.size(); i++) {
+			TestCase temp = (TestCase) Adequacy.testCases
+					.get((String) testcases.get(i));
+			double CI_temp = temp.CI;
+			if (CI_temp < CI) {
+				// add temp to replace queue which is sorted by ascending order of CI 
+				if (replaced.size() > 0) {
+					int j = 0;
+					boolean added = false;
+					for (; j < replaced.size(); j++) {
+						TestCase replacedTC = (TestCase) replaced
+								.get(j);
+						double CI_replacedTC = replacedTC.CI;
+						if (CI_replacedTC > CI_temp) {
+							replaced.add(j, temp);
+							added = true;
+							break;
+						}
+					}
+					if (!added) { // add it if it has not
+						replaced.add(temp);
+					}
+				} else {
+					replaced.add(temp);
+				}
+
+			}
+		}
+
+		// just faciliate to compare
+		ArrayList traceList = new ArrayList();
+		for (int k = 0; k < stringTrace.length; k++)
+			traceList.add(stringTrace[k]);
+
+
+		// 2009-02-24: replace the one who has the lowest CI value while keeping coverage not decrease
+		for (int i = 0; i < replaced.size(); i++) {
+			TestCase temp = (TestCase) replaced.get(i);
+			ArrayList temp_traces = (ArrayList) testcase_traces
+					.get(temp.index);
+			
+			//keep all traces: testSet + testcase - temp
+			ArrayList testSet_otherTraces = new ArrayList(); 
+			testSet_otherTraces.addAll(traceList);
+			Iterator ite = testcase_traces.keySet().iterator();
+			while(ite.hasNext()){
+				String tc = (String)ite.next();
+				if(!tc.equals(temp.index)){
+					testSet_otherTraces.addAll((ArrayList)testcase_traces.get(tc));
+				}
+			}
+			
+			int j = 0;
+			for(; j < temp_traces.size(); j ++){
+				String trace = (String)temp_traces.get(j);
+				if(!testSet_otherTraces.contains(trace))
+					break;
+			}
+			
+			if (j == temp_traces.size()) {
+				// replace "temp" with "testcase"
+				testcase_traces.remove(temp.index);
+				testcase_traces.put(testcase, traceList);
+				
+				testSet.remove(temp.index);
+				testSet.add(testcase);
+				testSet.replaceCounter ++;
+
+				break;
+			}
+		}
+		
+		return testSet;
+	}
+
+	
 	/**
 	 * 2009-02-21: revised test case selection strategy: add a test case if it
 	 * increases the cumulative coverage or it has a higher CI value than
@@ -368,21 +520,20 @@ public class TestSetManager {
 			double min_CI, double max_CI, int testSuiteSize,
 			String randomOrCriteria) {
 
-		int replaceCounter = 0; // record the replace times
 		Criterion criterion = (Criterion) c.clone();
 		Criterion finalCriterion = null;
 		TestSet testSet = new TestSet();
 		TestSet visited = new TestSet();
-		HashMap testcase_uniqueTraces = new HashMap();
+		HashMap testcase_uniqueCovers = new HashMap();
 
 		long time = System.currentTimeMillis();
 
 		int originalSize = criterion.size();
 		while (visited.size() < maxTrials && visited.size() < testpool.size()
-				&& criterion.size() > 0) {
-			String testcase = testpool.getByRandom();
+				&& criterion.size() > 0 && testSet.size() < testSuiteSize) {
+//			String testcase = testpool.getByRandom();
 
-			// String testcase = testpool.getByART();
+			 String testcase = testpool.getByART();
 
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
@@ -394,145 +545,12 @@ public class TestSetManager {
 
 				ArrayList uniqueCover = increaseCoverage(stringTrace, criterion);
 				if (uniqueCover.size() > 0) {
-					testcase_uniqueTraces.put(testcase, uniqueCover);
+					testcase_uniqueCovers.put(testcase, uniqueCover);
 					testSet.add(testcase);
 				} else {
-					// 2009-2-21: if the test case does not increase the
-					// coverage
-					double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
-
-					Vector testcases = testSet.testcases;
-					ArrayList replaced = new ArrayList(); // keep all test
-					// cases in the test
-					// set that has
-					// lower CI values
-					// in ascending
-					// orders
-
-					for (int i = 0; i < testcases.size(); i++) { // check
-						// whether
-						// some test
-						// cases
-						// have
-						// lower CI
-						// than
-						// current
-						// ones.
-						TestCase temp = (TestCase) Adequacy.testCases
-								.get((String) testcases.get(i));
-						double CI_temp = temp.CI;
-						if (CI_temp < CI) { // add temp to replace queue which
-							// is sorted by ascending order of
-							// CI
-							if (replaced.size() > 0) {
-								int j = 0;
-								boolean added = false;
-								for (; j < replaced.size(); j++) {
-									TestCase replacedTC = (TestCase) replaced
-											.get(j);
-									double CI_replacedTC = replacedTC.CI;
-									if (CI_replacedTC > CI_temp) {
-										// it is a correct place to insert
-										// current test case(ascending order):
-										// temp
-										replaced.add(j, temp);
-										added = true;
-										break;
-									}
-								}
-								if (!added) { // add it if it has not
-									replaced.add(temp);
-								}
-							} else {
-								replaced.add(temp);
-							}
-
-						}
-					}
-
-					// just faciliate to compare
-					ArrayList traceList = new ArrayList();
-					for (int k = 0; k < stringTrace.length; k++)
-						traceList.add(stringTrace[k]);
-
-					// 2009-02-22: two strategies here: 1).select one and
-					// replace it randomly;
-					// 2).replace the one who has the lowest CI value
-					// 1).select one and replace it randomly
-					// ArrayList checked = new ArrayList(); // keep all checked
-					// // test cases in
-					// // replace queue
-					//
-					// Random rand = new Random();
-					// int index = -1;
-					// while (checked.size() < replaced.size()) {
-					//
-					// // random select a index which has not been checked
-					// do {
-					// index = rand.nextInt(replaced.size());
-					// } while (checked.contains(index));
-					//
-					// TestCase temp = (TestCase) replaced.get(index);
-					// ArrayList temp_uniqueTraces = (ArrayList)
-					// testcase_uniqueTraces
-					// .get(temp.index);
-					//
-					// // if a "testcase" contains all unique statements
-					// // covered by "temp",
-					// // then we can safely replace "temp" with "testcase"
-					//
-					// int j = 0;
-					// for (; j < temp_uniqueTraces.size(); j++) {
-					// String unique = (String) temp_uniqueTraces.get(j);
-					// if (!traceList.contains(unique))
-					// break;
-					// }
-					// if (j == temp_uniqueTraces.size()) {
-					// // replace "temp" with "testcase"
-					// testcase_uniqueTraces.remove(temp.index);
-					// testcase_uniqueTraces.put(testcase,
-					// temp_uniqueTraces);
-					//
-					// testSet.remove(temp.index);
-					// testSet.add(testcase);
-					// replaceCounter++;
-					// break;
-					// }
-					//
-					// checked.add(index);
-					// }
-
-					// 2009-02-24: 2).replace the one who has the lowest CI
-					// value
-					for (int i = 0; i < replaced.size(); i++) {
-						TestCase temp = (TestCase) replaced.get(i);
-						ArrayList temp_uniqueTraces = (ArrayList) testcase_uniqueTraces
-								.get(temp.index);
-						// if a "testcase" contains all unique statements
-						// covered by "temp",
-						// then we can safely replace "temp" with "testcase"
-						int j = 0;
-						for (; j < temp_uniqueTraces.size(); j++) {
-							String unique = (String) temp_uniqueTraces.get(j);
-							if (!traceList.contains(unique))
-								break;
-						}
-						if (j == temp_uniqueTraces.size()) {
-							// replace "temp" with "testcase"
-							testcase_uniqueTraces.remove(temp.index);
-							testcase_uniqueTraces.put(testcase,
-									temp_uniqueTraces);
-
-							testSet.remove(temp.index);
-							testSet.add(testcase);
-							replaceCounter++;
-
-							// 2009-02-25:if one test case can only replace
-							// another one, then we need "break;"
-							// otherwise, we do not need "break;"
-							break;
-						}
-					}
+					//2009-03-07: wrap the replacement strategy as a method
+					testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
+					
 				}
 			}
 		}
@@ -567,17 +585,21 @@ public class TestSetManager {
 			do {
 				// reset the criterion and repeat the test case selection
 				// process
-				// int trial = 0;
+				
+				
+				//2009-03-06: we also need a maxTrial here and must be small enough in case of unfeasible du-pairs
+				int trial = 0;
+				maxTrials = 100; 
 				criterion = (Criterion) c.clone();
 
-				while (/* trial < maxTrials && */visited.size() < testpool
+				while ( trial < maxTrials && visited.size() < testpool
 						.size()
 						&& criterion.size() > 0
 						&& testSet.size() < testSuiteSize) {
 					// String testcase = testpool.getByRandom();
 					String testcase = testpool.getByART();
 
-					// trial++;
+					 trial++;
 					// just for debugging purpose
 					// TestCase testCase = (TestCase)
 					// Adequacy.testCases.get(testcase);
@@ -590,158 +612,13 @@ public class TestSetManager {
 						ArrayList uniqueCover = increaseCoverage(stringTrace,
 								criterion);
 						if (uniqueCover.size() > 0) {
-							testcase_uniqueTraces.put(testcase, uniqueCover);
+							testcase_uniqueCovers.put(testcase, uniqueCover);
 							testSet.add(testcase);
 
 							checkCoverage(stringTrace, finalCriterion);
 						} else {
-							// 2009-2-21: if the test case does not increase the
-							// coverage
-							double CI = ((TestCase) (Adequacy.testCases
-									.get(testcase))).CI;
-
-							Vector testcases = testSet.testcases;
-							ArrayList replaced = new ArrayList(); // keep all
-							// test
-							// cases in the test
-							// set that has
-							// lower CI values
-							// in ascending
-							// orders
-
-							for (int i = 0; i < testcases.size(); i++) { // check
-								// whether
-								// some test
-								// cases
-								// have
-								// lower CI
-								// than
-								// current
-								// ones.
-								TestCase temp = (TestCase) Adequacy.testCases
-										.get((String) testcases.get(i));
-								double CI_temp = temp.CI;
-								if (CI_temp < CI) { // add temp to replace queue
-									// which
-									// is sorted by ascending order of
-									// CI
-									if (replaced.size() > 0) {
-										int j = 0;
-										boolean added = false;
-										for (; j < replaced.size(); j++) {
-											TestCase replacedTC = (TestCase) replaced
-													.get(j);
-											double CI_replacedTC = replacedTC.CI;
-											if (CI_replacedTC > CI_temp) {
-												// it is a correct place to
-												// insert
-												// current test case(ascending
-												// order):
-												// temp
-												replaced.add(j, temp);
-												added = true;
-												break;
-											}
-										}
-										if (!added) { // add it if it has not
-											replaced.add(temp);
-										}
-									} else {
-										replaced.add(temp);
-									}
-
-								}
-							}
-
-							// just facilitate to compare
-							ArrayList traceList = new ArrayList();
-							for (int k = 0; k < stringTrace.length; k++)
-								traceList.add(stringTrace[k]);
-
-							// 2009-02-22: two strategies here: 1).select one
-							// and replace it randomly;
-							// 2).replace the one who has the lowest CI value
-							// 1).select one and replace it randomly
-							// ArrayList checked = new ArrayList(); // keep all
-							// // checked
-							// // test
-							// // cases in
-							// // replace
-							// // queue
-							//
-							// Random rand = new Random();
-							// int index = -1;
-							// while (checked.size() < replaced.size()) {
-							//
-							// // random select a index which has not been
-							// // checked
-							// do {
-							// index = rand.nextInt(replaced.size());
-							// } while (checked.contains(index));
-							//
-							// TestCase temp = (TestCase) replaced.get(index);
-							// ArrayList temp_uniqueTraces = (ArrayList)
-							// testcase_uniqueTraces
-							// .get(temp.index);
-							//
-							// // if a "testcase" contains all unique
-							// // statements
-							// // covered by "temp",
-							// // then we can safely replace "temp" with
-							// // "testcase"
-							//
-							// int j = 0;
-							// for (; j < temp_uniqueTraces.size(); j++) {
-							// String unique = (String) temp_uniqueTraces
-							// .get(j);
-							// if (!traceList.contains(unique))
-							// break;
-							// }
-							// if (j == temp_uniqueTraces.size()) {
-							// // replace "temp" with "testcase"
-							// testcase_uniqueTraces.remove(temp.index);
-							// testcase_uniqueTraces.put(testcase,
-							// temp_uniqueTraces);
-							//
-							// testSet.remove(temp.index);
-							// testSet.add(testcase);
-							// replaceCounter++;
-							// break;
-							// }
-							//
-							// checked.add(index);
-							// }
-
-							// 2009-02-24: 2).replace the one who has the lowest
-							// CI value
-							for (int i = 0; i < replaced.size(); i++) {
-								TestCase temp = (TestCase) replaced.get(i);
-								ArrayList temp_uniqueTraces = (ArrayList) testcase_uniqueTraces
-										.get(temp.index);
-								// if a "testcase" contains all unique
-								// statements
-								// covered by "temp",
-								// then we can safely replace "temp" with
-								// "testcase"
-								int j = 0;
-								for (; j < temp_uniqueTraces.size(); j++) {
-									String unique = (String) temp_uniqueTraces
-											.get(j);
-									if (!traceList.contains(unique))
-										break;
-								}
-								if (j == temp_uniqueTraces.size()) {
-									// replace "temp" with "testcase"
-									testcase_uniqueTraces.remove(temp.index);
-									testcase_uniqueTraces.put(testcase,
-											temp_uniqueTraces);
-
-									testSet.remove(temp.index);
-									testSet.add(testcase);
-									replaceCounter++;
-									break;
-								}
-							}
+							//2009-03-07:
+							testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
 						}
 					}
 				}
@@ -751,7 +628,6 @@ public class TestSetManager {
 		int currentSize = finalCriterion.size();
 		testSet.setCoverage((float) (originalSize - currentSize)
 				/ (float) originalSize);
-		testSet.replaceCounter = replaceCounter;
 		testSet.geneTime = System.currentTimeMillis() - time;
 		return testSet;
 	}
@@ -770,7 +646,7 @@ public class TestSetManager {
 		long time = System.currentTimeMillis();
 
 		while (visited.size() < maxTrials && visited.size() < testpool.size()
-				&& criterion.size() > 0) {
+				&& criterion.size() > 0 && testSet.size() < testSuiteSize) {
 			String testcase = testpool.getByRandom();
 			if (!visited.contains(testcase)) {
 				visited.add(testcase);
@@ -808,16 +684,17 @@ public class TestSetManager {
 			do {
 				// reset the criterion and repeat the test case selection
 				// process
-				// int trial = 0;
+				 
 				criterion = (Criterion) c.clone();
-
+				//2009-03-06: we also need a maxTrial here and must be small enough in case of unfeasible du-pairs 
+				maxTrials =  100;
+				int trial = 0;
+				
 				while (visited.size() < testpool.size()
-						&& testSet.size() < testSuiteSize /*
-															 * && trial <
-															 * maxTrials
-															 */
+						&& testSet.size() < testSuiteSize 
+						&& trial < maxTrials
 						&& criterion.size() > 0) {
-					// trial++;
+					 trial++;
 					String testcase = testpool.getByRandom();
 					if (!visited.contains(testcase)) {
 						visited.add(testcase);
@@ -924,7 +801,6 @@ public class TestSetManager {
 				if (trace[i] instanceof PolicyNode) {
 					policyNodes++;
 				}
-
 			}
 		}
 		boolean effective = false;
