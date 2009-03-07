@@ -275,15 +275,23 @@ public class ScriptManager {
 		}else if(instruction.equals("AllInOne")){
 			//generate all random, adequate test sets, then execute them and analyze them
 			//2009-03-07: we set a interval to separate all tasks into several shells
-			int interval = 20;
+			int interval = 5;
+			int start = 127;
+			int end = 200;
 			
-			for(int i = 1; i < 200; i = i + interval){
+			StringBuilder sb1 = new StringBuilder();
+			for(int i = start; i < end; i = i + interval){
 				min_TestSuiteSize = i;
 				max_TestSuiteSize = i + interval;
+				if(max_TestSuiteSize > end)
+					max_TestSuiteSize = end;
+				
 				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 					+ date + "/Script/AllInOne_"+min_TestSuiteSize
 					+"_"+max_TestSuiteSize+".sh";
 				
+				sb1.append("./AllInOne_"+min_TestSuiteSize
+					+"_"+max_TestSuiteSize+".sh &" + "\n");
 				
 				StringBuilder sb = new StringBuilder();
 //				sb.append(genRandomTS_Script(testSetNum, min_TestSuiteSize,
@@ -298,6 +306,9 @@ public class ScriptManager {
 				ScriptManager.save(sb.toString(), saveFile);
 
 			}
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/AllInOne_Executor_"+ start +"_" +end+".sh";
+			ScriptManager.save(sb1.toString(), saveFile);
 		}
 	}
 }
