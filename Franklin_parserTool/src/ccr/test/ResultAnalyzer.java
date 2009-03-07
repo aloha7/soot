@@ -636,6 +636,8 @@ public class ResultAnalyzer {
 	
 	public static void mergeHashMap(String[] criteria, HashMap criterion_Metric, String saveFile){
 		StringBuilder sb = new StringBuilder();
+		
+		//Header
 		sb.append("Fault" + "\t" + "FailureRate" + "\t");
 		
 		for(int i =0; i < criteria.length; i ++){
@@ -659,7 +661,48 @@ public class ResultAnalyzer {
 				sb.append(item+"\t");
 			}
 			sb.append("\n");
-		}		
+		}	
+		
+		
+		//2009-03-07: we need a more abstract information, for example: min, max, mean 
+		//and SD for each criterion 
+		//another header
+		sb.append("\nCriterion\tMin\tMean\tMax\tSD\n");
+		for(int i = 0; i < criteria.length; i ++){
+			criterion = criteria[i];
+			sb.append(criterion + "\t");
+			HashMap metric = (HashMap)criterion_Metric.get(criterion);
+			
+			double[] performances = new double[metric.size()];
+			int index = 0;
+			Iterator ite1 = metric.values().iterator();
+			while(ite1.hasNext()){
+				performances[index] = Double.parseDouble((String)ite1.next());
+				index++;
+			}
+			
+			double min = Double.MAX_VALUE;
+			double max = Double.MIN_VALUE;
+			double sum = 0;
+			
+			for(int j = 0; j < performances.length; j ++){
+				sum += performances[j];
+				
+				if(performances[j] > max)
+					max = performances[j];
+				else if(performances[j] < min)
+					min = performances[j];
+			}
+			double mean = sum/(double)performances.length;
+			
+			sum = 0.0;
+			for(int j = 0; j < performances.length; j ++){
+				sum += (performances[j]-mean)*(performances[j]-mean);
+			}
+			double SD = Math.sqrt(sum/performances.length);
+			sb.append(min + "\t" + mean +"\t" + max+"\t" + SD+ "\n");
+		}
+		
 		
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
