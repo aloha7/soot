@@ -512,6 +512,23 @@ public class ResultAnalyzer {
 		
 		File[] files = new File(srcDir).listFiles();
 		
+		ArrayList faults = new ArrayList();
+		//1.get all interested faults
+		try {
+			BufferedReader br_temp = new BufferedReader(new FileReader(srcDir + "FaultList.txt"));
+			String line = null;
+			
+			while((line=br_temp.readLine())!= null){
+				faults.add(line);
+			}
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		for(File file: files){
 			String fileName = file.getName();
 			if(fileName.matches(criterion + "\\_[0-9]+\\_limited_load.txt")){
@@ -526,6 +543,10 @@ public class ResultAnalyzer {
 					while((str = br.readLine())!= null){
 						String[] strs = str.split("\t");
 						String fault = strs[0];
+						
+						if(!faults.contains(fault))
+								continue;
+						
 						String validTestSet = strs[5];
 						
 						ArrayList testSets;
@@ -568,7 +589,7 @@ public class ResultAnalyzer {
 		return size_perValidTestSet;
 	}
 	
-	/**return the fault-perValidTestSet for a given testing criterion
+	/**return the fault-perValidTestSet(String->double) for a given testing criterion
 	 * 
 	 * @param testSetExecutionFile
 	 * @param containHeader
@@ -628,13 +649,14 @@ public class ResultAnalyzer {
 			e.printStackTrace();
 		}
 		
-		Logger.getInstance().setPath(saveFile, false);
-		Logger.getInstance().write(sb.toString());
-		Logger.getInstance().close();
+		//2009-03-08: no need to save the file
+//		Logger.getInstance().setPath(saveFile, false);
+//		Logger.getInstance().write(sb.toString());
+//		Logger.getInstance().close();
 		return fault_perValidTestSet;
 	}
 	
-	public static void mergeHashMap(String[] criteria, HashMap criterion_Metric, String saveFile){
+	public static void mergeHashMap(String[] criteria, HashMap criterion_Metric, String date, String saveFile){
 		StringBuilder sb = new StringBuilder();
 		
 		//Header
@@ -645,23 +667,49 @@ public class ResultAnalyzer {
 		}
 		sb.append("\n");
 		
-		//list all faults
-		Iterator ite = ResultAnalyzer.failureRate.keySet().iterator();
+		//2009-03-08: we may not interest in all faults
+//		Iterator ite = ResultAnalyzer.failureRate.keySet().iterator();
+		
+		//2009-03-08: we may only interest in faults in fault list
+		ArrayList faultList = new ArrayList();
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("src/ccr/experiment" +
+					"/Context-Intensity_backup/TestHarness/"+date+"/FaultList.txt")); 
+			String str = null;
+			while((str = br.readLine())!=null){
+				faultList.add(str);
+			}
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		String criterion = null;
-		while(ite.hasNext()){
-			String fault = (String)ite.next();
+		for(int j = 0; j < faultList.size(); j ++){
+			String fault = (String)faultList.get(j);
 			sb.append(fault + "\t" + ResultAnalyzer.failureRate.get(fault)+"\t");
 			for(int i = 0; i < criteria.length; i++){
 				criterion = criteria[i];
 				HashMap metric = (HashMap)criterion_Metric.get(criterion);
+				
+				if(!metric.containsKey(fault))
+					System.out.println("No existing");
+				
 				Object item = metric.get(fault);
 				if(item == null){
 					item = metric.get(Integer.parseInt(fault) + "");
 				}
 				sb.append(item+"\t");
 			}
-			sb.append("\n");
-		}	
+			sb.append("\n");	
+		}
+		
 		
 		
 		//2009-03-07: we need a more abstract information, for example: min, max, mean 
@@ -673,14 +721,31 @@ public class ResultAnalyzer {
 			sb.append(criterion + "\t");
 			HashMap metric = (HashMap)criterion_Metric.get(criterion);
 			
-			double[] performances = new double[metric.size()];
-			int index = 0;
-			Iterator ite1 = metric.values().iterator();
-			while(ite1.hasNext()){
-				performances[index] = Double.parseDouble((String)ite1.next());
-				index++;
+			double[] performances = new double[faultList.size()];
+			for(int j = 0; j < faultList.size(); j ++){
+				String fault = (String)faultList.get(j);
+				Double performance = (Double)metric.get(fault);
+				performances[j] = performance;
 			}
 			
+			
+//			
+//			int index = 0;
+//			Iterator ite1 = metric.keySet().iterator();
+//			while(ite1.hasNext()){
+//				String fault = (String)ite1.next();
+//				if(!faultList.contains(fault))
+//					continue;
+//					
+//				Double  performance= (Double)metric.get(fault);
+//				if(performance == null){
+//					performance = (Double)metric.get(Integer.parseInt(fault) + "");
+//				}
+//				
+//				performances[index] =  performance;
+//				index++;
+//			}
+//			
 			double min = Double.MAX_VALUE;
 			double max = Double.MIN_VALUE;
 			double sum = 0;
@@ -709,24 +774,17 @@ public class ResultAnalyzer {
 		Logger.getInstance().close();
 	}
 	
-	public static void getCorrelationTSPeformance(HashMap criterion_size_performance, String saveFile){
+	public static void getCorrelationTSPeformance(String[] criteria, HashMap criterion_size_performance, String saveFile){
 
-		//1.get all criteria
-		Iterator ite = criterion_size_performance.keySet().iterator();
-		ArrayList criteria = new ArrayList();
-		while(ite.hasNext()){
-			criteria.add(ite.next());
-		}
-		
 		//2. Header, keeping the order
 		StringBuilder sb = new StringBuilder();
 		sb.append("Size" + "\t");
-		for(int i = 0; i < criteria.size(); i ++){
-			sb.append((String)criteria.get(i) + "\t");
+		for(int i = 0; i < criteria.length; i ++){
+			sb.append(criteria[i] + "\t");
 		}
 		sb.append("\n");
 		
-		String criterion = (String)criteria.get(0); // standard criterion
+		String criterion = (String)criteria[0]; // standard criterion
 		HashMap size_performance = (HashMap)criterion_size_performance.get(criterion);
 		
 		//3.summary all results
@@ -736,8 +794,8 @@ public class ResultAnalyzer {
 			sb.append(size + "\t");
 			
 			ArrayList criterion_performance = new ArrayList(); 
-			for(int i = 0; i < criteria.size(); i ++){
-				double performance = (Double)((HashMap)criterion_size_performance.get(criteria.get(i))).get(size);
+			for(int i = 0; i < criteria.length; i ++){
+				double performance = (Double)((HashMap)criterion_size_performance.get(criteria[i])).get(size);
 				sb.append(performance + "\t");
 			}
 			sb.append("\n");
@@ -771,38 +829,48 @@ public class ResultAnalyzer {
 		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";
 		
 		String[] criteria = new String[]{
-				"AllPoliciesTestSets_old",
-//				"AllPoliciesTestSets_new",
-//				"All1ResolvedDUTestSets_old","All1ResolvedDUTestSets_new",
-//				"All2ResolvedDUTestSets_old","All2ResolvedDUTestSets_new",
-//				
-//				"AllPoliciesTestSets_old_random_58","AllPoliciesTestSets_new_random_58",
-//				"All1ResolvedDUTestSets_old_random_58","All1ResolvedDUTestSets_new_random_58",
-//				"All2ResolvedDUTestSets_old_random_58","All2ResolvedDUTestSets_new_random_58",
-//
-//				"AllPoliciesTestSets_old_criteria_58","AllPoliciesTestSets_new_criteria_58",
-//				"All1ResolvedDUTestSets_old_criteria_58","All1ResolvedDUTestSets_new_criteria_58",
-//				"All2ResolvedDUTestSets_old_criteria_58","All2ResolvedDUTestSets_new_criteria_58",
-//				
+				//Group 1
 //				"RandomTestSets_21",
+				"AllPoliciesTestSets_old",
+				"AllPoliciesTestSets_new",
 //				"RandomTestSets_39",
+				"All1ResolvedDUTestSets_old",
+				"All1ResolvedDUTestSets_new",
 //				"RandomTestSets_47",
-//				"RandomTestSets_58",
+				"All2ResolvedDUTestSets_old",
+				"All2ResolvedDUTestSets_new",
 				
+				//Group 2
+//				"RandomTestSets_56",
+				"AllPoliciesTestSets_old_random_56",
+				"AllPoliciesTestSets_new_random_56",
+				"All1ResolvedDUTestSets_old_random_56",
+				"All1ResolvedDUTestSets_new_random_56",
+				"All2ResolvedDUTestSets_old_random_56",
+				"All2ResolvedDUTestSets_new_random_56",
+
+				//Group 3
+//				"RandomTestSets_56",
+				"AllPoliciesTestSets_old_criteria_56",
+				"AllPoliciesTestSets_new_criteria_56",
+				"All1ResolvedDUTestSets_old_criteria_56",
+				"All1ResolvedDUTestSets_new_criteria_56",
+				"All2ResolvedDUTestSets_old_criteria_56",
+				"All2ResolvedDUTestSets_new_criteria_56",
 		};
 		
-		if(instruction.equals("Context_Intensity")){
+		if(instruction.equals("Context_Intensity") ||instruction.equals("Limited")||instruction.equals("Load")){
 //			HashMap criterion_faultNum = new HashMap();
 //			HashMap criterion_perValidTC = new HashMap();
 			HashMap criterion_perValidTS = new HashMap();
 
-			String saveFile;
+			String saveFile = null;
 			for(int i = 0; i < criteria.length; i++){
-				saveFile = srcDir + criteria[i] + "_testing.txt";
-				ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
+				saveFile = srcDir + criteria[i] + "_limited_load.txt";
+//				ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
 				
 				String testSetExecutionFile = saveFile;
-				boolean containHeader1 = false;
+				boolean containHeader1 = true;
 				
 //				String faultTypeFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_FaultType.txt";
 //				HashMap faultNum = ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile, containHeader1, faultTypeFile);
@@ -812,82 +880,18 @@ public class ResultAnalyzer {
 //				HashMap perValidTC = ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile, containHeader1, perValidTCFile);
 //				criterion_perValidTC.put(criteria[i], perValidTC);
 				
-				String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestSet.txt";
-				HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
-				criterion_perValidTS.put(criteria[i], perValidTS);
-			}
-			
-			//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
-//			saveFile = "C:/FaultNum.txt";
-//			ResultAnalyzer.mergeHashMap(criteria, criterion_faultNum, saveFile);
-//			saveFile = "C:/PerValidTC.txt";
-//			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC, saveFile);
-			saveFile = "C:/PerValidTS.txt";
-			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
-			
-			//2009-02-25: to explore the CI distributions of different testing criteria
-			StringBuilder sb = new StringBuilder();
-			sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t" + "maxCI" + "\t" + "stdCI" + "\n" );
-			for(int i =0; i < criteria.length; i ++){
-				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, criteria[i]));
-			}
-			saveFile = "C:/CI.txt";
-			Logger.getInstance().setPath(saveFile, false);
-			Logger.getInstance().write(sb.toString());
-			Logger.getInstance().close();
-		}else if(instruction.equals("Limited")){
-			
-			HashMap criterion_perValidTS = new HashMap();
-
-			String saveFile;
-			for(int i = 0; i < criteria.length; i++){
-				saveFile = srcDir + criteria[i] + "_limited.txt";
-				ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
-				
-				String testSetExecutionFile = saveFile;
-				boolean containHeader1 = true;
-				
-				String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_testing.txt")) + "_PerValidTestSet.txt";
-				HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
-				criterion_perValidTS.put(criteria[i], perValidTS);
-			}
-			
-			//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
-			saveFile = "C:/PerValidTS.txt";
-			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
-			
-			//2009-02-25: to explore the CI distributions of different testing criteria
-			StringBuilder sb = new StringBuilder();
-			sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t" + "maxCI" + "\t" + "stdCI" + "\n" );
-			for(int i =0; i < criteria.length; i ++){
-				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, criteria[i]));
-			}
-			saveFile = "C:/CI.txt";
-			Logger.getInstance().setPath(saveFile, false);
-			Logger.getInstance().write(sb.toString());
-			Logger.getInstance().close();
-			
-		}else if(instruction.equals("Load")){ // the fast way to derive the fault detection rate of a specified testing criterion
-			HashMap criterion_perValidTS = new HashMap();
-
-			String saveFile;
-			for(int i = 0; i < criteria.length; i++){
-				saveFile = srcDir + criteria[i] + "_limited_load.txt"; 
-				
-				//it is not necessary to merge yet
-//				ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i], containHeader, saveFile);
-				
-				String testSetExecutionFile = saveFile;
-				boolean containHeader1 = true;
-				
 				String perValidTSFile = saveFile.substring(0, saveFile.indexOf("_limited_load.txt")) + "_PerValidTestSet.txt";
 				HashMap perValidTS = ResultAnalyzer.perValidTestSet(testSetExecutionFile, containHeader1, perValidTSFile);
 				criterion_perValidTS.put(criteria[i], perValidTS);
 			}
 			
 			//2009-02-24: to summarize all three views to evaluate the performance of testing criteria
-			saveFile = "C:/PerValidTS.txt";
-			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, saveFile);
+//			saveFile = srcDir +"/FaultNum.txt";
+//			ResultAnalyzer.mergeHashMap(criteria, criterion_faultNum, saveFile);
+//			saveFile = srcDir + "/PerValidTC.txt";
+//			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC, saveFile);
+			saveFile = srcDir + "/PerValidTS.txt";
+			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, date, saveFile);
 			
 			//2009-02-25: to explore the CI distributions of different testing criteria
 			StringBuilder sb = new StringBuilder();
@@ -895,23 +899,56 @@ public class ResultAnalyzer {
 			for(int i =0; i < criteria.length; i ++){
 				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, criteria[i]));
 			}
-			saveFile = "C:/CI.txt";
+			
+			saveFile = srcDir + "/CI.txt";
 			Logger.getInstance().setPath(saveFile, false);
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
-			
 		}else if(instruction.equals("getSizePerformance")){
 			//2009-03-06: get the correlations between test set size and fault detection rate of each criterion
-			HashMap criterion_sizePerformance = new HashMap();
 			
-			String saveFile = "C:/Size_Performance.txt";
+			//refine the criteria
+			criteria = new String[]{
+//					//Group 1
+//					"AllPoliciesTestSets_old",
+//					"AllPoliciesTestSets_new",
+//					"All1ResolvedDUTestSets_old",
+//					"All1ResolvedDUTestSets_new",
+//					"All2ResolvedDUTestSets_old",
+//					"All2ResolvedDUTestSets_new",
+					
+					//Group 2
+					"RandomTestSets",
+					"AllPoliciesTestSets_old_random",
+					"AllPoliciesTestSets_new_random",
+					"All1ResolvedDUTestSets_old_random",
+					"All1ResolvedDUTestSets_new_random",
+					"All2ResolvedDUTestSets_old_random",
+					"All2ResolvedDUTestSets_new_random",
+
+					//Group 3
+					"RandomTestSets",
+					"AllPoliciesTestSets_old_criteria",
+					"AllPoliciesTestSets_new_criteria",
+					"All1ResolvedDUTestSets_old_criteria",
+					"All1ResolvedDUTestSets_new_criteria",
+					"All2ResolvedDUTestSets_old_criteria",
+					"All2ResolvedDUTestSets_new_criteria",
+
+					
+					
+			};
+			
+			HashMap criterion_sizePerformance = new HashMap();
+//			srcDir += "/oldNewRegression/";
+			String saveFile = srcDir +"/Size_Performance.txt";
 			for(int i = 0; i < criteria.length; i ++){
 				String criterion = criteria[i];
 				containHeader = true;
 				criterion_sizePerformance.put(criteria[i], ResultAnalyzer.getTSPerValidTestSet(srcDir, criterion, containHeader));
 			}
 			
-			ResultAnalyzer.getCorrelationTSPeformance(criterion_sizePerformance, saveFile);
+			ResultAnalyzer.getCorrelationTSPeformance(criteria, criterion_sizePerformance, saveFile);
 		}
 		
 	}
