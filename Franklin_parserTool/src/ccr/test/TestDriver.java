@@ -529,13 +529,90 @@ public class TestDriver {
 		}
 	}
 	
+	public static void getFaultDetail(String srcDir,  boolean containHeader){
+		try {
+			
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append("FaultyVersion\t"  + "FailureRate\t" + "MinCI\t" + "MeanCI\t"+"MaxCI\t" + "SD.CI\t\n");
+
+			
+			HashMap fault_validTestCases = new HashMap();
+			String faultList = srcDir + "/FaultList.txt";
+			BufferedReader br = new BufferedReader(new FileReader(faultList));
+			String fault = null;
+			while((fault = br.readLine())!= null){
+				fault_validTestCases.put(fault, new ArrayList());
+			}
+			br.close();
+			
+			String executionFile = srcDir + "/detailed.txt";  
+			br = new BufferedReader(new FileReader(executionFile));
+			String line = null;
+			if(containHeader)
+				br.readLine();
+			
+			while((line = br.readLine())!= null){
+				String[] strs = line.split("\t");
+				fault = strs[0];
+				if(!fault_validTestCases.containsKey(fault)) //non-interested fault
+					continue;
+				
+				String testcase = strs[1];
+				String PorF = strs[2];
+				if(PorF.equals("F")){
+					//failed test case
+					ArrayList validTestCases = (ArrayList)(fault_validTestCases.get(fault));
+					if(validTestCases == null){
+						validTestCases = (ArrayList)(fault_validTestCases.get(""+Integer.parseInt(fault)));
+					}
+					validTestCases.add(testcase);
+					fault_validTestCases.put(fault, validTestCases);
+				}
+			}
+			
+			Iterator ite = fault_validTestCases.keySet().iterator();
+			while(ite.hasNext()){
+				fault = (String)ite.next();
+				ArrayList validTCs = (ArrayList)fault_validTestCases.get(fault);
+				sb.append(fault + "\t" +ResultAnalyzer.failureRate.get(fault) + "\t" + Adequacy.getStatisticsCI(validTCs) + "\n");
+			}
+			
+			Logger.getInstance().setPath(srcDir + "/Fault_CI_Detail.txt", false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+	}
+	
 
 	public static void main(String argv[]) {
 		
 		//2009-02-21:
-		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/TestPool.txt";
-		getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
-				"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/");
+		String instruction = argv[0];
+		String date = argv[1];
+		
+		if(instruction.equals("getFailureRate")){
+			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/TestPool.txt";
+			getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
+					"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/");	
+		}else if(instruction.equals("getFaultCI")){
+			String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";
+			String failureRateFile = srcDir + "failureRate.txt";
+			boolean containHeader = true;
+			ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
+			
+			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
+			
+			//2009-02-18: load CI of each test case from a file
+			containHeader = true;
+			Adequacy.getTestPool(testcaseFile, containHeader);
+			
+
+			TestDriver.getFaultDetail(srcDir, containHeader);
+		}
+		
 	}
 
 }
