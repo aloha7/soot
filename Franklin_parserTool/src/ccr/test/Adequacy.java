@@ -1159,6 +1159,38 @@ public class Adequacy {
 		return avg_CI;
 	}
 	
+	public static String getStatisticsCI(ArrayList ts){
+		StringBuilder sb = new StringBuilder();
+		double min_CI = Double.MAX_VALUE;
+		double max_CI = Double.MIN_VALUE;
+		double sum_CI = 0.0;
+		
+		for(int i = 0; i < ts.size(); i ++){
+			String index_testcase = (String)ts.get(i);
+			double CI= ((TestCase)Adequacy.testCases.get(index_testcase)).CI;
+			
+			sum_CI += CI;
+			if(CI > max_CI)
+				max_CI = CI;
+			else if(CI < min_CI)
+				min_CI = CI;
+		}
+		double mean_CI = sum_CI/(double)ts.size();
+		
+		double sd_CI = 0.0;
+		double sum = 0.0;
+		for(int i = 0; i < ts.size(); i ++){
+			String index_testcase = (String)ts.get(i);
+			double CI= ((TestCase)Adequacy.testCases.get(index_testcase)).CI;
+			sum += (CI - mean_CI)*(CI - mean_CI);
+		}
+		sd_CI = Math.sqrt(sum/(double)ts.size());
+		
+		sb.append(min_CI + "\t" + mean_CI + "\t" + max_CI + "\t" + sd_CI+"\t");
+		
+		return sb.toString();
+	}
+	
 	public static void main(String argv[]) {
 	//	testSetSize, instruction, testPoolStartLabel, testPoolSize
 //		argv = new String[]{"50", "together_noOrdinary"};
