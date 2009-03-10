@@ -61,6 +61,8 @@ public class TestSetManager {
 		Logger.getInstance().close();
 	}
 
+	
+	
 	public static void attachTSWithCI(TestSet[] testSets, String saveFile) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("TestSet" + "\t" + "Size" + "\t" + "Coverage" + "\t" + "CI"
@@ -157,6 +159,76 @@ public class TestSetManager {
 		return testSet;
 	}
 
+//	/**2009-03-09:Since valid test cases to a fault may form a cluster, thus we may need  
+//	 * a feedback-directed test set construction methods
+//	 * @param appClassName
+//	 * @param c
+//	 * @param testpool
+//	 * @param maxTrials
+//	 * @param min_CI
+//	 * @param max_CI
+//	 * @return
+//	 */
+//	public static TestSet getAdequacyTestSet_feedback(String appClassName,
+//			Criterion c, TestSet testpool, int maxTrials, double min_CI,
+//			double max_CI){
+//
+//		Criterion criterion = (Criterion) c.clone();
+//		TestSet testSet = new TestSet();
+//		TestSet visited = new TestSet();
+//		HashMap testcase_uniqueCovers = new HashMap();
+//		HashMap testcase_traces = new HashMap();
+//		
+//		double validCI = 0.0;
+//		
+//		long time = System.currentTimeMillis();
+//
+//		int originalSize = criterion.size();
+//		while (visited.size() < maxTrials && visited.size() < testpool.size()
+//				&& criterion.size() > 0) {
+//			String testcase = testpool.getByRandom();
+////			String testcase = testpool.getByART(); //more likely to sample test cases with high CI
+//
+//			// just for debugging purpose
+//			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);			
+//			if (!visited.contains(testcase)) {
+//				visited.add(testcase);
+//				String stringTrace[] = TestDriver.getTrace(appClassName,
+//						testcase);
+//				
+//				
+//				
+//				ArrayList uniqueCover = increaseCoverage(stringTrace, criterion);
+//				if (uniqueCover.size() > 0) {
+//					testcase_uniqueCovers.put(testcase, uniqueCover);
+//					testSet.add(testcase);
+//					
+//					ArrayList traces = new ArrayList();
+//					for(int i = 0; i < stringTrace.length; i++)
+//						traces.add(stringTrace[i]);
+//					
+//					testcase_traces.put(testcase, traces);
+//				} else {
+//					//2009-03-06:
+////					testSet = replace_CI_ordering(testSet,
+////							testcase_uniqueCovers, testcase, stringTrace);
+//					
+//					//2009-03-07:
+////					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+////							testcase_traces, testcase, stringTrace);
+//				}			
+//			}
+//		}
+//		int currentSize = criterion.size();
+//		testSet.setCoverage((float) (originalSize - currentSize)
+//				/ (float) originalSize);
+//		testSet.geneTime = System.currentTimeMillis() - time;
+//		return testSet;
+//
+//	}
+	
+	
+	
 	/**
 	 * 2009-02-21: revised test case selection strategy: add a test case if it
 	 * increases the cumulative coverage or it has a higher CI value than
@@ -208,12 +280,12 @@ public class TestSetManager {
 					testcase_traces.put(testcase, traces);
 				} else {
 					//2009-03-06:
-//					testSet = replace_CI_ordering(testSet,
-//							testcase_uniqueCovers, testcase, stringTrace);
+					testSet = replace_CI_ordering(testSet,
+							testcase_uniqueCovers, testcase, stringTrace);
 					
 					//2009-03-07:
-					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
-							testcase_traces, testcase, stringTrace);
+//					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+//							testcase_traces, testcase, stringTrace);
 				}			
 			}
 		}
@@ -499,7 +571,60 @@ public class TestSetManager {
 		return testSet;
 	}
 
-	
+	public static TestSet getAdequacyTestSet_refined_fixCI(	String appClassName, 
+			Criterion c, TestSet testpool, int maxTrials,
+			double min_CI, double max_CI) {
+		Criterion criterion = (Criterion) c.clone();
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		HashMap testcase_uniqueCovers = new HashMap();
+		HashMap testcase_traces = new HashMap();
+		
+		long time = System.currentTimeMillis();
+
+		int originalSize = criterion.size();
+		while (visited.size() < maxTrials && visited.size() < testpool.size()
+				&& criterion.size() > 0) {
+
+//			String testcase = testpool.getByART(); //more likely to sample test cases with high CI
+			
+			String testcase = testpool.getByRandom(min_CI, max_CI, 100);
+			 TestCase temp = (TestCase) Adequacy.testCases
+				.get(testcase);
+			
+			 
+			if (!visited.contains(testcase)) {
+				visited.add(testcase);
+				String stringTrace[] = TestDriver.getTrace(appClassName,
+						testcase);
+				
+				ArrayList uniqueCover = increaseCoverage(stringTrace, criterion);
+				if (uniqueCover.size() > 0) {
+					testcase_uniqueCovers.put(testcase, uniqueCover);
+					testSet.add(testcase);
+					
+					ArrayList traces = new ArrayList();
+					for(int i = 0; i < stringTrace.length; i++)
+						traces.add(stringTrace[i]);
+					
+					testcase_traces.put(testcase, traces);
+				} /*else {
+					//2009-03-06:
+					testSet = replace_CI_ordering(testSet,
+							testcase_uniqueCovers, testcase, stringTrace);
+					
+					//2009-03-07:
+//					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+//							testcase_traces, testcase, stringTrace);
+				}	*/		
+			}
+		}
+		int currentSize = criterion.size();
+		testSet.setCoverage((float) (originalSize - currentSize)
+				/ (float) originalSize);
+		testSet.geneTime = System.currentTimeMillis() - time;
+		return testSet;
+	}
 	/**
 	 * 2009-02-21: revised test case selection strategy: add a test case if it
 	 * increases the cumulative coverage or it has a higher CI value than
@@ -557,11 +682,11 @@ public class TestSetManager {
 					
 				} else {
 					//2009-03-07: wrap the replacement strategy as a method
-//					testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
+					testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
 					
-					//2009-03-07:
-					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
-							testcase_traces, testcase, stringTrace);
+//					//2009-03-07:
+//					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+//							testcase_traces, testcase, stringTrace);
 				}
 			}
 		}
@@ -570,7 +695,6 @@ public class TestSetManager {
 		// calculate the final
 		// coverage
 		if (randomOrCriteria.equals("random")) {
-
 			// 2009-02-22:the stopping rule is very important here:
 			while (testSet.size() < testSuiteSize
 					&& visited.size() < testpool.size()) {
@@ -635,11 +759,11 @@ public class TestSetManager {
 							checkCoverage(stringTrace, finalCriterion);
 						} else {
 							//2009-03-07:
-//							testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
+							testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
 							
 							//2009-03-07:
-							testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
-									testcase_traces, testcase, stringTrace);
+//							testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+//									testcase_traces, testcase, stringTrace);
 						}
 					}
 				}
@@ -742,6 +866,7 @@ public class TestSetManager {
 		return testSet;
 	}
 
+	
 	/**
 	 * conventional strategy to get adequate test set: add a test case if it
 	 * increases the cumulative coverage until 100% coverage is achieved or a
@@ -1050,7 +1175,7 @@ public class TestSetManager {
 							+ testSets[i].toString());
 				}
 			}
-		} else {// fix the test set size
+		} else if(testSuiteSize > 0){// fix the test set size
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
 					testSets[i] = TestSetManager
@@ -1078,6 +1203,20 @@ public class TestSetManager {
 							+ testSets[i].toString());
 				}
 			}
+		}else if(testSuiteSize == 0){ 
+			//2009-03-09:min_CI, max_CI plays some roles
+			for(int i = 0; i < testSetNum; i ++){
+				testSets[i] = TestSetManager.getAdequacyTestSet_refined_fixCI(
+						appClassName, c, testpool, maxTrials, 
+						min_CI, max_CI 
+						);
+				
+				testSets[i].index = "" + i;
+
+				System.out.println("Test set " + i + ": "
+						+ testSets[i].toString());
+
+			}
 		}
 		TestSetManager.saveTestSets(testSets, saveFile);
 		return testSets;
@@ -1101,7 +1240,9 @@ public class TestSetManager {
 						+ "<TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>");
 
 		String appClassName = "TestCFG2_ins";
-
+		
+		int maxTrials = 2000;
+		
 		if (args.length == 9) { // 2009-02-25: generate adequate test sets
 			int testSetNum = Integer.parseInt(args[0]);
 			String instruction = args[1];
@@ -1130,7 +1271,7 @@ public class TestSetManager {
 					+ date + "/TestPool.txt";
 			TestSet testpool = getTestPool(testPoolFile, true);
 
-			int maxTrials = 2000;
+			
 
 			if (instruction.equals("Context_Intensity")) {
 				Adequacy.loadTestCase(testPoolFile);
@@ -1199,7 +1340,8 @@ public class TestSetManager {
 			saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
 					+ "_CI.txt";
 			TestSetManager.attachTSWithCI(testSets[0], saveFile);
-		} else if (args.length == 2) { //2009-03-03: add this to study correlations between CI and covered elements
+		} else if (args.length == 2) { 
+			//2009-03-03: add this to study correlations between CI and covered elements
 			String date = args[0];
 			int iterations = Integer.parseInt(args[1]);
 			
@@ -1245,6 +1387,72 @@ public class TestSetManager {
 				+ "All2Service_CICoverage.txt";
 			System.out.println(c.size());
 			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
+		}else if(args.length == 5){			
+			double start_CI = Double.parseDouble(args[0]);
+			double end_CI = Double.parseDouble(args[1]);
+			double interval  = Double.parseDouble(args[2]);
+			int testSetNum = Integer.parseInt(args[3]);
+			String date = args[4];
+			
+			CFG g = new CFG(System.getProperty("user.dir")
+					+ "/src/ccr/app/TestCFG2.java");
+			Criterion c = null;
+			
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestPool.txt";
+			TestSet testpool = getTestPool(testPoolFile, true);
+			Adequacy.loadTestCase(testPoolFile);
+//			for(int i = start; i < end; i = i + interval){
+//				min_TestSuiteSize = i;
+//				max_TestSuiteSize = i + interval;
+//				if(max_TestSuiteSize > end)
+//					max_TestSuiteSize = end;
+				
+			for(double i = start_CI; i < end_CI; i = i + interval){
+				double min_CI = i;
+				double max_CI = i + interval;
+				
+				if(max_CI > end_CI)
+					max_CI = end_CI;
+				
+				//1. for AllPolicies
+				c = g.getAllPolicies();
+				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/AllPolicies_" +min_CI + "_"+max_CI +".txt";
+				
+				TestSet[][] testSets = new TestSet[1][];
+				testSets[0] = TestSetManager.getTestSets(appClassName, c,
+						testpool, maxTrials, testSetNum, min_CI, max_CI,
+						"null", "null", 0, saveFile);
+				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+					+ "_CI.txt";
+				TestSetManager.attachTSWithCI(testSets[0], saveFile);
+				
+				//2. for All1ResolvedDU
+				c = g.getAllKResolvedDU(1);
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/All1ResolvedDU_" +min_CI + "_"+max_CI +".txt";
+				
+				testSets[0] = TestSetManager.getTestSets(appClassName, c,
+						testpool, maxTrials, testSetNum, min_CI, max_CI,
+						"null", "null", 0, saveFile);
+				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+					+ "_CI.txt";
+				TestSetManager.attachTSWithCI(testSets[0], saveFile);			
+				
+				//3. for All2ResolvedDU 
+				c = g.getAllKResolvedDU(2);
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/All2ResolvedDU_" +min_CI + "_"+max_CI +".txt";
+				
+				testSets[0] = TestSetManager.getTestSets(appClassName, c,
+						testpool, maxTrials, testSetNum, min_CI, max_CI,
+						"null", "null", 0, saveFile);
+				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+					+ "_CI.txt";
+				TestSetManager.attachTSWithCI(testSets[0], saveFile);
+			}
+		
 		}
 	}
 }
