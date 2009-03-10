@@ -17,24 +17,24 @@ public class ScriptManager {
 	
 	public static String exeRandomTS_Script(int min_TestSuiteSize, int max_TestSuiteSize,
 			String date){
-		int interval = 18;
-		int sleep_sed = 60; // sleep time in terms of seconds
-		int incremental = 30;
-		int total = 0;
+//		int interval = 18;
+//		int sleep_sed = 60; // sleep time in terms of seconds
+//		int incremental = 30;
+//		int total = 0;
 		
 		StringBuilder sb = new StringBuilder();
 		for(int testSuiteSize = min_TestSuiteSize; testSuiteSize < max_TestSuiteSize; testSuiteSize ++){
-			sb.append("java ccr.test.ExecutionManager Load "+ testSuiteSize + " " + date + " &\n");
-			if (testSuiteSize % interval == 0) { // sleep a fixed time if a specified
-				// interval is reached
-				sb.append("sleep " + sleep_sed + "\n");
-				total += sleep_sed;
-				sleep_sed += incremental;
-				
-			}
+			sb.append("java ccr.test.ExecutionManager Load "+ testSuiteSize + " " + date + " \n");
+//			if (testSuiteSize % interval == 0) { // sleep a fixed time if a specified
+//				// interval is reached
+//				sb.append("sleep " + sleep_sed + "\n");
+//				total += sleep_sed;
+//				sleep_sed += incremental;
+//				
+//			}
 		}	
 		
-		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
+//		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
 		return sb.toString();
 	}
 	
@@ -48,17 +48,17 @@ public class ScriptManager {
 		int total = 0;
 		
 		String[] criteria = new String[] { 
-//				"AllPolicies_old_random",  
-//				
-//				"All1ResolvedDU_old_random",  
-//				
-//				"All2ResolvedDU_old_random", 
-//
-//				"AllPolicies_old_criteria", 
-//		
-//				"All1ResolvedDU_old_criteria", 
-//				
-//				"All2ResolvedDU_old_criteria", 
+				"AllPolicies_old_random",  
+				
+				"All1ResolvedDU_old_random",  
+				
+				"All2ResolvedDU_old_random", 
+
+				"AllPolicies_old_criteria", 
+		
+				"All1ResolvedDU_old_criteria", 
+				
+				"All2ResolvedDU_old_criteria", 
 				
 				"AllPolicies_new_random",
 				
@@ -107,6 +107,43 @@ public class ScriptManager {
 	  return sb.toString();
 	}
 	
+	
+	public static String exeAdequateTS_withoutFixSize_Script(int testSetNum, double min_CI,
+			double max_CI, String date ){
+
+		String[] criteria = new String[] { 
+		"AllPolicies_old",
+
+		"All1ResolvedDU_old",
+
+		"All2ResolvedDU_old",
+
+		"AllPolicies_new",
+
+		"All1ResolvedDU_new",
+
+		"All2ResolvedDU_new",
+
+		};
+
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < criteria.length; i++) {
+			String[] strs = criteria[i].split("_");
+
+			String criterion = strs[0];// AllPolicies, All1ResolvedDU,
+										// All2ResolvedDU
+			String oldOrNew = strs[1];
+		
+
+			sb.append("java ccr.test.ExecutionManager " + testSetNum + " Load "
+					+ min_CI + " " + max_CI + " " + date + " " + criterion
+					+ " -1 " + oldOrNew + " random"
+					+ " \n");
+		}
+
+		return sb.toString();
+	}
+	
 	/**
 	 * To generate random test sets with fixed size
 	 * 
@@ -118,24 +155,24 @@ public class ScriptManager {
 	 */
 	public static String genRandomTS_Script(int testSetNum,
 			int min_TestSuiteSize, int max_TestSuiteSize, String date) {
-		int interval = 18;
-		int sleep_sed = 10; // sleep time in terms of seconds
-		int incremental = 5;
-		int total = 0;
+//		int interval = 18;
+//		int sleep_sed = 10; // sleep time in terms of seconds
+//		int incremental = 5;
+//		int total = 0;
 		StringBuilder sb = new StringBuilder();
 		
 		for (int i = min_TestSuiteSize; i < max_TestSuiteSize; i++) {
 			sb.append("java ccr.test.TestSetManager " + testSetNum + " " + i
-					+ " " + date + " &\n");
-			if (i % interval == 0) { // sleep a fixed time if a specified
-				// interval is reached
-				sb.append("sleep " + sleep_sed + "\n");
-				total += sleep_sed;
-				sleep_sed += incremental;
-				
-			}
+					+ " " + date + " \n");
+//			if (i % interval == 0) { // sleep a fixed time if a specified
+//				// interval is reached
+//				sb.append("sleep " + sleep_sed + "\n");
+//				total += sleep_sed;
+//				sleep_sed += incremental;
+//				
+//			}
 		}
-		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
+//		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
 		return sb.toString();
 	}
 
@@ -162,17 +199,17 @@ public class ScriptManager {
 		int total = 0;
 		
 		String[] criteria = new String[] { 
-//				"AllPolicies_old_random",  
-//				
-//				"All1ResolvedDU_old_random",  
-//				
-//				"All2ResolvedDU_old_random", 
-//
-//				"AllPolicies_old_criteria", 
-//		
-//				"All1ResolvedDU_old_criteria", 
-//				
-//				"All2ResolvedDU_old_criteria", 
+				"AllPolicies_old_random",  
+				
+				"All1ResolvedDU_old_random",  
+				
+				"All2ResolvedDU_old_random", 
+
+				"AllPolicies_old_criteria", 
+		
+				"All1ResolvedDU_old_criteria", 
+				
+				"All2ResolvedDU_old_criteria", 
 				
 				"AllPolicies_new_random",
 				
@@ -222,6 +259,55 @@ public class ScriptManager {
 			}
 		}
 //		System.out.println("Time required:" + (double)total/(double)60 + " minutes");
+		return sb.toString();
+	}
+	
+	
+	/**
+	 * To generate adequate test sets without fixed size
+	 * 
+	 * @param testSetNum
+	 * @param instruction
+	 * @param min_CI
+	 * @param max_CI
+	 * @param date
+	 * @param min_TestSuiteSize
+	 * @param max_TestSuiteSize
+	 * @param saveFile
+	 */
+	public static String genAdequateTS_WithoutFixSize_Script(int testSetNum, double min_CI,
+			double max_CI, String date) {
+		
+		String[] criteria = new String[] {
+		"AllPolicies_old",
+
+		"All1ResolvedDU_old",
+
+		"All2ResolvedDU_old",
+
+		"AllPolicies_new",
+
+		"All1ResolvedDU_new",
+
+		"All2ResolvedDU_new", 
+		};
+
+		StringBuilder sb = new StringBuilder();
+
+		for (int j = 0; j < criteria.length; j++) {
+			String[] strs = criteria[j].split("_");
+
+			String criterion = strs[0];// AllPolicies, All1ResolvedDU, All2ResolvedDU
+
+			String oldOrNew = strs[1];
+			
+
+			sb.append("java ccr.test.TestSetManager " + testSetNum
+					+ " Context_Intensity " + min_CI + " " + max_CI + " "
+					+ date + " " + criterion + " -1 " + oldOrNew + " random"
+					 + " \n");
+
+		}
 		return sb.toString();
 	}
 
@@ -276,7 +362,7 @@ public class ScriptManager {
 			//generate all random, adequate test sets, then execute them and analyze them
 			//2009-03-07: we set a interval to separate all tasks into several shells
 			int interval = 5;
-			int start = 127;
+			int start = 127; //(1-127:7, 127-200:5)
 			int end = 200;
 			
 			StringBuilder sb1 = new StringBuilder();
@@ -294,12 +380,15 @@ public class ScriptManager {
 					+"_"+max_TestSuiteSize+".sh &" + "\n");
 				
 				StringBuilder sb = new StringBuilder();
-//				sb.append(genRandomTS_Script(testSetNum, min_TestSuiteSize,
-//						max_TestSuiteSize, date));
-//				sb.append(exeRandomTS_Script(min_TestSuiteSize, 
-//						max_TestSuiteSize, date));
+				sb.append(genRandomTS_Script(testSetNum, min_TestSuiteSize,
+						max_TestSuiteSize, date));
+				
 				sb.append(genAdequateTS_Script(testSetNum, min_CI, max_CI,
 						date, min_TestSuiteSize, max_TestSuiteSize));
+				
+				sb.append(exeRandomTS_Script(min_TestSuiteSize, 
+						max_TestSuiteSize, date));
+				
 				sb.append(exeAdequateTS_Script(testSetNum, instruction, min_CI, max_CI, 
 						date, min_TestSuiteSize, max_TestSuiteSize));
 				
@@ -308,7 +397,50 @@ public class ScriptManager {
 			}
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/AllInOne_Executor_"+ start +"_" +end+".sh";
+			
+//			sb1.append("java ccr.test.ResultAnalyzer getSizePerformance " + date + "\n");
 			ScriptManager.save(sb1.toString(), saveFile);
+		}else if(instruction.equals("3GroupComparison")){
+			//2009-03-09:we are only interest in comparing three groups of testing criteria
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/3GroupComparison.sh";
+			
+			StringBuilder sb = new StringBuilder();
+
+			//Group 1
+			sb.append(genRandomTS_Script(testSetNum, 21,
+					22, date)); //to compare AllPolicies			
+			sb.append(genRandomTS_Script(testSetNum, 39,
+					40, date)); //to compare All1ResovledDU
+			sb.append(genRandomTS_Script(testSetNum, 47,
+					48, date)); //to compare All2ResolvedDU
+			
+			sb.append(genAdequateTS_WithoutFixSize_Script(testSetNum, min_CI, max_CI,
+					date));
+			sb.append(exeRandomTS_Script(21, 
+					22, date));
+			sb.append(exeRandomTS_Script(39, 
+					40, date));
+			sb.append(exeRandomTS_Script(47, 
+					48, date));
+			sb.append(exeAdequateTS_withoutFixSize_Script(testSetNum, min_CI, max_CI, 
+					date));
+			
+			//Group 2 & Group 3
+			sb.append(genRandomTS_Script(testSetNum, 56,
+					57, date));
+
+			sb.append(genAdequateTS_Script(testSetNum, min_CI, max_CI,
+					date, 56, 57 ));
+			
+			sb.append(exeRandomTS_Script(56, 
+					57, date));
+			
+			sb.append(exeAdequateTS_Script(testSetNum, instruction, min_CI, max_CI, 
+					date, 56, 57));
+			
+			sb.append("java ccr.test.ResultAnalyzer Load " + date + " \n");
+			ScriptManager.save(sb.toString(), saveFile);
 		}
 	}
 }
