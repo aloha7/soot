@@ -103,6 +103,84 @@ public class TestSet {
 		return get((int) (Math.random() * (double) size()));
 	}
 	
+	public String getByART(TestSet testset){
+
+		//1. prepare for the ART choosing
+		ArrayList CI_testcases = new ArrayList();
+
+		for (int i = 0; i < testset.size(); i++) {
+			String testcase = (String) testset.get(i);
+			double CI_testcase = ((TestCase) Adequacy.testCases.get(testcase)).CI;
+
+			// insert it into testcases
+			if (CI_testcases.size() != 0) {
+				for (int j = 0; j < CI_testcases.size(); j++) {
+					double CI_tc = (Double)CI_testcases.get(j);					
+					if (CI_tc < CI_testcase) {
+						// right place to insert testcase, 
+						//all CI in test cases are ordered in descending order
+						CI_testcases.add(j, CI_testcase);
+						break;
+					}
+				}
+			} else {
+				CI_testcases.add(CI_testcase);
+			}
+		}
+
+		// 2. use ART-algorithm to choose 10 candidate test cases
+		ArrayList tmp = new ArrayList();
+		do {
+			String testcase = this.getByRandom();
+			if (!tmp.contains(testcase)) {
+				// sort test cases in tmp
+				double CI_testcase = ((TestCase) Adequacy.testCases
+						.get(testcase)).CI;
+				if (tmp.size() != 0) {
+					for (int k = 0; k < tmp.size(); k++) {
+						TestCase temp = (TestCase) tmp.get(k);
+						double CI_temp = temp.CI;
+						if (CI_temp < CI_testcase) {// right place to insert CI
+							tmp.add(k, (TestCase) Adequacy.testCases
+									.get(testcase));
+							break;
+						}
+					}
+				} else {
+					tmp.add((TestCase) Adequacy.testCases.get(testcase));
+				}
+			}
+		} while (tmp.size() < 10);
+		
+		//3. use nearest neighbors to determine which test case in tmp should be returned
+		ArrayList minDistances = new ArrayList();
+		for(int i = 0; i < tmp.size(); i ++){
+			TestCase tc = (TestCase)tmp.get(i);
+			double minDis = Double.MAX_VALUE;
+			for(int j = 0; j < CI_testcases.size(); j ++){
+				double distance = Math.abs(tc.CI-(Double)CI_testcases.get(j));
+				if(minDis > distance)
+					minDis = distance;
+			}
+			minDistances.add(minDis);
+		}
+		
+		
+		double maxDis = Double.MIN_VALUE;
+		int index = 0;
+		
+		for(int i = 0; i < minDistances.size(); i ++){
+			double dis = (Double)minDistances.get(i);
+			if(maxDis < dis){
+				maxDis = dis;
+				index = i;
+			}
+		}
+		
+		return ((TestCase)tmp.get(index)).index; 
+		
+	}
+	
 	/**return the test case who has the ith-largest CI value 
 	 * 
 	 * @param i
