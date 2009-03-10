@@ -308,6 +308,92 @@ public class ExecutionManager {
 				TestDriver.test_load(testSets, faultList, execHistory, saveFile);
 				
 			}
+		}else if(args.length == 2){
+			//specify the test set file directly, used to execute test sets whose CI are fixed in a small range
+			String date = args[0];
+			String testSetFile = args[1];
+
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/TestPool.txt";
+			TestSet testpool = TestSetManager.getTestPool(testPoolFile, true);
+			Adequacy.loadTestCase(testPoolFile);
+
+			TestSet testSets[][] = new TestSet[1][];
+			testSets[0] = Adequacy.getTestSets(testSetFile);
+
+			String saveFile = testSetFile.substring(0, testSetFile
+					.indexOf(".txt"))
+					+ "_limited_load.txt";
+
+			String faultListFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/FaultList.txt";
+
+			// 1. load the fault list
+			ArrayList faultList = new ArrayList();
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(
+						faultListFile));
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					faultList.add(line.trim());
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// 2. load the test result from history
+			boolean containHeader = true;
+			HashMap execHistory = new HashMap();
+			String historyFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/detailed.txt";
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(
+						historyFile));
+				String line = null;
+
+				if (containHeader)
+					br.readLine();
+
+				while ((line = br.readLine()) != null) {
+					String[] strs = line.split("\t");
+					String fault = strs[0].trim();
+
+					if (!faultList.contains(fault)) // this can save memory
+						// significantly
+						continue;
+
+					String testcase = strs[1].trim();
+					String POrF = strs[2].trim();
+
+					// save data into execHistory
+					HashMap tc_pf;
+					if (execHistory.containsKey("" + fault)) {
+						tc_pf = (HashMap) execHistory.get("" + fault);
+					} else {
+						tc_pf = new HashMap();
+					}
+
+					// if(!tc_pf.containsKey(""+testcase))//this is not
+					// necessary since it never happens
+					tc_pf.put(testcase, POrF);
+					execHistory.put(fault, tc_pf);
+				}
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// 3. test the specified faults
+			TestDriver.test_load(testSets, faultList, execHistory, saveFile);
+				
+			
 		}
 	}
 }
