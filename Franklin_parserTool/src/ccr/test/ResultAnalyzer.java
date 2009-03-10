@@ -84,6 +84,81 @@ public class ResultAnalyzer {
 		return sb.toString();
 	}
 	
+	
+	public static HashMap getCriterialCI(String srcDir, boolean containHeader, String criterion, String pattern){
+		
+		HashMap CIRange_CIStatistic = new HashMap();
+		
+		File[] files = new File(srcDir).listFiles();
+	
+		
+		for(File file: files){
+			String fileName = file.getName();
+			if(fileName.matches(pattern)){
+				String[] strs =fileName.split("_");
+				String min = strs[1];
+				String max = strs[2];
+				String CIRange = min + "_" + max;
+				
+				
+				double minCI = Double.MAX_VALUE;
+				double maxCI = Double.MIN_VALUE;
+				double meanCI =0.0;
+				double stdCI = 0.0;
+				
+				String str = null;
+				double sumCI = 0.0;
+				ArrayList CIs = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					if(containHeader)
+						br.readLine();
+					
+					while((str=br.readLine())!= null){
+						strs = str.split("\t");
+						CIs.add(Double.parseDouble(strs[3]));
+					}
+					
+					for(int i = 0; i < CIs.size(); i ++){
+						double CI = (Double)CIs.get(i);
+						
+						sumCI += CI;
+						if(CI > maxCI)
+							maxCI = CI;
+						else if(CI < minCI)
+							minCI = CI;
+						
+					}
+					
+					meanCI = sumCI/(double)CIs.size();
+					double tempCI = 0.0;
+					for(int i =0; i < CIs.size(); i ++){
+						double CI = (Double)CIs.get(i);
+						tempCI += (CI - meanCI) * (CI -meanCI);
+					}
+					stdCI = Math.sqrt(tempCI/(double)CIs.size());
+					
+					ArrayList CIStatistics = new ArrayList();
+					CIStatistics.add(minCI);
+					CIStatistics.add(meanCI);
+					CIStatistics.add(maxCI);
+					CIStatistics.add(stdCI);
+					
+					CIRange_CIStatistic.put(CIRange, CIStatistics);
+					
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return CIRange_CIStatistic;
+	}
+	
 	/**2009-02-24: due to the concurrent execution, we need to merge those partial results into a complete one 
 	 * 
 	 * @param srcDir
@@ -589,6 +664,100 @@ public class ResultAnalyzer {
 		return size_perValidTestSet;
 	}
 	
+	/**2009-03-10: get the relationship between CI and testing performance of a specified criterion
+	 * 
+	 * @param srcDir
+	 * @param criterion
+	 * @param containHeader
+	 * @return
+	 */
+	public static HashMap getCIPerValidTestSet(String srcDir, String criterion, boolean containHeader){
+		HashMap CIRange_perValidTestSet = new HashMap();
+		
+		File[] files = new File(srcDir).listFiles();
+		
+		ArrayList faults = new ArrayList();
+		//1.get all interested faults
+		try {
+			BufferedReader br_temp = new BufferedReader(new FileReader(srcDir + "/FaultList.txt"));
+			String line = null;
+			
+			while((line=br_temp.readLine())!= null){
+				faults.add(line);
+			}
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		for(File file: files){
+			String fileName = file.getName();
+			if(fileName.matches(criterion + "\\_0\\.[0-9]+\\_0\\.[0-9]+\\_limited_load.txt")){
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					String str = null;
+					if(containHeader)
+						br.readLine();
+					
+					//get fault-test sets pair
+					HashMap fault_TestSets = new HashMap(); 
+					while((str = br.readLine())!= null){
+						String[] strs = str.split("\t");
+						String fault = strs[0];
+						
+						if(!faults.contains(fault))
+								continue;
+						
+						String validTestSet = strs[5];
+						
+						ArrayList testSets;
+						if(fault_TestSets.containsKey(fault))
+							testSets = (ArrayList)fault_TestSets.get(fault);
+						else
+							testSets = new ArrayList();
+						
+						testSets.add(validTestSet);
+						fault_TestSets.put(fault, testSets);
+					}
+					br.close();
+					
+					//count the valid test sets for each fault
+					double sum_perValidTestSet = 0.0;
+					Iterator ite = fault_TestSets.keySet().iterator();
+					while(ite.hasNext()){ // for each fault
+						String fault = (String)ite.next();
+						ArrayList testSets = (ArrayList)fault_TestSets.get(fault);
+						int validCounter = 0;
+						for(int i = 0; i < testSets.size(); i ++){
+							String testSet = (String)testSets.get(i);
+							if(testSet.equals("1"))
+								validCounter ++;
+						}
+						sum_perValidTestSet += (double)validCounter/(double)testSets.size();
+					}
+					double mean_perValidTestSet = sum_perValidTestSet/(double)fault_TestSets.size();
+					String[] strs = fileName.split("_");
+					
+					String CIRange = strs[1] + "_" + strs[2];
+					
+					CIRange_perValidTestSet.put(CIRange, mean_perValidTestSet);
+					
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		return CIRange_perValidTestSet;
+	}
+	
+	
 	/**return the fault-perValidTestSet(String->double) for a given testing criterion
 	 * 
 	 * @param testSetExecutionFile
@@ -807,6 +976,42 @@ public class ResultAnalyzer {
 		
 	}
 	
+	public static void getCorrelationCIPeformance(String[] criteria, HashMap criterion_CIs, HashMap criterion_CIRange_performance, String saveFile){
+
+		//2. Header, keeping the order
+		StringBuilder sb = new StringBuilder();
+		sb.append("CIRange\t");
+		for(int i = 0; i < criteria.length; i ++){
+			sb.append("CI\t" +criteria[i] + "\t");
+		}
+		sb.append("\n");
+		
+		String criterion = (String)criteria[0]; // standard criterion
+		HashMap CIRange_performance = (HashMap)criterion_CIRange_performance.get(criterion);
+		
+		//3.summary all results
+		Iterator it1 = CIRange_performance.keySet().iterator();
+		while(it1.hasNext()){
+			String CIRange = (String)it1.next();
+			sb.append(CIRange + "\t");
+			
+			ArrayList criterion_performance = new ArrayList(); 
+			for(int i = 0; i < criteria.length; i ++){
+				criterion = criteria[i];
+				double meanCI = (Double)((ArrayList)((HashMap)criterion_CIs.get(criterion)).get(CIRange)).get(1); 
+				CIRange_performance = (HashMap)criterion_CIRange_performance.get(criterion);				
+				double performance = (Double)CIRange_performance.get(CIRange);
+				sb.append(meanCI + "\t" +performance + "\t");
+			}
+			sb.append("\n");
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+		
+	}
+	
 	public static void main(String[] args){
 		System.out
 		.println("USAGE: java ccr.test.ResultAnalyzer <Context_Intensity,Limited,Load>"
@@ -949,6 +1154,29 @@ public class ResultAnalyzer {
 			}
 			
 			ResultAnalyzer.getCorrelationTSPeformance(criteria, criterion_sizePerformance, saveFile);
+		}else if(instruction.equals("getCIPerformance")){
+			//2009-03-10: get the correlations between CI of test sets and fault detection rate of each criterion
+			criteria = new String[]{
+					"AllPolicies",
+					"All1ResolvedDU",
+					"All2ResolvedDU",
+			};
+			
+			//2009-02-25: to explore the CI distributions of different testing criteria
+			HashMap criterion_CIs = new HashMap();
+			for(int i =0; i < criteria.length; i ++){
+				String pattern = criteria[i] + "\\_0\\.[0-9]+\\_0\\.[0-9]+" +"\\_CI.txt"; 
+				criterion_CIs.put(criteria[i], ResultAnalyzer.getCriterialCI(srcDir, containHeader, criteria[i], pattern));
+			}
+			
+			HashMap criterion_CIPerformance = new HashMap();
+			String saveFile = srcDir + "/CI_Performance.txt";
+			for(int i = 0; i < criteria.length; i++){
+				String criterion = criteria[i];
+				containHeader = true;
+				criterion_CIPerformance.put(criterion, ResultAnalyzer.getCIPerValidTestSet(srcDir, criterion, containHeader));
+			}
+			ResultAnalyzer.getCorrelationCIPeformance(criteria, criterion_CIs, criterion_CIPerformance, saveFile);
 		}
 		
 	}
