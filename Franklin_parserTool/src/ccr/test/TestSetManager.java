@@ -280,12 +280,12 @@ public class TestSetManager {
 					testcase_traces.put(testcase, traces);
 				} else {
 					//2009-03-06:
-					testSet = replace_CI_ordering(testSet,
-							testcase_uniqueCovers, testcase, stringTrace);
+//					testSet = replace_CI_ordering(testSet,
+//							testcase_uniqueCovers, testcase, stringTrace);
 					
 					//2009-03-07:
-//					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
-//							testcase_traces, testcase, stringTrace);
+					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+							testcase_traces, testcase, stringTrace);
 				}			
 			}
 		}
@@ -682,11 +682,11 @@ public class TestSetManager {
 					
 				} else {
 					//2009-03-07: wrap the replacement strategy as a method
-					testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
+//					testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
 					
 //					//2009-03-07:
-//					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
-//							testcase_traces, testcase, stringTrace);
+					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+							testcase_traces, testcase, stringTrace);
 				}
 			}
 		}
@@ -759,11 +759,11 @@ public class TestSetManager {
 							checkCoverage(stringTrace, finalCriterion);
 						} else {
 							//2009-03-07:
-							testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
+//							testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
 							
 							//2009-03-07:
-//							testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
-//									testcase_traces, testcase, stringTrace);
+							testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+									testcase_traces, testcase, stringTrace);
 						}
 					}
 				}
@@ -866,6 +866,141 @@ public class TestSetManager {
 		return testSet;
 	}
 
+	public static TestSet getAdequacyTestSet_ART_fixSize(
+			String appClassName, Criterion c, TestSet testpool, int maxTrials,
+			int testSuiteSize, String randomOrCriterion) {
+
+		Criterion criterion = (Criterion) c.clone();
+		Criterion finalCriterion = null; // use to calculate the final
+		// coverage of the test set
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		int originalSize = criterion.size();
+
+		long time = System.currentTimeMillis();
+
+		while (visited.size() < maxTrials && visited.size() < testpool.size()
+				&& criterion.size() > 0 && testSet.size() < testSuiteSize) {
+			String testcase = null;
+			if(testSet.size() == 0){
+				testcase = testpool.getByRandom();	
+			}else{
+				testcase = testpool.getByART(testSet);
+			}
+			
+			if (!visited.contains(testcase)) {
+				visited.add(testcase);
+				String stringTrace[] = TestDriver.getTrace(appClassName,
+						testcase);
+
+				if (checkCoverage(stringTrace, criterion)) {
+					testSet.add(testcase);
+				}
+			}
+		}
+
+		finalCriterion = (Criterion) criterion.clone(); // save the criterion to
+		// calculate the final
+		// coverage
+		if (randomOrCriterion.equals("random")) {
+
+			// 2009-02-22:the stopping rule is very important here:
+			while (testSet.size() < testSuiteSize
+					&& visited.size() < testpool.size()) {
+				String testcase = testpool.getByRandom();
+
+				if (!visited.contains(testcase) && !testSet.contains(testcase)) {
+					String stringTrace[] = TestDriver.getTrace(appClassName,
+							testcase);
+					checkCoverage(stringTrace, finalCriterion); // remove
+					// redundant
+					// coverage
+					visited.add(testcase);
+					testSet.add(testcase);
+				}
+			}
+		} else if (randomOrCriterion.equals("criteria")) {
+
+			do {
+				// reset the criterion and repeat the test case selection
+				// process
+				 
+				criterion = (Criterion) c.clone();
+				//2009-03-06: we also need a maxTrial here and must be small enough in case of unfeasible du-pairs 
+				maxTrials =  100;
+				int trial = 0;
+				
+				while (visited.size() < testpool.size()
+						&& testSet.size() < testSuiteSize 
+						&& trial < maxTrials
+						&& criterion.size() > 0) {
+					 trial++;
+//					String testcase = testpool.getByRandom();
+					 
+					String testcase = testpool.getByART(testSet);
+					
+					if (!visited.contains(testcase)) {
+						visited.add(testcase);
+						String stringTrace[] = TestDriver.getTrace(
+								appClassName, testcase);
+
+						if (checkCoverage(stringTrace, criterion)) {
+							testSet.add(testcase);
+							if (finalCriterion.size() > 0) {
+								checkCoverage(stringTrace, finalCriterion);
+							}
+						}
+					}
+				}
+			} while (testSet.size() < testSuiteSize
+					&& visited.size() < testpool.size());
+		}
+
+		int currentSize = finalCriterion.size();
+		testSet.setCoverage((float) (originalSize - currentSize)
+				/ (float) originalSize);
+		testSet.geneTime = System.currentTimeMillis() - time;
+
+		return testSet;
+	}
+	
+	public static TestSet getAdequacyTestSet_ART(String appClassName,
+			Criterion c, TestSet testpool, int maxTrials) {
+
+		Criterion criterion = (Criterion) c.clone();
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		int originalSize = criterion.size();
+
+		long time = System.currentTimeMillis();
+
+		while (visited.size() < maxTrials && visited.size() < testpool.size()
+				&& criterion.size() > 0) {
+			String testcase = null;
+			if(testSet.size() == 0){
+				testcase = testpool.getByRandom();	
+			}else{
+				testcase = testpool.getByART(testSet);
+			}
+			
+			if (!visited.contains(testcase)) {
+				visited.add(testcase);
+				String stringTrace[] = TestDriver.getTrace(appClassName,
+						testcase);
+
+				if (checkCoverage(stringTrace, criterion)) {
+					testSet.add(testcase);
+				}
+			}
+		}
+
+		int currentSize = criterion.size();
+		testSet.setCoverage((float) (originalSize - currentSize)
+				/ (float) originalSize);
+		testSet.geneTime = System.currentTimeMillis() - time;
+
+		return testSet;
+	}
 	
 	/**
 	 * conventional strategy to get adequate test set: add a test case if it
@@ -910,6 +1045,7 @@ public class TestSetManager {
 		return testSet;
 	}
 
+	
 	// 2009-02-16:load the test pool from the file
 	public static TestSet getTestPool(String file, boolean containHeader) {
 		TestSet testpool = new TestSet();
@@ -1152,9 +1288,17 @@ public class TestSetManager {
 		if (testSuiteSize < 0) { // do not fix the test set size
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
-					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
-							appClassName, c, testpool, maxTrials, min_CI,
-							max_CI);
+					
+					//2009-03-10: we use ART to generate adequate test sets
+//					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
+//							appClassName, c, testpool, maxTrials, min_CI,
+//							max_CI);
+					
+					//2009-03-10: we use ART to generate adequate test sets
+					testSets[i] = TestSetManager.getAdequacyTestSet_ART(appClassName, c, 
+							testpool, maxTrials);
+
+					
 
 					// 2009-02-24: set the index of testSets
 					testSets[i].index = "" + i;
@@ -1178,11 +1322,15 @@ public class TestSetManager {
 		} else if(testSuiteSize > 0){// fix the test set size
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
-					testSets[i] = TestSetManager
-							.getAdequacyTestSet_refined_fixSize(appClassName,
-									c, testpool, maxTrials, min_CI, max_CI,
-									testSuiteSize, randomOrCriteria);
-
+//					testSets[i] = TestSetManager
+//							.getAdequacyTestSet_refined_fixSize(appClassName,
+//									c, testpool, maxTrials, min_CI, max_CI,
+//									testSuiteSize, randomOrCriteria);
+					
+					//2009-03-10: we use ART to generate adequate test sets
+					testSets[i] = TestSetManager.getAdequacyTestSet_ART_fixSize(appClassName, 
+							c, testpool, maxTrials, testSuiteSize, randomOrCriteria);
+					
 					// 2009-02-24: set the index of testSets
 					testSets[i].index = "" + i;
 
@@ -1408,6 +1556,7 @@ public class TestSetManager {
 //				if(max_TestSuiteSize > end)
 //					max_TestSuiteSize = end;
 				
+			//only interest in Group 1
 			for(double i = start_CI; i < end_CI; i = i + interval){
 				double min_CI = i;
 				double max_CI = i + interval;
@@ -1415,6 +1564,7 @@ public class TestSetManager {
 				if(max_CI > end_CI)
 					max_CI = end_CI;
 				
+				System.out.println("Min:" +min_CI + " Max:" + max_CI + "\n");
 				//1. for AllPolicies
 				c = g.getAllPolicies();
 				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
