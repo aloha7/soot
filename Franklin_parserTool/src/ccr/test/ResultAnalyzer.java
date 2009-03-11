@@ -51,7 +51,7 @@ public class ResultAnalyzer {
 						sumCI += CI;
 						if(CI > maxCI)
 							maxCI = CI;
-						else if(CI < minCI)
+						if(CI < minCI)
 							minCI = CI;
 						
 					}
@@ -125,7 +125,7 @@ public class ResultAnalyzer {
 						sumCI += CI;
 						if(CI > maxCI)
 							maxCI = CI;
-						else if(CI < minCI)
+						if(CI < minCI)
 							minCI = CI;
 						
 					}
@@ -924,7 +924,7 @@ public class ResultAnalyzer {
 				
 				if(performances[j] > max)
 					max = performances[j];
-				else if(performances[j] < min)
+				if(performances[j] < min)
 					min = performances[j];
 			}
 			double mean = sum/(double)performances.length;
