@@ -1331,6 +1331,7 @@ public class TestSetManager {
 					testSets[i] = TestSetManager.getAdequacyTestSet_ART_fixSize(appClassName, 
 							c, testpool, maxTrials, testSuiteSize, randomOrCriteria);
 					
+					
 					// 2009-02-24: set the index of testSets
 					testSets[i].index = "" + i;
 
