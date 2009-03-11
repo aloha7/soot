@@ -258,14 +258,17 @@ public class TestSetManager {
 		int originalSize = criterion.size();
 		while (visited.size() < maxTrials && visited.size() < testpool.size()
 				&& criterion.size() > 0) {
+			
 //			// String testcase = testpool.getByRandom();
-//			String testcase = testpool.getByART(); //more likely to sample test cases with high CI
-			String testcase = null;
-			if(testSet.size() == 0){
-				testcase = testpool.getByRandom();	
-			}else{
-				testcase = testpool.getByART(testSet);
-			}
+			
+			String testcase = testpool.getByART(); //more likely to sample test cases with high CI
+			
+//			String testcase = null;
+//			if(testSet.size() == 0){
+//				testcase = testpool.getByRandom();	
+//			}else{
+//				testcase = testpool.getByART(testSet);
+//			}
 			
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
@@ -665,14 +668,14 @@ public class TestSetManager {
 				&& criterion.size() > 0 && testSet.size() < testSuiteSize) {
 //			String testcase = testpool.getByRandom();
 
-//			 String testcase = testpool.getByART();
+			 String testcase = testpool.getByART();
 			
-			String testcase = null;
-			if(testSet.size() == 0){
-				testcase = testpool.getByRandom();	
-			}else{
-				testcase = testpool.getByART(testSet);
-			}
+//			String testcase = null;
+//			if(testSet.size() == 0){
+//				testcase = testpool.getByRandom();	
+//			}else{
+//				testcase = testpool.getByART(testSet);
+//			}
 
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
@@ -745,9 +748,10 @@ public class TestSetManager {
 						&& criterion.size() > 0
 						&& testSet.size() < testSuiteSize) {
 					// String testcase = testpool.getByRandom();
-//					String testcase = testpool.getByART();
 					
-					String testcase = testpool.getByART(testSet);
+					String testcase = testpool.getByART();
+					
+//					String testcase = testpool.getByART(testSet);
 					
 					 trial++;
 					// just for debugging purpose
