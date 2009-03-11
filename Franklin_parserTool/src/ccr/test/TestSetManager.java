@@ -258,9 +258,15 @@ public class TestSetManager {
 		int originalSize = criterion.size();
 		while (visited.size() < maxTrials && visited.size() < testpool.size()
 				&& criterion.size() > 0) {
-			// String testcase = testpool.getByRandom();
-			String testcase = testpool.getByART(); //more likely to sample test cases with high CI
-
+//			// String testcase = testpool.getByRandom();
+//			String testcase = testpool.getByART(); //more likely to sample test cases with high CI
+			String testcase = null;
+			if(testSet.size() == 0){
+				testcase = testpool.getByRandom();	
+			}else{
+				testcase = testpool.getByART(testSet);
+			}
+			
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
 			if (!visited.contains(testcase)) {
@@ -659,7 +665,14 @@ public class TestSetManager {
 				&& criterion.size() > 0 && testSet.size() < testSuiteSize) {
 //			String testcase = testpool.getByRandom();
 
-			 String testcase = testpool.getByART();
+//			 String testcase = testpool.getByART();
+			
+			String testcase = null;
+			if(testSet.size() == 0){
+				testcase = testpool.getByRandom();	
+			}else{
+				testcase = testpool.getByART(testSet);
+			}
 
 			// just for debugging purpose
 			// TestCase testCase = (TestCase) Adequacy.testCases.get(testcase);
@@ -732,8 +745,10 @@ public class TestSetManager {
 						&& criterion.size() > 0
 						&& testSet.size() < testSuiteSize) {
 					// String testcase = testpool.getByRandom();
-					String testcase = testpool.getByART();
-
+//					String testcase = testpool.getByART();
+					
+					String testcase = testpool.getByART(testSet);
+					
 					 trial++;
 					// just for debugging purpose
 					// TestCase testCase = (TestCase)
@@ -1290,13 +1305,13 @@ public class TestSetManager {
 				for (int i = 0; i < testSetNum; i++) {
 					
 					//2009-03-10: we use ART to generate adequate test sets
-//					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
-//							appClassName, c, testpool, maxTrials, min_CI,
-//							max_CI);
+					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
+							appClassName, c, testpool, maxTrials, min_CI,
+							max_CI);
 					
 					//2009-03-10: we use ART to generate adequate test sets
-					testSets[i] = TestSetManager.getAdequacyTestSet_ART(appClassName, c, 
-							testpool, maxTrials);
+//					testSets[i] = TestSetManager.getAdequacyTestSet_ART(appClassName, c, 
+//							testpool, maxTrials);
 
 					
 
@@ -1322,14 +1337,14 @@ public class TestSetManager {
 		} else if(testSuiteSize > 0){// fix the test set size
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
-//					testSets[i] = TestSetManager
-//							.getAdequacyTestSet_refined_fixSize(appClassName,
-//									c, testpool, maxTrials, min_CI, max_CI,
-//									testSuiteSize, randomOrCriteria);
+					testSets[i] = TestSetManager
+							.getAdequacyTestSet_refined_fixSize(appClassName,
+									c, testpool, maxTrials, min_CI, max_CI,
+									testSuiteSize, randomOrCriteria);
 					
 					//2009-03-10: we use ART to generate adequate test sets
-					testSets[i] = TestSetManager.getAdequacyTestSet_ART_fixSize(appClassName, 
-							c, testpool, maxTrials, testSuiteSize, randomOrCriteria);
+//					testSets[i] = TestSetManager.getAdequacyTestSet_ART_fixSize(appClassName, 
+//							c, testpool, maxTrials, testSuiteSize, randomOrCriteria);
 					
 					
 					// 2009-02-24: set the index of testSets
