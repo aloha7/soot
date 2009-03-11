@@ -59,7 +59,7 @@ public class TestCFG2 extends Application {
 		int cPos = -1;
 		int stay = 0;
 	//	int mode = MODE_MIX;
-		int lastPos = -1;
+//		int lastPos = -1;
 		timestamp = System.currentTimeMillis();
 		counter = 0;
 	//	double distance = 0;
@@ -805,7 +805,7 @@ public class TestCFG2 extends Application {
 			int changes = ins.getChanges(ins.PositionQueue);
 			System.out.println(testcase);
 			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
-					+"\t" + (double)changes/(double)(ins.PositionQueue.size()-1)) ;
+					+"\t" + (ins.PositionQueue.size() - changes)) ;
 			
 //			for(int j = 0; j < ins.PositionQueue.size(); j ++){
 //				sb.append(ins.PositionQueue.get(j)+"\t");
@@ -813,15 +813,14 @@ public class TestCFG2 extends Application {
 			sb.append("\n");
 		}
 		System.out.println(sb.toString());
-		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/TestPool.txt";
-		
-		
+		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090309/TestPool.txt";
+
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
 		
-		String testcase = "10"; 
-		System.out.println("result = " + (new TestCFG2()).application(testcase));
+//		String testcase = "10"; 
+//		System.out.println("result = " + (new TestCFG2()).application(testcase));
 	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
 
