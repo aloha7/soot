@@ -25,10 +25,5 @@ public class Coordinates {
 
         return dist;
     }
-    
-    //2009-2-15
-    public String toString(){
-    	return "x=" + x + ",y=" +y;
-    }
 
 }

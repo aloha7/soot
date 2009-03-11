@@ -2,7 +2,7 @@ package ccr.app;
 
 import java.util.*;
 
-public class TestCFG2_ins extends Application {
+public class TestCFG2_conv_ins extends Application {
 	
 //	private final int PATH_LEN = /*100*/100;  // Length of a random path
 	private final long STAY_TIME = 200; // Each stay takes 200 ms	
@@ -936,7 +936,7 @@ public class TestCFG2_ins extends Application {
 
 	protected void resolve() {
 		
-		boolean consistent = true;
+	/*	boolean consistent = true;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
 			if (filterLocCons2Stay(ctx, candidate) && !funcLocDistOk(ctx, candidate)) {
@@ -976,14 +976,15 @@ public class TestCFG2_ins extends Application {
 			queue.add(0, candidate);
 		} else {
 			candidate = (Context) queue.get(0);
-		}
+		}*/
+		record(updateIndex);
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
 	}
 	
 	public static void main(String argv[]) {
 		
 		String testcase = "10"; 
-		System.out.println("result = " + (new TestCFG2()).application(testcase));
+		System.out.println("result = " + (new TestCFG2_conv_ins()).application(testcase));
 	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
 

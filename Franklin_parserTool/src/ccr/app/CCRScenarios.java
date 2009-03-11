@@ -37,7 +37,7 @@ public class CCRScenarios {
         posActLocs[1][6] = new Coordinates(1.9, 1.5);
         posActLocs[1][7] = new Coordinates(1.9, 2.5);
 
-        // Initialize all estimated locations of positions in scenario 0, 45 estimated locations of one position 
+        // Initialize all estimated locations of positions in scenario 0
         for (int i = 0; i < POS_NUM; i++) {
             posEstLocs[0][i] = new Vector();
             try {

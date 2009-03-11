@@ -30,7 +30,7 @@ public class TestCFG2 extends Application {
 		
 		// Program ID [c]
 		
-		// Ordinary Variable [moved, reliable, error, c, stay, timestamp, counter, t]
+		// Ordinary Variable [location, lastLocation, moved, reliable, displace, error, curEstX, curEstY, c, bPos, cPos, stay, lastPos, timestamp, counter, t, actLoc, estLoc, lastLoc, dist]
 		
 		// Context Variable [candidate]
 		
@@ -40,7 +40,7 @@ public class TestCFG2 extends Application {
 		queue = new Vector();
 		Coordinates location = null;
 		Random rand = new Random(seed);
-		CCRScenarios scenarios = new CCRScenarios(seed);//this input doesn't have any explicit meanings
+		CCRScenarios scenarios = new CCRScenarios(seed);
 		long t;
 		Coordinates actLoc;
 		Coordinates estLoc;
@@ -74,7 +74,7 @@ public class TestCFG2 extends Application {
 	//			cPos = rand.nextInt(CCRScenarios.POS_NUM);
 	//		}
 	//	}
-		stay = rand.nextInt(MAX_STAY) + 1;//[1,6]
+		stay = rand.nextInt(MAX_STAY) + 1;
 	//	mode = MODE_MIX; // Experimentation: Variation on mode
 	//	if (mode == MODE_WALK) {
 	//		stay = 1;  // Always walk without stay
@@ -90,7 +90,7 @@ public class TestCFG2 extends Application {
 		actLoc = scenarios.getActLoc(sid, cPos);
 		// Set the estimated location for pos
 		estLoc = scenarios.getEstLoc(sid, cPos);
-		curEstX = estLoc.x; //use to generate candidate
+		curEstX = estLoc.x;
 		curEstY = estLoc.y;
 		
 		// Apply the noise
@@ -112,15 +112,15 @@ public class TestCFG2 extends Application {
 		lastPos = cPos;
 		candidate = generateCtx();
 		resolve();
-		location = toCoordinates(candidate); 
+		location = toCoordinates(candidate);
 	//	System.out.println(counter + ":\t(" + location.x + ", " + location.y + ")");
 	//	distance = distance + Coordinates.calDist(location, lastLocation); // Experiments: calculate distance
 		displace = Math.sqrt((location.x - lastLocation.x) * (location.x - lastLocation.x) + 
-				(location.y - lastLocation.y) * (location.y - lastLocation.y));//lastLocation is actual one while location is the estimated one.
-		moved = moved + toBoolean(displace); //If estimated location is exactly (0,0), then no movement at all. 
+				(location.y - lastLocation.y) * (location.y - lastLocation.y));
+		moved = moved + toBoolean(displace);
 		error = Math.sqrt((actLoc.x - location.x) * (actLoc.x - location.x) + 
 				(actLoc.y - location.y) * (actLoc.y - location.y));
-		lastLocation = location; //lastLocation is used to measure the estimated location
+		lastLocation = location;
 		counter = counter + 1;
 		
 		while (stay > 0) { // initial
@@ -168,11 +168,11 @@ public class TestCFG2 extends Application {
 		while (cPos == -1 || cPos == bPos ||
 			Coordinates.calDist(scenarios.getActLoc(sid, bPos), scenarios.getActLoc(sid, cPos)) < WALK_DIST) {
 			cPos = rand.nextInt(CCRScenarios.POS_NUM);
-		} //continue until there are some movement
+		}
 		stay = rand.nextInt(MAX_STAY) + 1;
 		c = c + stay;
-		bPos = cPos; //keep the latest location
-		stay = stay - 1; // 1 //What is the use of stay?
+		bPos = cPos;
+		stay = stay - 1; // 1
 		actLoc = scenarios.getActLoc(sid, cPos);
 		estLoc = scenarios.getEstLoc(sid, cPos);
 		curEstX = estLoc.x;
@@ -182,9 +182,9 @@ public class TestCFG2 extends Application {
 		lastLoc = scenarios.getActLoc(sid, lastPos); // The actual location for lastPos
 		dist = Coordinates.calDist(lastLoc, actLoc);
 		t = (long) (dist / VELOCITY * 1000); // Experimentation: Estimated time required from lastLoc to actLoc
-		timestamp = timestamp + t; 
+		timestamp = timestamp + t;
 		lastPos = cPos;
-		candidate = generateCtx(); //attach data with timestamp and so on
+		candidate = generateCtx();
 		resolve();
 		location = toCoordinates(candidate);
 	//	distance = distance + Coordinates.calDist(location, lastLocation); // Experiments: calculate distance
@@ -194,8 +194,8 @@ public class TestCFG2 extends Application {
 		error = Math.sqrt((actLoc.x - location.x) * (actLoc.x - location.x) + 
 				(actLoc.y - location.y) * (actLoc.y - location.y));
 		lastLocation = location;
-		counter = counter + 1; //use to judge whether adjacent or not
-		while (stay > 0) { // 1 //one package may stay in the same place for several stays
+		counter = counter + 1;
+		while (stay > 0) { // 1
 			stay = stay - 1;
 			actLoc = scenarios.getActLoc(sid, cPos);
 			estLoc = scenarios.getEstLoc(sid, cPos);
@@ -224,7 +224,7 @@ public class TestCFG2 extends Application {
 			counter = counter + 1;
 		}
 
-		// 2, return is the movement and reliables
+		// 2
 		cPos = rand.nextInt(CCRScenarios.POS_NUM);
 		while (cPos == -1 || cPos == bPos ||
 			Coordinates.calDist(scenarios.getActLoc(sid, bPos), scenarios.getActLoc(sid, cPos)) < WALK_DIST) {
@@ -336,7 +336,7 @@ public class TestCFG2 extends Application {
 		//	distance = distance + Coordinates.calDist(location, lastLocation); // Experiments: calculate distance
 			displace = Math.sqrt((location.x - lastLocation.x) * (location.x - lastLocation.x) + 
 					(location.y - lastLocation.y) * (location.y - lastLocation.y));
-			moved = moved + toBoolean(displace); //when stay, there is no moved at all if there is no changes for two consecutive context
+			moved = moved + toBoolean(displace);
 			error = Math.sqrt((actLoc.x - location.x) * (actLoc.x - location.x) + 
 					(actLoc.y - location.y) * (actLoc.y - location.y));
 			if (error <= ERR) {
@@ -426,7 +426,7 @@ public class TestCFG2 extends Application {
 		lastLoc = scenarios.getActLoc(sid, lastPos); // The actual location for lastPos
 		dist = Coordinates.calDist(lastLoc, actLoc);
 		t = (long) (dist / VELOCITY * 1000); // Experimentation: Estimated time required from lastLoc to actLoc
-		timestamp = timestamp + t; //from one sensor to another sensor
+		timestamp = timestamp + t;
 		lastPos = cPos;
 		candidate = generateCtx();
 		resolve();
@@ -436,7 +436,7 @@ public class TestCFG2 extends Application {
 				(location.y - lastLocation.y) * (location.y - lastLocation.y));
 		moved = moved + toBoolean(displace);
 		error = Math.sqrt((actLoc.x - location.x) * (actLoc.x - location.x) + 
-				(actLoc.y - location.y) * (actLoc.y - location.y)); //Why there is no error statics here?
+				(actLoc.y - location.y) * (actLoc.y - location.y));
 		lastLocation = location;
 		counter = counter + 1;
 		while (stay > 0) { // 5
@@ -449,7 +449,7 @@ public class TestCFG2 extends Application {
 			curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;  // [- NOISE, + NOISE)
 			lastLoc = scenarios.getActLoc(sid, lastPos); // The actual location for lastPos
 			dist = Coordinates.calDist(lastLoc, actLoc);
-			t = STAY_TIME; // Experimentation: stay within the range of a sensor
+			t = STAY_TIME; // Experimentation:
 			timestamp = timestamp + t;
 			lastPos = cPos;
 			candidate = generateCtx();
@@ -721,7 +721,7 @@ public class TestCFG2 extends Application {
 	private int toBoolean(double d) {
 		
 		int result = 0;
-		if (d != (double) 0) { //need to change this line d >= ERR
+		if (d != (double) 0) {
 			result = 1;
 		}
 		return result;
@@ -737,7 +737,7 @@ public class TestCFG2 extends Application {
 
 	protected void resolve() {
 		
-		boolean consistent = true;//the context is inconsistent when it is inconsistent with any one element in the queue;
+		boolean consistent = true;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
 			if (filterLocCons2Stay(ctx, candidate) && !funcLocDistOk(ctx, candidate)) {
@@ -770,7 +770,7 @@ public class TestCFG2 extends Application {
 			// Context definition
 			queue.add(0, candidate);
 		} else {
-			candidate = (Context) queue.get(0); //basically speaking, get the head of the queue if it is not consistent
+			candidate = (Context) queue.get(0);
 		}
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
 	}

@@ -32,8 +32,6 @@ public abstract class Application {
 	public static final String BINARY_DELIMITER[] = {"++", "--", 
 		"+=", "-=", "*=", "/=", ">=", "<=", "&&", "||", "!=", "=="};
 	
-	//2008/7/25: add a keyword set, then we can get all user-defined variables
-	
 	protected String updateIndex;
 	
 	abstract public Object application(String testcase);
