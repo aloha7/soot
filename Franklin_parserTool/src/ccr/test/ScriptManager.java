@@ -48,29 +48,29 @@ public class ScriptManager {
 		int total = 0;
 		
 		String[] criteria = new String[] { 
-				"AllPolicies_old_random",  
-				
-				"All1ResolvedDU_old_random",  
-				
-				"All2ResolvedDU_old_random", 
-
 				"AllPolicies_new_random",
 
 				"All1ResolvedDU_new_random",
 				
 				"All2ResolvedDU_new_random",
 				
-				"AllPolicies_old_criteria", 
+				"AllPolicies_old_random",  
 				
-				"All1ResolvedDU_old_criteria", 
+				"All1ResolvedDU_old_random",  
 				
-				"All2ResolvedDU_old_criteria", 
-				
+				"All2ResolvedDU_old_random", 
+
 				"AllPolicies_new_criteria",
 				
 				"All1ResolvedDU_new_criteria",
 				
 				"All2ResolvedDU_new_criteria",
+				
+				"AllPolicies_old_criteria", 
+				
+				"All1ResolvedDU_old_criteria", 
+				
+				"All2ResolvedDU_old_criteria", 
 		};
 		StringBuilder sb = new StringBuilder();
 		for(int testSuiteSize = min_TestSuiteSize; testSuiteSize < max_TestSuiteSize; testSuiteSize ++){
@@ -112,18 +112,17 @@ public class ScriptManager {
 			double max_CI, String date ){
 
 		String[] criteria = new String[] { 
-		"AllPolicies_old",
+				"AllPolicies_new",
 
-		"All1ResolvedDU_old",
+				"All1ResolvedDU_new",
 
-		"All2ResolvedDU_old",
+				"All2ResolvedDU_new",
+				
+				"AllPolicies_old",
 
-		"AllPolicies_new",
+				"All1ResolvedDU_old",
 
-		"All1ResolvedDU_new",
-
-		"All2ResolvedDU_new",
-
+				"All2ResolvedDU_old",
 		};
 
 		StringBuilder sb = new StringBuilder();
@@ -199,29 +198,29 @@ public class ScriptManager {
 		int total = 0;
 		
 		String[] criteria = new String[] { 
-				"AllPolicies_old_random",  
-				
-				"All1ResolvedDU_old_random",  
-				
-				"All2ResolvedDU_old_random", 
-
 				"AllPolicies_new_random",
 				
 				"All1ResolvedDU_new_random",
 				
 				"All2ResolvedDU_new_random",
 				
-				"AllPolicies_old_criteria", 
+				"AllPolicies_old_random",  
 				
-				"All1ResolvedDU_old_criteria", 
+				"All1ResolvedDU_old_random",  
 				
-				"All2ResolvedDU_old_criteria", 
-				
+				"All2ResolvedDU_old_random", 
+
 				"AllPolicies_new_criteria",
 				
 				"All1ResolvedDU_new_criteria",
 				
 				"All2ResolvedDU_new_criteria",
+				
+				"AllPolicies_old_criteria", 
+				
+				"All1ResolvedDU_old_criteria", 
+				
+				"All2ResolvedDU_old_criteria", 
 		};
 		
 		StringBuilder sb = new StringBuilder();
@@ -279,17 +278,17 @@ public class ScriptManager {
 			double max_CI, String date) {
 		
 		String[] criteria = new String[] {
-		"AllPolicies_old",
+				"AllPolicies_new",
 
-		"All1ResolvedDU_old",
+				"All1ResolvedDU_new",
 
-		"All2ResolvedDU_old",
+				"All2ResolvedDU_new", 
+				
+				"AllPolicies_old",
 
-		"AllPolicies_new",
+				"All1ResolvedDU_old",
 
-		"All1ResolvedDU_new",
-
-		"All2ResolvedDU_new", 
+				"All2ResolvedDU_old",
 		};
 
 		StringBuilder sb = new StringBuilder();
