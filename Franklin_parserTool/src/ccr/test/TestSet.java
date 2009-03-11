@@ -100,7 +100,9 @@ public class TestSet {
 		if (isEmpty()) {
 			return null;
 		}
-		return get((int) (Math.random() * (double) size()));
+		//2009-03-11: more likely to return a uniform distributed test case
+		return get(new Random().nextInt(size()));
+//		return get((int) (Math.random() * (double) size()));
 	}
 	
 	public String getByART(TestSet testset){
@@ -130,32 +132,44 @@ public class TestSet {
 
 		// 2. use ART-algorithm to choose 10 candidate test cases
 		ArrayList tmp = new ArrayList();
+		int trial = 0;
 		do {
 			String testcase = this.getByRandom();
+			
+//			System.out.println("testcase(TestSet):" + testcase);
+			
+			trial ++;
 			if (!tmp.contains(testcase)) {
+				
 				// sort test cases in tmp
 				double CI_testcase = ((TestCase) Adequacy.testCases
 						.get(testcase)).CI;
 				if (tmp.size() != 0) {
-					for (int k = 0; k < tmp.size(); k++) {
-						TestCase temp = (TestCase) tmp.get(k);
+					int k = 0;
+					for (; k < tmp.size(); k++) {
+						TestCase temp = (TestCase)Adequacy.testCases.get((String)tmp.get(k));
 						double CI_temp = temp.CI;
 						if (CI_temp < CI_testcase) {// right place to insert CI
-							tmp.add(k, (TestCase) Adequacy.testCases
-									.get(testcase));
+							tmp.add(k, testcase);
 							break;
 						}
 					}
+					if(k == tmp.size()){ //add it to the tail of sequences
+						tmp.add(testcase);
+					}
 				} else {
-					tmp.add((TestCase) Adequacy.testCases.get(testcase));
+					tmp.add(testcase);
 				}
+			}
+			if(trial > 20){
+				System.out.println("Trail(TestSet):" + trial + "\ttmp.size():" + tmp.size() + "\tsize:" + this.size());
 			}
 		} while (tmp.size() < 10);
 		
 		//3. use nearest neighbors to determine which test case in tmp should be returned
 		ArrayList minDistances = new ArrayList();
 		for(int i = 0; i < tmp.size(); i ++){
-			TestCase tc = (TestCase)tmp.get(i);
+			TestCase tc = (TestCase)Adequacy.testCases.get((String)tmp.get(i));
 			double minDis = Double.MAX_VALUE;
 			for(int j = 0; j < CI_testcases.size(); j ++){
 				double distance = Math.abs(tc.CI-(Double)CI_testcases.get(j));
@@ -177,7 +191,8 @@ public class TestSet {
 			}
 		}
 		
-		return ((TestCase)tmp.get(index)).index; 
+		return (String)tmp.get(index);
+//		return ((TestCase)Adequacy.testCases.get((String)tmp.get(index))).index; 
 		
 	}
 	
