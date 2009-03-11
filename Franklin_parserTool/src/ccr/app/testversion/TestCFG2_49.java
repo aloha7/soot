@@ -472,7 +472,7 @@ public class TestCFG2_49 extends Application {
 		}
 		
 	//	Double result = new Double(distance);
-		ApplicationResult result = new ApplicationResult(moved, reliable, counter);
+		ApplicationResult result = new ApplicationResult(moved, reliable);
 		// EXIT // NODE
 		
 		return result;
@@ -724,7 +724,7 @@ public class TestCFG2_49 extends Application {
 	private int toBoolean(double d) {
 		
 		int result = 0;
-		if(d>NOISE){
+		if (d != (double) 0) {
 			result = 1;
 		}
 		return result;

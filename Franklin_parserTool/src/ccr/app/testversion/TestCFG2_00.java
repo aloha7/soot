@@ -97,8 +97,8 @@ public class TestCFG2_00 extends Application {
 		curEstY = estLoc.y;
 		
 		// Apply the noise
-		curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;  // [- NOISE, + NOISE)
-		curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;  // [- NOISE, + NOISE)
+		curEstX = curEstX + ((double) /*2 **/ rand.nextDouble() - (double) 1) * NOISE;  // Seeded fault // [- NOISE, + NOISE)
+		curEstY = curEstY + ((double) /*2 **/ rand.nextDouble() - (double) 1) * NOISE;  // Seeded fault // [- NOISE, + NOISE)
 		
 		// Decide the time we should wait before sending the next context
 		t = 0;  // Only for the first time
@@ -472,7 +472,7 @@ public class TestCFG2_00 extends Application {
 		}
 		
 	//	Double result = new Double(distance);
-		ApplicationResult result = new ApplicationResult(moved, reliable, counter);
+		ApplicationResult result = new ApplicationResult(moved, reliable);
 		// EXIT // NODE
 		
 		return result;
@@ -724,7 +724,7 @@ public class TestCFG2_00 extends Application {
 	private int toBoolean(double d) {
 		
 		int result = 0;
-		/*if(d!=(double)0){*/if(d>NOISE){
+		if (d != (double) 0) {
 			result = 1;
 		}
 		return result;
