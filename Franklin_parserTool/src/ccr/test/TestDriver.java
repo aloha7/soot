@@ -18,8 +18,7 @@ public class TestDriver {
 	//2009-02-26: keep all execution records
 	public static HashMap traceTable = new HashMap(); 
 	
-	//2009-02-26: keep all execution results of a test case with respect to a fault
-	public static HashMap resultTable = new HashMap();
+	
 	
 	public static final String WORK_FOLDER = System.getProperty("user.dir")
 			+ File.separator + "src" + File.separator + "ccr" + File.separator
@@ -50,15 +49,20 @@ public class TestDriver {
 
 	public static String[] getTrace(String appClassName, String testcase) {
 
-		if(traceTable.containsKey(testcase)){
-			return (String[])traceTable.get(testcase);
-		}else{
-			Trace.getInstance().initialize();
-			run(APPLICATION_PACKAGE + "." + appClassName, testcase);
-			String[] records =Trace.getInstance().getTrace();
-			traceTable.put(testcase, records);
-			return 	records;
-		}
+//		if(traceTable.containsKey(testcase)){
+//			return (String[])traceTable.get(testcase);
+//		}else{
+//			Trace.getInstance().initialize();
+//			run(APPLICATION_PACKAGE + "." + appClassName, testcase);
+//			String[] records =Trace.getInstance().getTrace();
+//			traceTable.put(testcase, records);
+//			return 	records;
+//		}
+		
+		Trace.getInstance().initialize();
+		run(APPLICATION_PACKAGE + "." + appClassName, testcase);
+		String[] records =Trace.getInstance().getTrace();
+		return 	records;
 		
 	}
 
