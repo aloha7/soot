@@ -15,6 +15,7 @@ public class ScriptManager {
 	}
 	
 	
+	
 	public static String exeRandomTS_Script(int min_TestSuiteSize, int max_TestSuiteSize,
 			String date){
 //		int interval = 18;
@@ -310,6 +311,28 @@ public class ScriptManager {
 		return sb.toString();
 	}
 
+	public static void genFailureRate_TS(String date, String saveFile){
+		int start = 0;
+		int end = 140;
+		int interval = 7;
+		
+		StringBuilder sb = new StringBuilder();
+		
+		for(int i = start; i < end; i = i + interval){
+			int min = i;
+			int max = i + interval;
+			if(max >= end)
+				max = end;
+			
+			sb.append("java ccr.test.TestManager " + min + " " 
+					+ max + " " + date + " &\n");
+			
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
 	
 	public static void main(String[] args) {
 		System.out
@@ -491,6 +514,11 @@ public class ScriptManager {
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/CIPerformance.sh";
 			ScriptManager.save(sb.toString(), saveFile);
+		}else if(instruction.equals("getFailureRate")){
+			
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/getFailureRate.sh";
+			ScriptManager.genFailureRate_TS(date, saveFile);
 		}
 	}
 }
