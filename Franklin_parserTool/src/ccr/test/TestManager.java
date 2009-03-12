@@ -1,7 +1,9 @@
 package ccr.test;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -160,12 +162,65 @@ public class TestManager {
 	}
 	
 	
+	
+	public static void getFailureRateFromFile(String executionFile, boolean containHeader, TestSet testpool, String saveFile){
+		try {
+//			sb.append("FaultyVersion" + "\t" + "TestCase" +"\t"+ "PorF" + "\t"+"CI"+"\n");
+			HashMap fault_validTestCases = new HashMap();
+			BufferedReader br = new BufferedReader(new FileReader(executionFile));
+			String line = null;
+			if(containHeader)
+				br.readLine();
+			
+			while((line= br.readLine())!= null){
+				String[] strs = line.split("\t");
+				String fault = strs[0];
+				String testcase = strs[1];
+				String PorF = strs[2];
+				if(!fault_validTestCases.containsKey(fault))
+					fault_validTestCases.put(fault, new ArrayList());
+				
+				if(PorF.equals("F")){
+					ArrayList validTestCases;
+					validTestCases = (ArrayList)fault_validTestCases.get(fault);
+					validTestCases.add(testcase);
+					fault_validTestCases.put(fault, validTestCases);
+				}else{
+					
+				}
+			}
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append("FaultyVersion" + "\t" + "FailureRate" + "\t" + "Avg.CIOfValidTestCases"+ "\t\n");
+			Iterator ite = fault_validTestCases.keySet().iterator();
+			while(ite.hasNext()){
+				String fault = (String)ite.next();
+				ArrayList validTestCases = (ArrayList)fault_validTestCases.get(fault);
+				double failureRate = (double)validTestCases.size()/(double)testpool.size();
+				
+				TestSet ts = new TestSet(); 
+				for(int i = 0; i < validTestCases.size(); i ++){
+					ts.add(validTestCases.get(i)+"");
+				}
+				sb.append(fault + "\t" + failureRate + "\t");
+				sb.append(Adequacy.getAverageCI(ts)+"\n");
+			}
+			
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	//2009-02-23: get failure rate 
 	public static void main(String[] args) {
 		
 		int startVersion = 0;
 		int endVersion = 140;
-		String date = "20090226";
+		String date = "debug";
 		if(args.length==3){
 			startVersion = Integer.parseInt(args[0]);
 			endVersion = Integer.parseInt(args[1]);
@@ -179,6 +234,11 @@ public class TestManager {
 		//2.get failure rate of each faulty versions
 		getFailureRate("testversion", "TestCFG2", testpool,
 		"src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/", startVersion, endVersion);
+		
+//		boolean containHeader = true;
+//		String executionFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/detailed.txt";
+//		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/FaulureRateDetail.txt";
+//		getFailureRateFromFile(executionFile, containHeader, testpool, saveFile);
 	}
 
 }
