@@ -159,6 +159,45 @@ public class ResultAnalyzer {
 		return CIRange_CIStatistic;
 	}
 	
+	
+	public static void mergeFiles(String srcDir, boolean containHeader, String pattern, String saveFile){
+		File[] files = new File(srcDir).listFiles();
+		StringBuilder sb = new StringBuilder();
+		boolean writeHeader = false;
+		for(File file: files){
+			
+			String fileName = file.getName();
+			if(fileName.matches(pattern)){
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					String str = null;
+					
+					
+					if(containHeader && writeHeader) //write the header only once
+						br.readLine();
+					else{
+						sb.append( br.readLine()+ "\n");
+						writeHeader = true;
+					}
+					
+					while((str = br.readLine())!= null){
+						sb.append(str+"\n");
+					}
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	/**2009-02-24: due to the concurrent execution, we need to merge those partial results into a complete one 
 	 * 
 	 * @param srcDir
@@ -1026,13 +1065,14 @@ public class ResultAnalyzer {
 		boolean containHeader = true;
 		Adequacy.getTestPool(testcaseFile, containHeader);
 		
-		//2009-02-22: load failure rates from a file, this
+		//2009-02-22: load failure rates from a file
+		containHeader = false;
 		String failureRateFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/failureRate.txt";
 		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
 
 		//2009-02-24: merge files
 		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";
-		
+		containHeader = true;
 		String[] criteria = new String[]{
 				//Group 1
 //				"RandomTestSets_21",
@@ -1177,7 +1217,12 @@ public class ResultAnalyzer {
 				criterion_CIPerformance.put(criterion, ResultAnalyzer.getCIPerValidTestSet(srcDir, criterion, containHeader));
 			}
 			ResultAnalyzer.getCorrelationCIPeformance(criteria, criterion_CIs, criterion_CIPerformance, saveFile);
+		}else if(instruction.equals("mergeFiles")){
+			containHeader = true;
+			String prefix = args[2];
+			String pattern = prefix + "\\_[0-9]+\\_[0-9]+\\.txt";
+			String saveFile = srcDir + prefix + ".txt"; 
+			ResultAnalyzer.mergeFiles(srcDir, containHeader, pattern, saveFile);
 		}
-		
 	}
 }

@@ -111,7 +111,7 @@ public class ExecutionManager {
 				// 2009-03-05: only interest in faults specified in a list
 				String saveFile = testSetFile.substring(0, testSetFile
 						.indexOf("."))
-						+ "_limited.txt";
+						+ "_limited_load.txt";
 
 				String faultListFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 						+ date + "/FaultList.txt";
@@ -307,6 +307,33 @@ public class ExecutionManager {
 				// 3. test the specified faults
 				TestDriver.test_load(testSets, faultList, execHistory, saveFile);
 				
+			}else if (instruction.equals("Limited")) {
+				// 2009-03-05: only interest in faults specified in a list
+				saveFile = testSetFile.substring(0, testSetFile
+						.indexOf("."))
+						+ "_limited_load.txt";
+
+				String faultListFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date + "/FaultList.txt";
+
+				// 1. load the fault list
+				ArrayList faultList = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(
+							faultListFile));
+					String line = null;
+					while ((line = br.readLine()) != null) {
+						faultList.add(line.trim());
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				// 2.run the test
+				String versionPackageName = "testversion";
+				TestDriver.test(versionPackageName, "TestCFG2", testSets,
+						saveFile, faultList);
 			}
 		}else if(args.length == 2){
 			//specify the test set file directly, used to execute test sets whose CI are fixed in a small range

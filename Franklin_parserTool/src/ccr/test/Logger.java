@@ -215,6 +215,7 @@ public class Logger {
 	 */
 	public void changePackage(String srcDir, String destDir, String type, String packageName){
 		
+		
 	}
 	
 	

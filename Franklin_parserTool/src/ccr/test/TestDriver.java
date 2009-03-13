@@ -48,21 +48,22 @@ public class TestDriver {
 	}
 
 	public static String[] getTrace(String appClassName, String testcase) {
-
-//		if(traceTable.containsKey(testcase)){
-//			return (String[])traceTable.get(testcase);
-//		}else{
-//			Trace.getInstance().initialize();
-//			run(APPLICATION_PACKAGE + "." + appClassName, testcase);
-//			String[] records =Trace.getInstance().getTrace();
-//			traceTable.put(testcase, records);
-//			return 	records;
-//		}
 		
-		Trace.getInstance().initialize();
-		run(APPLICATION_PACKAGE + "." + appClassName, testcase);
-		String[] records =Trace.getInstance().getTrace();
-		return 	records;
+		//2009-03-13: it is true that multiple running of a test case generates the same outputs.
+		if(traceTable.containsKey(testcase)){
+			return (String[])traceTable.get(testcase);
+		}else{
+			Trace.getInstance().initialize();
+			run(APPLICATION_PACKAGE + "." + appClassName, testcase);
+			String[] records =Trace.getInstance().getTrace();
+			traceTable.put(testcase, records);
+			return 	records;
+		}
+		
+//		Trace.getInstance().initialize();
+//		run(APPLICATION_PACKAGE + "." + appClassName, testcase);
+//		String[] records =Trace.getInstance().getTrace();
+//		return 	records;
 		
 	}
 
@@ -326,8 +327,8 @@ public class TestDriver {
 								+ "."
 								+ appClassName.substring(0, appClassName
 										.indexOf(".java"));
-						int faultyVersion =Integer.parseInt(appClassName.substring(appClassName.indexOf("_")+"_".length())); 
-						if(!faultList.contains(""+faultyVersion))
+						String faultyVersion =appClassName.substring(appClassName.indexOf("_")+"_".length()); 
+						if(!faultList.contains(faultyVersion))
 							continue;
 						
 
