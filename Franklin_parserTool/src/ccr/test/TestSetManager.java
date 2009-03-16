@@ -1575,13 +1575,13 @@ public class TestSetManager {
 				for (int i = 0; i < testSetNum; i++) {
 					
 					//2009-03-14: we favor test cases with low CI
-					testSets[i] = TestSetManager.getAdequacyTestSet_refined_favorLowCI(
-							appClassName, c, testpool, maxTrials);
+//					testSets[i] = TestSetManager.getAdequacyTestSet_refined_favorLowCI(
+//							appClassName, c, testpool, maxTrials);
 					
-					//2009-03-10: we use ART to generate adequate test sets
-//					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
-//							appClassName, c, testpool, maxTrials, min_CI,
-//							max_CI);
+					//2009-03-10: we use ART+generalReplacement to favor test cases with higher CI
+					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
+							appClassName, c, testpool, maxTrials, min_CI,
+							max_CI);
 					
 					
 					//2009-03-10: we use ART to generate adequate test sets
@@ -1614,13 +1614,14 @@ public class TestSetManager {
 				for (int i = 0; i < testSetNum; i++) {
 					
 					//2009-03-14: we favor test cases with lower CI
-					testSets[i] = TestSetManager.getAdequacyTestSet_refined_fixSize_favorLowCI(appClassName,
-							c, testpool, maxTrials, testSuiteSize, randomOrCriteria);
-					
-//					testSets[i] = TestSetManager
-//							.getAdequacyTestSet_refined_fixSize(appClassName,
-//									c, testpool, maxTrials, min_CI, max_CI,
-//									testSuiteSize, randomOrCriteria);
+//					testSets[i] = TestSetManager.getAdequacyTestSet_refined_fixSize_favorLowCI(appClassName,
+//							c, testpool, maxTrials, testSuiteSize, randomOrCriteria);
+				
+					//2009-03-16: ART+generalReplacement to favor test cases with higher CI
+					testSets[i] = TestSetManager
+							.getAdequacyTestSet_refined_fixSize(appClassName,
+									c, testpool, maxTrials, min_CI, max_CI,
+									testSuiteSize, randomOrCriteria);
 					
 					//2009-03-10: we use ART to generate adequate test sets
 //					testSets[i] = TestSetManager.getAdequacyTestSet_ART_fixSize(appClassName, 
