@@ -160,6 +160,88 @@ public class ResultAnalyzer {
 	}
 	
 	
+	/**2009-03-17: filter faults whose failure rate is below threshHold 
+	 * 
+	 * @param srcFaultFile
+	 * @param threshHold
+	 * @param saveFile
+	 */
+	public static ArrayList filterFaults(String srcFaultFile, boolean containHeader, double threshHold){
+		ArrayList faults = new ArrayList();
+		try {
+			
+			BufferedReader br = new BufferedReader(new FileReader(srcFaultFile));
+			String line = null;
+			
+			if(containHeader)
+				br.readLine();
+			
+			while((line = br.readLine())!= null){
+				String[] strs = line.split("\t");
+				String fault = strs[0];
+				double failureRate = Double.parseDouble(strs[1]);
+				if(failureRate <= threshHold){
+					faults.add(fault);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return faults;
+	}
+	
+	
+	/**2009-03-17: filter faults whose failure rate is below threshHold, save results into a file 
+	 * 
+	 * @param srcFaultFile
+	 * @param threshHold
+	 * @param saveFile
+	 */
+	public static ArrayList filterFaults(String srcFaultFile, boolean containHeader, double threshHold, String saveFile){
+		ArrayList faults = new ArrayList();
+		try {
+			
+			BufferedReader br = new BufferedReader(new FileReader(srcFaultFile));
+			String line = null;
+			StringBuilder sb = new StringBuilder();
+			if(containHeader)
+				br.readLine();
+			
+			while((line = br.readLine())!= null){
+				String[] strs = line.split("\t");
+				String fault = strs[0];
+				double failureRate = Double.parseDouble(strs[1]);
+				if(failureRate <= threshHold){
+					sb.append(fault+"\t" + failureRate + "\n");
+					faults.add(fault);
+				}
+			}
+			
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return faults;
+	}
+	
+	/**2009-03-17: a powerful method to merge all files generated distributedly
+	 * 
+	 * @param srcDir
+	 * @param containHeader
+	 * @param pattern
+	 * @param saveFile
+	 */
 	public static void mergeFiles(String srcDir, boolean containHeader, String pattern, String saveFile){
 		File[] files = new File(srcDir).listFiles();
 		StringBuilder sb = new StringBuilder();
@@ -1068,7 +1150,7 @@ public class ResultAnalyzer {
 		//2009-02-22: load failure rates from a file
 		containHeader = false;
 		String failureRateFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/failureRate.txt";
-		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
+//		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
 
 		//2009-02-24: merge files
 		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";
