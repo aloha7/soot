@@ -683,9 +683,191 @@ public class TestDriver {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
 	}
+	
+	/**2009-03-17: get failure rates of interest faults specified in a faultList(from
+	 * start to end)
+	 * 
+	 * @param versionPackageName
+	 * @param oracleClassName
+	 * @param testpool
+	 * @param reportDir
+	 * @param faultList
+	 * @param start
+	 * @param end
+	 */
+	public static void getFailureRate_interest(String versionPackageName, String oracleClassName, 
+			TestSet testpool, String reportDir, ArrayList faultList, int start, int end){
+		for(int i = start; i < end; i ++){
+			int fault = Integer.parseInt((String)faultList.get(i));
+			TestManager.getFailureRate(versionPackageName, oracleClassName, 
+					testpool, reportDir, fault, fault + 1);
+		}
+	}
+	
+	
+	/**2009-03-16: get failure rates of faults specified in a range
+	 * 
+	 * @param versionPackageName
+	 * @param oracleClassName
+	 * @param testpool
+	 * @param reportDir
+	 * @param startVersion
+	 * @param endVersion
+	 */
+	public static void getFailureRate(String versionPackageName, String oracleClassName, TestSet testpool, String reportDir,
+			int startVersion, int endVersion){
+		try {
+			Oracle oracle = new Oracle(APPLICATION_PACKAGE + "."
+					+ oracleClassName, testpool);
+			String versionFolder = APPLICATION_FOLDER + "/"
+					+ versionPackageName;
+			File versions = new File(versionFolder);
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append("FaultyVersion" + "\t" + "TestCase" +"\t"+ "PorF" + "\t"+"CI"+"\n");
+			
+			HashMap failureRate = new HashMap(); //keep all valid test cases for a specified fault
+			for(int i = 0 ; i < versions.list().length; i ++){					
+				if((versions.listFiles()[i]).isFile()){
+					String appClassName = versions.list()[i];
+					appClassName = appClassName.substring(appClassName.indexOf("_") + "_".length(), appClassName.indexOf(".java"));
+
+					if(Integer.parseInt(appClassName) >= startVersion && Integer.parseInt(appClassName) < endVersion)
+						failureRate.put(appClassName, new ArrayList());
+				}
+			}
+			
+			HashMap validTestCase = new HashMap(); //keep all exposed faults for a specified test case
+			for(int i = 0; i < testpool.size(); i ++){
+				validTestCase.put(testpool.get(i), new ArrayList());
+			}
+			
+			long startTime = System.currentTimeMillis();
+			for (int i = 0; i < versions.list().length; i++) {
+				//for each faulty version
+				if (versions.listFiles()[i].isFile()) {
+					String appClassName = versions.list()[i];
+					StringBuilder tmp = new StringBuilder();
+					tmp.append(APPLICATION_PACKAGE);
+					tmp.append(".");
+					tmp.append(versionPackageName);
+					tmp.append(".");
+					tmp.append(appClassName.substring(0, appClassName.indexOf(".java")));
+					appClassName = tmp.toString();
+					
+					//2009-02-22: add this statement to support concurrent execution
+					if(!failureRate.containsKey(appClassName.substring(appClassName.indexOf("_") + "_".length())))
+						continue;
+					
+					int detected = 0;
+					System.out.println("Start version:" + appClassName.substring(appClassName.indexOf("_")+"_".length()));
+					for (int j = 0; j < testpool.size(); j++) {
+						long startTime1 = System.currentTimeMillis();
+						ApplicationResult result = (ApplicationResult) run(
+								appClassName, testpool.get(j));
+						long last = System.currentTimeMillis() - startTime1;
+						
+						//fault version
+						sb.append(appClassName.substring(appClassName.indexOf("_")+"_".length()));
+						sb.append("\t");
+						//test case
+						sb.append(testpool.get(j));
+						sb.append("\t");
+								
+						if (!result.equals(oracle.getOutcome(testpool.get(j)))) {
+							detected = detected + 1;
+							String faultName = appClassName.substring(appClassName.indexOf("_")+"_".length());
+							((ArrayList)failureRate.get(faultName)).add(testpool.get(j));
+//							((ArrayList)validTestCase.get(testpool.get(j))).add(appClassName.substring(appClassName.indexOf("_")+"_".length()));
+							// Pass or Fail
+							sb.append("F");
+							sb.append("\t");
+							
+							// CI
+							sb.append(((TestCase)Adequacy.testCases.get(testpool.get(j))).CI);
+							sb.append("\n");
+						} else
+							//Pass or Fail
+							sb.append("P");
+							sb.append("\t");
+							
+							//CI
+							sb.append(((TestCase)Adequacy.testCases.get(testpool.get(j))).CI);
+							sb.append("\n");
+					}
+				}
+			}
+			
+//			//detailed result
+//			BufferedWriter bw = new BufferedWriter(new FileWriter(reportDir + "/detailed_"+startVersion+ "_"+ endVersion+".txt"));
+//			bw.write(sb.toString());
+//			bw.close();
+			
+			//failure rate of faulty version
+			BufferedWriter bw = new BufferedWriter(new FileWriter(reportDir + "/failureRate_"+startVersion+ "_"+ endVersion + ".txt"));
+			Iterator ite = failureRate.keySet().iterator();
+			StringBuilder temp = new StringBuilder();
+			temp.append("FaultyVersion" + "\t" + "FailureRate" + "\n");
+			while(ite.hasNext()){ //for each faulty version
+				String faultyVersion = (String)ite.next();
+				ArrayList validTestCases = (ArrayList)failureRate.get(faultyVersion);
+				//get faulty version and failure rate
+				temp.append(faultyVersion + "\t" + (double)validTestCases.size()/(double)testpool.size() + "\t");
+				
+				//get Avg.CI of validTestCase
+//				if(validTestCases.size() > 0){
+//					//the failure rate of faults is not 0
+//					TestSet ts = new TestSet(); 
+//					for(int i = 0; i < validTestCases.size(); i ++){
+//						ts.add(validTestCases.get(i)+"");
+//					}
+//					temp.append(Adequacy.getAverageCI(ts)+"\n");
+//				}else{
+//					temp.append("0.0" + "\n");
+//				}
+//				
+			}
+			bw.write(temp.toString());
+			bw.flush();
+			bw.close();
+			
+			//valid test cases exposed faults
+//			bw = new BufferedWriter(new FileWriter(reportDir + "/validTestCases_"+startVersion+ "_"+ endVersion + ".txt"));
+//			ite = validTestCase.keySet().iterator();
+//			StringBuilder tmp = new StringBuilder();
+//			tmp.append("TestCase" + "\t" + "#ExposedFault" + "\t" + "CI" + "\t" + "Avg.FailureRate" + "\n");
+//			while(ite.hasNext()){ //for each faulty version
+//				String testcase = (String)ite.next();
+//				ArrayList exposedFault = (ArrayList)validTestCase.get(testcase);
+//				//get test case and exposed faults
+//				tmp.append(testcase + "\t" + exposedFault.size() + "\t");
+//				
+//				//get CI of test case
+//				tmp.append(((TestCase)Adequacy.testCases.get(testcase)).CI + "\t");
+//				
+//				//get Avg.failure rate of exposed faults
+//				double sum_failureRate = 0.0;
+//				if(exposedFault.size() > 0){
+//					for(int i = 0; i < exposedFault.size(); i ++){
+//						String fault = (String)exposedFault.get(i);
+//						sum_failureRate += (double)((ArrayList)failureRate.get(fault)).size()/(double)testpool.size();
+//					}
+//					tmp.append(sum_failureRate/(double)exposedFault.size()+"\n");	
+//				}else{
+//					tmp.append("0.0"+"\n");
+//				}
+//			}
+//			bw.write(tmp.toString());
+//			bw.flush();
+//			bw.close();
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+
+	}
+	
+	
 	
 	public static ArrayList getSharedTestCases(ArrayList testSet_src, ArrayList testSet_dest){
 		ArrayList sharedTC = new ArrayList();
@@ -774,9 +956,17 @@ public class TestDriver {
 		String date = argv[1];
 		
 		if(instruction.equals("getFailureRate")){
-			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/TestPool.txt";
-			getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
-					"src/ccr/experiment/Context-Intensity_backup/TestHarness/20090221/");	
+			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
+			if(argv.length == 2){
+				getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/");	
+			}else if(argv.length == 4){
+				int startVersion = Integer.parseInt(argv[2]);
+				int endVersion = Integer.parseInt(argv[3]);
+				TestDriver.getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true), 
+						"src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/", 
+						startVersion, endVersion);
+			}
 		}else if(instruction.equals("getFaultCI")){
 			String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";
 			String failureRateFile = srcDir + "failureRate.txt";
