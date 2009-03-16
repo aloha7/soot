@@ -1,8 +1,19 @@
 package ccr.test;
 
+import java.io.BufferedWriter;
 import java.util.*;
 
 public class Oracle {
+	
+	private static Oracle m_Oracle;
+
+	public static Oracle getInstance(String appClassName, TestSet t) {
+		if (m_Oracle == null) {
+			m_Oracle = new Oracle(appClassName, t);
+		}
+		return m_Oracle;
+	}
+	
 	
 	private final TestSet testpool;
 	private HashMap outcome;
