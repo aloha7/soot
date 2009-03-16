@@ -97,10 +97,11 @@ public class Logger {
 		}
 	}
 	
-	public static int duplicateFlag = 1;
+	public static int duplicateFlag = 140;
 
 	public void moveFiles(String srcDir, String destDir, String type){
 		try {
+			
 			File src = new File(srcDir);
 			if(src.exists()){
 				File dest = new File(destDir);
@@ -111,6 +112,7 @@ public class Logger {
 					BufferedReader br = new BufferedReader(new FileReader(src));
 					String srcFile = src.getName();
 					String srcType = srcFile.substring(srcFile.indexOf(".") + ".".length());
+					
 					if(srcType.equals(type)){
 						//destFile: TourApp.java -> TourApp_1.java
 						String destFile = srcFile.substring(0, srcFile.indexOf(".")) + "_"+duplicateFlag + srcFile.substring(srcFile.indexOf("."));
@@ -125,10 +127,20 @@ public class Logger {
 						bw.write(sb.toString());
 						bw.close();
 						br.close();
-					}					
+						
+						String[] temp = src.getAbsolutePath().split("\\\\");
+						String src_File = temp[temp.length-2];
+						
+						Logger.getInstance().setPath(destDir + "/MappingList.txt", true);
+						Logger.getInstance().write(src_File + "\t" + destFile + "\n");
+						Logger.getInstance().close();
+					}
+					
+					
 				}else{
 					File[] files = src.listFiles();
 					for(File file: files){
+						String path = file.getAbsolutePath();
 						this.moveFiles(file.getPath(), destDir, type);
 					}
 				}
@@ -147,8 +159,12 @@ public class Logger {
 	}
 	
 	
-	
-	public void changePackage(String srcDir, String packageName){
+	/**2009-03-16: change the package name
+	 * 
+	 * @param srcDir
+	 * @param packageName: the desirable package name
+	 */
+	public void changePackage(String srcDir, String destDir, String packageName){
 		try {
 			File src = new File(srcDir);			
 			if(src.exists()){
@@ -160,20 +176,21 @@ public class Logger {
 					while((line = br.readLine())!= null){
 						if(line.indexOf("package")!=-1){ //change the package						
 							sb.append("package " + packageName + ";\n");
-							sb.append("import context.test.contextIntensity.*;\n");
-							sb.append("import context.apps.Tour.*;\n");
-						}else if(line.indexOf("public class")!= -1){
+							sb.append("import ccr.app.*;");
+//							sb.append("import context.test.contextIntensity.*;\n");
+//							sb.append("import context.apps.Tour.*;\n");
+						}else if(line.indexOf("public class")!= -1){//change the class name 
 							int i = line.indexOf("public class") + "public class".length();
 							i = line.indexOf(" ", i);
 							int j = line.indexOf(" ", i + 1);
 							
 							sb.append(line.substring(0, i + 1) + className + line.substring(j) +  "\n");
-						}else if(line.indexOf("TourApp")!= -1 && line.indexOf("TourAppFrame")==-1 && line.indexOf("context.apps.Tour.TourApp")==-1){							
+						/*}else if(line.indexOf("TourApp")!= -1 && line.indexOf("TourAppFrame")==-1 && line.indexOf("context.apps.Tour.TourApp")==-1){							
 							sb.append(line.replaceAll("TourApp", className) + "\n");
 						}else if(line.indexOf("context.apps.Tour.TourApp")!=-1 ){
 							if( line.indexOf("TourAppFrame")==-1){
 								sb.append(line.replaceAll("context.apps.Tour.TourApp", packageName + "." + className)+ "\n");				
-							}
+							}*/
 						}else{
 							sb.append(line + "\n");
 						}
@@ -183,14 +200,16 @@ public class Logger {
 //					content.replaceAll("TourApp", className);
 					
 					br.close();
-					BufferedWriter bw =new BufferedWriter(new FileWriter(src.getPath()));
+					BufferedWriter bw =new BufferedWriter(new FileWriter(destDir));
 					bw.write(sb.toString());
 					bw.close();
 				}else{
 					File[] files = src.listFiles();
 					for(File temp: files){
 						if(temp.getName().contains(".java")){
-							this.changePackage(temp.getPath(), packageName);	
+//							destDir += "/" + temp.getName();
+							String dest = destDir + "/" + temp.getName();
+							this.changePackage(temp.getPath(), dest, packageName);	
 						}
 					}
 				}
@@ -204,30 +223,15 @@ public class Logger {
 		}
 	}
 	
-	
-		
-	/**
-	 * 
-	 * @param srcDir
-	 * @param destDir
-	 * @param type: can be ".java" or ".class"
-	 * @param packageName
-	 */
-	public void changePackage(String srcDir, String destDir, String type, String packageName){
-		
-		
-	}
-	
-	
 
 	public static void main(String[] args) {
-		String srcDir = "C:\\WangHuai\\Martin\\Eclipse3.4\\ContextToolkit_intensity\\temp";
-		String destDir = "C:\\WangHuai\\Martin\\Eclipse3.3.1\\ContextToolkit_intensity\\src\\context\\apps\\Tour\\mutants";
-		String packageName = "a";
+		String srcDir = System.getProperty("user.dir") +"/result";
+		String destDir = System.getProperty("user.dir") + "/MuJava";
+//		String packageName = "a";
 		String type = "java";
 //		Logger.getInstance().delete(destDir);
 //		Logger.getInstance().moveFiles(srcDir, destDir, type);
 		
-		Logger.getInstance().changePackage(destDir, "context.apps.Tour.mutants");
+		Logger.getInstance().changePackage(destDir, System.getProperty("user.dir") + "/temp/","ccr.app.testversion");
 	}
 }
