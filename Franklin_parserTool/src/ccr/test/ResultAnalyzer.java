@@ -1075,33 +1075,33 @@ public class ResultAnalyzer {
 		containHeader = true;
 		String[] criteria = new String[]{
 				//Group 1
-//				"RandomTestSets_21",
+				"RandomTestSets_27",
 				"AllPoliciesTestSets_old",
 				"AllPoliciesTestSets_new",
-//				"RandomTestSets_39",
+				"RandomTestSets_42",
 				"All1ResolvedDUTestSets_old",
 				"All1ResolvedDUTestSets_new",
-//				"RandomTestSets_47",
+				"RandomTestSets_50",
 				"All2ResolvedDUTestSets_old",
 				"All2ResolvedDUTestSets_new",
 				
 				//Group 2
-//				"RandomTestSets_56",
-				"AllPoliciesTestSets_old_random_56",
-				"AllPoliciesTestSets_new_random_56",
-				"All1ResolvedDUTestSets_old_random_56",
-				"All1ResolvedDUTestSets_new_random_56",
-				"All2ResolvedDUTestSets_old_random_56",
-				"All2ResolvedDUTestSets_new_random_56",
+				"RandomTestSets_62",
+				"AllPoliciesTestSets_old_random_62",
+				"AllPoliciesTestSets_new_random_62",
+				"All1ResolvedDUTestSets_old_random_62",
+				"All1ResolvedDUTestSets_new_random_62",
+				"All2ResolvedDUTestSets_old_random_62",
+				"All2ResolvedDUTestSets_new_random_62",
 
 				//Group 3
 //				"RandomTestSets_56",
-				"AllPoliciesTestSets_old_criteria_56",
-				"AllPoliciesTestSets_new_criteria_56",
-				"All1ResolvedDUTestSets_old_criteria_56",
-				"All1ResolvedDUTestSets_new_criteria_56",
-				"All2ResolvedDUTestSets_old_criteria_56",
-				"All2ResolvedDUTestSets_new_criteria_56",
+				"AllPoliciesTestSets_old_criteria_62",
+				"AllPoliciesTestSets_new_criteria_62",
+				"All1ResolvedDUTestSets_old_criteria_62",
+				"All1ResolvedDUTestSets_new_criteria_62",
+				"All2ResolvedDUTestSets_old_criteria_62",
+				"All2ResolvedDUTestSets_new_criteria_62",
 		};
 		
 		if(instruction.equals("Context_Intensity") ||instruction.equals("Limited")||instruction.equals("Load")){

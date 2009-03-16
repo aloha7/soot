@@ -203,28 +203,63 @@ public class TestSet {
 	 */
 	public String getByART(int i){
 		Vector tmp = new Vector();
-		//randomly get a test set S containing 10 test cases 
-		do{
+		//randomly get a test set S containing 10 test cases
+		
+		int trial = 0;
+		do {
 			String testcase = this.getByRandom();
-			if(!tmp.contains(testcase)){
-				//sort test cases in tmp
-				double CI_testcase = ((TestCase)Adequacy.testCases.get(testcase)).CI;
-				if(tmp.size()!=0){
-					for(int k = 0; k < tmp.size(); k ++){
-						TestCase temp = (TestCase)tmp.get(k);
+			
+//			System.out.println("testcase(TestSet):" + testcase);
+			
+			trial ++;
+			if (!tmp.contains(testcase)) {
+				
+				// sort test cases in tmp in descending orders
+				double CI_testcase = ((TestCase) Adequacy.testCases
+						.get(testcase)).CI;
+				if (tmp.size() != 0) {
+					int k = 0;
+					for (; k < tmp.size(); k++) {
+						TestCase temp = (TestCase)Adequacy.testCases.get((String)tmp.get(k));
 						double CI_temp = temp.CI;
-						if(CI_temp < CI_testcase){//right place to insert CI
-							tmp.add(k, (TestCase)Adequacy.testCases.get(testcase));
+						if (CI_temp < CI_testcase) {// right place to insert CI
+							tmp.add(k, testcase);
 							break;
 						}
 					}
-				}else{
-					tmp.add((TestCase)Adequacy.testCases.get(testcase));
+					if(k == tmp.size()){ //add it to the tail of sequences
+						tmp.add(testcase);
+					}
+				} else {
+					tmp.add(testcase);
 				}
 			}
-		}while(tmp.size()< 10);
+			if(trial > 20){
+				System.out.println("Trail(TestSet):" + trial + "\ttmp.size():" + tmp.size() + "\tsize:" + this.size());
+			}
+		} while (tmp.size() < 10);
+		return (String)tmp.get(i);
+//		do{
+//			String testcase = this.getByRandom();
+//			if(!tmp.contains(testcase)){
+//				//sort test cases in tmp
+//				double CI_testcase = ((TestCase)Adequacy.testCases.get(testcase)).CI;
+//				if(tmp.size()!=0){
+//					for(int k = 0; k < tmp.size(); k ++){
+//						TestCase temp = (TestCase)tmp.get(k);
+//						double CI_temp = temp.CI;
+//						if(CI_temp < CI_testcase){//right place to insert CI
+//							tmp.add(k, (TestCase)Adequacy.testCases.get(testcase));
+//							break;
+//						}
+//					}
+//				}else{
+//					tmp.add(testcase);
+//				}
+//			}
+//		}while(tmp.size()< 10);
 		
-		return ((TestCase)tmp.get(i)).index;
+//		return ((TestCase)tmp.get(i)).index;
 		
 	}
 	

@@ -24,7 +24,7 @@ public class ScriptManager {
 		
 		StringBuilder sb = new StringBuilder();
 		for(int testSuiteSize = min_TestSuiteSize; testSuiteSize < max_TestSuiteSize; testSuiteSize ++){
-			sb.append("java ccr.test.ExecutionManager "+ instruction +" " +testSuiteSize + " " + date + " &\n");
+			sb.append("java ccr.test.ExecutionManager "+ instruction +" " +testSuiteSize + " " + date + " \n");
 //			if (testSuiteSize % interval == 0) { // sleep a fixed time if a specified
 //				// interval is reached
 //				sb.append("sleep " + sleep_sed + "\n");
@@ -439,9 +439,9 @@ public class ScriptManager {
 		}else if(instruction.equals("AllInOne")){
 			//generate all random, adequate test sets, then execute them and analyze them
 			//2009-03-07: we set a interval to separate all tasks into several shells
-			int interval = 7;
-			int start = 1; //(1-127:7, 127-200:5)
-			int end = 127;
+			int interval = 5;
+			int start = 127; //(1-127:7, 127-200:5)
+			int end = 200;
 			
 			StringBuilder sb1 = new StringBuilder();
 			for(int i = start; i < end; i = i + interval){
@@ -485,38 +485,38 @@ public class ScriptManager {
 				+ date + "/Script/3GroupComparison.sh";
 			
 			StringBuilder sb = new StringBuilder();
-			instruction = "Limited";
+			instruction = "Load";
 			//Group 1
-//			sb.append(genRandomTS_Script(testSetNum, 21,
-//					22,  date)); //to compare AllPolicies			
-//			sb.append(genRandomTS_Script(testSetNum, 39,
-//					40, date)); //to compare All1ResovledDU
-//			sb.append(genRandomTS_Script(testSetNum, 47,
-//					48, date)); //to compare All2ResolvedDU
+//			sb.append(genRandomTS_Script(testSetNum, 27,
+//					28,  date)); //to compare AllPolicies			
+//			sb.append(genRandomTS_Script(testSetNum, 43,
+//					44, date)); //to compare All1ResovledDU
+//			sb.append(genRandomTS_Script(testSetNum, 50,
+//					51, date)); //to compare All2ResolvedDU
 //			
 //			sb.append(genAdequateTS_WithoutFixSize_Script(testSetNum, min_CI, max_CI,
 //					date));
-			sb.append(exeRandomTS_Script(21, 
-					22,instruction ,date));
-			sb.append(exeRandomTS_Script(39, 
-					40, instruction,date));
-			sb.append(exeRandomTS_Script(47, 
-					48, instruction,date));
+			sb.append(exeRandomTS_Script(27, 
+					28,instruction ,date));
+			sb.append(exeRandomTS_Script(43, 
+					44, instruction,date));
+			sb.append(exeRandomTS_Script(50, 
+					51, instruction,date));
 			sb.append(exeAdequateTS_withoutFixSize_Script(testSetNum, min_CI, max_CI, instruction,
 					date));
 			
 			//Group 2 & Group 3
-//			sb.append(genRandomTS_Script(testSetNum, 56,
-//					57, date));
+//			sb.append(genRandomTS_Script(testSetNum, 62,
+//					63, date));
 //
 //			sb.append(genAdequateTS_Script(testSetNum, min_CI, max_CI,
-//					date, 56, 57 ));
+//					date, 62, 63 ));
 			
-			sb.append(exeRandomTS_Script(56, 
-					57, instruction,date));
+			sb.append(exeRandomTS_Script(62, 
+					63, instruction,date));
 			
 			sb.append(exeAdequateTS_Script(testSetNum, instruction, min_CI, max_CI, 
-					date, 56, 57));
+					date, 62, 63));
 			
 //			sb.append("java ccr.test.ResultAnalyzer Load " + date + " \n");
 			ScriptManager.save(sb.toString(), saveFile);
