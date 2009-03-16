@@ -367,11 +367,41 @@ public class ScriptManager {
 		return sb.toString();
 	}
 
-	public static void genFailureRate_TS(String date, String saveFile){
-		int start = 0;
-		int end = 140;
-		int interval = 7;
+	/**2009-03-17: we must execute these faulty version one by one since some faults may 
+	 * cause program crashed
+	 * @param date
+	 * @param saveFile
+	 * @param startVersion
+	 * @param endVersion
+	 */
+	public static void genFailureRate_Sequential(String date, String saveFile, 
+			int startVersion, int endVersion){
+		StringBuilder sb = new StringBuilder();
+		for(int i = startVersion; i < endVersion; i ++){
+			sb.append("java ccr.test.TestDriver getFailureRate " + date + " " + i + " "
+					+ (i+1) + " \n");
+		}
 		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
+	public static void genFailureRate_TS(String date, String saveFile){
+		int start = 2600;
+		int end = 2604; //[140, 2600][2600, 5024]
+		int concurrent = 5;
+		
+		int interval = (end - start + 1)/concurrent ;
+		if( (end - start + 1) > interval * concurrent )
+			interval ++;
+		
+		
+//		String instruction = argv[0];
+//		String date = argv[1];
+//		int startVersion = Integer.parseInt(argv[2]);
+//		int endVersion = Integer.parseInt(argv[3]);
+//		getFailureRate
 		StringBuilder sb = new StringBuilder();
 		
 		for(int i = start; i < end; i = i + interval){
@@ -380,8 +410,8 @@ public class ScriptManager {
 			if(max >= end)
 				max = end;
 			
-			sb.append("java ccr.test.TestManager " + min + " " 
-					+ max + " " + date + " &\n");
+			sb.append("java ccr.test.TestDriver getFailureRate " +date + " "+ min + " " 
+					+ max + " &\n");
 			
 		}
 		
@@ -573,9 +603,37 @@ public class ScriptManager {
 			ScriptManager.save(sb.toString(), saveFile);
 		}else if(instruction.equals("getFailureRate")){
 			
+			int start = 140;
+			int end = 3600; //[140, 3600][3600, 5024]
+			int concurrent = 20;
+			
+			int interval = (end - start + 1)/concurrent ;
+			if( (end - start + 1) > interval * concurrent )
+				interval ++;
+			
+			StringBuilder sb1 = new StringBuilder();
+			for(int i = start; i < end; i = i + interval){
+				int startVersion = i;
+				int endVersion = i + interval;
+				if(endVersion > end)
+					endVersion = end;
+				
+				instruction = "getFailurRate";
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/Script/GetFailureRate_"+startVersion
+					+"_"+endVersion+".sh";
+				
+				sb1.append("./GetFailureRate_"+startVersion
+					+"_"+endVersion+".sh &" + "\n");
+				
+				StringBuilder sb = new StringBuilder();
+				ScriptManager.genFailureRate_Sequential(date, saveFile, startVersion, endVersion);
+			}
+
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/Script/getFailureRate.sh";
-			ScriptManager.genFailureRate_TS(date, saveFile);
+				+ date + "/Script/GetFailureRate_Executor_"+start + "_" + end +".sh";
+			ScriptManager.save(sb1.toString(), saveFile);
+			
 		}
 	}
 }
