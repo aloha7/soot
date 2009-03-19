@@ -316,7 +316,6 @@ public class ResultAnalyzer {
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
-		
 	}
 	
 	/**2009-02-22: load the failure rate of each fault from the file

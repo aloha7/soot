@@ -233,6 +233,28 @@ public class TestDriver {
 		}
 	}
 
+	public static ArrayList loadInterestFaults(String srcFile, boolean containHeader){
+		ArrayList faultList = new ArrayList();
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(srcFile));
+			String str = null;
+			if(containHeader)
+				br.readLine();
+			
+			while((str = br.readLine())!= null){
+				faultList.add(str);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return faultList;
+	}
+	
 	/**2009-03-05: To speed up the testing process, we did not run the test case on the faulty version 
 	 * any more, we just retrieve the P/F information from execHistory which is generated when examining 
 	 * failure rates of faults.
@@ -956,16 +978,36 @@ public class TestDriver {
 		String date = argv[1];
 		
 		if(instruction.equals("getFailureRate")){
+			String versionPackageName = "testversion";
+			String oracleClassName = "TestCFG2";
+			
 			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
+			boolean containHeader = true;
+			TestSet testpool = Adequacy.getTestPool(testcaseFile, true);
+			String reportDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/";
+			
 			if(argv.length == 2){
-				getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/");	
+				TestDriver.getFailureRate(versionPackageName, oracleClassName, testpool, reportDir);
+//				getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/");	
 			}else if(argv.length == 4){
 				int startVersion = Integer.parseInt(argv[2]);
 				int endVersion = Integer.parseInt(argv[3]);
-				TestDriver.getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true), 
-						"src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/", 
-						startVersion, endVersion);
+				TestDriver.getFailureRate(versionPackageName, oracleClassName, testpool, 
+						reportDir, startVersion, endVersion);
+//				TestDriver.getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true), 
+//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/", 
+//						startVersion, endVersion);
+			}else if(argv.length == 5){
+				int start = Integer.parseInt(argv[2]); 
+				int end = Integer.parseInt(argv[3]);
+				
+				String faultFile = reportDir + "/FaultList.txt";
+				containHeader = false;
+				ArrayList faultList = TestDriver.loadInterestFaults(faultFile, containHeader);
+				
+				TestDriver.getFailureRate_interest(versionPackageName, oracleClassName, testpool, reportDir, faultList, start, end);
+				
 			}
 		}else if(instruction.equals("getFaultCI")){
 			String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";

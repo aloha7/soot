@@ -379,7 +379,7 @@ public class ScriptManager {
 		StringBuilder sb = new StringBuilder();
 		for(int i = startVersion; i < endVersion; i ++){
 			sb.append("java ccr.test.TestDriver getFailureRate " + date + " " + i + " "
-					+ (i+1) + " \n");
+					+ (i+1) + " a\n");
 		}
 		
 		Logger.getInstance().setPath(saveFile, false);
@@ -387,10 +387,10 @@ public class ScriptManager {
 		Logger.getInstance().close();
 	}
 	
-	public static void genFailureRate_TS(String date, String saveFile){
-		int start = 2600;
-		int end = 2604; //[140, 2600][2600, 5024]
-		int concurrent = 5;
+	public static void genFailureRate_TS(int startVersion, int endVersion, int concurrentNumber, String date, String saveFile){
+		int start = startVersion;
+		int end = endVersion; //[140, 2600][2600, 5024]
+		int concurrent = concurrentNumber;
 		
 		int interval = (end - start + 1)/concurrent ;
 		if( (end - start + 1) > interval * concurrent )
@@ -603,9 +603,15 @@ public class ScriptManager {
 			ScriptManager.save(sb.toString(), saveFile);
 		}else if(instruction.equals("getFailureRate")){
 			
-			int start = 140;
-			int end = 3600; //[140, 3600][3600, 5024]
-			int concurrent = 20;
+			
+			int start = 0;
+			int end = 128; //[140, 3600][3600, 5024]
+			int concurrent = 10;
+			
+//			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//				+ date + "/Script/GetFailureRate_Executor_"+start + "_" + end +".sh";
+//			
+//			ScriptManager.genFailureRate_TS(start, end, concurrent, date, saveFile);
 			
 			int interval = (end - start + 1)/concurrent ;
 			if( (end - start + 1) > interval * concurrent )
