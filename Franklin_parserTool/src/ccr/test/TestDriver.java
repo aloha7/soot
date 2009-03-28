@@ -1033,7 +1033,7 @@ public class TestDriver {
 			
 //			ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
 			
-//			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
+			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
 			
 			//2009-02-18: load CI of each test case from a file
 //			containHeader = true;
