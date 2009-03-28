@@ -945,14 +945,155 @@ public class ResultAnalyzer {
 		return fault_perValidTestSet;
 	}
 	
-	public static void mergeHashMap(String[] criteria, HashMap criterion_Metric, String date, String saveFile){
+	/**2009-03-27: we wish to rename the original criteria
+	 * 
+	 * @param criteria
+	 * @param rename_criteria
+	 * @param criterion_Metric
+	 * @param date
+	 * @param saveFile
+	 */
+	public static void mergeHashMap(String[] criteria, String[] rename_criteria, HashMap criterion_Metric, String date, String saveFile){
 		StringBuilder sb = new StringBuilder();
+		
 		
 		//Header
 		sb.append("Fault" + "\t" + "FailureRate" + "\t");
 		
 		for(int i =0; i < criteria.length; i ++){
-			sb.append(criteria[i] + "\t");
+			//2009-03-27: we wish to shorten the name of criterion
+			String criterion = rename_criteria[i];
+			sb.append(criterion + "\t");
+
+//			sb.append(criteria[i] + "\t");
+		}
+		sb.append("\n");
+		
+		//2009-03-08: we may not interest in all faults
+//		Iterator ite = ResultAnalyzer.failureRate.keySet().iterator();
+		
+		//2009-03-08: we may only interest in faults in fault list
+		ArrayList faultList = new ArrayList();
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("src/ccr/experiment" +
+					"/Context-Intensity_backup/TestHarness/"+date+"/FaultList.txt")); 
+			String str = null;
+			while((str = br.readLine())!=null){
+				faultList.add(str);
+			}
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		String criterion = null;
+		for(int j = 0; j < faultList.size(); j ++){
+			String fault = (String)faultList.get(j);
+			sb.append(fault + "\t" + ResultAnalyzer.failureRate.get(fault)+"\t");
+			for(int i = 0; i < criteria.length; i++){
+				criterion = criteria[i];
+				HashMap metric = (HashMap)criterion_Metric.get(criterion);
+				
+				if(!metric.containsKey(fault))
+					System.out.println("No existing");
+				
+				Object item = metric.get(fault);
+				if(item == null){
+					item = metric.get(Integer.parseInt(fault) + "");
+				}
+				sb.append(item+"\t");
+			}
+			sb.append("\n");	
+		}
+		
+		
+		
+		//2009-03-07: we need a more abstract information, for example: min, max, mean 
+		//and SD for each criterion 
+		//another header
+		sb.append("\nCriterion\tMin\tMean\tMax\tSD\n");
+		for(int i = 0; i < criteria.length; i ++){
+			criterion = criteria[i];
+			
+			//2009-03-27: we wish to rename the original criteria
+			sb.append(rename_criteria[i] + "\t");
+//			sb.append(criterion + "\t");
+			
+			HashMap metric = (HashMap)criterion_Metric.get(criterion);
+			
+			double[] performances = new double[faultList.size()];
+			for(int j = 0; j < faultList.size(); j ++){
+				String fault = (String)faultList.get(j);
+				Double performance = (Double)metric.get(fault);
+				performances[j] = performance;
+			}
+			
+			
+//			
+//			int index = 0;
+//			Iterator ite1 = metric.keySet().iterator();
+//			while(ite1.hasNext()){
+//				String fault = (String)ite1.next();
+//				if(!faultList.contains(fault))
+//					continue;
+//					
+//				Double  performance= (Double)metric.get(fault);
+//				if(performance == null){
+//					performance = (Double)metric.get(Integer.parseInt(fault) + "");
+//				}
+//				
+//				performances[index] =  performance;
+//				index++;
+//			}
+//			
+			double min = Double.MAX_VALUE;
+			double max = Double.MIN_VALUE;
+			double sum = 0;
+			
+			for(int j = 0; j < performances.length; j ++){
+				sum += performances[j];
+				
+				if(performances[j] > max)
+					max = performances[j];
+				if(performances[j] < min)
+					min = performances[j];
+			}
+			double mean = sum/(double)performances.length;
+			
+			sum = 0.0;
+			for(int j = 0; j < performances.length; j ++){
+				sum += (performances[j]-mean)*(performances[j]-mean);
+			}
+			double SD = Math.sqrt(sum/performances.length);
+			sb.append(min + "\t" + mean +"\t" + max+"\t" + SD+ "\n");
+		}
+		
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+
+	
+	public static void mergeHashMap(String[] criteria, HashMap criterion_Metric, String date, String saveFile){
+		StringBuilder sb = new StringBuilder();
+		
+		
+		//Header
+		sb.append("Fault" + "\t" + "FailureRate" + "\t");
+		
+		for(int i =0; i < criteria.length; i ++){
+			//2009-03-27: we wish to shorten the name of criterion
+			String criterion = criteria[i].replaceAll("TestSets", "");
+			sb.append(criterion + "\t");
+
+//			sb.append(criteria[i] + "\t");
 		}
 		sb.append("\n");
 		
@@ -1096,6 +1237,17 @@ public class ResultAnalyzer {
 		
 	}
 	
+	/*public static HashMap getMatchPair(String[] criteria, String[] replace_name){
+		HashMap matchPair = new HashMap();
+		if(criteria.length ==  replace_name.length){
+			for(int i = 0; i < criteria.length;  i++){
+				matchPair.put(criteria[i], replace_name[i]);
+			}
+		}
+		
+		return matchPair;
+	}*/
+	
 	public static void getCorrelationCIPeformance(String[] criteria, HashMap criterion_CIs, HashMap criterion_CIRange_performance, String saveFile){
 
 		//2. Header, keeping the order
@@ -1132,6 +1284,23 @@ public class ResultAnalyzer {
 		
 	}
 	
+	/**2009-03-28:
+	 * 
+	 * @param criteria
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	public static String getLostTest(String[] criteria, int start, int end){
+		
+		StringBuilder sb = new StringBuilder();
+		HashMap criterion_LostTest = new HashMap();
+		
+		
+		
+		return sb.toString();
+	}
+	
 	public static void main(String[] args){
 		System.out
 		.println("USAGE: java ccr.test.ResultAnalyzer <Context_Intensity,Limited,Load>"
@@ -1149,7 +1318,7 @@ public class ResultAnalyzer {
 		//2009-02-22: load failure rates from a file
 		containHeader = false;
 		String failureRateFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/failureRate.txt";
-//		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
+		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
 
 		//2009-02-24: merge files
 		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/";
@@ -1176,7 +1345,7 @@ public class ResultAnalyzer {
 				"All2ResolvedDUTestSets_new_random_62",
 
 				//Group 3
-//				"RandomTestSets_56",
+//				"RandomTestSets_62",
 				"AllPoliciesTestSets_old_criteria_62",
 				"AllPoliciesTestSets_new_criteria_62",
 				"All1ResolvedDUTestSets_old_criteria_62",
@@ -1184,6 +1353,7 @@ public class ResultAnalyzer {
 				"All2ResolvedDUTestSets_old_criteria_62",
 				"All2ResolvedDUTestSets_new_criteria_62",
 		};
+		
 		
 		if(instruction.equals("Context_Intensity") ||instruction.equals("Limited")||instruction.equals("Load")){
 //			HashMap criterion_faultNum = new HashMap();
@@ -1217,7 +1387,40 @@ public class ResultAnalyzer {
 //			saveFile = srcDir + "/PerValidTC.txt";
 //			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC, saveFile);
 			saveFile = srcDir + "/PerValidTS.txt";
-			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, date, saveFile);
+			
+			//2009-03-27: rename the default criterion
+			String[] rename_criteria = new String[]{
+					//rename the criteria of Group 1
+					"Random-27",
+					"All-Services",
+					"All-Services-Refined",
+					"Random-42",
+					"All-Services-Uses",
+					"All-Services-Uses-Refined",
+					"Random-50",
+					"All-2-Services-Uses",
+					"All-2-Services-Uses-Refined",
+					
+					//rename the criteria of Group 2
+					"Random-62",
+					"All-Services-random",
+					"All-Services-random-Refined",				
+					"All-Services-Uses-random",
+					"All-Services-Uses-random-Refined",				
+					"All-2-Services-Uses-random",
+					"All-2-Services-Uses-random-Refined",
+					
+					//rename the criteria of Group 3
+					"All-Services-criterion",
+					"All-Services-criterion-Refined",				
+					"All-Services-Uses-criterion",
+					"All-Services-Uses-criterion-Refined",				
+					"All-2-Services-Uses-criterion",
+					"All-2-Services-Uses-criterion-Refined",
+					
+			};
+			ResultAnalyzer.mergeHashMap(criteria, rename_criteria, criterion_perValidTS, date, saveFile);
+//			ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, date, saveFile);
 			
 			//2009-02-25: to explore the CI distributions of different testing criteria
 			StringBuilder sb = new StringBuilder();
