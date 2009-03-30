@@ -556,6 +556,135 @@ public class TestDriver {
 		}
 	}
 	
+	/**2009-03-30: Compared with "getFaultSimilarity()", the threshold for this method is 1.0 by default, that is,
+	 * if two faults are equivalent, then the number of valid test cases for them are exactly the same  
+	 * 
+	 * @param srcDir
+	 * @param containHeader_faultList
+	 * @param containHeader_executionFile
+	 */
+	public static void getFaultSimilarity_Strict(String srcDir, boolean containHeader_faultList, boolean containHeader_executionFile){
+		StringBuilder sb = new StringBuilder();
+		
+		HashMap fault_validTestCases = new HashMap();
+		HashMap faultPair_equivalent = new HashMap();
+		
+		ArrayList faults = new ArrayList();
+		String faultList = srcDir + "/FaultList.txt";
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(faultList));
+			String fault = null;
+			
+			if(containHeader_faultList)
+				br.readLine();
+			
+			while((fault = br.readLine())!= null){
+				faults.add(fault);
+				fault_validTestCases.put(fault, new ArrayList());
+				faultPair_equivalent.put(fault, new ArrayList());
+			}
+			
+			br.close();
+			String executionFile = srcDir +"/detailed.txt";
+			br = new BufferedReader(new FileReader(executionFile));
+			String line = null;
+			if(containHeader_executionFile)
+				br.readLine();
+			
+			while((line=br.readLine())!=null){
+				String[] strs = line.split("\t");
+				fault = strs[0];
+				if(!fault_validTestCases.containsKey(fault))
+					continue;
+				String testcase = strs[1];
+				String PorF = strs[2];
+				if(PorF.equals("F")){
+					ArrayList validTestCases = (ArrayList)(fault_validTestCases.get(fault));
+					validTestCases.add(testcase);
+					fault_validTestCases.put(fault, validTestCases);
+				}
+			}
+			br.close();
+			
+			//1.header: first line: the size of valid test cases; second line: fault number
+			sb.append("\t");
+			StringBuilder sb_temp = new StringBuilder();
+			sb_temp.append("\t");
+			for(int i = 0; i < faults.size(); i ++){
+				fault = (String)faults.get(i);
+				int validTC_size = ((ArrayList)(fault_validTestCases.get(fault))).size();
+				sb.append(validTC_size + "\t");
+				sb_temp.append(fault + "\t");
+			}
+			sb.append("\n");
+			sb.append(sb_temp.toString() + "\n");
+			
+			//2.compare the similarity
+			StringBuilder sb_sum = new StringBuilder();
+			for(int i = 0; i < faults.size(); i ++){
+				fault = (String)faults.get(i);
+				sb.append(fault + "\t");
+				for(int j = 0; j < faults.size(); j ++){
+					String fault_temp = (String)faults.get(j);
+					ArrayList testSet_src = (ArrayList)fault_validTestCases.get(fault);
+					ArrayList testSet_dest = (ArrayList)fault_validTestCases.get(fault_temp);
+					
+					ArrayList sharedTC = getSharedTestCases(testSet_src, testSet_dest);
+					
+					sb.append(sharedTC.size() + "\t");
+					
+					//judge whether they are equivalent faults
+					double rate_1 = (double)sharedTC.size()/(double)testSet_src.size();
+					double rate_2 = (double)sharedTC.size()/(double)testSet_dest.size();
+					
+					
+					if(rate_1 ==1 && rate_2==1 && testSet_src.size()==testSet_dest.size() && !fault.equals(fault_temp)){
+						if(faultPair_equivalent.containsKey(fault)){
+							ArrayList equivalent = (ArrayList)faultPair_equivalent.get(fault);
+							if(equivalent.contains(fault_temp)){ //this pair has been recorded
+								continue;
+							}else{
+								equivalent.add(fault_temp);
+								faultPair_equivalent.put(fault, equivalent);
+							}
+						}
+						if(faultPair_equivalent.containsKey(fault_temp)){
+							ArrayList equivalent = (ArrayList)faultPair_equivalent.get(fault_temp);
+							if(equivalent.contains(fault)){ //this pair has been recorded
+								continue;
+							}else{
+								equivalent.add(fault);
+								faultPair_equivalent.put(fault_temp, equivalent);
+							}
+						}
+						
+						sb_sum.append(fault + "\t" + testSet_src.size() + "\t" + fault_temp + "\t"
+								+testSet_dest.size() + "\t" + sharedTC.size() + "\t" + rate_1 + "\n");
+						
+					}
+						
+				}
+				sb.append("\n");
+			}
+			
+			sb.append("\nPotential equivalent faults\n");
+			sb.append("Fault\t" + "ValidTestCases\t" + "Fault\t" + "ValidTestCases\t" + "SharedTestCases\t" + "Ratio\n");
+			sb.append(sb_sum.toString());
+			
+			Logger.getInstance().setPath(srcDir + "/Fault_Similarity.txt", false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	/**2009-03-16: fault similarity is measured by the percentage of shared test cases
 	 * 
 	 * @param srcDir
@@ -1028,12 +1157,15 @@ public class TestDriver {
 //			String failureRateFile = srcDir + "failureRate.txt";
 			boolean containHeader_faultList = false;
 			boolean containHeader_executionFile = true;
-			double threshHold = Double.parseDouble(argv[2]);
-			TestDriver.getFaultSimilarity(srcDir, containHeader_faultList, containHeader_executionFile, threshHold);
+			double threshHold = Double.parseDouble(argv[2]);//the percentage to measure how percentage of valid test cases they share
+//			TestDriver.getFaultSimilarity(srcDir, containHeader_faultList, containHeader_executionFile, threshHold);
+			
+			//2009-03-30: get similar faults which share the exactly same valid test cases 
+			TestDriver.getFaultSimilarity_Strict(srcDir, containHeader_faultList, containHeader_executionFile);
 			
 //			ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
 			
-			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
+//			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"+date+"/TestPool.txt";
 			
 			//2009-02-18: load CI of each test case from a file
 //			containHeader = true;
