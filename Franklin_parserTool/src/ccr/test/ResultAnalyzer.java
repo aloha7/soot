@@ -755,7 +755,7 @@ public class ResultAnalyzer {
 					}
 					br.close();
 					
-					//count the valid test sets for each fault
+					//count the valid test sets for all faults
 					double sum_perValidTestSet = 0.0;
 					Iterator ite = fault_TestSets.keySet().iterator();
 					while(ite.hasNext()){ // for each fault
@@ -1284,21 +1284,77 @@ public class ResultAnalyzer {
 		
 	}
 	
-	/**2009-03-28:
+	/**2009-03-28: we wish to find out all tests failed to executed when deriving the correlations
+	 * between test set sizes and testing performances
+	 * Add another method getLostTest(): we wish to find out all tests failed to executed when deriving the correlations
+	 * between test set sizes and testing performances
 	 * 
 	 * @param criteria
+	 * @param srcDir
 	 * @param start
 	 * @param end
 	 * @return
 	 */
-	public static String getLostTest(String[] criteria, int start, int end){
+	public static void getLostTest(String[] criteria, String srcDir, int start, int end ){
+
+		HashMap criterion_tests = new HashMap(); //record the size of test sets which have been tested
+		HashMap criterion_lostTest = new HashMap(); //record the size of test sets which have been missed
+		
+		for(int i = 0; i < criteria.length; i ++){
+			criterion_tests.put(criteria[i], new ArrayList());
+			criterion_lostTest.put(criteria[i], new ArrayList());
+		}
+		
+		//1.record all test set sizes which have been tested
+		String pattern = null;
+		File dir = new File(srcDir);
+		for(int i = 0; i < criteria.length; i ++){
+			String criterion = criteria[i];
+			ArrayList tests = (ArrayList)criterion_tests.get(criterion);
+			
+			pattern = criterion + "\\_[0-9]+\\_limited_load.txt";
+			for(File file: dir.listFiles()){
+				//for each file matchining the specified pattern
+				if(file.getName().matches(pattern)){
+					String[] strs = file.getName().split("_");
+					int index = Integer.parseInt(strs[strs.length-3]);
+					tests.add(index);
+				}				
+			}
+			
+			criterion_tests.put(criterion, tests);
+		}
+		
+		//2.get test set sizes which have been lost
+		for(int i = 0; i < criteria.length; i ++){
+			String criterion = criteria[i];
+			
+			ArrayList tests = (ArrayList)criterion_tests.get(criterion);
+			ArrayList lostTests = (ArrayList)criterion_lostTest.get(criterion);
+			
+			for(int j = start; j < end; j ++){
+				if(!tests.contains(j)){
+					lostTests.add(j);
+				}
+			}			
+			criterion_lostTest.put(criterion, lostTests);			
+		}
 		
 		StringBuilder sb = new StringBuilder();
-		HashMap criterion_LostTest = new HashMap();
+		for(int i = 0; i < criteria.length; i ++){
+			String criterion = criteria[i];
+			ArrayList loadTests = (ArrayList)criterion_lostTest.get(criterion);
+			sb.append(criterion + "\t");
+			for(int j = 0; j < loadTests.size(); j ++){
+				sb.append(loadTests.get(j) + "\t");
+			}
+			sb.append("\n");
+		}
 		
+		Logger.getInstance().setPath(srcDir + "/LostTest.txt", false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
 		
-		
-		return sb.toString();
 	}
 	
 	public static void main(String[] args){
@@ -1456,7 +1512,7 @@ public class ResultAnalyzer {
 					"All2ResolvedDUTestSets_new_random",
 
 					//Group 3
-					"RandomTestSets",
+//					"RandomTestSets",
 					"AllPoliciesTestSets_old_criteria",
 					"AllPoliciesTestSets_new_criteria",
 					"All1ResolvedDUTestSets_old_criteria",
@@ -1507,6 +1563,28 @@ public class ResultAnalyzer {
 			String pattern = prefix + "\\_[0-9]+\\_[0-9]+\\.txt";
 			String saveFile = srcDir + prefix + ".txt"; 
 			ResultAnalyzer.mergeFiles(srcDir, containHeader, pattern, saveFile);
+		}else if(instruction.equals("getLostTests")){
+			criteria = new String[]{
+					//Group 2
+					"RandomTestSets",
+					"AllPoliciesTestSets_old_random",
+					"AllPoliciesTestSets_new_random",
+					"All1ResolvedDUTestSets_old_random",
+					"All1ResolvedDUTestSets_new_random",
+					"All2ResolvedDUTestSets_old_random",
+					"All2ResolvedDUTestSets_new_random",
+
+					//Group 3					
+					"AllPoliciesTestSets_old_criteria",
+					"AllPoliciesTestSets_new_criteria",
+					"All1ResolvedDUTestSets_old_criteria",
+					"All1ResolvedDUTestSets_new_criteria",
+					"All2ResolvedDUTestSets_old_criteria",
+					"All2ResolvedDUTestSets_new_criteria",
+			};
+			int start = Integer.parseInt(args[2]);
+			int end = Integer.parseInt(args[3]);
+			ResultAnalyzer.getLostTest(criteria, srcDir, start, end);			
 		}
 	}
 }
