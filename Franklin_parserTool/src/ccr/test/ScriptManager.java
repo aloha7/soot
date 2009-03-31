@@ -693,27 +693,27 @@ public class ScriptManager {
 		}else if(instruction.equals("getCIPerformance")){
 			StringBuilder sb = new StringBuilder();
 			
-			double start_CI = 0.6;
-			double end_CI = 0.8;
-			double interval  = 0.02;
-			date = "20090307";
+			double start_CI = 6;
+			double end_CI = 20;
+			double interval  = 1;
+			date = "20090314";
 			
 //			//1. generate adequate test sets
-//			for(double i = start_CI; i < end_CI; i = i + interval){
-//				min_CI = i;
-//				max_CI = i + interval;
-//				
-//				if(max_CI > end_CI)
-//					max_CI = end_CI;
-//				
-//				sb.append("java ccr.test.TestSetManager " + min_CI + " " 
-//					+ max_CI + " " + interval + " " + testSetNum +
-//					" " + date + " &\n");
-//			}
-//			
-//			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-//				+ date + "/Script/CIPerformance.sh";
-//			ScriptManager.save(sb.toString(), saveFile);
+			for(double i = start_CI; i < end_CI; i = i + interval){
+				min_CI = i;
+				max_CI = i + interval;
+				
+				if(max_CI > end_CI)
+					max_CI = end_CI;
+				
+				sb.append("java ccr.test.TestSetManager " + min_CI + " " 
+					+ max_CI + " " + interval + " " + testSetNum +
+					" " + date + " &\n");
+			}
+			
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/CIPerformance.sh";
+			ScriptManager.save(sb.toString(), saveFile);
 			
 			//2. execute these test sets
 			String srcDir ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
@@ -734,8 +734,8 @@ public class ScriptManager {
 				for(int j = 0; j < criteria.length; j ++){
 					String criterion = criteria[j];
 					testSetFile = srcDir + criterion+"_"+min_CI + "_"+max_CI+".txt";
-					sb.append("java ccr.test.ExecutionManager " + date + " " 
-						+ testSetFile+ " &\n");	
+					sb.append("java ccr.test.ExecutionManager -Xmx1500m " + date + " " 
+						+ testSetFile+ " \n");	
 				}
 			}
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
