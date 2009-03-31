@@ -61,7 +61,61 @@ public class TestSetManager {
 		Logger.getInstance().close();
 	}
 
-	
+	public static void attachTSWithCoveredElements(TestSet[] testSets, String appClassName, Criterion c, String saveFile){
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("TestSet" + "\t" + "Size" + "\t" + "CI" +"\t" + "minCovered" + "\t" 
+				+"meanCovered" + "\t" + "maxCovered" + "\t" + "SDCovered" 
+				+ "\n");
+		
+		for(int j = 0; j < testSets.length; j ++){
+			
+			TestSet testSet = testSets[j];
+			
+			ArrayList coveredElements = new ArrayList();
+			for(int i = 0; i < testSet.size(); i ++){
+				String testcase = testSet.get(i);
+				String stringTrace[] = TestDriver.getTrace(appClassName,
+						testcase);			
+				coveredElements.add(countCoveredElements(stringTrace, c));
+			}	
+			
+			
+			int minCovered = Integer.MAX_VALUE;
+			int maxCovered = Integer.MIN_VALUE;
+			
+			int sum_covered = 0;
+			double mean_covered = 0.0;
+			double SD_covered = 0.0;
+			
+			for(int i = 0; i < coveredElements.size(); i ++){
+				int covered = (Integer)coveredElements.get(i);
+				if(covered > maxCovered)
+					maxCovered = covered;
+				if(covered < minCovered)
+					minCovered = covered;
+				
+				sum_covered += covered;
+			}
+			
+			mean_covered = (double)sum_covered/(double)coveredElements.size();
+			double sum = 0;
+			for(int i = 0; i < coveredElements.size(); i ++){
+				int covered = (Integer)coveredElements.get(i);
+				sum = (covered - mean_covered)*(covered - mean_covered);
+			}
+			SD_covered = Math.sqrt(sum/(double)coveredElements.size());
+			
+			sb.append(j + "\t" + testSet.size() + "\t" + ((TestCase)Adequacy.testCases.get(testSet.get(0))).CI + "\t"
+					+ minCovered + "\t" + mean_covered + "\t" + maxCovered + "\t" + SD_covered + "\t"
+					+ "\n");
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();		
+		System.out.println(saveFile + " has been generated");
+	}
 	
 	public static void attachTSWithCI(TestSet[] testSets, String saveFile) {
 		StringBuilder sb = new StringBuilder();
@@ -227,7 +281,21 @@ public class TestSetManager {
 //
 //	}
 	
-	
+	/**2009-03-31: collect all test cases whose CI falls into the specified range from the test pool
+	 * to form a test set directly, which is used to explain why the CI matters to the testing performance
+	 *  
+	 * 
+	 */
+	public static TestSet getTestSets_FixedCI(TestSet testpool, double min_CI,
+			double max_CI){
+		TestSet testSet = new TestSet();
+		for(int i = 0; i < testpool.size(); i ++){
+			TestCase testcase = (TestCase)Adequacy.testCases.get((String)testpool.get(i));
+			if(testcase.CI>= min_CI && testcase.CI < max_CI)
+				testSet.add(testcase.index);			
+		}
+		return testSet;
+	}
 	
 	/**
 	 * 2009-02-21: revised test case selection strategy: add a test case if it
@@ -1403,6 +1471,49 @@ public class TestSetManager {
 		return effective;
 	}
 
+	
+	/**2009-03-31: count the number of elements covered by a specified 
+	 * test case
+	 * 
+	 * @param stringTrace
+	 * @param criterion
+	 * @return
+	 */
+	private static int countCoveredElements(String[] stringTrace,
+			Criterion criterion) {
+
+		int counter = 0;
+		int policyNodes = 0;
+		Node trace[] = new Node[stringTrace.length];
+		for (int i = 0; i < trace.length; i++) {
+			trace[i] = NodeIndex.getInstance().get(stringTrace[i]);
+		}
+		boolean effective = false;
+
+		for (int i = 0; i < trace.length; i++) {
+			
+			if(criterion.containsNode(trace[i]))
+				counter ++;
+			
+			if(trace[i] instanceof PolicyNode && 
+					criterion.containsPolicy(((PolicyNode)trace[i]).policy))
+				counter ++;
+			
+			if(criterion.containsDefinition(trace[i])){
+				for(int j = i + 1; j < trace.length; j ++){
+					if(criterion.containsAssociation(trace[i], trace[j])){
+						counter ++;
+					}
+					
+					if(trace[j]!= null && trace[i].hasSameDef(trace[j]))
+						break;
+				}
+			}
+		}
+
+		return counter;
+	}
+	
 	/**
 	 * 2009-02-21:return the results of all nodes, policy nodes, and DU-pairs
 	 * unique covered by this test case
@@ -1653,15 +1764,18 @@ public class TestSetManager {
 		}else if(testSuiteSize == 0){ 
 			//2009-03-09:min_CI, max_CI plays some roles
 			for(int i = 0; i < testSetNum; i ++){
-				testSets[i] = TestSetManager.getAdequacyTestSet_refined_fixCI(
-						appClassName, c, testpool, maxTrials, 
-						min_CI, max_CI 
-						);
 				
+				//2009-03-31: study the relationships between CI of adequacy test sets and testing performance 
+//				testSets[i] = TestSetManager.getAdequacyTestSet_refined_fixCI(
+//						appClassName, c, testpool, maxTrials, 
+//						min_CI, max_CI 
+//						);
+				
+				
+				//2009-03-31: study the correlationships between CI of test cases and testing performance
+				testSets[i] = TestSetManager.getTestSets_FixedCI(testpool, min_CI, max_CI);				
 				testSets[i].index = "" + i;
-
-				System.out.println("Test set " + i + ": "
-						+ testSets[i].toString());
+				System.out.println("Test set " + i + ": ");
 
 			}
 		}
@@ -1868,42 +1982,56 @@ public class TestSetManager {
 					break;
 				
 				System.out.println("Min:" +min_CI + " Max:" + max_CI);
-				//1. for AllPolicies
-				c = g.getAllPolicies();
-				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date + "/AllPolicies_" +min_CI + "_"+max_CI +".txt";
+//				//1. for AllPolicies
+//				c = g.getAllPolicies();
+//				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//					+ date + "/AllPolicies_" +min_CI + "_"+max_CI +".txt";
+//				
+//				TestSet[][] testSets = new TestSet[1][];
+//				testSets[0] = TestSetManager.getTestSets(appClassName, c,
+//						testpool, maxTrials, testSetNum, min_CI, max_CI,
+//						"null", "null", 0, saveFile);
+//				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+//					+ "_CI.txt";
+//				TestSetManager.attachTSWithCI(testSets[0], saveFile);
+//				
+//				//2. for All1ResolvedDU
+//				c = g.getAllKResolvedDU(1);
+//				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//					+ date + "/All1ResolvedDU_" +min_CI + "_"+max_CI +".txt";
+//				
+//				testSets[0] = TestSetManager.getTestSets(appClassName, c,
+//						testpool, maxTrials, testSetNum, min_CI, max_CI,
+//						"null", "null", 0, saveFile);
+//				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+//					+ "_CI.txt";
+//				TestSetManager.attachTSWithCI(testSets[0], saveFile);			
+//				
+//				//3. for All2ResolvedDU 
+//				c = g.getAllKResolvedDU(2);
+//				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//					+ date + "/All2ResolvedDU_" +min_CI + "_"+max_CI +".txt";
+//				
+//				testSets[0] = TestSetManager.getTestSets(appClassName, c,
+//						testpool, maxTrials, testSetNum, min_CI, max_CI,
+//						"null", "null", 0, saveFile);
+//				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+//					+ "_CI.txt";
+//				TestSetManager.attachTSWithCI(testSets[0], saveFile);
 				
-				TestSet[][] testSets = new TestSet[1][];
-				testSets[0] = TestSetManager.getTestSets(appClassName, c,
-						testpool, maxTrials, testSetNum, min_CI, max_CI,
-						"null", "null", 0, saveFile);
-				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
-					+ "_CI.txt";
-				TestSetManager.attachTSWithCI(testSets[0], saveFile);
-				
-				//2. for All1ResolvedDU
-				c = g.getAllKResolvedDU(1);
-				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date + "/All1ResolvedDU_" +min_CI + "_"+max_CI +".txt";
-				
-				testSets[0] = TestSetManager.getTestSets(appClassName, c,
-						testpool, maxTrials, testSetNum, min_CI, max_CI,
-						"null", "null", 0, saveFile);
-				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
-					+ "_CI.txt";
-				TestSetManager.attachTSWithCI(testSets[0], saveFile);			
-				
-				//3. for All2ResolvedDU 
+
+				//Get the covered element information for test cases whose CI within a specified range 
 				c = g.getAllKResolvedDU(2);
-				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date + "/All2ResolvedDU_" +min_CI + "_"+max_CI +".txt";
+				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/TestCases_" +min_CI + "_"+max_CI +".txt";
 				
+				TestSet[][] testSets = new TestSet[1][];				
 				testSets[0] = TestSetManager.getTestSets(appClassName, c,
 						testpool, maxTrials, testSetNum, min_CI, max_CI,
 						"null", "null", 0, saveFile);
 				saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
-					+ "_CI.txt";
-				TestSetManager.attachTSWithCI(testSets[0], saveFile);
+					+ "_coveredElements.txt";
+				TestSetManager.attachTSWithCoveredElements(testSets[0], appClassName, c, saveFile);
 			}
 		
 		}
