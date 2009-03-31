@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Logger {
@@ -223,6 +224,60 @@ public class Logger {
 		}
 	}
 	
+	/**2009-03-30: get the diff between two fault lists
+	 * 
+	 * @param srcDir
+	 */
+	public static void diffFaults(String srcDir){
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(srcDir + "/FaultList.txt"));
+			String line = null;
+			ArrayList faultList = new ArrayList();
+			while((line= br.readLine())!= null){
+				faultList.add(line);
+			}
+			br.close();
+			
+			ArrayList clearList = new ArrayList();
+			br = new BufferedReader(new FileReader(srcDir + "/ClearList.txt"));			
+			while((line = br.readLine())!=null){
+				clearList.add(line);
+			}
+			br.close();
+			
+//			ArrayList temp = new ArrayList();
+//			for(int i = 0; i < clearList.size(); i ++){
+//				String fault = (String)clearList.get(i);
+//				if(!faultList.contains(fault)){
+//					temp.add(fault);
+//				}
+//			}
+			
+			
+			ArrayList temp = new ArrayList();
+			for(int i = 0; i < faultList.size(); i ++){
+				String fault = (String)faultList.get(i);
+				if(!clearList.contains(fault))
+					temp.add(fault);
+			}
+			
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < temp.size(); i ++){
+				sb.append((String)temp.get(i)+"\n");
+			}
+			
+			Logger.getInstance().setPath(srcDir + "/FaultList_noDuplicate.txt", false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 
 	public static void main(String[] args) {
 		String srcDir = System.getProperty("user.dir") +"/result";
@@ -232,6 +287,9 @@ public class Logger {
 //		Logger.getInstance().delete(destDir);
 //		Logger.getInstance().moveFiles(srcDir, destDir, type);
 		
-		Logger.getInstance().changePackage(destDir, System.getProperty("user.dir") + "/temp/","ccr.app.testversion");
+//		Logger.getInstance().changePackage(destDir, System.getProperty("user.dir") + "/temp/","ccr.app.testversion");
+		
+		srcDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090313/";
+		Logger.getInstance().diffFaults(srcDir);
 	}
 }
