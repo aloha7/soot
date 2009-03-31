@@ -288,11 +288,11 @@ public class TestSetManager {
 					
 					testcase_traces.put(testcase, traces);
 				} else {
-					//2009-03-06:
+					//2009-03-06: stricted replacement strategy
 //					testSet = replace_CI_ordering(testSet,
 //							testcase_uniqueCovers, testcase, stringTrace);
 					
-					//2009-03-07:
+					//2009-03-07: general replacement strategy
 					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
 							testcase_traces, testcase, stringTrace);
 				}			
@@ -727,20 +727,22 @@ public class TestSetManager {
 		TestSet visited = new TestSet();
 		HashMap testcase_uniqueCovers = new HashMap();
 		HashMap testcase_traces = new HashMap();
-		
+		int trials = 0;
 		long time = System.currentTimeMillis();
 
 		int originalSize = criterion.size();
-		while (visited.size() < maxTrials && visited.size() < testpool.size()
+		while (trials < maxTrials && visited.size() < maxTrials && visited.size() < testpool.size()
 				&& criterion.size() > 0) {
 
 //			String testcase = testpool.getByART(); //more likely to sample test cases with high CI
 			
-			String testcase = testpool.getByRandom(min_CI, max_CI, 100);
+//			String testcase = testpool.getByRandom(min_CI, max_CI, 100);
+			String testcase = testpool.getByRandom(min_CI, max_CI);
+			
 			 TestCase temp = (TestCase) Adequacy.testCases
 				.get(testcase);
 			
-			 
+			 trials ++;
 			if (!visited.contains(testcase)) {
 				visited.add(testcase);
 				String stringTrace[] = TestDriver.getTrace(appClassName,
@@ -963,10 +965,10 @@ public class TestSetManager {
 					testcase_traces.put(testcase, traces);
 					
 				} else {
-					//2009-03-07: wrap the replacement strategy as a method
+					//2009-03-07: restricted replacement strategy
 //					testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
 					
-//					//2009-03-07:
+//					//2009-03-07: general replacement strategy
 					testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
 							testcase_traces, testcase, stringTrace);
 				}
@@ -1043,10 +1045,10 @@ public class TestSetManager {
 							
 							checkCoverage(stringTrace, finalCriterion);
 						} else {
-							//2009-03-07:
+							//2009-03-07: restricted replacement strategy
 //							testSet = TestSetManager.replace_CI_ordering(testSet, testcase_uniqueCovers, testcase, stringTrace);
 							
-							//2009-03-07:
+							//2009-03-07: general replacement strategy
 							testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
 									testcase_traces, testcase, stringTrace);
 						}
@@ -1832,7 +1834,8 @@ public class TestSetManager {
 				+ "All2Service_CICoverage.txt";
 			System.out.println(c.size());
 			TestSetManager.checkCorrelation( appClassName, testpool, testCases, c, iterations, saveFile);
-		}else if(args.length == 5){			
+		}else if(args.length == 5){	
+			//2009-03-31: get adequate test sets whose CI are fixed
 			double start_CI = Double.parseDouble(args[0]);
 			double end_CI = Double.parseDouble(args[1]);
 			double interval  = Double.parseDouble(args[2]);
@@ -1861,7 +1864,10 @@ public class TestSetManager {
 				if(max_CI > end_CI)
 					max_CI = end_CI;
 				
-				System.out.println("Min:" +min_CI + " Max:" + max_CI + "\n");
+				if(min_CI == max_CI)
+					break;
+				
+				System.out.println("Min:" +min_CI + " Max:" + max_CI);
 				//1. for AllPolicies
 				c = g.getAllPolicies();
 				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
