@@ -693,10 +693,10 @@ public class ScriptManager {
 		}else if(instruction.equals("getCIPerformance")){
 			StringBuilder sb = new StringBuilder();
 			
-			double start_CI = 6;
-			double end_CI = 20;
-			double interval  = 1;
-			date = "20090314";
+			double start_CI = Double.parseDouble(args[2]);
+			double end_CI = Double.parseDouble(args[3]);
+			double interval  = Double.parseDouble(args[4]);
+			date = args[5];
 			
 //			//1. generate adequate test sets
 			for(double i = start_CI; i < end_CI; i = i + interval){
@@ -715,7 +715,34 @@ public class ScriptManager {
 				+ date + "/Script/CIPerformance.sh";
 			ScriptManager.save(sb.toString(), saveFile);
 			
-			//2. execute these test sets
+//			//2. 2009-03-31: execute these test sets: get the relationships between CI of adequate test sets and testing effectiveness
+//			String srcDir ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//				+ date +"/";
+//			String testSetFile = null;
+//			for(double i = start_CI; i < end_CI; i = i + interval){
+//				min_CI = i;
+//				max_CI = i + interval;
+//				
+//				if(max_CI > end_CI)
+//					max_CI = end_CI;
+//				
+//				String criteria[] = {
+//						"AllPolicies",
+//						"All1ResolvedDU",
+//						"All2ResolvedDU",
+//				};
+//				for(int j = 0; j < criteria.length; j ++){
+//					String criterion = criteria[j];
+//					testSetFile = srcDir + criterion+"_"+min_CI + "_"+max_CI+".txt";
+//					sb.append("java ccr.test.ExecutionManager " + date + " " 
+//						+ testSetFile+ " \n");	
+//				}
+//			}
+//			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//				+ date + "/Script/CIPerformance.sh";
+//			ScriptManager.save(sb.toString(), saveFile);
+			
+			//2. 2009-03-31: execute these test sets: get the correlations between CI of test cases and testing effectiveness
 			String srcDir ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/";
 			String testSetFile = null;
@@ -726,21 +753,16 @@ public class ScriptManager {
 				if(max_CI > end_CI)
 					max_CI = end_CI;
 				
-				String criteria[] = {
-						"AllPolicies",
-						"All1ResolvedDU",
-						"All2ResolvedDU",
-				};
-				for(int j = 0; j < criteria.length; j ++){
-					String criterion = criteria[j];
-					testSetFile = srcDir + criterion+"_"+min_CI + "_"+max_CI+".txt";
-					sb.append("java ccr.test.ExecutionManager -Xmx1500m " + date + " " 
+					
+				testSetFile = srcDir + "TestCases_"+min_CI + "_"+max_CI+".txt";
+				sb.append("java ccr.test.ExecutionManager " + date + " " 
 						+ testSetFile+ " \n");	
-				}
+				
 			}
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/CIPerformance.sh";
 			ScriptManager.save(sb.toString(), saveFile);
+			
 		}else if(instruction.equals("getFailureRate")){
 			
 			
