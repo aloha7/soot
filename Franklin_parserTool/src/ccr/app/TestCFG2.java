@@ -2,8 +2,6 @@ package ccr.app;
 
 import java.util.*;
 
-import ccr.test.Logger;
-
 public class TestCFG2 extends Application {
 	
 //	private final int PATH_LEN = /*100*/100;  // Length of a random path
@@ -27,8 +25,7 @@ public class TestCFG2 extends Application {
 	private Vector queue;
 	private long timestamp;
 	private Context candidate;
-	private Vector PositionQueue = new Vector();
-	int lastPos = -1;
+
 	public Object application(String testcase) {
 		
 		// Program ID [c]
@@ -59,7 +56,7 @@ public class TestCFG2 extends Application {
 		int cPos = -1;
 		int stay = 0;
 	//	int mode = MODE_MIX;
-//		int lastPos = -1;
+		int lastPos = -1;
 		timestamp = System.currentTimeMillis();
 		counter = 0;
 	//	double distance = 0;
@@ -739,7 +736,7 @@ public class TestCFG2 extends Application {
 	}
 
 	protected void resolve() {
-		PositionQueue.add(lastPos);
+		
 		boolean consistent = true;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
@@ -778,49 +775,10 @@ public class TestCFG2 extends Application {
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
 	}
 	
-	public int getChanges(Vector queue){
-		int changes = 0;
-		Object last = null;
-		Object previous = null;
-		if(queue.size() == 1){
-			changes = 0;
-		}
-		for(int i = 0; i < queue.size()-1; i ++){
-			previous = queue.get(i);
-			last = queue.get(i +1);
-			if(previous!=last)
-				changes ++;
-		}
-		return changes;
-	}
 	public static void main(String argv[]) {
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append("TestCase" + "\t" + "length" + "\t" +"changes" + "\t" + "CI" +"\n");
-		for(int i = -10000; i < 10000; i ++){
-			String testcase = "" + i;
-			TestCFG2 ins = new TestCFG2();
-			ins.application(testcase);
-		
-			int changes = ins.getChanges(ins.PositionQueue);
-			System.out.println(testcase);
-			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
-					+"\t" + (ins.PositionQueue.size() - changes)) ;
-			
-//			for(int j = 0; j < ins.PositionQueue.size(); j ++){
-//				sb.append(ins.PositionQueue.get(j)+"\t");
-//			}
-			sb.append("\n");
-		}
-		System.out.println(sb.toString());
-		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090309/TestPool.txt";
-
-		Logger.getInstance().setPath(saveFile, false);
-		Logger.getInstance().write(sb.toString());
-		Logger.getInstance().close();
-		
-//		String testcase = "10"; 
-//		System.out.println("result = " + (new TestCFG2()).application(testcase));
+		String testcase = "10"; 
+		System.out.println("result = " + (new TestCFG2()).application(testcase));
 	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
 
