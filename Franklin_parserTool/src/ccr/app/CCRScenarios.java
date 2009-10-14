@@ -3,6 +3,8 @@ package ccr.app;
 import java.io.*;
 import java.util.*;
 
+import ccr.help.FileOperator;
+
 public class CCRScenarios {
 
     public static int SCENARIO_NUM = 2;  // Two scenarios
@@ -41,7 +43,11 @@ public class CCRScenarios {
         for (int i = 0; i < POS_NUM; i++) {
             posEstLocs[0][i] = new Vector();
             try {
-                BufferedReader br = new BufferedReader(new FileReader("data/scenario 0/input/" + i + ".txt"));
+//            	2009-09-04: 
+            	BufferedReader br = new BufferedReader(new FileReader("data/scenario 0/input/" + i + ".txt"));
+//            	System.out.println(new File("data/scenario 1/input/" + i + ".txt").getAbsolutePath());
+//            	File dataFile = FileOperator.getFile(System.getProperty("java.class.path"), "data/scenario 0/input/" + i + ".txt");
+//                BufferedReader br = new BufferedReader(new FileReader(dataFile));
                 String line = br.readLine();
                 while (line != null) {
                     StringTokenizer st = new StringTokenizer(line);
@@ -61,7 +67,12 @@ public class CCRScenarios {
         for (int i = 0; i < POS_NUM; i++) {
             posEstLocs[1][i] = new Vector();
             try {
-                BufferedReader br = new BufferedReader(new FileReader("data/scenario 1/input/" + i + ".txt"));
+            	//2009-09-04: 
+              BufferedReader br = new BufferedReader(new FileReader("data/scenario 1/input/" + i + ".txt"));
+//              System.out.println(new File("data/scenario 1/input/" + i + ".txt").getAbsolutePath());
+//            	File dataFile = FileOperator.getFile(System.getProperty("java.class.path"), "data/scenario 0/input/" + i + ".txt");
+//                BufferedReader br = new BufferedReader(new FileReader(dataFile));
+
                 String line = br.readLine();
                 while (line != null) {
                     StringTokenizer st = new StringTokenizer(line);

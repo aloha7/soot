@@ -16,13 +16,13 @@ public class TestCFG2 extends Application {
 //	private final int MODE_WALK = 1;  // Always in walk
 //	private final int MODE_MIX = 2;  // In stay and walk
 	private final int sid = 0; // Scenario id
-	
+	      
 	private int counter = 0;
 //	private int lastPos = -1; // Last position id
 	private double curEstX = 0.0, curEstY = 0.0; // Current estimated location
 //	private int mode = MODE_MIX;
 	
-	private Vector queue;
+	private Vector queue; 
 	private long timestamp;
 	private Context candidate;
 
@@ -32,8 +32,8 @@ public class TestCFG2 extends Application {
 		
 		// Ordinary Variable [location, lastLocation, moved, reliable, displace, error, curEstX, curEstY, c, bPos, cPos, stay, lastPos, timestamp, counter, t, actLoc, estLoc, lastLoc, dist]
 		
-		// Context Variable [candidate]
-		
+		// Context Variable [candidate, location, lastLocation, displace, curEstX, curEstY, bPos, cPos, lastPos, actLoc, estLoc, lastLoc, dist]
+		     
 		// Assignment [=]
 		
 		int seed = Integer.parseInt(testcase);
@@ -728,13 +728,13 @@ public class TestCFG2 extends Application {
 	}
 	
 	private Coordinates toCoordinates(Context ctx) {
-		
+		  
 		StringTokenizer st = new StringTokenizer((String) ctx.get(Context.FLD_OBJECT));
 		double x = Double.parseDouble(st.nextToken());
 		double y = Double.parseDouble(st.nextToken());
 		return new Coordinates(x, y);
 	}
-
+ 
 	protected void resolve() {
 		
 		boolean consistent = true;
@@ -773,12 +773,12 @@ public class TestCFG2 extends Application {
 			candidate = (Context) queue.get(0);
 		}
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
-	}
+	}  
 	
 	public static void main(String argv[]) {
-		
-		String testcase = "10"; 
-		System.out.println("result = " + (new TestCFG2()).application(testcase));
+		String testcase = argv[0]; 
+		new TestCFG2().application(testcase); 
+//		System.out.println("result = " + (new TestCFG2()).application(testcase));
 	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
 

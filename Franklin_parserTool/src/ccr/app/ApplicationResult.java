@@ -22,7 +22,7 @@ public class ApplicationResult {
 	
 	public String toString() {
 		
-		return "moved: " + moved + " reliable: " + reliable; 
+		return "moved:" + moved + " reliable:" + reliable; 
 	}
 
 }
