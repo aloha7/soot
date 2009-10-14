@@ -61,6 +61,89 @@ public class ScriptManager {
 		return sb.toString();
 	}
 	
+	/**2009-09-19: run CA, RA-H, RA-L, RA-R test suites
+	 * 
+	 * @param testSetNum
+	 * @param date
+	 * @return
+	 */
+	public static String exeAdequateTS_Script(int testSetNum, String date){
+
+		int interval = 18;
+		int sleep_sed = 180; // sleep time in terms of seconds(60, 5 for [1, 130]->118min, 180, 10 for[130, 200]->112min)
+		int incremental = 10;
+		int counter = 0; 
+		int total = 0;
+		
+		String[] criteria = new String[] { 
+				"AllPolicies",
+				"All1ResolvedDU",
+				"All2ResolvedDU",
+		};
+		
+		//Load 20090918 AllPolicies -1 new random H
+		StringBuilder sb = new StringBuilder();
+		for(int j = 0; j < criteria.length; j ++){			
+			//for CA
+			sb.append("java -Xmx1500m ccr.test.TestingEffectiveManager " 
+					+ "Load " + date + " " + criteria[j]
+					+ " -1 " + "old " + "random " + "R " + "\n");			
+			//for RA_H
+			sb.append("java -Xmx1500m ccr.test.TestingEffectiveManager " 
+					+ "Load " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "H " + "\n");
+			//for RA_L
+			sb.append("java -Xmx1500m ccr.test.TestingEffectiveManager " 
+					+ "Load " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "L " + "\n");
+			//for RA_R
+			sb.append("java -Xmx1500m ccr.test.TestingEffectiveManager " 
+					+ "Load " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "R " + "\n");			
+		}
+		
+		return sb.toString();
+	}
+	
+	/**2009-10-13: add another parameter: size_ART
+	 * 
+	 * @param testSetNum
+	 * @param date
+	 * @param size_ART: the size of Adaptive Random Testing_generated test sets
+	 * @return
+	 */
+	public static String exeAdequateTS_Script(int testSetNum, String date, String size_ART){
+
+		String[] criteria = new String[] { 
+				"AllPolicies",
+				"All1ResolvedDU",
+				"All2ResolvedDU",
+		};
+		
+		//Load 20090918 AllPolicies -1 new random H
+		StringBuilder sb = new StringBuilder();
+		for(int j = 0; j < criteria.length; j ++){			
+			//for CA
+			sb.append("java ccr.test.TestingEffectiveManager " 
+					+ "Load_large " + date + " " + criteria[j]
+					+ " -1 " + "old " + "random " + "R " + size_ART + "&\n");			
+			//for RA_H
+			sb.append("java ccr.test.TestingEffectiveManager " 
+					+ "Load_large " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "H " + size_ART + "&\n");
+			//for RA_L
+			sb.append("java ccr.test.TestingEffectiveManager " 
+					+ "Load_large " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "L "  + size_ART+ "&\n");
+			//for RA_R
+			sb.append("java ccr.test.TestingEffectiveManager " 
+					+ "Load_large " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "R " + size_ART + "&\n");			
+		}
+		
+		return sb.toString();
+	}
+	
 	public static String exeAdequateTS_Script(int testSetNum, String instruction, double min_CI,
 			double max_CI, String date, int min_TestSuiteSize, int max_TestSuiteSize){
 
@@ -285,6 +368,82 @@ public class ScriptManager {
 		return sb.toString();
 	}
 
+	/**2009-09-19: using CA, RA_H, RA_L, RA_R to construct adequate test suites
+	 * 
+	 * @param testSetNum
+	 * @param date
+	 * @return
+	 */
+	public static String genAdequateTS_Script(int testSetNum, String date){
+		StringBuilder sb = new StringBuilder();
+		
+		//5 Context_Intensity 0.7 0.9 20090918 AllPolicies -1 new random R
+		String[] criteria = new String[] { 
+				"AllPolicies",
+				"All1ResolvedDU",
+				"All2ResolvedDU",
+		};
+		
+		for(int j = 0; j < criteria.length; j ++){			
+			//for CA
+			sb.append("java ccr.test.TestSetManager " + testSetNum 
+					+ " Context_Intensity 0.7 0.9 " + date + " " + criteria[j]
+					+ " -1 " + "old " + "random " + "R " + "&\n");			
+			//for RA_H
+			sb.append("java ccr.test.TestSetManager " + testSetNum 
+					+ " Context_Intensity 0.7 0.9 " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "H " + "&\n");
+			//for RA_L
+			sb.append("java ccr.test.TestSetManager " + testSetNum 
+					+ " Context_Intensity 0.7 0.9 " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "L " + "&\n");
+			//for RA_R
+			sb.append("java ccr.test.TestSetManager " + testSetNum 
+					+ " Context_Intensity 0.7 0.9 " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "R " + "&\n");			
+		}
+		
+		return sb.toString();
+	}
+	
+	/**2009-10-13: using CA, RA_H, RA_L, RA_R to construct adequate test suites
+	 * 
+	 * @param testSetNum
+	 * @param date
+	 * @param size_ART: the size of Adaptive Random Testing_generated test set
+	 * @return
+	 */
+	public static String genAdequateTS_Script(int testSetNum, String date, String size_ART){
+		StringBuilder sb = new StringBuilder();
+		
+		//5 Context_Intensity 0.7 0.9 20090918 AllPolicies -1 new random R
+		String[] criteria = new String[] { 
+				"AllPolicies",
+				"All1ResolvedDU",
+				"All2ResolvedDU",
+		};
+		
+		for(int j = 0; j < criteria.length; j ++){			
+			//for CA
+			sb.append("java ccr.test.TestSetManager " + testSetNum 
+					+ " Context_Intensity 0.7 0.9 " + date + " " + criteria[j]
+					+ " -1 " + "old " + "random " + "R " + size_ART + "&\n");			
+			//for RA_H
+			sb.append("java ccr.test.TestSetManager " + testSetNum 
+					+ " Context_Intensity 0.7 0.9 " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "H " + size_ART + "&\n");
+			//for RA_L
+			sb.append("java ccr.test.TestSetManager " + testSetNum 
+					+ " Context_Intensity 0.7 0.9 " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "L " + size_ART + "&\n");
+			//for RA_R
+			sb.append("java ccr.test.TestSetManager " + testSetNum 
+					+ " Context_Intensity 0.7 0.9 " + date + " " + criteria[j]
+					+ " -1 " + "new " + "random " + "R " + size_ART + "&\n");			
+		}
+		
+		return sb.toString();
+	}
 	/**
 	 * To generate adequate test sets with fixed size
 	 * 
@@ -451,7 +610,7 @@ public class ScriptManager {
 		StringBuilder sb = new StringBuilder();
 		for(int i = startVersion; i < endVersion; i ++){
 			sb.append("java ccr.test.TestDriver getFailureRate " + date + " " + i + " "
-					+ (i+1) + " a\n");
+					+ (i+1) + "\n");
 		}
 		
 		Logger.getInstance().setPath(saveFile, false);
@@ -492,6 +651,8 @@ public class ScriptManager {
 		Logger.getInstance().close();
 	}
 	
+	
+	
 	public static void main(String[] args) {
 		System.out
 				.println("USAGE: java ccr.test.ScriptManager <testSetNum(100)> <Context_Intensity> <min_CI(0.7)> "
@@ -508,6 +669,8 @@ public class ScriptManager {
 		int min_TestSuiteSize = Integer.parseInt(args[5]);
 		int max_TestSuiteSize = Integer.parseInt(args[6]);
 
+		String size_ART = args[7];
+		
 		String saveFile = null;
 		if (instruction.equals("GenRandomTS")) { 
 			//generate random test sets
@@ -521,9 +684,15 @@ public class ScriptManager {
 			//generate adequate test sets
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 					+ date + "/Script/GenAdequateTestSet.sh";
-			ScriptManager.save(genAdequateTS_Script(testSetNum, min_CI, max_CI,
-					date, min_TestSuiteSize, max_TestSuiteSize), saveFile);
-
+//			ScriptManager.save(genAdequateTS_Script(testSetNum, min_CI, max_CI,
+//					date, min_TestSuiteSize, max_TestSuiteSize), saveFile);
+			
+			//2009-09-19:
+//			ScriptManager.save(genAdequateTS_Script(testSetNum, date), saveFile);
+			
+			//2009-10-13: add another parameter: size_ART 
+			ScriptManager.save(genAdequateTS_Script(testSetNum, date, size_ART), saveFile);
+			
 		} else if (instruction.equals("ExeRandomTS")) {
 			//execute random test sets
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
@@ -535,9 +704,15 @@ public class ScriptManager {
 			//execute adequate test sets
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/ExeAdequateTS.sh";
-			ScriptManager.save(exeAdequateTS_Script(testSetNum, instruction, min_CI, max_CI, 
-					date, min_TestSuiteSize, max_TestSuiteSize), saveFile);
 			
+//			ScriptManager.save(exeAdequateTS_Script(testSetNum, instruction, min_CI, max_CI, 
+//					date, min_TestSuiteSize, max_TestSuiteSize), saveFile);
+			
+			//2009-09-19:
+//			ScriptManager.save(exeAdequateTS_Script(testSetNum, date), saveFile);
+			
+			//2009-10-13: add another parameter
+			ScriptManager.save(exeAdequateTS_Script(testSetNum, date, size_ART), saveFile);
 		}else if(instruction.equals("AllInOne")){//getSizePerformance
 			//This scripts is used to investigate the correlations between test suite size and testing performances
 			//generate all random, adequate test sets, then execute them and analyze them
@@ -764,10 +939,8 @@ public class ScriptManager {
 			ScriptManager.save(sb.toString(), saveFile);
 			
 		}else if(instruction.equals("getFailureRate")){
-			
-			
-			int start = 0;
-			int end = 544; //[140, 3600][3600, 5024]
+			int start = 4369;
+			int end = 4527; //[140, 3600][3600, 5024]
 			int concurrent = 10;
 			
 			//2.concurrent execution

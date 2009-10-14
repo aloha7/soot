@@ -105,96 +105,138 @@ public class TestSet {
 //		return get((int) (Math.random() * (double) size()));
 	}
 	
-	public String getByART(TestSet testset){
-
-		//1. prepare for the ART choosing
-		ArrayList CI_testcases = new ArrayList();
-
-		for (int i = 0; i < testset.size(); i++) {
-			String testcase = (String) testset.get(i);
-			double CI_testcase = ((TestCase) Adequacy.testCases.get(testcase)).CI;
-
-			// insert it into testcases
-			if (CI_testcases.size() != 0) {
-				for (int j = 0; j < CI_testcases.size(); j++) {
-					double CI_tc = (Double)CI_testcases.get(j);					
-					if (CI_tc < CI_testcase) {
-						// right place to insert testcase, 
-						//all CI in test cases are ordered in descending order
-						CI_testcases.add(j, CI_testcase);
-						break;
-					}
-				}
-			} else {
-				CI_testcases.add(CI_testcase);
-			}
+	/**2009-08-19: RA_R which constructs test sets with evenly-distributed context diversities
+	 * 
+	 * @param testset
+	 * @param size_TestSet: the size of ART-constructed test sets(default value = 10)
+	 * @return
+	 */
+	public String getByART(TestSet testset, int size_TestSet){
+		//1.get CIs of test cases in the test set
+		ArrayList<Double> CI_testcases = new ArrayList<Double>();
+		for(int i = 0; i < testset.size(); i ++){
+			String index_testcase = (String)testset.get(i);
+			double CI_testcase = ((TestCase)Adequacy.testCases.get(index_testcase)).CI;
+			CI_testcases.add(CI_testcase);
 		}
-
-		// 2. use ART-algorithm to choose 10 candidate test cases
-		ArrayList tmp = new ArrayList();
-		int trial = 0;
-		do {
+		
+		//2.get 10 random candidate test sets, and their distances to test cases in testset
+		ArrayList<String> tmpTestSet = new ArrayList<String>();
+		ArrayList<Double> dis_TempTestSet = new ArrayList<Double>();
+		
+		while(tmpTestSet.size() < size_TestSet){
 			String testcase = this.getByRandom();
-			
-//			System.out.println("testcase(TestSet):" + testcase);
-			
-			trial ++;
-			if (!tmp.contains(testcase)) {
-				
-				// sort test cases in tmp
-				double CI_testcase = ((TestCase) Adequacy.testCases
-						.get(testcase)).CI;
-				if (tmp.size() != 0) {
-					int k = 0;
-					for (; k < tmp.size(); k++) {
-						TestCase temp = (TestCase)Adequacy.testCases.get((String)tmp.get(k));
-						double CI_temp = temp.CI;
-						if (CI_temp < CI_testcase) {// right place to insert CI
-							tmp.add(k, testcase);
-							break;
-						}
-					}
-					if(k == tmp.size()){ //add it to the tail of sequences
-						tmp.add(testcase);
-					}
-				} else {
-					tmp.add(testcase);
+			if(!tmpTestSet.contains(testcase) && !testset.contains(testcase)){
+				tmpTestSet.add(testcase);
+				double CI_testcase = ((TestCase)Adequacy.testCases.get(testcase)).CI;
+				double distance = 0.0;
+				for(Double CI: CI_testcases){
+					distance += Math.abs(CI - CI_testcase);
 				}
-			}
-			if(trial > 20){
-				System.out.println("Trail(TestSet):" + trial + "\ttmp.size():" + tmp.size() + "\tsize:" + this.size());
-			}
-		} while (tmp.size() < 10);
-		
-		//3. use nearest neighbors to determine which test case in tmp should be returned
-		ArrayList minDistances = new ArrayList();
-		for(int i = 0; i < tmp.size(); i ++){
-			TestCase tc = (TestCase)Adequacy.testCases.get((String)tmp.get(i));
-			double minDis = Double.MAX_VALUE;
-			for(int j = 0; j < CI_testcases.size(); j ++){
-				double distance = Math.abs(tc.CI-(Double)CI_testcases.get(j));
-				if(minDis > distance)
-					minDis = distance;
-			}
-			minDistances.add(minDis);
-		}
-		
-		
-		double maxDis = Double.MIN_VALUE;
-		int index = 0;
-		
-		for(int i = 0; i < minDistances.size(); i ++){
-			double dis = (Double)minDistances.get(i);
-			if(maxDis < dis){
-				maxDis = dis;
-				index = i;
+				dis_TempTestSet.add(distance);
 			}
 		}
 		
-		return (String)tmp.get(index);
-//		return ((TestCase)Adequacy.testCases.get((String)tmp.get(index))).index; 
+		//3. get the test case with max distance from existing test cases
+		double max_dist = Double.MIN_VALUE;
+		int max_index = 0;
+		for(int i = 0; i < dis_TempTestSet.size(); i ++){
+			double dis = dis_TempTestSet.get(i);
+			if(dis > max_dist){
+				max_dist = dis;
+				max_index = i;
+			}
+		}
 		
+		return tmpTestSet.get(max_index);
 	}
+	
+	
+//	public String getByART(TestSet testset){
+//
+//		//1. prepare for the ART choosing
+//		ArrayList CI_testcases = new ArrayList();
+//
+//		for (int i = 0; i < testset.size(); i++) {
+//			String testcase = (String) testset.get(i);
+//			double CI_testcase = ((TestCase) Adequacy.testCases.get(testcase)).CI;
+//
+//			// insert it into testcases
+//			if (CI_testcases.size() != 0) {
+//				for (int j = 0; j < CI_testcases.size(); j++) {
+//					double CI_tc = (Double)CI_testcases.get(j);					
+//					if (CI_tc < CI_testcase) {
+//						// right place to insert testcase, 
+//						//all CI in test cases are ordered in descending order
+//						CI_testcases.add(j, CI_testcase);
+//						break;
+//					}
+//				}
+//			} else {
+//				CI_testcases.add(CI_testcase);
+//			}
+//		}
+//
+//		// 2. use ART-algorithm to choose 10 candidate test cases
+//		ArrayList tmp = new ArrayList();
+//		int trial = 0;
+//		do {
+//			String testcase = this.getByRandom();
+//			trial ++;
+//			if (!tmp.contains(testcase)) {
+//				// sort test cases in tmp
+//				double CI_testcase = ((TestCase) Adequacy.testCases
+//						.get(testcase)).CI;
+//				if (tmp.size() != 0) {
+//					int k = 0;
+//					for (; k < tmp.size(); k++) {
+//						TestCase temp = (TestCase)Adequacy.testCases.get((String)tmp.get(k));
+//						double CI_temp = temp.CI;
+//						if (CI_temp < CI_testcase) {// right place to insert CI
+//							tmp.add(k, testcase);
+//							break;
+//						}
+//					}
+//					if(k == tmp.size()){ //add it to the tail of sequences
+//						tmp.add(testcase);
+//					}
+//				} else {
+//					tmp.add(testcase);
+//				}
+//			}
+//			if(trial > 20){
+//				System.out.println("Trail(TestSet):" + trial + "\ttmp.size():" + tmp.size() + "\tsize:" + this.size());
+//			}
+//		} while (tmp.size() < 10);
+//		
+//		//3. use nearest neighbors to determine which test case in tmp should be returned
+//		ArrayList minDistances = new ArrayList();
+//		for(int i = 0; i < tmp.size(); i ++){
+//			TestCase tc = (TestCase)Adequacy.testCases.get((String)tmp.get(i));
+//			double minDis = Double.MAX_VALUE;
+//			for(int j = 0; j < CI_testcases.size(); j ++){
+//				double distance = Math.abs(tc.CI-(Double)CI_testcases.get(j));
+//				if(minDis > distance)
+//					minDis = distance;
+//			}
+//			minDistances.add(minDis);
+//		}
+//		
+//		
+//		double maxDis = Double.MIN_VALUE;
+//		int index = 0;
+//		
+//		for(int i = 0; i < minDistances.size(); i ++){
+//			double dis = (Double)minDistances.get(i);
+//			if(maxDis < dis){
+//				maxDis = dis;
+//				index = i;
+//			}
+//		}
+//		
+//		return (String)tmp.get(index);
+//		
+//	}
 	
 	/**return the test case who has the ith-largest CI value 
 	 * 
@@ -285,6 +327,51 @@ public class TestSet {
 		}
 		return testCaseMaxCI;
 	}
+	
+	/**2009-09-18:
+	 * 
+	 * @param H_L: RA_H or RA_L: the former favors high context diversities 
+	 * while the latter favors low context diversities
+	 * @param size_TestSet: the size of ART-constructed test sets
+	 * @return
+	 */
+	public String getByART(String H_L, int size_TestSet){
+		TestSet tmp = new TestSet();
+		//randomly get a test set S containing 10 test cases 
+		do{
+			String testcase = this.getByRandom();
+			if(!tmp.contains(testcase))
+				tmp.add(testcase);
+		}while(tmp.size()< size_TestSet);
+		
+		
+		String testCaseMaxCI = null;
+		
+		if(H_L.equals("H")){
+			double maxCI =Double.MIN_VALUE;
+			for(int i = 0; i < tmp.size(); i ++){
+				TestCase temp = (TestCase) Adequacy.testCases.get((String)tmp.get(i));
+				double CI_temp = temp.CI;
+				if(CI_temp > maxCI){
+					maxCI = CI_temp;
+					testCaseMaxCI = temp.index;
+				}
+			}	
+		}else if(H_L.equals("L")){
+			double minCI = Double.MAX_VALUE;
+			for(int i = 0; i < tmp.size(); i ++){
+				TestCase temp = (TestCase) Adequacy.testCases.get((String)tmp.get(i));
+				double CI_temp = temp.CI;
+				if(CI_temp < minCI){
+					minCI = CI_temp;
+					testCaseMaxCI = temp.index;
+				}
+			}
+		}
+		
+		return testCaseMaxCI;
+	}
+	
 	
 	public String getByRandom(double min_CI, double max_CI, int maxTrial){
 		String randomTC = null;

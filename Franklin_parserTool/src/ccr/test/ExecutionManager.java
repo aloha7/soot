@@ -35,7 +35,14 @@ public class ExecutionManager {
 				.println("USAGE: java ccr.test.ExecutionManager <testSetNum(100)> <Context_Intensity,Limited,Load> <min_CI(0.7)> "
 						+ "<max_CI(0.9)> <directory(20090222)> <testing criteria(AllPolicies, All1ResolvedDU, All2ResolvedDU)>"
 						+ "<TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>[min_FaultyVersion][max_FaultyVersion]");
-
+		for(int i = 0; i < args.length; i ++){
+			System.out.println(args[i]);	
+		}
+		//2009-09-19
+		if(args.length == 10){
+			
+		}
+		
 		if (args.length >= 9) {
 			int testSetNum = Integer.parseInt(args[0]);
 			String instruction = args[1];
@@ -268,17 +275,21 @@ public class ExecutionManager {
 
 					if (containHeader)
 						br.readLine();
-
+					String[] strs;
+					String fault;
+					String testcase;
+					String POrF;
+					
 					while ((line = br.readLine()) != null) {
-						String[] strs = line.split("\t");
-						String fault = strs[0].trim();
+						strs = line.split("\t");
+						fault = strs[0].trim();
 
 						if (!faultList.contains(fault)) // this can save memory
 														// significantly
 							continue;
 
-						String testcase = strs[1].trim();
-						String POrF = strs[2].trim();
+						testcase = strs[1].trim();
+						POrF = strs[2].trim();
 
 						// save data into execHistory
 						HashMap tc_pf;
@@ -337,6 +348,8 @@ public class ExecutionManager {
 			}
 		}else if(args.length == 2){
 			//specify the test set file directly, used to execute test sets whose CI are fixed in a small range
+			
+			
 			String date = args[0];
 			String testSetFile = args[1];
 

@@ -25,7 +25,7 @@ public class TestManager {
 	public static void getFailureRate(String versionPackageName, String oracleClassName, TestSet testpool, 
 			String reportDir, int minFaultyVersion, int maxFaultyVersion){
 		try {
-			Oracle oracle = new Oracle(APPLICATION_PACKAGE + "."
+			Oracle oracle = Oracle.getInstance(APPLICATION_PACKAGE + "."
 					+ oracleClassName, testpool);
 			String versionFolder = APPLICATION_FOLDER + "/"
 					+ versionPackageName;
