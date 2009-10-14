@@ -117,6 +117,73 @@ public class FileOperator {
 			
 	}
 	
+	public static File getFile(String classPath, String fileName){
+//		fileName = fileName.replace('.', '/');
+		for(String clzPath: classPath.split(";")){
+			File temp = new File(clzPath + File.separator + fileName);
+			if(temp.exists()){
+				return temp;
+			}
+		}
+		return null;
+	}
+	
+	/**2009-10-14: filter faulty versions
+	 * 
+	 * @param src_file
+	 * @param containHeader
+	 * @param dest_file
+	 */
+	public static void filterFiles(String src_file, boolean containHeader, double max_failure_rate, String dest_file){
+		StringBuilder sb = new StringBuilder();
+		String line = null;
+
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(src_file));
+			if(containHeader)
+				br.readLine();
+			
+			while((line=br.readLine())!= null){
+				String[] str = line.split("\t");
+				String faultyVersion;
+				double failureRate, P_AS_CA, P_AS_RA_H, P_ASU_CA, P_ASU_RA_H, P_A2SU_CA, P_A2SU_RA_H;
+				
+				if(str.length ==  14){
+					faultyVersion = str[0];
+					failureRate = Double.parseDouble(str[1]);
+					P_AS_CA = Double.parseDouble(str[2]);
+					P_AS_RA_H = Double.parseDouble(str[3]);
+					
+					P_ASU_CA = Double.parseDouble(str[6]);
+					P_ASU_RA_H = Double.parseDouble(str[7]);
+					
+					P_A2SU_CA = Double.parseDouble(str[10]);
+					P_A2SU_RA_H = Double.parseDouble(str[11]);
+					
+					if(failureRate < max_failure_rate && P_AS_CA <= P_AS_RA_H 
+							&& P_ASU_CA < P_ASU_RA_H && P_A2SU_CA <= P_A2SU_RA_H){
+						sb.append(faultyVersion + "\n");
+					}	
+				}
+				
+			}
+			
+			br.close();
+			
+			BufferedWriter bw = new BufferedWriter(new FileWriter(dest_file));
+			bw.write(sb.toString());
+			bw.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public static void main(String[] args){
 	//	FileOperator.copyFile("B.java");
 	//	System.out.println(FileOperator.deleteFile("B.java"));
@@ -124,8 +191,18 @@ public class FileOperator {
 	//	String src = System.getProperty("user.dir")+ File.separator +"Test" + File.separator + "A";
 	//	String dest = System.getProperty("user.dir")+ File.separator +"Test" + File.separator  +"B";
 	//	FileOperator.copyFile(src, dest);
-		String src = "src/ccr/app/TestCFG2.java";
-		String dest = "src/ccr/app/testversion/TestCFG2_1010.java";
-		System.out.print(FileOperator.compare(src, dest));
+//		String src = "src/ccr/app/TestCFG2.java";
+//		String dest = "src/ccr/app/testversion/TestCFG2_1010.java";
+//		System.out.print(FileOperator.compare(src, dest));
+		
+		String date = args[0];
+		double max_failure_rate = Double.parseDouble(args[1]);
+		
+		String src_file = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+		+ date + "/PerValidTS.txt";
+		String dest_file = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/FaultList_new.txt";
+		boolean containHeader = true;
+		FileOperator.filterFiles(src_file, containHeader, max_failure_rate, dest_file);
 	}
 }
