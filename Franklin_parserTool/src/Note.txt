@@ -2,6 +2,19 @@
 For the Context-Extraction Model:Context Variable [candidate, location, lastLocation, displace, curEstX, curEstY, bPos, cPos, lastPos, actLoc, estLoc, lastLoc, dist]
 For the Context-Intensity: Context Variable [candidate]
 2.The procedure to do the experiments:
-1). Get the failure rate of 140 faulty versions: ccr.test.TestDriver.java
-2). Get the criterion-adequacy test sets:ccr.test.Adequacy.java
-3). Get the fault detection rate of adequate test sets: ccr.test.Adequacy.java
+1). Get the failure rate of all faulty versions: ccr.test.TestDriver.java
+
+2). Get the criterion-adequacy test sets:ccr.test.TestSetManager.java
+java ccr.test.TestSetManager 2 Context_Intensity 0.7 0.9 20090919 AllPolicies -1 new random L 20
+
+3). Get the detailed fault detection information of adequate test sets: ccr.test.TestingEffectiveManager.java
+java ccr.test.TestingEffectiveManager Load 20090918 AllPolicies -1 new random H 20
+
+4). Get the fault detection rate of adequate test sets: ccr.test.ResultAnalyzer.java
+
+
+5). Write the script:ccr.test.ScriptManager.java 
+
+Information:
+1. All test cases information is saved in "TestPool.txt"
+2. Failure rates of all faulty versions is in "failureRate.txt"(Especially in /20090312,20091005)
