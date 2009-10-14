@@ -81,7 +81,6 @@ public class Criterion implements Cloneable {
 	}
 	
 	public Object clone() {
-		
 		try {
 			Criterion criterion = (Criterion) super.clone();
 			criterion.DUMap = (NodeMap) this.DUMap.clone();
@@ -123,6 +122,10 @@ public class Criterion implements Cloneable {
 		return policies.contains(policy);
 	}
 	
+	public boolean containsAssociation(Node node, Node node1){
+		return DUMap.containsAssociation(node, node1);
+	}
+	
 	public boolean removeByID(Node node, Node node1){
 		boolean result = false;
 		if(DUMap.containsKey(node)){
@@ -139,6 +142,8 @@ public class Criterion implements Cloneable {
 		
 		return result;
 	}
+	
+
 	
 	public boolean remove(Node node, Node node1) {
 		
@@ -170,7 +175,7 @@ public class Criterion implements Cloneable {
 		}
 		return result;
 	}
-	
+
 	public boolean remove(Node node) {
 		
 		boolean result = false;
@@ -195,6 +200,8 @@ public class Criterion implements Cloneable {
 		
 		return result;
 	}
+	
+
 	
 	public boolean remove(Policy policy) {
 		
