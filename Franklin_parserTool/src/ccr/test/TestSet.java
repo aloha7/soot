@@ -20,6 +20,9 @@ public class TestSet {
 	//2009-2-21: replace counters
 	public int replaceCounter=0;
 	
+	//2009-10-15: the tie between activation and CI. 
+	public int tie_activation_CI = 0;
+	
 	public TestSet() {
 		
 		testcases = new Vector();
@@ -44,7 +47,6 @@ public class TestSet {
 	}
 	
 	public void add(String testcase) {
-		
 		if (!testcases.contains(testcase)) {
 			testcases.add(testcase);
 		}
@@ -105,6 +107,8 @@ public class TestSet {
 //		return get((int) (Math.random() * (double) size()));
 	}
 	
+	
+	
 	/**2009-08-19: RA_R which constructs test sets with evenly-distributed context diversities
 	 * 
 	 * @param testset
@@ -151,6 +155,51 @@ public class TestSet {
 		return tmpTestSet.get(max_index);
 	}
 	
+	/**2009-10-15:RA_R which constructs test sets with evenly-distributed activation
+	 * 
+	 * @param testset
+	 * @param size_TestSet
+	 * @return
+	 */
+	public String getByART_activation(TestSet testset, int size_TestSet){
+		//1.get activations of test cases in the test set
+		ArrayList<Integer> activation_testcases = new ArrayList<Integer>();
+		for(int i = 0; i < testset.size(); i ++){
+			String index_testcase = (String)testset.get(i);
+			int activation_testcase = ((TestCase)Adequacy.testCases.get(index_testcase)).activation;
+			activation_testcases.add(activation_testcase);
+		}
+		
+		//2.get 10 random candidate test sets, and their distances to test cases in testset
+		ArrayList<String> tmpTestSet = new ArrayList<String>();
+		ArrayList<Double> dis_TempTestSet = new ArrayList<Double>();
+		
+		while(tmpTestSet.size() < size_TestSet){
+			String testcase = this.getByRandom();
+			if(!tmpTestSet.contains(testcase) && !testset.contains(testcase)){ // has not been visited
+				tmpTestSet.add(testcase);
+				int activation_testcase = ((TestCase)Adequacy.testCases.get(testcase)).activation;
+				double distance = 0.0;
+				for(int activation: activation_testcases){
+					distance += Math.abs(activation - activation_testcase);
+				}
+				dis_TempTestSet.add(distance);
+			}
+		}
+		
+		//3. get the test case with max distance from existing test cases
+		double max_dist = Double.MIN_VALUE;
+		int max_index = 0;
+		for(int i = 0; i < dis_TempTestSet.size(); i ++){
+			double dis = dis_TempTestSet.get(i);
+			if(dis > max_dist){
+				max_dist = dis;
+				max_index = i;
+			}
+		}
+		
+		return tmpTestSet.get(max_index);
+	}
 	
 //	public String getByART(TestSet testset){
 //
@@ -372,6 +421,43 @@ public class TestSet {
 		return testCaseMaxCI;
 	}
 	
+	public String getByART_activation(String H_L, int size_TestSet){
+		TestSet tmp = new TestSet();
+		//randomly get a test set S containing 10 test cases 
+		do{
+			String testcase = this.getByRandom();
+			if(!tmp.contains(testcase))
+				tmp.add(testcase);
+		}while(tmp.size()< size_TestSet);
+		
+		
+		String testCaseMaxActivation = null;
+		
+		if(H_L.equals("H")){
+			int maxActivation =Integer.MIN_VALUE;
+			for(int i = 0; i < tmp.size(); i ++){
+				TestCase temp = (TestCase) Adequacy.testCases.get((String)tmp.get(i));
+				int activation_temp = temp.activation;
+				if(activation_temp > maxActivation){
+					maxActivation = activation_temp;
+					testCaseMaxActivation = temp.index;
+				}
+			}	
+		}else if(H_L.equals("L")){
+			int minActivation = Integer.MAX_VALUE;
+			for(int i = 0; i < tmp.size(); i ++){
+				TestCase temp = (TestCase) Adequacy.testCases.get((String)tmp.get(i));
+				int activation_temp = temp.activation;
+				if(activation_temp < minActivation){
+					minActivation = activation_temp;
+					testCaseMaxActivation = temp.index;
+				}
+			}
+		}
+		
+		return testCaseMaxActivation;
+	}
+	
 	
 	public String getByRandom(double min_CI, double max_CI, int maxTrial){
 		String randomTC = null;
@@ -464,7 +550,7 @@ public class TestSet {
 //				+ "\t" + testcases.toString();
 		
 		return "\t" + size() + "\t" + COVERAGE_TAG + displayCoverage() + "\t" + "Time:" + String.valueOf(geneTime)
-		+ "\t" + testcases.toString() +"\t"+ "replaceCounter:" + "\t" + replaceCounter;
+		+ "\t" + testcases.toString() +"\t"+ "replaceCounter:" + "\t" + replaceCounter + "\t" + "Tie_activation_CI:" + this.tie_activation_CI + "\t";
 
 	}
 	

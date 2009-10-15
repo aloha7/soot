@@ -1148,6 +1148,17 @@ public class Adequacy {
 	 * @param testcaseFile
 	 * @return
 	 */
+	public static double getAverageActivation(TestSet ts){
+		double avg_Activation = 0;
+		int sum_Activation = 0;
+		for(int i = 0; i < ts.testcases.size(); i ++){
+			String index_testcase = (String)ts.testcases.get(i);
+			sum_Activation += ((TestCase)Adequacy.testCases.get(index_testcase)).activation;
+		}
+		avg_Activation = sum_Activation/(double)ts.testcases.size();
+		return avg_Activation;
+	}
+	
 	public static double getAverageCI(TestSet ts){
 		double avg_CI = 0.0;
 		double sum_CI = 0.0;

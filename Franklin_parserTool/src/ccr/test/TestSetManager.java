@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
@@ -140,6 +141,34 @@ public class TestSetManager {
 		}
 	}
 
+	/**2009-10-15: attach test set with CI and activation information
+	 * 
+	 * @param testSets
+	 * @param saveFile
+	 */
+	public static void attachTSWithCI_Activation(TestSet[] testSets, String saveFile) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("TestSet" + "\t" + "Size" + "\t" + "Coverage" + "\t" + "CI" + "\t" + "Activation"
+				+ "\n");
+
+		for (int j = 0; j < testSets.length; j++) {
+			TestSet ts = testSets[j];
+			double CI = Adequacy.getAverageCI(ts);
+			double Activation = Adequacy.getAverageActivation(ts);
+			sb.append(ts.index + "\t" + ts.size() + "\t" + ts.coverage + "\t"
+					+ CI + "\t" + Activation + "\n");
+		}
+
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
+			bw.write(sb.toString());
+			bw.close();
+			System.out.println(saveFile + " has been generated");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	/**
 	 * 2009-02-22: load test sets from files
 	 * 
@@ -260,6 +289,87 @@ public class TestSetManager {
 		return testSet;
 	}
 	
+	/**2009-10-14:activation rather than CI is the principle factor to replace test sets
+	 * 
+	 * @param appClassName
+	 * @param c
+	 * @param testpool
+	 * @param maxTrials
+	 * @param H_L_R
+	 * @param size_ART
+	 * @return
+	 */
+	public static TestSet getAdequacyTestSet_refined_activation(String appClassName,
+			Criterion c, TestSet testpool, int maxTrials, String H_L_R, int size_ART) {
+
+		Criterion criterion = (Criterion) c.clone();
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		HashMap testcase_uniqueCovers = new HashMap();
+		HashMap testcase_traces = new HashMap();
+		
+		long time = System.currentTimeMillis();
+
+		int originalSize = criterion.size();
+		
+		if(H_L_R.equals("R")){ //RA-R: refined test suite construction algorithms favoring evenly-distributed context diversities
+			while(visited.size() < maxTrials && visited.size() < testpool.size()
+					&& criterion.size() > 0){
+//				String testcase = testpool.getByART(testSet, size_ART);//2009-08-19: take care of this
+				
+				//2009-10-15: get a test case with the even-distributed activation 
+				String testcase = testpool.getByART_activation(testSet, size_ART);
+				
+				if (!visited.contains(testcase)) {
+					visited.add(testcase);
+					String stringTrace[] = TestDriver.getTrace(appClassName,
+							testcase);
+
+					if (checkCoverage(stringTrace, criterion)) {
+						testSet.add(testcase);
+					}
+				}
+			}
+		}else if(H_L_R.equals("H") || H_L_R.equals("L")){//RA-H, RA-L: refined test suite construction algorithms favoring high/low context diversity
+			while (visited.size() < maxTrials && visited.size() < testpool.size()
+					&& criterion.size() > 0) {
+
+				String testcase = testpool.getByART_activation(H_L_R, size_ART);//more likely to sample test cases with high/low activation
+				
+				if (!visited.contains(testcase)) {
+					visited.add(testcase);
+					String stringTrace[] = TestDriver.getTrace(appClassName,
+							testcase);
+					
+					ArrayList uniqueCover = increaseCoverage(stringTrace, criterion);
+					if (uniqueCover.size() > 0) {
+						testcase_uniqueCovers.put(testcase, uniqueCover);
+						testSet.add(testcase);
+						
+						ArrayList traces = new ArrayList();
+						for(int i = 0; i < stringTrace.length; i++)
+							traces.add(stringTrace[i]);
+						
+						testcase_traces.put(testcase, traces);
+					} else {
+						
+						//2009-10-13: use activation rather than CI to replace test cases
+						testSet = TestSetManager.replace_activation_ordering_refine(
+								testSet, testcase_traces, testcase, stringTrace, H_L_R);
+						
+					}			
+				}
+			}
+		}
+		
+		int currentSize = criterion.size();
+		testSet.setCoverage((float) (originalSize - currentSize)
+				/ (float) originalSize);
+		testSet.geneTime = System.currentTimeMillis() - time;
+		return testSet;
+		
+	}
+	
 	/**2009-09-18: construct adequate test sets via RA_H, RA_L, or RA_R
 	 * 
 	 * @param appClassName
@@ -319,8 +429,12 @@ public class TestSetManager {
 						
 						testcase_traces.put(testcase, traces);
 					} else {
-						//2009-03-07: general replacement strategy
-						testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+						//2009-09-18: general replacement strategy
+//						testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+//								testcase_traces, testcase, stringTrace, H_L_R);
+						
+						//2009-10-18: CI as the principle factor and activation as the second factor
+						testSet = TestSetManager.replace_CI_Activation_refine(testSet, 
 								testcase_traces, testcase, stringTrace, H_L_R);
 					}			
 				}
@@ -731,12 +845,322 @@ public class TestSetManager {
 		return testSet;
 	}
 	
-	/**2009-09-18: replacing existing test cases within TestSet with TestCase
+	/**2009-10-15: sort replacing array according to specified index
+	 * 
+	 * @param replacing
+	 * @param index: either "CI" or "activation"
+	 * @param H_L: either "H" or "L"
+	 * @return
+	 */
+	public static ArrayList sort(ArrayList replacing, String index, String H_L){
+		ArrayList temp = new ArrayList();
+		for(int i = 0; i < replacing.size(); i ++){
+			temp.add(replacing.get(i));
+		}
+		
+		ArrayList replaced = new ArrayList();
+		if(H_L.equals("L")){			
+			if(index.equals("CI")){
+				while(temp.size() > 0 ){
+					int index_H = -1;
+					double CI_H = Double.MIN_VALUE;
+					
+					for(int i = 0; i < temp.size(); i ++){ // find the largest CI
+						if(((TestCase)temp.get(i)).CI > CI_H){
+							CI_H = ((TestCase)temp.get(i)).CI;
+							index_H = i;
+						}
+					}
+					replaced.add((TestCase)temp.get(index_H));
+					temp.remove(index_H);		
+				} //order test cases in replaced in descending orders with respect to CI
+			}else if(index.equals("activation")){
+				while(temp.size() > 0){
+					int index_H = -1;
+					int activation_H = Integer.MIN_VALUE;
+					
+					for(int i = 0; i < temp.size(); i ++){ //find the largest activation
+						if( ((TestCase)temp.get(i)).activation > activation_H){
+							activation_H =((TestCase)temp.get(i)).activation;
+							index_H = i;
+						}
+					}
+					replaced.add((TestCase)temp.get(index_H));
+					temp.remove(index_H);
+				} // order test cases in replaced in descending orders with respect to activation
+			}
+		}else if(H_L.equals("H")){
+			if(index.equals("CI")){
+				while(temp.size() > 0){
+					int index_L = -1;
+					double CI_L = Double.MAX_VALUE;
+					
+					for(int i = 0; i < temp.size(); i ++){ // find the smallest CI
+						if(((TestCase)temp.get(i)).CI < CI_L){
+							index_L = i;
+							CI_L = ((TestCase)temp.get(i)).CI;
+						}
+					}
+					replaced.add(temp.get(index_L));
+					temp.remove(index_L);
+				}
+			}else if(index.equals("activation")){
+				while(temp.size() > 0){
+					int index_L = -1;
+					int activation_L = Integer.MAX_VALUE;
+					for(int i = 0; i < temp.size(); i ++){ // find the largest activation
+						if(((TestCase)temp.get(i)).activation < activation_L){
+							index_L = i;
+							activation_L =((TestCase)temp.get(i)).activation; 
+						}
+					}
+					replaced.add(temp.get(index_L));
+					temp.remove(index_L);
+				}
+			}
+		}
+		
+		return replaced;
+	}
+	
+	/**2009-10-14: favoring test cases with high/low activation
 	 * 
 	 * @param testSet
 	 * @param testcase_traces
 	 * @param testcase
 	 * @param stringTrace
+	 * @param H_L: "H" if favoring test cases with high context diversities;
+	 * "L" if favoring test cases with low context diversities.
+	 * @return
+	 */
+	public static TestSet replace_activation_ordering_refine(TestSet testSet, HashMap testcase_traces, 
+			String testcase, String[] stringTrace, String H_L){
+		
+		int activation = ((TestCase) (Adequacy.testCases.get(testcase))).activation;
+		
+		Vector testcases = testSet.testcases;
+		ArrayList replaced = new ArrayList(); // keep all test cases in the test set that has lower CI in ascending orders 
+
+		for (int i = 0; i < testcases.size(); i++) {
+			TestCase temp = (TestCase) Adequacy.testCases
+					.get((String) testcases.get(i));
+			int activation_temp = temp.activation;
+			
+			if(H_L.equals("H")){
+				if (activation_temp < activation) {
+					// add temp to replace queue which is sorted by ascending order of activation 
+					replaced.add(temp);
+				}
+			}else if(H_L.equals("L")){
+				if (activation_temp > activation) {
+					// add temp to replace queue which is sorted by descending order of activation 
+					replaced.add(temp);
+				}
+			}
+		}
+		//1. "replaced" keeps all test cases whose activation are low(for H)/high(for L)
+		replaced = sort(replaced, "activation", H_L);
+		
+		
+		// just faciliate to compare
+		ArrayList traceList = new ArrayList();
+		for (int k = 0; k < stringTrace.length; k++)
+			traceList.add(stringTrace[k]);
+
+
+		// 2009-02-24: replace the one who has the lowest/highest activation value while keeping coverage not decrease
+		ArrayList candidate = new ArrayList(); // replace test cases within candidate with testcase is safe, but we can have the tie case 
+		for (int i = 0; i < replaced.size(); i++) {
+			TestCase temp = (TestCase) replaced.get(i);
+			ArrayList temp_traces = (ArrayList) testcase_traces
+					.get(temp.index);
+			
+			//keep all traces: testSet + testcase - temp
+			ArrayList testSet_otherTraces = new ArrayList(); 
+			testSet_otherTraces.addAll(traceList);
+			Iterator ite = testcase_traces.keySet().iterator();
+			while(ite.hasNext()){
+				String tc = (String)ite.next();
+				if(!tc.equals(temp.index)){
+					testSet_otherTraces.addAll((ArrayList)testcase_traces.get(tc));
+				}
+			}
+			
+			int j = 0;
+			for(; j < temp_traces.size(); j ++){
+				String trace = (String)temp_traces.get(j);
+				if(!testSet_otherTraces.contains(trace))
+					break;
+			}
+			
+			//2009-10-13: testcase can replace temp without decreasing coverage 
+			if (j == temp_traces.size()) {
+				candidate.add(temp);				
+			}
+		}
+		
+		//2. candidate is a subset of replaced but can replaced by testcase safely in terms of no loss of coverage 
+		
+		//check the tie case: with the same activation but with the different CI value
+		if(candidate.size() > 1){
+			int standard_activation = ((TestCase)candidate.get(0)).activation;
+			
+			ArrayList finalReplaced = new ArrayList();
+			finalReplaced.add((TestCase)candidate.get(0));
+			for(int i = 1; i < candidate.size(); i ++){
+				if(((TestCase)candidate.get(i)).activation == standard_activation){
+					finalReplaced.add((TestCase)candidate.get(i));
+				}
+			}
+			
+			finalReplaced = sort(finalReplaced, "CI", H_L);
+			
+			TestCase temp = (TestCase)finalReplaced.get(0);			
+			testcase_traces.remove(temp.index);
+			testcase_traces.put(testcase, traceList);
+			
+			testSet.remove(temp.index);
+			testSet.add(testcase);
+			testSet.replaceCounter ++;			
+			if(finalReplaced.size() > 1){
+				testSet.tie_activation_CI ++;
+			}
+			
+		}else if(candidate.size() == 1){
+			TestCase temp = (TestCase)candidate.get(0);			
+			testcase_traces.remove(temp.index);
+			testcase_traces.put(testcase, traceList);
+			
+			testSet.remove(temp.index);
+			testSet.add(testcase);
+			testSet.replaceCounter ++;
+		}
+		
+		return testSet;
+	}
+	
+	/**2009-10-15: CI as the first factor, Activation as the second factor to update existing test sets
+	 * 
+	 * @param testSet
+	 * @param testcase_traces
+	 * @param testcase
+	 * @param stringTrace
+	 * @param H_L
+	 * @return
+	 */
+	public static TestSet replace_CI_Activation_refine(TestSet testSet, HashMap testcase_traces, 
+			String testcase, String[] stringTrace, String H_L){
+		
+		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
+		
+		Vector testcases = testSet.testcases;
+		ArrayList replaced = new ArrayList(); // keep all test cases in the test set that has lower CI in ascending orders 
+
+		for (int i = 0; i < testcases.size(); i++) {
+			TestCase temp = (TestCase) Adequacy.testCases
+					.get((String) testcases.get(i));
+			double CI_temp = temp.CI;
+			
+			if(H_L.equals("H")){
+				if (CI_temp < CI) {
+					// add temp to replace queue which is sorted by ascending order of activation 
+					replaced.add(temp);
+				}
+			}else if(H_L.equals("L")){
+				if (CI_temp > CI) {
+					// add temp to replace queue which is sorted by descending order of activation 
+					replaced.add(temp);
+				}
+			}
+		}
+		//1. "replaced" keeps all test cases whose activation are low(for H)/high(for L)
+		replaced = sort(replaced, "CI", H_L);
+		
+		
+		// just faciliate to compare
+		ArrayList traceList = new ArrayList();
+		for (int k = 0; k < stringTrace.length; k++)
+			traceList.add(stringTrace[k]);
+
+
+		// 2009-02-24: replace the one who has the lowest/highest activation value while keeping coverage not decrease
+		ArrayList candidate = new ArrayList(); // replace test cases within candidate with testcase is safe, but we can have the tie case 
+		for (int i = 0; i < replaced.size(); i++) {
+			TestCase temp = (TestCase) replaced.get(i);
+			ArrayList temp_traces = (ArrayList) testcase_traces
+					.get(temp.index);
+			
+			//keep all traces: testSet + testcase - temp
+			ArrayList testSet_otherTraces = new ArrayList(); 
+			testSet_otherTraces.addAll(traceList);
+			Iterator ite = testcase_traces.keySet().iterator();
+			while(ite.hasNext()){
+				String tc = (String)ite.next();
+				if(!tc.equals(temp.index)){
+					testSet_otherTraces.addAll((ArrayList)testcase_traces.get(tc));
+				}
+			}
+			
+			int j = 0;
+			for(; j < temp_traces.size(); j ++){
+				String trace = (String)temp_traces.get(j);
+				if(!testSet_otherTraces.contains(trace))
+					break;
+			}
+			
+			//2009-10-13: testcase can replace temp without decreasing coverage 
+			if (j == temp_traces.size()) {
+				candidate.add(temp);				
+			}
+		}
+		
+		//2. candidate is a subset of replaced but can replaced by testcase safely in terms of no loss of coverage 
+		
+		//check the tie case: with the same activation but with the different CI value
+		if(candidate.size() > 1){
+			double standard_CI = ((TestCase)candidate.get(0)).CI;
+			
+			ArrayList finalReplaced = new ArrayList();
+			finalReplaced.add((TestCase)candidate.get(0));
+			for(int i = 1; i < candidate.size(); i ++){
+				if(((TestCase)candidate.get(i)).CI == standard_CI){
+					finalReplaced.add((TestCase)candidate.get(i));
+				}
+			}
+			
+			finalReplaced = sort(finalReplaced, "activation", H_L);
+			
+			TestCase temp = (TestCase)finalReplaced.get(0);			
+			testcase_traces.remove(temp.index);
+			testcase_traces.put(testcase, traceList);
+			
+			testSet.remove(temp.index);
+			testSet.add(testcase);
+			testSet.replaceCounter ++;			
+			if(finalReplaced.size() > 1){
+				testSet.tie_activation_CI ++;
+			}
+			
+		}else if(candidate.size() == 1){
+			TestCase temp = (TestCase)candidate.get(0);			
+			testcase_traces.remove(temp.index);
+			testcase_traces.put(testcase, traceList);
+			
+			testSet.remove(temp.index);
+			testSet.add(testcase);
+			testSet.replaceCounter ++;
+		}
+		
+		
+		return testSet;
+	}
+	
+	/**2009-09-18: replace existing test cases within TestSet with a TestCase with High/low CI
+	 * 
+	 * @param testSet: existing test set
+	 * @param testcase_traces: execution traces of all test cases in the test set
+	 * @param testcase: test cases to be replaced
+	 * @param stringTrace: execution traces of the replaced test case
 	 * @param H_L: "H" if favoring test cases with high context diversities;
 	 * "L" if favoring test cases with low context diversities.
 	 * @return
@@ -748,7 +1172,7 @@ public class TestSetManager {
 		
 		Vector testcases = testSet.testcases;
 		ArrayList replaced = new ArrayList(); // keep all test cases in the test set that has lower CI in ascending orders 
-
+		
 		for (int i = 0; i < testcases.size(); i++) {
 			TestCase temp = (TestCase) Adequacy.testCases
 					.get((String) testcases.get(i));
@@ -1863,6 +2287,10 @@ public class TestSetManager {
 					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
 							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 
+					//2009-10-15: we use activation rather than CI as the principle factor 
+//					testSets[i] = TestSetManager.getAdequacyTestSet_refined_activation(
+//							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
+//					
 					// 2009-02-24: set the index of testSets
 					testSets[i].index = "" + i;
 
@@ -2407,13 +2835,19 @@ public class TestSetManager {
 						}
 					}
 
+					
 					testSets[0] = TestSetManager.getTestSets(appClassName, c,
 							testpool, maxTrials, testSetNum, min_CI, max_CI,
 							oldOrNew, randomOrCriterion, testSuiteSize, saveFile, H_L_R, size_ART);
-
+					
+//					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+//							+ "_CI.txt";
+//					TestSetManager.attachTSWithCI(testSets[0], saveFile);
+					
+					//2009-10-15: attach test sets with CI and activation information
 					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
-							+ "_CI.txt";
-					TestSetManager.attachTSWithCI(testSets[0], saveFile);
+					+ "_CI_Activation.txt";
+					TestSetManager.attachTSWithCI_Activation(testSets[0], saveFile);
 
 				}
 		}

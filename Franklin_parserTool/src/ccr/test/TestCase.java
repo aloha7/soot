@@ -3,16 +3,25 @@ package ccr.test;
 public class TestCase {
 	
 	public String index;
-	public String length;
-	public String changes;
+	public String length;	
 	public double CI;
+	public int activation;
 	
 	public TestCase(String testcase){
 		String[] ts = testcase.split("\t");
 		this.index = ts[0];
 		this.length = ts[1];
-		this.changes = ts[2];
-		this.CI = Double.parseDouble(ts[3]);
+		this.CI = Double.parseDouble(ts[2]);
+		this.activation = Integer.parseInt(ts[3]);
+	}
+	
+//	public String toString(){
+//		return "Index:" + this.index + "\tLength:" + this.length +
+//		"\tContextDiversity:"+ this.CI + "\tActivation:" + this.activation;
+//	}
+	
+	public String toString(){
+		return this.CI+ "-" +this.activation;
 	}
 	
 	/**
