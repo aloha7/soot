@@ -20,7 +20,7 @@ public class TestingEffectiveManager {
 	public static void main(String[] args) {
 		//Load 20090918 AllPolicies -1 new random H
 		String instruction = args[0];
-		String date = args[1];
+		String date = args[1];		
 		String criterion = args[2];
 		int testSuiteSize = Integer.parseInt(args[3]);
 		String oldOrNew = args[4];
@@ -28,11 +28,14 @@ public class TestingEffectiveManager {
 		String H_L_R = args[6];	
 		String size_ART = args[7];
 		
+		//2009-10-15: specify the directory of execution histories.
+		String date_execHisotry = args[8];
+		
 		int start = 0;
 		int end = 140;
-		if (args.length == 10 && instruction.equals("Context_Intensity")) {
-			start = Integer.parseInt(args[8]);
-			end = Integer.parseInt(args[9]);
+		if (args.length == 11 && instruction.equals("Context_Intensity")) {
+			start = Integer.parseInt(args[9]);
+			end = Integer.parseInt(args[10]);
 		}
 		
 		//load the test pool
@@ -257,7 +260,7 @@ public class TestingEffectiveManager {
 
 			// 2. test the specified faults
 			TestDriver
-					.test_load(testSets, faultList, date, saveFile);
+					.test_load(testSets, faultList, date_execHisotry, saveFile);
 			
 		}
 		
