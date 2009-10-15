@@ -1,11 +1,8 @@
 package ccr.app;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Random;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
+
+import ccr.test.Logger;
 
 public class TestCFG2_context_diversity_derive extends Application {
 	
@@ -21,19 +18,18 @@ public class TestCFG2_context_diversity_derive extends Application {
 //	private final int MODE_WALK = 1;  // Always in walk
 //	private final int MODE_MIX = 2;  // In stay and walk
 	private final int sid = 0; // Scenario id
-	      
+	
 	private int counter = 0;
 //	private int lastPos = -1; // Last position id
 	private double curEstX = 0.0, curEstY = 0.0; // Current estimated location
 //	private int mode = MODE_MIX;
 	
-	private Vector queue; 
+	private Vector queue;
 	private long timestamp;
 	private Context candidate;
-	private Context latestCtx;
-	public int length = 0;
-	public int context_diversity = 0;
-	public int activation = 0;
+	private Vector PositionQueue = new Vector();
+	int lastPos = -1;
+	int activation = 0;
 	
 	public Object application(String testcase) {
 		
@@ -41,8 +37,8 @@ public class TestCFG2_context_diversity_derive extends Application {
 		
 		// Ordinary Variable [location, lastLocation, moved, reliable, displace, error, curEstX, curEstY, c, bPos, cPos, stay, lastPos, timestamp, counter, t, actLoc, estLoc, lastLoc, dist]
 		
-		// Context Variable [candidate, location, lastLocation, displace, curEstX, curEstY, bPos, cPos, lastPos, actLoc, estLoc, lastLoc, dist]
-		     
+		// Context Variable [candidate]
+		
 		// Assignment [=]
 		
 		int seed = Integer.parseInt(testcase);
@@ -65,7 +61,7 @@ public class TestCFG2_context_diversity_derive extends Application {
 		int cPos = -1;
 		int stay = 0;
 	//	int mode = MODE_MIX;
-		int lastPos = -1;
+//		int lastPos = -1;
 		timestamp = System.currentTimeMillis();
 		counter = 0;
 	//	double distance = 0;
@@ -737,25 +733,15 @@ public class TestCFG2_context_diversity_derive extends Application {
 	}
 	
 	private Coordinates toCoordinates(Context ctx) {
-		  
+		
 		StringTokenizer st = new StringTokenizer((String) ctx.get(Context.FLD_OBJECT));
 		double x = Double.parseDouble(st.nextToken());
 		double y = Double.parseDouble(st.nextToken());
 		return new Coordinates(x, y);
 	}
- 
-	
+
 	protected void resolve() {
-		length ++;
-		if(latestCtx != null){
-			//compare candidate and latestCtx to update ContextChanges
-			if(!this.funcLocDistOk(latestCtx, candidate)){
-				//two different contexts
-				context_diversity ++;
-			}
-		}		
-		latestCtx = candidate;
-		
+		PositionQueue.add(lastPos);
 		boolean consistent = true;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
@@ -786,46 +772,55 @@ public class TestCFG2_context_diversity_derive extends Application {
 			}
 		}
 		if (consistent) {
-			// Context definition			
+			// Context definition
 			queue.add(0, candidate);
 		} else {
 			activation ++;
 			candidate = (Context) queue.get(0);
 		}
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
-	}  
+	}
 	
+	public int getChanges(Vector queue){
+		int changes = 0;
+		Object last = null;
+		Object previous = null;
+		if(queue.size() == 1){
+			changes = 0;
+		}
+		for(int i = 0; i < queue.size()-1; i ++){
+			previous = queue.get(i);
+			last = queue.get(i +1);
+			if(previous!=last)
+				changes ++;
+		}
+		return changes;
+	}
 	public static void main(String argv[]) {
-		String date = argv[0];
-		
-		TestCFG2_context_diversity_derive ins;
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append("TestCase").append("\t").append("length").append("\t").
-		append("ContextDiversity").append("\t").append("activation").append("\n");
 
-		for(int i = -10000; i <= 10000; i ++){
-			ins = new TestCFG2_context_diversity_derive();
-			ins.application(i + "");
-			sb.append(i).append("\t").append(ins.length).append("\t").
-			append(ins.context_diversity).append("\t").append(ins.activation).append("\n");
+		sb.append("TestCase").append("\t").append("Length").append("\t").
+		append("ContextDiversity").append("\t").append("Activation").append("\n");
+		
+		for(int i = -10000; i < 10000; i ++){
+			String testcase = "" + i;
+			TestCFG2_context_diversity_derive ins = new TestCFG2_context_diversity_derive();
+			ins.application(testcase);
+		
+			int changes = ins.getChanges(ins.PositionQueue);			
+			sb.append(testcase).append("\t").append(ins.PositionQueue.size()).
+			append("\t").append(ins.PositionQueue.size() - changes).append("\t"). 
+					append(ins.activation).append("\n") ;
 		}
 		
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter("src/ccr/experiment"
-					+ "/Context-Intensity_backup/TestHarness/" + date
-					+ "/TestPool_updated.txt"));
-			bw.write(sb.toString());
-			bw.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		System.out.println(sb.toString());
+		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/Temp/TestPool_new.txt";
+
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
 		
-//		System.out.println("length:" + ins.length );
-//		System.out.println("activation:" + ins.activation );
-//		System.out.println("context_diversity:" + ins.context_diversity);
-//		System.out.println("result = " + (new TestCFG2()).application(testcase));
-	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
+
 }
