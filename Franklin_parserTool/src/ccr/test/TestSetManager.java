@@ -498,12 +498,12 @@ public class TestSetManager {
 						
 					} else {
 						//2009-09-18: general replacement strategy
-//						testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
-//								testcase_traces, testcase, stringTrace, H_L_R);
+						testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+								testcase_traces, testcase, stringTrace, H_L_R);
 						
 						//2009-10-18: CI as the principle factor and activation as the second factor
-						testSet = TestSetManager.replace_CI_Activation_refine(testSet, 
-								testcase_traces, testcase, stringTrace, H_L_R);
+//						testSet = TestSetManager.replace_CI_Activation_refine(testSet, 
+//								testcase_traces, testcase, stringTrace, H_L_R);
 					}			
 				}
 			}
@@ -2688,12 +2688,12 @@ public class TestSetManager {
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
 					//2009-03-10: we use ART+generalReplacement to favor test cases with higher CI
-//					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
-//							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
+					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
+							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 
 					//2009-10-15: we use activation rather than CI as the principle factor 
-					testSets[i] = TestSetManager.getAdequacyTestSet_refined_activation(
-							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
+//					testSets[i] = TestSetManager.getAdequacyTestSet_refined_activation(
+//							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 //					
 					// 2009-02-24: set the index of testSets
 					testSets[i].index = "" + i;
@@ -3276,14 +3276,16 @@ public class TestSetManager {
 							testpool, maxTrials, testSetNum, min_CI, max_CI,
 							oldOrNew, randomOrCriterion, testSuiteSize, saveFile, H_L_R, size_ART);
 					
-//					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
-//							+ "_CI.txt";
+					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+							+ "_CI.txt";
+					TestSetManager.attachTSWithCI_Activation(testSets[0], saveFile);
+					
 //					TestSetManager.attachTSWithCI(testSets[0], saveFile);
 					
 					//2009-10-15: attach test sets with CI and activation information
-					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
-					+ "_Activation_CI.txt";
-					TestSetManager.attachTSWithCI_Activation(testSets[0], saveFile);
+//					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+//					+ "_Activation_CI.txt";
+					
 
 				}
 		}
