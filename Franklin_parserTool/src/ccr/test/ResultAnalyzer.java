@@ -14,6 +14,86 @@ public class ResultAnalyzer {
 	public static final int TESTPOOL_SIZE = 20000;
 	public static HashMap failureRate = new HashMap();
 	
+	/**2009-10-20: get the Activation distribution for each testing criterion and rename it. 
+	 * criterion + minActivation + meanActivation + mediumActivation + maxActivation + stdActivation
+	 * 
+	 * @param srcDir
+	 * @param containHeader
+	 * @param criterion
+	 * @param rename_criterion
+	 * @return
+	 */
+	public static String getActivation(String srcDir, boolean containHeader, String criterion, String rename_criterion){
+		File[] files = new File(srcDir).listFiles();
+		StringBuilder sb = new StringBuilder();
+		
+		for (File file : files) {
+			String fileName = file.getName();
+			if (fileName.matches(criterion + "_CI.txt")) {
+				String str = null;
+				ArrayList Activations = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					if (containHeader)
+						br.readLine();
+
+					while ((str = br.readLine()) != null) {
+						String[] strs = str.split("\t");
+						Activations.add(Double.parseDouble(strs[4]));
+					}
+					
+					double[] Activation_array = new double[Activations.size()];
+					for(int i = 0; i < Activation_array.length; i ++){
+						Activation_array[i] = (Double)Activations.get(i);
+					}
+					Arrays.sort(Activation_array);
+					
+					double minActivation = Activation_array[0];
+					double maxActivation = Activation_array[Activation_array.length - 1];
+
+					double sumActivation = 0.0;
+					double meanActivation = 0.0;
+					double stdActivation = 0.0;
+					
+					for (int i = 0; i < Activation_array.length; i++) {
+						sumActivation += Activation_array[i];
+					}
+					meanActivation = sumActivation / (double) Activation_array.length;
+					
+					double tempActivation = 0.0;
+					for (int i = 0; i < Activation_array.length; i++) {
+						double activation = Activation_array[i];
+						tempActivation += (activation - meanActivation) * (activation - meanActivation);
+					}
+					stdActivation = Math.sqrt(tempActivation / (double) Activation_array.length);
+
+					double mediumActivation = 0.0;
+					if(Activation_array.length % 2 == 1){//odd number
+						mediumActivation = Activation_array[(Activation_array.length + 1)/2 - 1];
+					}else{//even number
+						mediumActivation = (Activation_array[Activation_array.length/2 - 1] + Activation_array[Activation_array.length/2])/(double)2.0;
+					}
+					
+					sb.append(rename_criterion + "\t");
+					sb.append(minActivation + "\t");					
+					sb.append(meanActivation + "\t");
+					sb.append(mediumActivation + "\t");
+					sb.append(maxActivation + "\t");
+					sb.append(stdActivation + "\t" + "\n");
+
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return sb.toString();
+	}
+	
 	/**
 	 * 2009-10-20: add medium information of the test set and rename 
 	 * the testing criterion
@@ -2212,6 +2292,7 @@ public class ResultAnalyzer {
 				append("\t").append("mediumCI").append("\t").
 				append("maxCI").append("\t").append("stdCI").append("\n");
 			
+			//2009-10-20:get CI distribution
 			for (int i = 0; i < criteria.length; i++) {
 				//2009-10-20: change the name of criteria
 				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
@@ -2221,14 +2302,24 @@ public class ResultAnalyzer {
 				//2009-02-25:
 //				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader,
 //						criteria[i]));
-				
-				//2009-10-20:
 				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
 						criteria[i], rename_criteria[i]));
 			}
 			
+			//2009-10-20:get Activation distribution
+			sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
+			append("\t").append("mediumAct.").append("\t").
+			append("maxAct.").append("\t").append("stdAct.").append("\n");
+			for (int i = 0; i < criteria.length; i++) {
+				//2009-10-20: change the name of criteria
+				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
+					criteria[i] = criteria[i] + "_" + size_ART;
+				}
+				sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
+			}
 
-			saveFile = srcDir + "/CI.txt";
+			saveFile = srcDir + "/CI_Activation.txt";
 			Logger.getInstance().setPath(saveFile, false);
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
