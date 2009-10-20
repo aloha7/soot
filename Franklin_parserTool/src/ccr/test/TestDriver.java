@@ -313,7 +313,7 @@ public class TestDriver {
 		return execHistory;
 	}
 	
-	public static void test_load(TestSet ts_Set[][], ArrayList faultList, String date, String reportFile){
+	public static void test_load(TestSet ts_Set[][], ArrayList faultList, String date_exec_history, String reportFile){
 		StringBuilder sb = new StringBuilder();
 		sb.append("FaultyVersion" + "\t" + "TestSet" + "\t" + "#TestCase"
 				+ "\t" + "#ValidTestCase" + "\t" + "%ValidTestCase" + "\t"
@@ -322,7 +322,7 @@ public class TestDriver {
 		for(int k = 0 ; k < faultList.size(); k ++){
 			String fault = (String)faultList.get(k); //for each faulty version
 			
-			HashMap execHistory = getExecHistory(true, date, fault); //load its execution history
+			HashMap execHistory = getExecHistory(true, date_exec_history, fault); //load its execution history
 			if(execHistory != null){
 				for(int t = 0; t < ts_Set.length; t ++){ // for each testing criterion
 					TestSet[] testSets = ts_Set[t];	
