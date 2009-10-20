@@ -14,6 +14,87 @@ public class ResultAnalyzer {
 	public static final int TESTPOOL_SIZE = 20000;
 	public static HashMap failureRate = new HashMap();
 	
+	/**2009-10-20: get the Replacement distribution for each testing criterion and rename it. 
+	 * criterion + minReplacement + meanReplacement + mediumReplacement + maxReplacement + stdReplacement
+	 * 
+	 * @param srcDir
+	 * @param containHeader
+	 * @param criterion
+	 * @param rename_criterion
+	 * @return
+	 */
+	public static String getReplacement(String srcDir, boolean containHeader, String criterion, String rename_criterion){
+		File[] files = new File(srcDir).listFiles();
+		StringBuilder sb = new StringBuilder();
+		
+		for (File file : files) {
+			String fileName = file.getName();
+			if (fileName.matches(criterion + "_CI.txt")) {
+				String str = null;
+				ArrayList Replacement = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					if (containHeader)
+						br.readLine();
+
+					while ((str = br.readLine()) != null) {
+						String[] strs = str.split("\t");
+						Replacement.add(Double.parseDouble(strs[5]));
+					}
+					
+					double[] Replacement_array = new double[Replacement.size()];
+					for(int i = 0; i < Replacement_array.length; i ++){
+						Replacement_array[i] = (Double)Replacement.get(i);
+					}
+					Arrays.sort(Replacement_array);
+					
+					double minReplacement = Replacement_array[0];
+					double maxReplacement = Replacement_array[Replacement_array.length - 1];
+
+					double sumReplacement = 0.0;
+					double meanReplacement = 0.0;
+					double stdReplacement = 0.0;
+					
+					for (int i = 0; i < Replacement_array.length; i++) {
+						sumReplacement += Replacement_array[i];
+					}
+					meanReplacement = sumReplacement / (double) Replacement_array.length;
+					
+					double tempReplacement = 0.0;
+					for (int i = 0; i < Replacement_array.length; i++) {
+						double replacement = Replacement_array[i];
+						tempReplacement += (replacement - meanReplacement) * (replacement - meanReplacement);
+					}
+					stdReplacement = Math.sqrt(tempReplacement / (double) Replacement_array.length);
+
+					double mediumReplacement = 0.0;
+					if(Replacement_array.length % 2 == 1){//odd number
+						mediumReplacement = Replacement_array[(Replacement_array.length + 1)/2 - 1];
+					}else{//even number
+						mediumReplacement = (Replacement_array[Replacement_array.length/2 - 1] + Replacement_array[Replacement_array.length/2])/(double)2.0;
+					}
+					
+					sb.append(rename_criterion + "\t");
+					sb.append(minReplacement + "\t");					
+					sb.append(meanReplacement + "\t");
+					sb.append(mediumReplacement + "\t");
+					sb.append(maxReplacement + "\t");
+					sb.append(stdReplacement + "\t" + "\n");
+
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return sb.toString();
+	}
+	
+
 	/**2009-10-20: get the Activation distribution for each testing criterion and rename it. 
 	 * criterion + minActivation + meanActivation + mediumActivation + maxActivation + stdActivation
 	 * 
@@ -2151,6 +2232,7 @@ public class ResultAnalyzer {
 		// "All2ResolvedDUTestSets_old_criteria_62",
 		// "All2ResolvedDUTestSets_new_criteria_62",
 		// };
+		
 		// 2009-09-21
 		String[] criteria = new String[] {"RandomTestSets_27", "AllPolicies_CA",
 				"AllPolicies_RA-H", "AllPolicies_RA-L", "AllPolicies_RA-R",
@@ -2169,8 +2251,6 @@ public class ResultAnalyzer {
 		
 		if (instruction.equals("Context_Intensity")
 				|| instruction.equals("Limited") || instruction.equals("Load")) {
-			// HashMap criterion_faultNum = new HashMap();
-			// HashMap criterion_perValidTC = new HashMap();
 			HashMap criterion_perValidTS = new HashMap();
 
 			// 2009-10-14: load the fault list
@@ -2187,25 +2267,9 @@ public class ResultAnalyzer {
 					+ "_limited_load.txt";	
 				}
 				
-				// ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i],
-				// containHeader, saveFile);
 
 				String testSetExecutionFile = saveFile;
 				boolean containHeader1 = true;
-
-				// String faultTypeFile = saveFile.substring(0,
-				// saveFile.indexOf("_testing.txt")) + "_FaultType.txt";
-				// HashMap faultNum =
-				// ResultAnalyzer.faultsExposedByTestSet(testSetExecutionFile,
-				// containHeader1, faultTypeFile);
-				// criterion_faultNum.put(criteria[i], faultNum);
-				//				
-				// String perValidTCFile = saveFile.substring(0,
-				// saveFile.indexOf("_testing.txt")) + "_PerValidTestCase.txt";
-				// HashMap perValidTC =
-				// ResultAnalyzer.perValidTestCaseWithinTestSet(testSetExecutionFile,
-				// containHeader1, perValidTCFile);
-				// criterion_perValidTC.put(criteria[i], perValidTC);
 
 				String perValidTSFile = saveFile.substring(0, saveFile
 						.indexOf("_limited_load.txt"))
@@ -2222,47 +2286,8 @@ public class ResultAnalyzer {
 				criterion_perValidTS.put(criteria[i], perValidTS);
 			}
 
-			// 2009-02-24: to summarize all three views to evaluate the
-			// performance of testing criteria
-			// saveFile = srcDir +"/FaultNum.txt";
-			// ResultAnalyzer.mergeHashMap(criteria, criterion_faultNum,
-			// saveFile);
-			// saveFile = srcDir + "/PerValidTC.txt";
-			// ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTC,
-			// saveFile);
 			saveFile = srcDir + "/PerValidTS.txt";
 
-			// //2009-03-27: rename the default criterion
-			// String[] rename_criteria = new String[]{
-			// //rename the criteria of Group 1
-			// "Random-27",
-			// "All-Services",
-			// "All-Services-Refined",
-			// "Random-42",
-			// "All-Services-Uses",
-			// "All-Services-Uses-Refined",
-			// "Random-50",
-			// "All-2-Services-Uses",
-			// "All-2-Services-Uses-Refined",
-			//					
-			// //rename the criteria of Group 2
-			// "Random-62",
-			// "All-Services-random",
-			// "All-Services-random-Refined",
-			// "All-Services-Uses-random",
-			// "All-Services-Uses-random-Refined",
-			// "All-2-Services-Uses-random",
-			// "All-2-Services-Uses-random-Refined",
-			//					
-			// //rename the criteria of Group 3
-			// "All-Services-criterion",
-			// "All-Services-criterion-Refined",
-			// "All-Services-Uses-criterion",
-			// "All-Services-Uses-criterion-Refined",
-			// "All-2-Services-Uses-criterion",
-			// "All-2-Services-Uses-criterion-Refined",
-			//					
-			// };
 
 			// 2009-09-19: rename the default criterion
 			String[] rename_criteria = new String[] {
@@ -2280,8 +2305,6 @@ public class ResultAnalyzer {
 			
 			ResultAnalyzer.mergeHashMap(criteria, rename_criteria,
 					criterion_perValidTS, date, saveFile);
-			// ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, date,
-			// saveFile);
 
 			// 2009-02-25: to explore the CI distributions of different testing
 			// criteria
@@ -2294,7 +2317,6 @@ public class ResultAnalyzer {
 			
 			//2009-10-20:get CI distribution
 			for (int i = 0; i < criteria.length; i++) {
-				//2009-10-20: change the name of criteria
 				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
 					criteria[i] = criteria[i] + "_" + size_ART;
 				}
@@ -2311,11 +2333,21 @@ public class ResultAnalyzer {
 			append("\t").append("mediumAct.").append("\t").
 			append("maxAct.").append("\t").append("stdAct.").append("\n");
 			for (int i = 0; i < criteria.length; i++) {
-				//2009-10-20: change the name of criteria
-				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
-					criteria[i] = criteria[i] + "_" + size_ART;
-				}
 				sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
+			}
+
+			saveFile = srcDir + "/CI_Activation.txt";
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			
+			//2009-10-20:get Replacement distribution
+			sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
+			append("\t").append("mediumReplace.").append("\t").
+			append("maxReplace.").append("\t").append("stdReplace.").append("\n");
+			for (int i = 0; i < criteria.length; i++) {
+				sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
 						criteria[i], rename_criteria[i]));
 			}
 
