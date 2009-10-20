@@ -14,6 +14,8 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
 
+import sun.tools.asm.Cover;
+
 import ccr.stat.CFG;
 import ccr.stat.Criterion;
 import ccr.stat.Node;
@@ -212,6 +214,62 @@ public class TestSetManager {
 		return testSets;
 	}
 
+	// 2009-10-16: random test sets serve as the baseline for comparison
+	public static TestSet[] getRandomTestSets_refined(String appClassName,
+			TestSet testpool, int testSetNum, int testSuiteSize, String H_L_R, 
+			int size_ART, String saveFile) {
+		
+		TestSet[] testSets = new TestSet[testSetNum];
+		
+		for (int i = 0; i < testSetNum; i++) {
+			testSets[i] = TestSetManager.getRandomTestSet_refined(appClassName,
+					testpool, testSuiteSize, H_L_R, size_ART);
+			testSets[i].index = "" + i;
+			System.out.println("Test set " + i + ": " + testSets[i].toString());
+		}
+		
+		
+		TestSetManager.saveTestSets(testSets, saveFile);
+		return testSets;
+	}
+	
+	/**2009-10-16: use ART to select test cases with high, low,
+	 * or random context diversity 
+	 * 
+	 * @param appClassName
+	 * @param testpool
+	 * @param testSuiteSize
+	 * @param H_L_R
+	 * @param size_ART
+	 * @return
+	 */
+	public static TestSet getRandomTestSet_refined(String appClassName, 
+			TestSet testpool, int testSuiteSize, String H_L_R, int size_ART){
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		
+		while(testSet.size() < testSuiteSize){
+			if(H_L_R.equals("R")){
+				while(testSet.size() < testSuiteSize){
+					String testcase = testpool.getByART(testSet, size_ART);//2009-08-19: take care of this
+					if (!visited.contains(testcase) /* && !testSet.contains(testcase) */) {
+						visited.add(testcase);
+						testSet.add(testcase);
+					}
+				}
+			}else if(H_L_R.equals("H") || H_L_R.equals("L")){
+				String testcase = testpool.getByART(H_L_R, size_ART); //more likely to sample test cases with high CI
+				if(!visited.contains(testcase)){
+					visited.add(testcase);
+					testSet.add(testcase);
+				}
+			}	
+		}
+		
+		
+		return testSet;
+	}
+	
 	// 2009-02-22:
 	public static TestSet getRandomTestSet(String appClassName,
 			TestSet testpool, int testSuiteSize) {
@@ -334,7 +392,8 @@ public class TestSetManager {
 			while (visited.size() < maxTrials && visited.size() < testpool.size()
 					&& criterion.size() > 0) {
 
-				String testcase = testpool.getByART_activation(H_L_R, size_ART);//more likely to sample test cases with high/low activation
+//				String testcase = testpool.getByART_activation(H_L_R, size_ART);//more likely to sample test cases with high/low activation
+				String testcase = testpool.getByRandom();
 				
 				if (!visited.contains(testcase)) {
 					visited.add(testcase);
@@ -346,17 +405,24 @@ public class TestSetManager {
 						testcase_uniqueCovers.put(testcase, uniqueCover);
 						testSet.add(testcase);
 						
-						ArrayList traces = new ArrayList();
-						for(int i = 0; i < stringTrace.length; i++)
-							traces.add(stringTrace[i]);
+						//2009-09-18: execution traces
+//						ArrayList traces = new ArrayList();
+//						for(int i = 0; i < stringTrace.length; i++)
+//							traces.add(stringTrace[i]);
+//						
+//						testcase_traces.put(testcase, traces);
 						
-						testcase_traces.put(testcase, traces);
+						//2009-10-19: execution traces have been translated into DU associations
+						testcase_traces.put(testcase, countDUCoverage(stringTrace, c));
+						
 					} else {
-						
 						//2009-10-13: use activation rather than CI to replace test cases
-						testSet = TestSetManager.replace_activation_ordering_refine(
-								testSet, testcase_traces, testcase, stringTrace, H_L_R);
-						
+//						testSet = TestSetManager.replace_activation_ordering_refine(
+//								testSet, testcase_traces, testcase, stringTrace, H_L_R);
+					
+						//2009-10-19: use coverage diversity to replace test cases
+						testSet = TestSetManager.replace_Coverage_refine(testSet, 
+								testcase_traces, testcase, stringTrace);
 					}			
 				}
 			}
@@ -423,11 +489,13 @@ public class TestSetManager {
 						testcase_uniqueCovers.put(testcase, uniqueCover);
 						testSet.add(testcase);
 						
+						//2009-09-18: execution traces
 						ArrayList traces = new ArrayList();
 						for(int i = 0; i < stringTrace.length; i++)
 							traces.add(stringTrace[i]);
 						
 						testcase_traces.put(testcase, traces);
+						
 					} else {
 						//2009-09-18: general replacement strategy
 //						testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
@@ -552,7 +620,7 @@ public class TestSetManager {
 					testcase_uniqueCovers.put(testcase, uniqueCover);
 					testSet.add(testcase);
 					
-					ArrayList traces = new ArrayList();
+					ArrayList traces = new ArrayList();					
 					for(int i = 0; i < stringTrace.length; i++)
 						traces.add(stringTrace[i]);
 					
@@ -1039,6 +1107,289 @@ public class TestSetManager {
 		return testSet;
 	}
 	
+	public static ArrayList removeDuplicate(ArrayList src){
+		ArrayList temp = new ArrayList();
+		
+		for(int i = 0; i < src.size(); i ++){
+			if(!temp.contains(src.get(i))){
+				temp.add(src.get(i));	
+			}
+		}
+		
+		return temp;
+	}
+	
+	/**2009-10-19: Jaccard Distance is used to measure the diversity of two sets(e.g., covered du-sets)
+	 * Jaccard distance = 1 - (A intersects B)/ (A unions B)
+	 * @param cover_elements1
+	 * @param cover_elements2
+	 * @return
+	 */
+	public static double getJaccardDistance(ArrayList cover_elements1, ArrayList cover_elements2){
+		
+		//2009-10-19: delete the duplicate elements firstly
+		cover_elements1 = removeDuplicate(cover_elements1);
+		cover_elements2 = removeDuplicate(cover_elements2);
+		
+		
+		double JaccardDistance = 0.0;
+		ArrayList union_set = new ArrayList();
+		ArrayList intersect_set = new ArrayList();
+		
+		//1. get the unions and intersections between two sets
+		for(Object du: cover_elements1){
+			du = (String)du;
+			if(!union_set.contains(du)){
+				union_set.add(du);
+			}
+			if(cover_elements2.contains(du)){
+				intersect_set.add(du);
+			}
+		}
+		
+		for(Object du: cover_elements2){
+			du = (String)du;
+			if(!union_set.contains(du)){
+				union_set.add(du);
+			}
+		}
+
+		JaccardDistance = (union_set.size() - intersect_set.size())/union_set.size();
+		
+		return JaccardDistance;
+	}
+	
+	/**2009-10-19: use DUCoverageDiverstiy to solve the tie cases(Using du-coveredTimes)
+	 * 
+	 * @param testSet
+	 * @param testcase_traces
+	 * @param testcase
+	 * @param du_covered
+	 * @return
+	 */
+	public static TestSet replace_DUCoverage_refine(TestSet testSet, HashMap testcase_traces,
+			String testcase, HashMap du_covered_testcase){
+		
+		//1. candidate set consisting of test cases whose replacement by testcase won't decrease the coverage
+		ArrayList candidate = new ArrayList();
+		
+		for(int i = 0; i < testSet.size(); i ++){
+			//1.1: determine whether temp should be included in candidate
+			String temp = testSet.get(i);
+			HashMap du_coverTime = (HashMap)testcase_traces.get(temp);
+			
+			//1.2: all dus covered by testSet + testcase - temp;
+			ArrayList dus = new ArrayList();
+			dus.addAll(Arrays.asList(du_covered_testcase.keySet().toArray()));
+			
+			Iterator ite = testcase_traces.keySet().iterator();
+			while(ite.hasNext()){
+				String other = (String)ite.next();
+				if(!other.equals(temp)){
+					HashMap du_other = (HashMap)testcase_traces.get(other);
+					String[] dus_other = (String[])du_other.keySet().toArray();
+					for(String du: dus_other){
+						if(!dus.contains(du)){
+							dus.add(du);
+						}
+					}
+				}
+			}
+			
+			//1.3:temp can be added into candidate if all its dus can be covered by dus
+			String[] dus_temp = (String[])((HashMap)testcase_traces.get(temp)).keySet().toArray();
+			int j = 0;
+			for(; j < dus_temp.length; j ++){
+				if(!dus.contains(dus_temp[j]))
+					break;				
+			}
+			
+			if( j == dus_temp.length){
+				candidate.add(temp);
+			}
+		}
+		
+		//2. get the Jaccard distance of testcase
+		ArrayList JD_candidate = new ArrayList();
+		
+		ArrayList dus_testSet  = new ArrayList();//keep all dus covered by the whole test set
+		ArrayList dus_testcase = new ArrayList(Arrays.asList((String[])du_covered_testcase.keySet().toArray()));
+		for(int i = 0; i < testcase_traces.size(); i ++){
+			HashMap dus_temp = (HashMap)testcase_traces.get(i);
+			String[] dus = (String[])dus_temp.keySet().toArray();
+			for(int j = 0; j < dus.length; j++){
+				String du = dus[j];
+				if(!dus_testSet.contains(du)){
+					dus_testSet.add(du);
+				}
+			}
+		}
+		//get the Jaccard distance of testcase with respect to testSet
+		JD_candidate.add(getJaccardDistance(dus_testcase, dus_testSet));
+		
+		//3. get the Jaccard distance of test cases in candidate
+		for(int i = 0; i < candidate.size(); i ++){
+			String temp = (String)candidate.get(i);
+			ArrayList dus_temp = new ArrayList(Arrays.asList(((HashMap)testcase_traces.get(temp)).keySet().toArray()));
+			
+			ArrayList dus_testSet_testcase = new ArrayList(); // keep all dus covered by testSet + testcase - temp
+			dus_testSet_testcase.addAll(dus_testcase);
+			
+			Iterator ite = testcase_traces.keySet().iterator();
+			while(ite.hasNext()){
+				String other = (String)ite.next();
+				if(!other.equals(temp)){
+					HashMap du_other = (HashMap)testcase_traces.get(other);
+					String[] dus_other = (String[])du_other.keySet().toArray();
+					for(String du: dus_other){
+						if(!dus_testSet_testcase.contains(du)){// keep all dus covered by testSet + testcase - temp
+							dus_testSet_testcase.add(du);
+						}
+					}
+				}
+			}
+			//get the Jaccard distance of temp with respect to testSet + testcase - temp
+			JD_candidate.add(getJaccardDistance(dus_temp, dus_testSet_testcase));
+		}
+		
+		//4. find the test case who owns the lowest Jaccard distances
+		candidate.add(0, testcase); //for consistently searching purpose(the first JD in JD_candidate belongs to testcase) 
+		int replaced_index = -1;
+		double low_JD = Double.MAX_VALUE;
+		for(int i = 0; i < JD_candidate.size(); i ++){
+			if(((Double)JD_candidate.get(i)) < low_JD){
+				low_JD = (Double)JD_candidate.get(i);
+				replaced_index = i;
+			}
+		}
+		
+		//5. replace occurs between testcase and the one that owns the lowest Jaccard distance
+		String temp = (String)candidate.get(replaced_index);
+		if(testSet.contains(temp)){ //temp may be testcase which is not a member of testSet
+			testSet.remove(temp);
+			testSet.add(testcase);
+			testSet.replaceCounter ++;
+
+			//count the number of test cases who own the low_JD
+			int low_JD_owner = 0;
+			for(int i = 0; i < JD_candidate.size(); i ++){
+				//when the differences within a range, then they are regarded as the same
+				if(Math.abs((Double)JD_candidate.get(i) - low_JD) < 0.001){
+					low_JD_owner ++; 
+				}
+			}
+			if(low_JD_owner > 1){
+				testSet.tie_activation_CI ++;
+			}
+		}
+		return testSet;
+	}
+	
+	/**2009-10-19: when ties occur, we use  CoverageDiversity(Second elements) to solve them
+	 * (Using execution traces)
+	 * @param testSet
+	 * @param testcase_traces
+	 * @param testcase
+	 * @param stringTrace
+	 * @return
+	 */
+	public static TestSet replace_Coverage_refine(TestSet testSet, HashMap testcase_traces, 
+			String testcase, String[] stringTrace){
+		
+		//1.keep traces of testcase
+		ArrayList traceList = new ArrayList();
+		for (int k = 0; k < stringTrace.length; k++)
+			traceList.add(stringTrace[k]);
+
+
+		//2009-10-19: candidate sets consisting of test cases whose replacement by testcase won't lose of the coverage.
+		ArrayList candidate = new ArrayList(); // replace test cases within candidate with testcase is safe, but we can have the tie case
+		for(int i = 0; i < testSet.size(); i ++){
+			String temp = testSet.get(i);
+			ArrayList temp_traces = (ArrayList)testcase_traces.get(temp);
+			
+			//keep traces: testSet + testcase - temp
+			ArrayList traces = new ArrayList();
+			traces.addAll(traceList);
+			Iterator ite = testcase_traces.keySet().iterator();
+			while(ite.hasNext()){
+				String tc = (String)ite.next();
+				if(!tc.equals(temp)){
+					traces.addAll((ArrayList)testcase_traces.get(tc));
+				}
+			}
+			
+			int j = 0;
+			String trace;
+			for(; j < temp_traces.size(); j ++){
+				trace = (String)temp_traces.get(j);
+				if(!traces.contains(trace))
+					break;
+			}
+			
+			//2009-10-19: temp can be replaced by testcase without loss of coverage
+			if(j == temp_traces.size()){
+				candidate.add(temp);
+			}
+		}		
+		
+		
+		//the Jaccard distance of testcase
+		ArrayList JD_candidate = new ArrayList();
+		ArrayList traces  = new ArrayList();
+		Iterator ite = testcase_traces.keySet().iterator();
+		while(ite.hasNext()){			
+			traces.addAll((ArrayList)testcase_traces.get((String)ite.next()));
+		}		
+		JD_candidate.add(getJaccardDistance(traces, traceList));
+		
+		//2009-10-19: //get the Jaccard distance of candidate[i] with respect to testSet + testcase - candidate[i]
+		for(int i = 0; i < candidate.size(); i ++){
+			traces = new ArrayList();//the size of candidate must be larger than 1, otherwise testcase much increase the coverage
+			traces.addAll(traceList);
+			ite = testcase_traces.keySet().iterator();
+			while(ite.hasNext()){
+				String tc = (String)ite.next();
+				if(!tc.equals(candidate.get(i))){
+					traces.addAll((ArrayList)testcase_traces.get(tc));
+				}
+			}
+			JD_candidate.add(getJaccardDistance(traces, (ArrayList)testcase_traces.get(candidate.get(i))));
+		}
+		
+		//2.find the test case who owns the lowest Jaccard distances
+		candidate.add(0, testcase); //for consistently searching purpose(the first JD in JD_candidate belongs to testcase) 
+		int replaced_index = -1;
+		double low_JD = Double.MAX_VALUE;
+		for(int i = 0; i < JD_candidate.size(); i ++){
+			if(((Double)JD_candidate.get(i)) < low_JD){
+				low_JD = (Double)JD_candidate.get(i);
+				replaced_index = i;
+			}
+		}
+		
+		//3. replace occurs between testcase and the one that owns the lowest Jaccard distance
+		String temp = (String)candidate.get(replaced_index);
+		if(testSet.contains(temp)){ //temp may be testcase which is not a member of testSet
+			testSet.remove(temp);
+			testSet.add(testcase);
+			testSet.replaceCounter ++;
+
+			//count the number of test cases who own the low_JD
+			int low_JD_owner = 0;
+			for(int i = 0; i < JD_candidate.size(); i ++){
+				//when the differences within a range, then they are regarded as the same
+				if(Math.abs((Double)JD_candidate.get(i) - low_JD) < 0.001){
+					low_JD_owner ++; 
+				}
+			}
+			if(low_JD_owner > 1){
+				testSet.tie_activation_CI ++;
+			}
+		}
+		return testSet;
+	}
+	
 	/**2009-10-15: CI as the first factor, Activation as the second factor to update existing test sets
 	 * 
 	 * @param testSet
@@ -1150,8 +1501,6 @@ public class TestSetManager {
 			testSet.add(testcase);
 			testSet.replaceCounter ++;
 		}
-		
-		
 		return testSet;
 	}
 	
@@ -2047,7 +2396,63 @@ public class TestSetManager {
 		}
 		return effective;
 	}
+	
+	/**2009-10-19:increase the covered times of a specified covered element.
+	 * 
+	 * @param covered
+	 * @param index
+	 * @return
+	 */
+	private static HashMap keepDuplicateElem(HashMap covered, Object index){
+		if(covered.containsKey(index)){
+			int coverTimes = (Integer)covered.get(index);
+			coverTimes ++;
+			covered.put(index, coverTimes);
+		}else{
+			int coverTimes = 1;
+			covered.put(index, coverTimes);
+		}
+		return covered;
+	}
 
+	/**2009-10-19:change execution traces of a test case into the meaningful du-associations
+	 * 
+	 * @param stringTrace
+	 * @param criterion
+	 * @return
+	 */
+	private static HashMap countDUCoverage(String[] stringTrace, Criterion criterion){
+		HashMap covered = new HashMap();
+		Node trace[] = new Node[stringTrace.length];
+		for(int i = 0; i < trace.length; i ++){
+			trace[i] = NodeIndex.getInstance().get(stringTrace[i]);
+		}
+		boolean effective = false;
+		
+		for(int i = 0; i < trace.length; i ++){
+			//2009-10-19: we do not care about nodes and policy nodes
+			if(criterion.containsNode(trace[i])){
+				keepDuplicateElem(covered, trace[i].index);
+			}
+			if(trace[i] instanceof PolicyNode &&
+					criterion.containsPolicy(((PolicyNode)trace[i]).policy)){
+				keepDuplicateElem(covered, ((PolicyNode)trace[i]).index);
+			}
+			
+			if(criterion.containsDefinition(trace[i])){
+				for(int j = i + 1; j < trace.length; j ++){
+					if(criterion.containsAssociation(trace[i], trace[j])){
+						keepDuplicateElem(covered, trace[i].index + ":" + trace[j].index);
+					}
+					if(trace[j]!= null && trace[i].hasSameDef(trace[j])){
+						break;
+					}
+				}
+			}
+		}
+		return covered;
+	}
+	
 	
 	/**2009-03-31: count the number of elements covered by a specified 
 	 * test case
@@ -2058,7 +2463,6 @@ public class TestSetManager {
 	 */
 	private static int countCoveredElements(String[] stringTrace,
 			Criterion criterion) {
-
 		int counter = 0;
 		int policyNodes = 0;
 		Node trace[] = new Node[stringTrace.length];
@@ -2284,12 +2688,12 @@ public class TestSetManager {
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
 					//2009-03-10: we use ART+generalReplacement to favor test cases with higher CI
-					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
-							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
+//					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
+//							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 
 					//2009-10-15: we use activation rather than CI as the principle factor 
-//					testSets[i] = TestSetManager.getAdequacyTestSet_refined_activation(
-//							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
+					testSets[i] = TestSetManager.getAdequacyTestSet_refined_activation(
+							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 //					
 					// 2009-02-24: set the index of testSets
 					testSets[i].index = "" + i;
@@ -2558,10 +2962,42 @@ public class TestSetManager {
 				TestSetManager.attachTSWithCI(testSets[0], saveFile);
 
 			}
-		} else if (args.length == 3) { // get random test sets
+		}else if(args.length == 6){
+			//2009-10-16: use context diversity information to select test cas
 			int testSetNum = Integer.parseInt(args[0]);
 			int testSuiteSize = Integer.parseInt(args[1]);
 			String date = args[2];
+			String H_L_R = args[3];
+			int size_ART = Integer.parseInt(args[4]);
+
+//			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//				+ date + "/RandomTestSets_RA-" + testSuiteSize +
+//				"_" + H_L_R + "_" 
+//				+ size_ART + ".txt";
+
+			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/RandomTestSets_RA-" + H_L_R + 
+				"_" + testSuiteSize + "_" 
+				+ size_ART + ".txt";
+			
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestPool.txt";
+			TestSet testpool = getTestPool(testPoolFile, true);
+			Adequacy.loadTestCase(testPoolFile);
+
+			TestSet[][] testSets = new TestSet[1][];
+			testSets[0] = TestSetManager.getRandomTestSets_refined(appClassName, 
+					testpool, testSetNum, testSuiteSize, H_L_R, size_ART, saveFile);
+
+			saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+				+ "_CI.txt";
+			TestSetManager.attachTSWithCI(testSets[0], saveFile);
+
+		}else if (args.length == 3) { // get random test sets
+			int testSetNum = Integer.parseInt(args[0]);
+			int testSuiteSize = Integer.parseInt(args[1]);
+			String date = args[2];
+			
 			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 					+ date + "/RandomTestSets_" + testSuiteSize + ".txt";
 
@@ -2846,7 +3282,7 @@ public class TestSetManager {
 					
 					//2009-10-15: attach test sets with CI and activation information
 					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
-					+ "_CI_Activation.txt";
+					+ "_Activation_CI.txt";
 					TestSetManager.attachTSWithCI_Activation(testSets[0], saveFile);
 
 				}
