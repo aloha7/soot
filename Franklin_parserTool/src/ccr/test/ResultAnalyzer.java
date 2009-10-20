@@ -6,20 +6,102 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
 public class ResultAnalyzer {
 	public static final int TESTPOOL_SIZE = 20000;
 	public static HashMap failureRate = new HashMap();
-
+	
 	/**
-	 * 2009-02-25: get the CI summary information for a given criterion
+	 * 2009-10-20: add medium information of the test set and rename 
+	 * the testing criterion
+	 * criterion + minCI + meanCI + mediumCI + maxCI + stdCI
+	 * 
+	 * @param srcDir
+	 * @param containHeader
+	 * @param criterion
+	 * @return
+	 */
+	public static String getCriteriaCI(String srcDir, boolean containHeader,
+			String criterion, String rename_criterion) {
+		File[] files = new File(srcDir).listFiles();
+		StringBuilder sb = new StringBuilder();
+		
+		for (File file : files) {
+			String fileName = file.getName();
+			if (fileName.matches(criterion + "_CI.txt")) {
+				String str = null;
+				ArrayList CIs = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					if (containHeader)
+						br.readLine();
+
+					while ((str = br.readLine()) != null) {
+						String[] strs = str.split("\t");
+						CIs.add(Double.parseDouble(strs[3]));
+					}
+					
+					double[] CI_array = new double[CIs.size()];
+					for(int i = 0; i < CI_array.length; i ++){
+						CI_array[i] = (Double)CIs.get(i);
+					}
+					Arrays.sort(CI_array);
+					
+					double minCI = CI_array[0];
+					double maxCI = CI_array[CI_array.length - 1];
+
+					double sumCI = 0.0;
+					double meanCI = 0.0;
+					double stdCI = 0.0;
+					
+					for (int i = 0; i < CI_array.length; i++) {
+						sumCI += CI_array[i];
+					}
+					meanCI = sumCI / (double) CI_array.length;
+					
+					double tempCI = 0.0;
+					for (int i = 0; i < CI_array.length; i++) {
+						double CI = CI_array[i];
+						tempCI += (CI - meanCI) * (CI - meanCI);
+					}
+					stdCI = Math.sqrt(tempCI / (double) CI_array.length);
+
+					double mediumCI = 0.0;
+					if(CI_array.length % 2 == 1){//odd number
+						mediumCI = CI_array[(CI_array.length + 1)/2 - 1];
+					}else{//even number
+						mediumCI = (CI_array[CI_array.length/2 - 1] + CI_array[CI_array.length/2])/(double)2.0;
+					}
+					
+					sb.append(rename_criterion + "\t");
+					sb.append(minCI + "\t");					
+					sb.append(meanCI + "\t");
+					sb.append(mediumCI + "\t");
+					sb.append(maxCI + "\t");
+					sb.append(stdCI + "\t" + "\n");
+
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return sb.toString();
+	}
+	/**2009-02-25: get the CI summary information for a given criterion
 	 * criterion + minCI + meanCI + maxCI + stdCI
 	 * 
 	 * @param srcDir
 	 * @param containHeader
 	 * @param criterion
+	 * @param rename_criterion
 	 * @return
 	 */
 	public static String getCriteriaCI(String srcDir, boolean containHeader,
@@ -84,6 +166,8 @@ public class ResultAnalyzer {
 
 		return sb.toString();
 	}
+	
+	
 
 	/**
 	 * 2009-03-31: get the correlation between CI and coveredElements
@@ -1325,7 +1409,124 @@ public class ResultAnalyzer {
 		// Logger.getInstance().close();
 		return fault_perValidTestSet;
 	}
+	
+	/**2009-10-20: this merge can get the medium information 
+	 * 
+	 * @param criteria
+	 * @param rename_criteria
+	 * @param criterion_Metric
+	 * @param date
+	 * @param saveFile
+	 */
+	public static void mergeHashMap_medium(String[] criteria,
+			String[] rename_criteria, HashMap criterion_Metric, String date,
+			String saveFile) {
+		StringBuilder sb = new StringBuilder();
 
+		// Header
+		sb.append("Fault" + "\t" + "FailureRate" + "\t");
+
+		for (int i = 0; i < criteria.length; i++) {
+			String criterion = rename_criteria[i];
+			sb.append(criterion + "\t");
+		}
+		sb.append("\n");
+
+		// 2009-03-08: we may only interest in faults in fault list
+		ArrayList faultList = new ArrayList();
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(
+					"src/ccr/experiment"
+							+ "/Context-Intensity_backup/TestHarness/" + date
+							+ "/FaultList.txt"));
+			String str = null;
+			while ((str = br.readLine()) != null) {
+				faultList.add(str);
+			}
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		String criterion = null;
+		for (int j = 0; j < faultList.size(); j++) {
+			String fault = (String) faultList.get(j);
+			String failureRate = null;
+			if(!ResultAnalyzer.failureRate.containsKey(fault)){
+				fault = "0" + fault;
+			}
+			
+			sb.append(fault + "\t" + ResultAnalyzer.failureRate.get(fault)
+					+ "\t");
+			for (int i = 0; i < criteria.length; i++) {
+				criterion = criteria[i];
+				HashMap metric = (HashMap) criterion_Metric.get(criterion);//metric:fault- testing effectiveness
+
+				Object effectiveness = metric.get(fault);
+				if (effectiveness == null) {
+					effectiveness = metric.get(Integer.parseInt(fault) + "");
+				}
+				sb.append(effectiveness + "\t");
+			}
+			sb.append("\n");
+		}
+
+		// 2009-03-07: we need more abstract information: min,
+		// max, medium, mean,
+		// and SD for each criterion
+
+		// another header
+		sb.append("\nCriterion\tMin\tMedium\tMean\tMax\tSD\n");
+		for (int i = 0; i < criteria.length; i++) {
+			sb.append(rename_criteria[i] + "\t");
+			
+			criterion = criteria[i];
+			HashMap metric = (HashMap) criterion_Metric.get(criterion);
+
+			double[] performances = new double[faultList.size()];
+			for (int j = 0; j < faultList.size(); j++) {
+				String fault = (String) faultList.get(j);
+				if(!metric.containsKey(fault)){
+					fault = Integer.parseInt(fault) + "";
+				}
+				
+				Double performance = (Double) metric.get(fault);
+				performances[j] = performance;	
+			}
+			Arrays.sort(performances);//ascending order
+			
+			double min = performances[0];
+			double max = performances[performances.length-1];
+			double medium = 0.0;
+			if(performances.length % 2 == 1){//odd number
+				medium = performances[(performances.length + 1)/2 - 1];
+			}else{//even number
+				medium = (performances[performances.length/2 - 1] + performances[performances.length/2])/(double)2.0;
+			}
+			
+			double sum = 0;
+			for(int j = 0; j < performances.length; j ++){
+				sum += performances[j];
+			}
+			double mean = sum/(double)performances.length;
+			
+			sum = 0.0;
+			for (int j = 0; j < performances.length; j++) {
+				sum += (performances[j] - mean) * (performances[j] - mean);
+			}
+			double STD = Math.sqrt(sum / performances.length);
+			sb.append(min + "\t" + medium + "\t" + mean + "\t" + max + "\t" + STD + "\n");
+		}
+
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
 	/**
 	 * 2009-03-27: we wish to rename the original criteria
 	 * 
@@ -2004,13 +2205,28 @@ public class ResultAnalyzer {
 
 			// 2009-02-25: to explore the CI distributions of different testing
 			// criteria
-			StringBuilder sb = new StringBuilder();
-			sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t"
-					+ "maxCI" + "\t" + "stdCI" + "\n");
+			StringBuilder sb = new StringBuilder();			
+//			sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t"
+//					+ "maxCI" + "\t" + "stdCI" + "\n");
+			sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
+				append("\t").append("mediumCI").append("\t").
+				append("maxCI").append("\t").append("stdCI").append("\n");
+			
 			for (int i = 0; i < criteria.length; i++) {
-				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader,
-						criteria[i]));
+				//2009-10-20: change the name of criteria
+				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
+					criteria[i] = criteria[i] + "_" + size_ART;
+				}
+				
+				//2009-02-25:
+//				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader,
+//						criteria[i]));
+				
+				//2009-10-20:
+				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
 			}
+			
 
 			saveFile = srcDir + "/CI.txt";
 			Logger.getInstance().setPath(saveFile, false);
