@@ -171,6 +171,36 @@ public class TestSetManager {
 			e.printStackTrace();
 		}
 	}
+	
+	
+	public static void attachTSWithCI_Activation_replacement(TestSet[] testSets, String saveFile){
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("TestSet" + "\t" + "Size" + "\t" + "Coverage" + "\t" + "CI" + "\t" + "Activation"
+				+ "\t" + "Replacement"+"\n");
+
+		for (int j = 0; j < testSets.length; j++) {
+			TestSet ts = testSets[j];
+			double CI = Adequacy.getAverageCI(ts);
+			double Activation = Adequacy.getAverageActivation(ts);
+			double Replacement = ts.replaceCounter; 
+			sb.append(ts.index + "\t" + ts.size() + "\t" + ts.coverage + "\t"
+					+ CI + "\t" + Activation + "\t" + Replacement + "\n");
+		}
+
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
+			bw.write(sb.toString());
+			bw.close();
+			System.out.println(saveFile + " has been generated");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+	
+	
 	/**
 	 * 2009-02-22: load test sets from files
 	 * 
@@ -2991,8 +3021,12 @@ public class TestSetManager {
 
 			saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
 				+ "_CI.txt";
-			TestSetManager.attachTSWithCI(testSets[0], saveFile);
-
+			//2009-03-31:
+//			TestSetManager.attachTSWithCI(testSets[0], saveFile);
+			//2009-10-20:
+//			TestSetManager.attachTSWithCI_Activation(testSets[0], saveFile);
+			TestSetManager.attachTSWithCI_Activation_replacement(testSets[0], saveFile);
+			
 		}else if (args.length == 3) { // get random test sets
 			int testSetNum = Integer.parseInt(args[0]);
 			int testSuiteSize = Integer.parseInt(args[1]);
@@ -3012,7 +3046,13 @@ public class TestSetManager {
 
 			saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
 					+ "_CI.txt";
-			TestSetManager.attachTSWithCI(testSets[0], saveFile);
+		
+			//2009-03-31:
+//			TestSetManager.attachTSWithCI(testSets[0], saveFile);
+			//2009-10-20:
+//			TestSetManager.attachTSWithCI_Activation(testSets[0], saveFile);
+			TestSetManager.attachTSWithCI_Activation_replacement(testSets[0], saveFile);
+			
 		} else if (args.length == 2) { 
 			//2009-03-03: add this to study correlations between CI and covered elements
 			String date = args[0];
@@ -3027,10 +3067,6 @@ public class TestSetManager {
 			Adequacy.loadTestCase(testPoolFile);
 
 			Vector testCases = new Vector(); // get random test sets
-//			for (int i = 0; i < 10; i++) {
-//				for (int j = 0; j < iterations; j++)
-//					testCases.add(testpool.getByART(i));
-//			}
 			
 			Iterator ite = Adequacy.testCases.keySet().iterator();
 			while(ite.hasNext()){
@@ -3076,11 +3112,6 @@ public class TestSetManager {
 				+ date + "/TestPool.txt";
 			TestSet testpool = getTestPool(testPoolFile, true);
 			Adequacy.loadTestCase(testPoolFile);
-//			for(int i = start; i < end; i = i + interval){
-//				min_TestSuiteSize = i;
-//				max_TestSuiteSize = i + interval;
-//				if(max_TestSuiteSize > end)
-//					max_TestSuiteSize = end;
 				
 			//only interest in Group 1
 			for(double i = start_CI; i < end_CI; i = i + interval){
@@ -3270,7 +3301,6 @@ public class TestSetManager {
 							}
 						}
 					}
-
 					
 					testSets[0] = TestSetManager.getTestSets(appClassName, c,
 							testpool, maxTrials, testSetNum, min_CI, max_CI,
@@ -3278,7 +3308,8 @@ public class TestSetManager {
 					
 					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
 							+ "_CI.txt";
-					TestSetManager.attachTSWithCI_Activation(testSets[0], saveFile);
+//					TestSetManager.attachTSWithCI_Activation(testSets[0], saveFile);
+					TestSetManager.attachTSWithCI_Activation_replacement(testSets[0], saveFile);
 					
 //					TestSetManager.attachTSWithCI(testSets[0], saveFile);
 					
