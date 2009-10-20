@@ -1871,15 +1871,21 @@ public class ResultAnalyzer {
 		// "All2ResolvedDUTestSets_new_criteria_62",
 		// };
 		// 2009-09-21
-		String[] criteria = new String[] { "AllPolicies_CA",
+		String[] criteria = new String[] {"RandomTestSets_27", "AllPolicies_CA",
 				"AllPolicies_RA-H", "AllPolicies_RA-L", "AllPolicies_RA-R",
 
-				"All1ResolvedDU_CA", "All1ResolvedDU_RA-H",
+				"RandomTestSets_42","All1ResolvedDU_CA", "All1ResolvedDU_RA-H",
 				"All1ResolvedDU_RA-L", "All1ResolvedDU_RA-R",
 
-				"All2ResolvedDU_CA", "All2ResolvedDU_RA-H",
-				"All2ResolvedDU_RA-L", "All2ResolvedDU_RA-R", };
+				"RandomTestSets_50","All2ResolvedDU_CA", "All2ResolvedDU_RA-H",
+				"All2ResolvedDU_RA-L", "All2ResolvedDU_RA-R", 
+				
+				"RandomTestSets_RA-H_27","RandomTestSets_RA-L_27","RandomTestSets_RA-R_27",
+				"RandomTestSets_RA-H_42","RandomTestSets_RA-L_42","RandomTestSets_RA-R_42",
+				"RandomTestSets_RA-H_50","RandomTestSets_RA-L_50","RandomTestSets_RA-R_50",
+		};
 
+		
 		if (instruction.equals("Context_Intensity")
 				|| instruction.equals("Limited") || instruction.equals("Load")) {
 			// HashMap criterion_faultNum = new HashMap();
@@ -1893,8 +1899,13 @@ public class ResultAnalyzer {
 			
 			String saveFile = null;
 			for (int i = 0; i < criteria.length; i++) {
-				saveFile = srcDir + criteria[i] + "_" + size_ART
-						+ "_limited_load.txt";
+				if(criteria[i].contains("RandomTestSets") && !criteria[i].contains("RandomTestSets_R")){
+					saveFile = srcDir + criteria[i] + "_limited_load.txt";
+				}else{
+					saveFile = srcDir + criteria[i] + "_" + size_ART
+					+ "_limited_load.txt";	
+				}
+				
 				// ResultAnalyzer.mergeTestResultFiles(srcDir, criteria[i],
 				// containHeader, saveFile);
 
@@ -1975,12 +1986,17 @@ public class ResultAnalyzer {
 			// 2009-09-19: rename the default criterion
 			String[] rename_criteria = new String[] {
 			// rename the criteria of Group 1
-					// "Random-27",
+					 "R-27",
 					"AS_CA", "AS_RA-H", "AS_RA-L", "AS_RA-R",
-					// "Random-42",
+					 "R-42",
 					"ASU-CA", "ASU_RA-H", "ASU_RA-L", "ASU_RA-R",
-					// "Random-50",
-					"A2SU_CA", "A2SU_RA-H", "A2SU_RA-L", "A2SU_RA-R", };
+					 "R-50",
+					"A2SU_CA", "A2SU_RA-H", "A2SU_RA-L", "A2SU_RA-R",
+					
+					"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
+					"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
+					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"};
+			
 			ResultAnalyzer.mergeHashMap(criteria, rename_criteria,
 					criterion_perValidTS, date, saveFile);
 			// ResultAnalyzer.mergeHashMap(criteria, criterion_perValidTS, date,
