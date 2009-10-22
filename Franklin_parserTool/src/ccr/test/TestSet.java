@@ -106,8 +106,45 @@ public class TestSet {
 		return get(new Random().nextInt(size()));
 //		return get((int) (Math.random() * (double) size()));
 	}
-	
-	
+
+	/**2009-10-22: remove one test case in the test set which has the nearest distances
+	 * to reminding test cases.
+	 * 
+	 * @param testSet
+	 * @return
+	 */
+	public TestSet removeTestCase_ART(TestSet testSet){		
+		double[] CIs = new double[testSet.size()]; //keep CIs of all test cases in the test set
+		for(int i = 0; i < testSet.size(); i ++){
+			String index_testcase = (String)testSet.get(i);
+			CIs[i] = ((TestCase)Adequacy.testCases.get(index_testcase)).CI;
+		}
+		
+		double[] distances = new double[testSet.size()]; //keep distances of a test case to reminding ones 
+		for(int i = 0; i < distances.length; i ++){
+			double CI_testcase = CIs[i];			
+			double distance = 0.0;
+			
+			for(int j = 0 ; j < CIs.length && j != i; j ++){
+				double CI_temp = CIs[j];
+				distance += Math.abs(CI_testcase - CI_temp);
+			}			
+			distances[i] = distance;
+		}
+		
+		//get the test case with minimum distance from reminding test cases
+		double min_dist = Double.MAX_VALUE;
+		int min_index = -1;
+		for(int i = 0; i < distances.length; i ++){
+			double dis = distances[i];
+			if(dis < min_dist){
+				min_dist = dis;
+				min_index = i;
+			}
+		}
+		testSet.remove(min_index); // remove the test case with minimum distances from reminding test cases
+		return testSet;
+	}
 	
 	/**2009-08-19: RA_R which constructs test sets with evenly-distributed context diversities
 	 * 
@@ -505,6 +542,10 @@ public class TestSet {
 	public boolean isEmpty() {
 		
 		return testcases.isEmpty();
+	}
+	
+	public void remove(int index){
+		testcases.remove(index);
 	}
 	
 	public void remove(String testcase) {

@@ -1142,12 +1142,7 @@ public class Adequacy {
 		}
 	}
 	
-	/**2009-2-16:attach test sets with the average Context Intensity of its test cases
-	 * 
-	 * @param ts
-	 * @param testcaseFile
-	 * @return
-	 */
+	
 	public static double getAverageActivation(TestSet ts){
 		double avg_Activation = 0;
 		int sum_Activation = 0;

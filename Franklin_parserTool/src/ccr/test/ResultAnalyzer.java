@@ -1634,7 +1634,10 @@ public class ResultAnalyzer {
 				}
 				sb.append(effectiveness + "\t");
 			}
+			
+
 			sb.append("\n");
+			
 		}
 
 		// 2009-03-07: we need more abstract information: min,
@@ -2302,10 +2305,13 @@ public class ResultAnalyzer {
 					"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
 					"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
 					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"};
-			
-			ResultAnalyzer.mergeHashMap(criteria, rename_criteria,
+			//2009-02-25:
+//			ResultAnalyzer.mergeHashMap(criteria, rename_criteria,
+//					criterion_perValidTS, date, saveFile);
+			//2009-10-20: get the mediume testing effectiveness
+			ResultAnalyzer.mergeHashMap_medium(criteria, rename_criteria,
 					criterion_perValidTS, date, saveFile);
-
+			
 			// 2009-02-25: to explore the CI distributions of different testing
 			// criteria
 			StringBuilder sb = new StringBuilder();			

@@ -28,6 +28,8 @@ public class TestSetManager {
 	
 	public static HashMap testCases = new HashMap();
 
+	
+	
 	/**
 	 * 2009-03-03: investigate the correlation between CI and coverage
 	 * 
@@ -377,6 +379,80 @@ public class TestSetManager {
 		return testSet;
 	}
 	
+	/**2009-10-22: 2009-10-22: we enumerate all test cases in the test pool to 
+	 * simulate a practical upper bound of CD improvement
+	 * 
+	 * @param appClassName
+	 * @param c
+	 * @param testpool
+	 * @param H_L_R
+	 * @return
+	 */
+	public static TestSet getAdequacyTestSet_refined_best(String appClassName, Criterion c, TestSet testpool, String H_L_R){
+		
+		Criterion criterion = (Criterion) c.clone();
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		HashMap testcase_uniqueCovers = new HashMap();
+		HashMap testcase_traces = new HashMap();
+		
+		long time = System.currentTimeMillis();
+
+		int originalSize = criterion.size();
+		
+		if(H_L_R.equals("R")){ //RA-R: refined test suite construction algorithms favoring evenly-distributed context diversities
+			for(int i = 0; i < testpool.size(); i ++){				
+				String testcase = testpool.get(i); 
+				if (!visited.contains(testcase)) {
+					visited.add(testcase);
+					String stringTrace[] = TestDriver.getTrace(appClassName,
+							testcase);
+
+					if (checkCoverage(stringTrace, criterion)) {
+						testSet.add(testcase);
+					}else{
+						testSet = testSet.removeTestCase_ART(testSet);
+					}
+				}
+			}
+		}else if(H_L_R.equals("H") || H_L_R.equals("L")){//RA-H, RA-L: refined test suite construction algorithms favoring high/low context diversity
+			for(int j = 0; j < testpool.size(); j ++){
+				String testcase = testpool.get(j);				
+				if (!visited.contains(testcase)) {
+					visited.add(testcase);
+					String stringTrace[] = TestDriver.getTrace(appClassName,
+							testcase);
+					
+					ArrayList uniqueCover = increaseCoverage(stringTrace, criterion);
+					if (uniqueCover.size() > 0) {
+						testcase_uniqueCovers.put(testcase, uniqueCover);
+						testSet.add(testcase);
+						
+						//2009-09-18: execution traces
+						ArrayList traces = new ArrayList();
+						for(int i = 0; i < stringTrace.length; i++)
+							traces.add(stringTrace[i]);
+						testcase_traces.put(testcase, traces);
+					} else {
+						testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+								testcase_traces, testcase, stringTrace, H_L_R);
+						
+					}			
+				}
+			}
+		}
+		
+				
+		int currentSize = criterion.size();
+		testSet.setCoverage((float) (originalSize - currentSize)
+				/ (float) originalSize);
+		testSet.geneTime = System.currentTimeMillis() - time;
+		return testSet;
+		
+		
+	}
+	
+	
 	/**2009-10-14:activation rather than CI is the principle factor to replace test sets
 	 * 
 	 * @param appClassName
@@ -523,9 +599,7 @@ public class TestSetManager {
 						ArrayList traces = new ArrayList();
 						for(int i = 0; i < stringTrace.length; i++)
 							traces.add(stringTrace[i]);
-						
 						testcase_traces.put(testcase, traces);
-						
 					} else {
 						//2009-09-18: general replacement strategy
 						testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
@@ -3316,9 +3390,57 @@ public class TestSetManager {
 					//2009-10-15: attach test sets with CI and activation information
 //					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
 //					+ "_Activation_CI.txt";
-					
-
 				}
+		}else if(args.length == 1){
+			//2009-10-22: get upper bound of improvement brought by CD
+			String date = args[0];
+			String[] criteria = new String[]{
+					"AllPolicies", "All1ResolvedDU", "All2ResolvedDU"	
+			};
+			String[] H_L_R = new String[]{
+					"H", "L", "R"
+			};
+			
+			
+			CFG g = new CFG(System.getProperty("user.dir")
+					+ "/src/ccr/app/TestCFG2.java");
+			Criterion c = null;
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/TestPool.txt";
+			TestSet testpool = getTestPool(testPoolFile, true);
+			
+			Adequacy.loadTestCase(testPoolFile);
+
+			TestSet[][] testSets = new TestSet[1][];
+			String versionPackageName = "testversion";
+			String saveFile = null;
+			
+			for(int i = 0; i <criteria.length; i ++){
+
+				for(int j = 0; j < H_L_R.length; j ++){
+					if (criteria[i].equals("AllPolicies"))
+						c = g.getAllPolicies();
+					else if (criteria[i].equals("All1ResolvedDU"))
+						c = g.getAllKResolvedDU(1);
+					else if (criteria[i].equals("All2ResolvedDU"))
+						c = g.getAllKResolvedDU(2);
+					saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date
+						+ "/"
+						+ criteria[i]
+						+ "_RA-"+H_L_R[j]+"_10.txt";
+					
+					testSets[0] = TestSetManager.getTestSets(appClassName, c,
+							testpool, maxTrials, 1, 0.7, 0.9,
+							"new", "random", -1, saveFile, H_L_R[j], 10);
+					saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+					+ "_CI.txt";
+					TestSetManager.attachTSWithCI_Activation_replacement(testSets[0], saveFile);
+				}
+				
+				
+			}
+			
 		}
 	}
 }
