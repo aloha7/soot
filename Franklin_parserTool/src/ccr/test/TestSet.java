@@ -125,9 +125,11 @@ public class TestSet {
 			double CI_testcase = CIs[i];			
 			double distance = 0.0;
 			
-			for(int j = 0 ; j < CIs.length && j != i; j ++){
-				double CI_temp = CIs[j];
-				distance += Math.abs(CI_testcase - CI_temp);
+			for(int j = 0 ; j < CIs.length ; j ++){
+				if(j != i){
+					double CI_temp = CIs[j];
+					distance += Math.abs(CI_testcase - CI_temp);	
+				}				
 			}			
 			distances[i] = distance;
 		}
@@ -143,6 +145,7 @@ public class TestSet {
 			}
 		}
 		testSet.remove(min_index); // remove the test case with minimum distances from reminding test cases
+		testSet.replaceCounter ++;
 		return testSet;
 	}
 	

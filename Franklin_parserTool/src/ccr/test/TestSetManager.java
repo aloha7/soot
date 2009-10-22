@@ -411,6 +411,7 @@ public class TestSetManager {
 					if (checkCoverage(stringTrace, criterion)) {
 						testSet.add(testcase);
 					}else{
+						testSet.add(testcase);
 						testSet = testSet.removeTestCase_ART(testSet);
 					}
 				}
@@ -1813,7 +1814,6 @@ public class TestSetManager {
 				break;
 			}
 		}
-		
 		return testSet;
 	}
 
@@ -2792,13 +2792,17 @@ public class TestSetManager {
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
 					//2009-03-10: we use ART+generalReplacement to favor test cases with higher CI
-					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
-							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
+//					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
+//							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 
 					//2009-10-15: we use activation rather than CI as the principle factor 
 //					testSets[i] = TestSetManager.getAdequacyTestSet_refined_activation(
 //							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 //					
+					//2009-10-22: get the upper bound of CD improvement
+					testSets[i] = TestSetManager.getAdequacyTestSet_refined_best(appClassName,
+							c, testpool, H_L_R);
+					
 					// 2009-02-24: set the index of testSets
 					testSets[i].index = "" + i;
 
@@ -3398,7 +3402,7 @@ public class TestSetManager {
 					"AllPolicies", "All1ResolvedDU", "All2ResolvedDU"	
 			};
 			String[] H_L_R = new String[]{
-					"H", "L", "R"
+					"R", "H", "L"
 			};
 			
 			
