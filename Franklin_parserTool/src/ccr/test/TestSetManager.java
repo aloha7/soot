@@ -379,6 +379,77 @@ public class TestSetManager {
 		return testSet;
 	}
 	
+	/**2009-10-23:get the upper bound of CD improvement based on random algorithms
+	 * 
+	 * @param appClassName
+	 * @param c
+	 * @param testpool
+	 * @param H_L_R
+	 * @return
+	 */
+	public static TestSet getAdequacyTestSet_best(String appClassName, Criterion c, TestSet testpool, String H_L_R, int size_ART){
+		
+		Criterion criterion = (Criterion) c.clone();
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		HashMap testcase_uniqueCovers = new HashMap();
+		HashMap testcase_traces = new HashMap();
+		
+		
+		long time = System.currentTimeMillis();
+
+		int originalSize = criterion.size();
+		
+		if(H_L_R.equals("R")){ //RA-R: refined test suite construction algorithms favoring evenly-distributed context diversities
+			while( testpool.size()!= 0){
+				String testcase = testpool.getByART(testSet, size_ART);//2009-08-19: take care of this
+				if (!visited.contains(testcase)) {
+					visited.add(testcase);
+					String stringTrace[] = TestDriver.getTrace(appClassName,
+							testcase);
+
+					if (checkCoverage(stringTrace, criterion)) {
+						testSet.add(testcase);
+					}
+				}
+				testpool.remove(testcase);
+			}
+		}else if(H_L_R.equals("H") || H_L_R.equals("L")){//RA-H, RA-L: refined test suite construction algorithms favoring high/low context diversity
+			while ( testpool.size() != 0) {
+				String testcase = testpool.getByART(H_L_R, size_ART); //more likely to sample test cases with high CI
+				if (!visited.contains(testcase)) {
+					visited.add(testcase);
+					String stringTrace[] = TestDriver.getTrace(appClassName,
+							testcase);
+					
+					ArrayList uniqueCover = increaseCoverage(stringTrace, criterion);
+					if (uniqueCover.size() > 0) {
+						testcase_uniqueCovers.put(testcase, uniqueCover);
+						testSet.add(testcase);
+						
+						//2009-09-18: execution traces
+						ArrayList traces = new ArrayList();
+						for(int i = 0; i < stringTrace.length; i++)
+							traces.add(stringTrace[i]);
+						testcase_traces.put(testcase, traces);
+					} else {
+						testSet = TestSetManager.replace_CI_ordering_refine(testSet, 
+								testcase_traces, testcase, stringTrace, H_L_R);
+					}			
+				}
+				testpool.remove(testcase);
+			}
+		}
+		
+				
+		int currentSize = criterion.size();
+		testSet.setCoverage((float) (originalSize - currentSize)
+				/ (float) originalSize);
+		testSet.geneTime = System.currentTimeMillis() - time;
+		return testSet;
+		
+		
+	}
 	/**2009-10-22: 2009-10-22: we enumerate all test cases in the test pool to 
 	 * simulate a practical upper bound of CD improvement
 	 * 
@@ -2800,8 +2871,12 @@ public class TestSetManager {
 //							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 //					
 					//2009-10-22: get the upper bound of CD improvement
-					testSets[i] = TestSetManager.getAdequacyTestSet_refined_best(appClassName,
-							c, testpool, H_L_R);
+//					testSets[i] = TestSetManager.getAdequacyTestSet_refined_best(appClassName,
+//							c, testpool, H_L_R);
+					
+					//2009-10-23: get the upper bound of CD improvement by Random Algorithm 
+					testSets[i] = TestSetManager.getAdequacyTestSet_best(appClassName, c, testpool, H_L_R, size_ART);
+					
 					
 					// 2009-02-24: set the index of testSets
 					testSets[i].index = "" + i;
