@@ -402,7 +402,12 @@ public class TestSetManager {
 		
 		if(H_L_R.equals("R")){ //RA-R: refined test suite construction algorithms favoring evenly-distributed context diversities
 			while( testpool.size()!= 0){
-				String testcase = testpool.getByART(testSet, size_ART);//2009-08-19: take care of this
+				//2009-08-19:
+//				String testcase = testpool.getByART(testSet, size_ART);//2009-08-19: take care of this
+				
+				//2009-10-25:
+				String testcase = testpool.getByART_best(testSet, size_ART);
+				
 				if (!visited.contains(testcase)) {
 					visited.add(testcase);
 					String stringTrace[] = TestDriver.getTrace(appClassName,
@@ -416,7 +421,12 @@ public class TestSetManager {
 			}
 		}else if(H_L_R.equals("H") || H_L_R.equals("L")){//RA-H, RA-L: refined test suite construction algorithms favoring high/low context diversity
 			while ( testpool.size() != 0) {
-				String testcase = testpool.getByART(H_L_R, size_ART); //more likely to sample test cases with high CI
+				//2009-08-19:
+//				String testcase = testpool.getByART(H_L_R, size_ART); //more likely to sample test cases with high CI
+				
+				//2009-10-25:
+				String testcase = testpool.getByART_best(H_L_R, size_ART);
+				
 				if (!visited.contains(testcase)) {
 					visited.add(testcase);
 					String stringTrace[] = TestDriver.getTrace(appClassName,
@@ -2863,8 +2873,8 @@ public class TestSetManager {
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
 					//2009-03-10: we use ART+generalReplacement to favor test cases with higher CI
-//					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
-//							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
+					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
+							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 
 					//2009-10-15: we use activation rather than CI as the principle factor 
 //					testSets[i] = TestSetManager.getAdequacyTestSet_refined_activation(
@@ -2874,8 +2884,9 @@ public class TestSetManager {
 //					testSets[i] = TestSetManager.getAdequacyTestSet_refined_best(appClassName,
 //							c, testpool, H_L_R);
 					
-					//2009-10-23: get the upper bound of CD improvement by Random Algorithm 
-					testSets[i] = TestSetManager.getAdequacyTestSet_best(appClassName, c, testpool, H_L_R, size_ART);
+					//2009-10-23: get the upper bound of CD improvement by Random Algorithm
+//					TestSet testpool_copy = testpool.copy();
+//					testSets[i] = TestSetManager.getAdequacyTestSet_best(appClassName, c, testpool_copy, H_L_R, size_ART);
 					
 					
 					// 2009-02-24: set the index of testSets
