@@ -46,6 +46,14 @@ public class TestSet {
 		
 	}
 	
+	public TestSet copy(){
+		TestSet testpool  = new TestSet();
+		for(int i = 0; i < this.size(); i ++){
+			testpool.add(this.get(i));
+		}		
+		return testpool;
+	}
+	
 	public void add(String testcase) {
 		if (!testcases.contains(testcase)) {
 			testcases.add(testcase);
@@ -147,6 +155,67 @@ public class TestSet {
 		testSet.remove(min_index); // remove the test case with minimum distances from reminding test cases
 		testSet.replaceCounter ++;
 		return testSet;
+	}
+	
+	/**2009-10-25:used by RA-R to sample test cases with ART, but since the test pool size
+	 * can be reduced, it needs to check the size before sampling 
+	 * 
+	 * @param testset
+	 * @param size_TestSet
+	 * @return
+	 */
+	public String getByART_best(TestSet testset, int size_TestSet){
+		//1.get CIs of test cases in the test set
+		ArrayList<Double> CI_testcases = new ArrayList<Double>();
+		for(int i = 0; i < testset.size(); i ++){
+			String index_testcase = (String)testset.get(i);
+			double CI_testcase = ((TestCase)Adequacy.testCases.get(index_testcase)).CI;
+			CI_testcases.add(CI_testcase);
+		}
+		
+		//2.get 10 random candidate test sets, and their distances to test cases in testset
+		ArrayList<String> tmpTestSet = new ArrayList<String>();
+		ArrayList<Double> dis_TempTestSet = new ArrayList<Double>();
+		
+		if(this.size() <= size_TestSet){
+			//2009-10-25:if the size is too small, then add all test cases to tmpTestSet
+			for(int i = 0; i < this.size(); i ++){
+				String testcase = this.get(i);
+				tmpTestSet.add(testcase);
+				double CI_testcase = ((TestCase)Adequacy.testCases.get(testcase)).CI;
+				double distance = 0.0;
+				for(Double CI: CI_testcases){
+					distance += Math.abs(CI - CI_testcase);
+				}
+				dis_TempTestSet.add(distance);
+			}
+		}else{//2009-10-25:
+			while(tmpTestSet.size() < size_TestSet){
+				String testcase = this.getByRandom();
+				if(!tmpTestSet.contains(testcase) && !testset.contains(testcase)){
+					tmpTestSet.add(testcase);
+					double CI_testcase = ((TestCase)Adequacy.testCases.get(testcase)).CI;
+					double distance = 0.0;
+					for(Double CI: CI_testcases){
+						distance += Math.abs(CI - CI_testcase);
+					}
+					dis_TempTestSet.add(distance);
+				}
+			}	
+		}
+		
+		//3. get the test case with max distance from existing test cases
+		double max_dist = Double.MIN_VALUE;
+		int max_index = 0;
+		for(int i = 0; i < dis_TempTestSet.size(); i ++){
+			double dis = dis_TempTestSet.get(i);
+			if(dis > max_dist){
+				max_dist = dis;
+				max_index = i;
+			}
+		}
+		
+		return tmpTestSet.get(max_index);
 	}
 	
 	/**2009-08-19: RA_R which constructs test sets with evenly-distributed context diversities
@@ -417,6 +486,59 @@ public class TestSet {
 		return testCaseMaxCI;
 	}
 	
+	/**2009-10-25:used by RA-H/RA-L to sample test cases. Since the size of test pool 
+	 *can be reduced, we need to check test set size before sampling
+	 * @param H_L
+	 * @param size_TestSet
+	 * @return
+	 */
+	public String getByART_best(String H_L, int size_TestSet){
+		TestSet tmp = new TestSet();
+		
+		//2009-10-25: check the size of test pool before sampling 
+		if(this.size() > size_TestSet){
+			do{
+				String testcase = this.getByRandom();
+				if(!tmp.contains(testcase))
+					tmp.add(testcase);
+			}while(tmp.size()< size_TestSet);	
+		}else{
+			for(int i = 0; i < this.size(); i ++){
+				String testcase = this.get(i);
+				tmp.add(testcase);
+			}
+		}
+		
+		
+		
+		String testCaseMaxCI = null;
+		
+		if(H_L.equals("H")){
+			double maxCI =Double.MIN_VALUE;
+			for(int i = 0; i < tmp.size(); i ++){
+				TestCase temp = (TestCase) Adequacy.testCases.get((String)tmp.get(i));
+				double CI_temp = temp.CI;
+				if(CI_temp > maxCI){
+					maxCI = CI_temp;
+					testCaseMaxCI = temp.index;
+				}
+			}	
+		}else if(H_L.equals("L")){
+			double minCI = Double.MAX_VALUE;
+			for(int i = 0; i < tmp.size(); i ++){
+				TestCase temp = (TestCase) Adequacy.testCases.get((String)tmp.get(i));
+				double CI_temp = temp.CI;
+				if(CI_temp < minCI){
+					minCI = CI_temp;
+					testCaseMaxCI = temp.index;
+				}
+			}
+		}
+		
+		return testCaseMaxCI;
+	}
+	
+	
 	/**2009-09-18:
 	 * 
 	 * @param H_L: RA_H or RA_L: the former favors high context diversities 
@@ -426,6 +548,7 @@ public class TestSet {
 	 */
 	public String getByART(String H_L, int size_TestSet){
 		TestSet tmp = new TestSet();
+		
 		//randomly get a test set S containing 10 test cases 
 		do{
 			String testcase = this.getByRandom();
