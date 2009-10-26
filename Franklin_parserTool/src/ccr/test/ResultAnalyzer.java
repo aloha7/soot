@@ -2237,18 +2237,18 @@ public class ResultAnalyzer {
 		// };
 		
 		// 2009-09-21
-		String[] criteria = new String[] {/*"RandomTestSets_27", "AllPolicies_CA",*/
+		String[] criteria = new String[] {"RandomTestSets_27", "AllPolicies_CA",
 				"AllPolicies_RA-H", "AllPolicies_RA-L", "AllPolicies_RA-R",
 
-				/*"RandomTestSets_42","All1ResolvedDU_CA",*/ "All1ResolvedDU_RA-H",
+				"RandomTestSets_42","All1ResolvedDU_CA", "All1ResolvedDU_RA-H",
 				"All1ResolvedDU_RA-L", "All1ResolvedDU_RA-R",
 
-				/*"RandomTestSets_50","All2ResolvedDU_CA",*/ "All2ResolvedDU_RA-H",
+				"RandomTestSets_50","All2ResolvedDU_CA", "All2ResolvedDU_RA-H",
 				"All2ResolvedDU_RA-L", "All2ResolvedDU_RA-R", 
 				
-				/*"RandomTestSets_RA-H_27","RandomTestSets_RA-L_27","RandomTestSets_RA-R_27",
+				"RandomTestSets_RA-H_27","RandomTestSets_RA-L_27","RandomTestSets_RA-R_27",
 				"RandomTestSets_RA-H_42","RandomTestSets_RA-L_42","RandomTestSets_RA-R_42",
-				"RandomTestSets_RA-H_50","RandomTestSets_RA-L_50","RandomTestSets_RA-R_50",*/
+				"RandomTestSets_RA-H_50","RandomTestSets_RA-L_50","RandomTestSets_RA-R_50",
 		};
 
 		
@@ -2295,19 +2295,19 @@ public class ResultAnalyzer {
 			// 2009-09-19: rename the default criterion
 			String[] rename_criteria = new String[] {
 			// rename the criteria of Group 1
-					/* "R-27",
-					"AS_CA",*/ 
+					 "R-27",
+					"AS_CA", 
 					"AS_RA-H", "AS_RA-L", "AS_RA-R",
-					/* "R-42",
-					"ASU-CA",*/ 
+					 "R-42",
+					"ASU-CA", 
 					"ASU_RA-H", "ASU_RA-L", "ASU_RA-R",
-					/* "R-50",
-					"A2SU_CA",*/ 
+					 "R-50",
+					"A2SU_CA", 
 					"A2SU_RA-H", "A2SU_RA-L", "A2SU_RA-R",
 					
-			/*		"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
+					"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
 					"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
-					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"*/
+					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"
 			};
 			//2009-02-25:
 //			ResultAnalyzer.mergeHashMap(criteria, rename_criteria,
