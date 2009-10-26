@@ -1571,6 +1571,116 @@ public class ResultAnalyzer {
 		return fault_perValidTestSet;
 	}
 	
+	public static void mergeHashMap_medium_classify(String[] criteria,
+			String[] rename_criteria, HashMap criterion_Metric, String faultFile,
+			String saveFile) {
+		StringBuilder sb = new StringBuilder();
+
+		// Header
+		sb.append("Fault" + "\t" + "FailureRate" + "\t");
+
+		for (int i = 0; i < criteria.length; i++) {
+			String criterion = rename_criteria[i];
+			sb.append(criterion + "\t");
+		}
+		sb.append("\n");
+
+		// 2009-03-08: we may only interest in faults in fault list
+		ArrayList faultList = new ArrayList();
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(faultFile));
+			String str = null;
+			while ((str = br.readLine()) != null) {
+				faultList.add(str);
+			}
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		String criterion = null;
+		for (int j = 0; j < faultList.size(); j++) {
+			String fault = (String) faultList.get(j);
+			String failureRate = null;
+			if(!ResultAnalyzer.failureRate.containsKey(fault)){
+				fault = "0" + fault;
+			}
+			
+			sb.append(fault + "\t" + ResultAnalyzer.failureRate.get(fault)
+					+ "\t");
+			for (int i = 0; i < criteria.length; i++) {
+				criterion = criteria[i];
+				HashMap metric = (HashMap) criterion_Metric.get(criterion);//metric:fault- testing effectiveness
+
+				Object effectiveness = metric.get(fault);
+				if (effectiveness == null) {
+					effectiveness = metric.get(Integer.parseInt(fault) + "");
+				}
+				sb.append(effectiveness + "\t");
+			}
+			
+
+			sb.append("\n");
+			
+		}
+
+		// 2009-03-07: we need more abstract information: min,
+		// max, medium, mean,
+		// and SD for each criterion
+
+		// another header
+		sb.append("\nCriterion\tMin\tMedium\tMean\tMax\tSD\n");
+		for (int i = 0; i < criteria.length; i++) {
+			sb.append(rename_criteria[i] + "\t");
+			
+			criterion = criteria[i];
+			HashMap metric = (HashMap) criterion_Metric.get(criterion);
+
+			double[] performances = new double[faultList.size()];
+			for (int j = 0; j < faultList.size(); j++) {
+				String fault = (String) faultList.get(j);
+				if(!metric.containsKey(fault)){
+					fault = Integer.parseInt(fault) + "";
+				}
+				
+				Double performance = (Double) metric.get(fault);
+				performances[j] = performance;	
+			}
+			Arrays.sort(performances);//ascending order
+			
+			double min = performances[0];
+			double max = performances[performances.length-1];
+			double medium = 0.0;
+			if(performances.length % 2 == 1){//odd number
+				medium = performances[(performances.length + 1)/2 - 1];
+			}else{//even number
+				medium = (performances[performances.length/2 - 1] + performances[performances.length/2])/(double)2.0;
+			}
+			
+			double sum = 0;
+			for(int j = 0; j < performances.length; j ++){
+				sum += performances[j];
+			}
+			double mean = sum/(double)performances.length;
+			
+			sum = 0.0;
+			for (int j = 0; j < performances.length; j++) {
+				sum += (performances[j] - mean) * (performances[j] - mean);
+			}
+			double STD = Math.sqrt(sum / performances.length);
+			sb.append(min + "\t" + medium + "\t" + mean + "\t" + max + "\t" + STD + "\n");
+		}
+
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	/**2009-10-20: this merge can get the medium information 
 	 * 
 	 * @param criteria
@@ -2347,11 +2457,6 @@ public class ResultAnalyzer {
 						criteria[i], rename_criteria[i]));
 			}
 
-			saveFile = srcDir + "/CI_Activation.txt";
-			Logger.getInstance().setPath(saveFile, false);
-			Logger.getInstance().write(sb.toString());
-			Logger.getInstance().close();
-			
 			//2009-10-20:get Replacement distribution
 			sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
 			append("\t").append("mediumReplace.").append("\t").
@@ -2491,6 +2596,106 @@ public class ResultAnalyzer {
 			int start = Integer.parseInt(args[2]);
 			int end = Integer.parseInt(args[3]);
 			ResultAnalyzer.getLostTest(criteria, srcDir, start, end);
+		}else if(instruction.equals("Load_Classified")){
+			//2009-10-26: a new analyzer to get the testing effectiveness on different categories of fault like hard, medium and easy.
+			HashMap criterion_perValidTS = new HashMap();
+			
+			//2009-10-26: add a parameter to indicate the fault category
+			String Hard_Medium_Easy = args[3];
+			//2009-10-26: change the fault list
+			String faultFile = srcDir + "/FaultList_" + Hard_Medium_Easy + ".txt";
+			//2009-10-26: change the srcDir
+			srcDir += size_ART + "/";
+			
+			
+			
+			String saveFile = null;
+			for (int i = 0; i < criteria.length; i++) {
+				if(criteria[i].contains("RandomTestSets") && !criteria[i].contains("RandomTestSets_R")){
+					saveFile = srcDir + criteria[i] + "_limited_load.txt";
+				}else{
+					saveFile = srcDir + criteria[i] + "_" + size_ART
+					+ "_limited_load.txt";	
+				}
+				
+
+				String testSetExecutionFile = saveFile;
+				boolean containHeader1 = true;
+
+				//2009-10-26: change the save file
+				String perValidTSFile = saveFile.substring(0, saveFile
+						.indexOf("_limited_load.txt"))
+						+ "_PerValidTestSet_" + Hard_Medium_Easy + ".txt";
+				
+				HashMap perValidTS = ResultAnalyzer.perValidTestSet(
+						testSetExecutionFile, containHeader1, perValidTSFile);
+				
+				
+				criterion_perValidTS.put(criteria[i], perValidTS);
+			}
+
+			saveFile = srcDir + "/PerValidTS_" + Hard_Medium_Easy+ ".txt";
+
+
+			String[] rename_criteria = new String[] {
+					 "R-27",
+					"AS_CA", 
+					"AS_RA-H", "AS_RA-L", "AS_RA-R",
+					 "R-42",
+					"ASU-CA", 
+					"ASU_RA-H", "ASU_RA-L", "ASU_RA-R",
+					 "R-50",
+					"A2SU_CA", 
+					"A2SU_RA-H", "A2SU_RA-L", "A2SU_RA-R",
+					
+					"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
+					"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
+					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"
+			};
+			//2009-10-26: get the testing effectiveness based on classified fault
+			
+			ResultAnalyzer.mergeHashMap_medium_classify(criteria, 
+					rename_criteria, criterion_perValidTS, faultFile, saveFile);
+			
+			// 2009-02-25: to explore the CI distributions of different testing
+			// criteria
+			StringBuilder sb = new StringBuilder();			
+			sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
+				append("\t").append("mediumCI").append("\t").
+				append("maxCI").append("\t").append("stdCI").append("\n");
+			
+			//2009-10-20:get CI distribution
+			for (int i = 0; i < criteria.length; i++) {
+				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
+					criteria[i] = criteria[i] + "_" + size_ART;
+				}
+				
+				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
+			}
+			
+			//2009-10-20:get Activation distribution
+			sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
+			append("\t").append("mediumAct.").append("\t").
+			append("maxAct.").append("\t").append("stdAct.").append("\n");
+			for (int i = 0; i < criteria.length; i++) {
+				sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
+			}
+
+			//2009-10-20:get Replacement distribution
+			sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
+			append("\t").append("mediumReplace.").append("\t").
+			append("maxReplace.").append("\t").append("stdReplace.").append("\n");
+			for (int i = 0; i < criteria.length; i++) {
+				sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
+			}
+
+			saveFile = srcDir + "/CI_Activation_" + Hard_Medium_Easy+ ".txt";
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
 		}
-	}
+	} 
 }
