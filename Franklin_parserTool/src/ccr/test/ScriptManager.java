@@ -679,6 +679,88 @@ public class ScriptManager {
 		Logger.getInstance().close();
 	}
 	
+	/**2009-10-29:study the correlation between testing effectiveness and 
+	 * the candidate test set size
+	 * 
+	 * @param date
+	 * @param saveFile
+	 */
+	public static void getTestingEffectivenessRegression(String date, String saveFile){
+		StringBuilder sb = new StringBuilder();
+		int testSetNum = 100;
+		
+		String[] criteria = new String[] { 
+				"AllPolicies",
+				"All1ResolvedDU",
+				"All2ResolvedDU",
+		};
+		
+		int[] size_ARTs = new int[]{
+			30, 40, 50, 60, 65, 66, 67, 68, 69, 70	
+		};
+		
+		int interval = 12;
+		int sum = 0;
+		//1.get adequate test sets for RA-H, RA-L, RA-R
+//		getTestSet_Refined 20091026 2 AllPolicies -1 new random H 10
+		for(int j = 0; j < criteria.length; j ++){
+			for(int i = 0; i < size_ARTs.length; i ++){
+				//for CA
+				sum ++;
+				if(sum % interval != 0 && (sum + 1) % interval != 0){
+					sb.append("java ccr.test.TestSetManager getTestSet_Refined " 
+							+ date + " " + testSetNum + " " + criteria[j]
+							+ " -1 " + "old " + "random " + "R " +  size_ARTs[i]+ "&\n");	
+				}else{
+					sb.append("java ccr.test.TestSetManager getTestSet_Refined " 
+							+ date + " " + testSetNum + " " + criteria[j]
+							+ " -1 " + "old " + "random " + "R " +  size_ARTs[i]+ "\n");
+				}
+							
+				//for RA_H
+				sum ++;
+				if(sum % interval != 0&& (sum + 1) % interval != 0){
+					sb.append("java ccr.test.TestSetManager getTestSet_Refined " 
+							+ date + " " + testSetNum + " " + criteria[j]
+							+ " -1 " + "new " + "random " + "H " +  size_ARTs[i]+ "&\n");	
+				}else{
+					sb.append("java ccr.test.TestSetManager getTestSet_Refined " 
+							+ date + " " + testSetNum + " " + criteria[j]
+							+ " -1 " + "new " + "random " + "H " +  size_ARTs[i]+ "\n");
+				}
+				
+				//for RA_L
+				sum ++;
+				if(sum % interval != 0&& (sum + 1) % interval != 0){
+					sb.append("java ccr.test.TestSetManager getTestSet_Refined "  
+							+ date + " " + testSetNum + " " + criteria[j]
+							+ " -1 " + "new " + "random " + "L " +  size_ARTs[i]+ "&\n");	
+				}else{
+					sb.append("java ccr.test.TestSetManager getTestSet_Refined "  
+							+ date + " " + testSetNum + " " + criteria[j]
+							+ " -1 " + "new " + "random " + "L " +  size_ARTs[i]+ "\n");
+				}
+				
+				//for RA_R
+				sum ++;
+				if(sum % interval != 0&& (sum + 1) % interval != 0){
+					sb.append("java ccr.test.TestSetManager getTestSet_Refined " 
+							+ date + " " + testSetNum + " " + criteria[j]
+							+ " -1 " + "new " + "random " + "R " +  size_ARTs[i]+ "&\n");	
+				}else{
+					sb.append("java ccr.test.TestSetManager getTestSet_Refined " 
+							+ date + " " + testSetNum + " " + criteria[j]
+							+ " -1 " + "new " + "random " + "R " +  size_ARTs[i]+ "\n");
+				}
+								
+			}
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	
 	public static void main(String[] args) {
 		System.out
@@ -1093,6 +1175,17 @@ public class ScriptManager {
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/GetEffectiveness_Classified.sh";
 			getTestingEffectiveness_Classified(date, saveFile);
+		}else if(instruction.equals("getEffectivenessRegression")){
+			//2009-10-29:get the correlation between testing effectiveness 
+			//and the candidate test set size, include the upper improvement
+			//brought by context diversity
+			String date = args[1];
+			
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/getEffectivenessRegression.sh";
+			
+			getTestingEffectivenessRegression(date, saveFile);
+			
 		}
 	}
 }
