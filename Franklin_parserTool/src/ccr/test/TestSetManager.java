@@ -2873,8 +2873,8 @@ public class TestSetManager {
 			if (newOrOld.equals("new")) {
 				for (int i = 0; i < testSetNum; i++) {
 					//2009-03-10: we use ART+generalReplacement to favor test cases with higher CI
-//					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
-//							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
+					testSets[i] = TestSetManager.getAdequacyTestSet_refined(
+							appClassName, c, testpool, maxTrials, H_L_R, size_ART);
 
 					//2009-10-15: we use activation rather than CI as the principle factor 
 //					testSets[i] = TestSetManager.getAdequacyTestSet_refined_activation(
@@ -2885,8 +2885,8 @@ public class TestSetManager {
 //							c, testpool, H_L_R);
 					
 					//2009-10-23: get the upper bound of CD improvement by Random Algorithm
-					TestSet testpool_copy = testpool.copy();
-					testSets[i] = TestSetManager.getAdequacyTestSet_best(appClassName, c, testpool_copy, H_L_R, size_ART);
+//					TestSet testpool_copy = testpool.copy();
+//					testSets[i] = TestSetManager.getAdequacyTestSet_best(appClassName, c, testpool_copy, H_L_R, size_ART);
 					
 					
 					// 2009-02-24: set the index of testSets
