@@ -111,7 +111,23 @@ public class TestSetManager {
 					+ "\t" + minCovered + "\t" + mean_covered + "\t"
 					+ maxCovered + "\t" + SD_covered + "\t" + "\n");
 		}
-
+		
+		// 2009-10-29:check whether the parent and file exists before
+		// dumping the contents
+		try {
+			File file = new File(saveFile);
+			if (!file.exists()) {
+				File parentFile = file.getParentFile();
+				if (!parentFile.exists()) {
+					parentFile.mkdirs();
+				}
+				file.createNewFile();
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
@@ -131,6 +147,17 @@ public class TestSetManager {
 		}
 
 		try {
+			// 2009-10-29:check whether the parent and file exists before
+			// dumping the contents
+			File file = new File(saveFile);
+			if (!file.exists()) {
+				File parentFile = file.getParentFile();
+				if (!parentFile.exists()) {
+					parentFile.mkdirs();
+				}
+				file.createNewFile();
+			}
+			
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 			bw.write(sb.toString());
 			bw.close();
@@ -162,6 +189,17 @@ public class TestSetManager {
 		}
 
 		try {
+			// 2009-10-29:check whether the parent and file exists before
+			// dumping the contents
+			File file = new File(saveFile);
+			if (!file.exists()) {
+				File parentFile = file.getParentFile();
+				if (!parentFile.exists()) {
+					parentFile.mkdirs();
+				}
+				file.createNewFile();
+			}
+			
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 			bw.write(sb.toString());
 			bw.close();
