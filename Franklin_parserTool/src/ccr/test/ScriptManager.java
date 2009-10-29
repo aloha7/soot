@@ -651,6 +651,33 @@ public class ScriptManager {
 		Logger.getInstance().close();
 	}
 	
+	/**2009-10-26: 
+	 * 
+	 * @param date
+	 * @param saveFile
+	 */
+	public static void getTestingEffectiveness_Classified(String date, String saveFile){
+		String[] H_M_E = new String[] {
+				"H",
+				"M",
+				"E" 
+		};//fault category
+		int[] sizes_ART = new int[]{
+				1, 2, 4, 8, 16, 32, 64, 70, 80
+		};
+		
+		StringBuilder sb = new StringBuilder();
+		for(int i = 0; i < H_M_E.length; i ++){
+			//Load_Classified 20091026 1 H
+			for(int j = 0; j < sizes_ART.length; j++){
+				sb.append("java ccr.test.ResultAnalyzer Load_Classified " 
+						+ date + " " + sizes_ART[j] + " "+ H_M_E[i] + "&").append("\n");	
+			}			
+		}
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
 	
 	
 	public static void main(String[] args) {
@@ -658,21 +685,14 @@ public class ScriptManager {
 				.println("USAGE: java ccr.test.ScriptManager <testSetNum(100)> <Context_Intensity> <min_CI(0.7)> "
 						+ "<max_CI(0.9)> <directory(20090222)> <testing criteria(AllPolicies, All1ResolvedDU, All2ResolvedDU)>"
 						+ "<Min_TestSuiteSize(1)><Max_TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>");
-
-		int testSetNum = Integer.parseInt(args[0]);
-		String instruction = args[1];
-		double min_CI = Double.parseDouble(args[2]);
-		double max_CI = Double.parseDouble(args[3]);
-
-		String date = args[4];
-
-		int min_TestSuiteSize = Integer.parseInt(args[5]);
-		int max_TestSuiteSize = Integer.parseInt(args[6]);
-
-		String size_ART = args[7];
-		
+		String instruction = args[0];
 		String saveFile = null;
-		if (instruction.equals("GenRandomTS")) { 
+		if (instruction.equals("GenRandomTS")) {
+			int testSetNum = Integer.parseInt(args[1]);
+			String date = args[2];
+			int min_TestSuiteSize = Integer.parseInt(args[3]);
+			int max_TestSuiteSize = Integer.parseInt(args[4]);
+
 			//generate random test sets
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 					+ date + "/Script/GenRandomTestSet.sh";
@@ -681,6 +701,10 @@ public class ScriptManager {
 					max_TestSuiteSize, date), saveFile);
 			
 		} else if (instruction.equals("GenAdequateTS")) {
+			int testSetNum = Integer.parseInt(args[1]);
+			String date = args[2];
+			String size_ART = args[7];
+			
 			//generate adequate test sets
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 					+ date + "/Script/GenAdequateTestSet.sh";
@@ -694,6 +718,9 @@ public class ScriptManager {
 			ScriptManager.save(genAdequateTS_Script(testSetNum, date, size_ART), saveFile);
 			
 		} else if (instruction.equals("ExeRandomTS")) {
+			String date = args[1];
+			int min_TestSuiteSize = Integer.parseInt(args[2]);
+			int max_TestSuiteSize = Integer.parseInt(args[3]);
 			//execute random test sets
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/ExeRandomTS.sh";
@@ -701,6 +728,10 @@ public class ScriptManager {
 					max_TestSuiteSize, date), saveFile);
 			
 		} else if(instruction.equals("ExeAdequateTS")){
+			int testSetNum = Integer.parseInt(args[1]);
+			String date = args[2];
+			String size_ART = args[3];
+			
 			//execute adequate test sets
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/ExeAdequateTS.sh";
@@ -714,6 +745,16 @@ public class ScriptManager {
 			//2009-10-13: add another parameter
 			ScriptManager.save(exeAdequateTS_Script(testSetNum, date, size_ART), saveFile);
 		}else if(instruction.equals("AllInOne")){//getSizePerformance
+			int testSetNum = Integer.parseInt(args[1]);
+			double min_CI = Double.parseDouble(args[2]);
+			double max_CI = Double.parseDouble(args[3]);
+
+			String date = args[4];
+
+			int min_TestSuiteSize = Integer.parseInt(args[5]);
+			int max_TestSuiteSize = Integer.parseInt(args[6]);
+
+			
 			//This scripts is used to investigate the correlations between test suite size and testing performances
 			//generate all random, adequate test sets, then execute them and analyze them
 			//2009-03-07: we set a interval to separate all tasks into several shells
@@ -758,6 +799,11 @@ public class ScriptManager {
 //			sb1.append("java ccr.test.ResultAnalyzer getSizePerformance " + date + "\n");
 			ScriptManager.save(sb1.toString(), saveFile);
 		}else if(instruction.equals("AllInOne_Residual")){
+			int testSetNum = Integer.parseInt(args[1]);
+			double min_CI = Double.parseDouble(args[2]);
+			double max_CI = Double.parseDouble(args[3]);
+			String date = args[4];
+
 			//2009-03-29: an method to handle residual tests
 			String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date;
 			
@@ -822,6 +868,12 @@ public class ScriptManager {
 			
 			
 		}else if(instruction.equals("3GroupComparison")){
+			int testSetNum = Integer.parseInt(args[1]);
+			double min_CI = Double.parseDouble(args[2]);
+			double max_CI = Double.parseDouble(args[3]);
+			String date = args[4];
+
+			
 			//2009-03-09:we are only interest in comparing three groups of testing criteria
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/3GroupComparison.sh";
@@ -866,12 +918,16 @@ public class ScriptManager {
 //			sb.append("java ccr.test.ResultAnalyzer Load " + date + " \n");
 			ScriptManager.save(sb.toString(), saveFile);
 		}else if(instruction.equals("getCIPerformance")){
+			int testSetNum = Integer.parseInt(args[1]);
 			StringBuilder sb = new StringBuilder();
+			
+			double min_CI;
+			double max_CI;
 			
 			double start_CI = Double.parseDouble(args[2]);
 			double end_CI = Double.parseDouble(args[3]);
 			double interval  = Double.parseDouble(args[4]);
-			date = args[5];
+			String date = args[5];
 			
 //			//1. generate adequate test sets
 			for(double i = start_CI; i < end_CI; i = i + interval){
@@ -939,6 +995,7 @@ public class ScriptManager {
 			ScriptManager.save(sb.toString(), saveFile);
 			
 		}else if(instruction.equals("getFailureRate")){
+			String date = args[1];
 			int start = 4369;
 			int end = 4527; //[140, 3600][3600, 5024]
 			int concurrent = 10;
@@ -969,7 +1026,6 @@ public class ScriptManager {
 				sb1.append("./GetFailureRate_"+startVersion
 					+"_"+endVersion+".sh &" + "\n");
 				
-				StringBuilder sb = new StringBuilder();
 				ScriptManager.genFailureRate_Sequential(date, saveFile, startVersion, endVersion);
 			}
 
@@ -1030,6 +1086,13 @@ public class ScriptManager {
 //				+ date + "/Script/GetFailureRate_Executor_"+start + "_" + end +".sh";
 //			ScriptManager.save(sb1.toString(), saveFile);
 			
+		}else if(instruction.equals("getEffectiveness_Classified")){
+			//2009-10-26: get testing effectiveness based on classified faults.
+			String date = args[1];
+			
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/GetEffectiveness_Classified.sh";
+			getTestingEffectiveness_Classified(date, saveFile);
 		}
 	}
 }
