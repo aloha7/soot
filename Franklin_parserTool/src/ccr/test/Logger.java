@@ -25,15 +25,25 @@ public class Logger {
 		return m_Logger;
 	}
 
-	/**
-	 * 
+	/**2009-10-30: check the directory and file before
+	 * operating on them
 	 * @param filename
 	 * @param append:
 	 *            false means override, true means append
 	 */
 	public void setPath(String filename, boolean append) {
 		this.path = filename;
+		
 		try {
+			File file = new File(filename);
+			if(!file.exists()){
+				File parent = file.getParentFile();
+				if(!parent.exists()){
+					parent.mkdirs();
+				}
+				file.createNewFile();
+			}
+			
 			writer = new BufferedWriter(new FileWriter(path, append));
 		} catch (Exception e) {
 			System.out.println(e);
