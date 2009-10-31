@@ -18,39 +18,92 @@ public class TestingEffectiveManager {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		//Load 20090918 AllPolicies -1 new random H
 			String instruction = args[0];
-			String date = args[1];		
-			String criterion = args[2];
-			int testSuiteSize = Integer.parseInt(args[3]);
-			String oldOrNew = args[4];
-			String randomOrCriterion = args[5];
-			String H_L_R = args[6];	
-			String size_ART = args[7];
-			
-			//2009-10-15: specify the directory of execution histories.
-			String date_execHisotry = args[8];
-			
-			int start = 0;
-			int end = 140;
-			if (args.length == 11 && instruction.equals("Context_Intensity")) {
-				start = Integer.parseInt(args[9]);
-				end = Integer.parseInt(args[10]);
-			}
 			
 			//load the test pool
 			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/TestPool.txt";
+				+ "/20091019/TestPool.txt";
 			TestSetManager.getTestPool(testPoolFile, true);
 			Adequacy.loadTestCase(testPoolFile);
 			
-			//determine the test set files to load test sets
-			String testSetFile = null;
-			if (testSuiteSize < 0) {
-				if(oldOrNew.equals("old")){//Conventional test suite construction algorithm
+			//2009-10-31: we use CD to improve Random Testing
+			if(instruction.equals("ContextDiversityOnly")){
+				String date = args[1];		
+				int testSuiteSize = Integer.parseInt(args[2]);						
+				String H_L_R = args[3];
+				int size_ART = Integer.parseInt(args[4]);
+				String date_execHisotry = args[5];
+				
+				String testSetFile = null;
+				if(H_L_R.equals("H")){
 					testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date + "/" + size_ART + "/"
+						+ "CD-H_" + testSuiteSize + "_"+size_ART + ".txt";
+				}else if(H_L_R.equals("L")){
+					testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date + "/" + size_ART + "/"
+						+ "CD-L_" + testSuiteSize + "_"+size_ART + ".txt";
+				}else if(H_L_R.equals("R")){
+					testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date + "/" + size_ART + "/"
+						+ "CD-L_" + testSuiteSize + "_"+size_ART + ".txt";
+				}
+				
+				TestSet testSets[][] = new TestSet[1][];
+				testSets[0] = Adequacy.getTestSets(testSetFile);
+				
+				String saveFile = testSetFile.substring(0, testSetFile
+						.indexOf("."))
+						+ "_limited_load.txt";
+				String faultListFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ "/20091019/FaultList.txt";
+
+				// 1. load the fault list
+				ArrayList faultList = new ArrayList();
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(
+							faultListFile));
+					String line = null;
+					while ((line = br.readLine()) != null) {
+						faultList.add(line.trim());
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				// 2. test the specified faults
+				TestDriver
+						.test_load(testSets, faultList, date_execHisotry, saveFile);
+				
+			}
+		
+			//2009-10-31:we use CD and DU-coverage to improve Random Testing
+			if(instruction.equals("Context_Intensity")|| instruction.equals("Limited")
+					|| instruction.equals("Load") || instruction.equals("Load_large")){								
+				String date = args[1];		
+				String criterion = args[2];
+				int testSuiteSize = Integer.parseInt(args[3]);
+				String oldOrNew = args[4];
+				String randomOrCriterion = args[5];
+				String H_L_R = args[6];	
+				String size_ART = args[7];
+				
+				
+				int start = 0;
+				int end = 140;
+				if (args.length == 11 && instruction.equals("Context_Intensity")) {
+					start = Integer.parseInt(args[9]);
+					end = Integer.parseInt(args[10]);
+				}	
+				
+				//determine the test set files to load test sets
+				String testSetFile = null;
+				if (testSuiteSize < 0) {
+					if(oldOrNew.equals("old")){//Conventional test suite construction algorithm
+						testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 						+ date
-						+ "/"
+						+ "/"+ size_ART + "/"
 						+ criterion
 						+ "_CA_" + size_ART + ".txt";
 					
@@ -58,19 +111,19 @@ public class TestingEffectiveManager {
 					if(H_L_R.equals("H")){ //Refined test suite construction algorithm with high context diversity
 						testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 							+ date
-							+ "/"
+							+ "/" + size_ART + "/"
 							+ criterion
 							+ "_RA-H_" + size_ART + ".txt";
 					}else if(H_L_R.equals("L")){//Refined test suite construction algorithm with low context diversity
 						testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 							+ date
-							+ "/"
+							+ "/" + size_ART + "/"
 							+ criterion
 							+ "_RA-L_" + size_ART + ".txt";
 					}else if(H_L_R.equals("R")){//Refined test suite construction algorithm with random context diversity
 						testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 							+ date
-							+ "/"
+							+ "/"+ size_ART + "/"
 							+ criterion
 							+ "_RA-R_" + size_ART + ".txt";
 					}
@@ -79,7 +132,7 @@ public class TestingEffectiveManager {
 				if(oldOrNew.equals("old")){
 					testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 						+ date
-						+ "/"
+						+ "/"+ size_ART + "/"
 						+ criterion
 						+ "_CA_"
 						+ randomOrCriterion
@@ -90,7 +143,7 @@ public class TestingEffectiveManager {
 					if(criterion.contains("Random")){
 						testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 							+ date
-							+ "/"
+							+ "/"+ size_ART + "/"
 							+ "RandomTestSets_" 
 							+ testSuiteSize + ".txt";
 					}
@@ -99,7 +152,7 @@ public class TestingEffectiveManager {
 					if(H_L_R.equals("H")){
 						testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 							+ date
-							+ "/"
+							+ "/"+ size_ART + "/"
 							+ criterion
 							+ "_RA-H_"
 							+ randomOrCriterion
@@ -109,7 +162,7 @@ public class TestingEffectiveManager {
 					}else if(H_L_R.equals("L")){
 						testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 							+ date
-							+ "/"
+							+ "/"+ size_ART + "/"
 							+ criterion
 							+ "_RA-L_"
 							+ randomOrCriterion
@@ -119,7 +172,7 @@ public class TestingEffectiveManager {
 					}else if(H_L_R.equals("R")){
 						testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 							+ date
-							+ "/"
+							+ "/"+ size_ART + "/"
 							+ criterion
 							+ "_RA-R_"
 							+ randomOrCriterion
@@ -256,6 +309,10 @@ public class TestingEffectiveManager {
 				//2009-10-13: when there are many faults in the fault list, we
 				//may not be able to merge so many execution history files into
 				//one
+				
+				//2009-10-15: specify the directory of execution histories.
+				String date_execHisotry = args[8];
+				
 				String saveFile = testSetFile.substring(0, testSetFile
 						.indexOf("."))
 						+ "_limited_load.txt";
@@ -281,8 +338,6 @@ public class TestingEffectiveManager {
 						.test_load(testSets, faultList, date_execHisotry, saveFile);
 				
 			}
-	
-		
+		}
 	}
-
 }
