@@ -444,6 +444,44 @@ public class TestSetManager {
 		return testSet;
 	}
 
+	
+	/**2009-10-31:construct test sets with H/L/R context diversities to see how 
+	 * black-box CD information can improve the Random Testing
+	 * 
+	 * @param testpool
+	 * @param H_L_R
+	 * @param testSuiteSize
+	 * @param size_ART
+	 * @return
+	 */
+	public static TestSet getRandomTestSets_CD(TestSet testpool, String H_L_R, int testSuiteSize, int size_ART){		
+		TestSet testSet = new TestSet();
+		TestSet visited = new TestSet();
+		long time = System.currentTimeMillis();
+
+		if (H_L_R.equals("R")) { 
+			while (visited.size() < testpool.size() && testSet.size() < testSuiteSize) {
+				String testcase = testpool.getByART(testSet,
+									size_ART);
+				if (!visited.contains(testcase)) {
+					visited.add(testcase);
+				}
+			}
+		}else if(H_L_R.equals("H") || H_L_R.equals("L")) {
+			while (visited.size() < testpool.size() && testSet.size() < testSuiteSize) {
+				String testcase = testpool.getByART(H_L_R, size_ART);
+				
+				if (!visited.contains(testcase)) {
+					visited.add(testcase);
+					testSet.add(testcase);
+				}
+			}
+		}
+		testSet.geneTime = System.currentTimeMillis() - time;
+		return testSet;
+	}
+	
+	
 	/**
 	 * 2009-10-23:get the upper bound of CD improvement based on random
 	 * algorithms
@@ -1585,8 +1623,8 @@ public class TestSetManager {
 			ArrayList cover_elements2) {
 
 		// 2009-10-19: delete the duplicate elements firstly
-		cover_elements1 = removeDuplicate(cover_elements1);
-		cover_elements2 = removeDuplicate(cover_elements2);
+//		cover_elements1 = removeDuplicate(cover_elements1);
+//		cover_elements2 = removeDuplicate(cover_elements2);
 
 		double JaccardDistance = 0.0;
 		ArrayList union_set = new ArrayList();
@@ -3228,6 +3266,32 @@ public class TestSetManager {
 		return testSets;
 	}
 
+	/**2009-10-31: use only context diversity information to construct test sets
+	 * which to demonstrate how CD can improve random testing
+	 * @param appClassName
+	 * @param testpool
+	 * @param testSetNum
+	 * @param testSuiteSize
+	 * @param saveFile
+	 * @param H_L_R
+	 * @param size_ART
+	 * @return
+	 */
+	public static TestSet[] getTestSets_CD(TestSet testpool, 
+			int testSetNum, int testSuiteSize, 
+			String saveFile, String H_L_R, int size_ART) {
+		TestSet[] testSets = new TestSet[testSetNum];
+		for(int i = 0; i < testSetNum; i ++){
+			testSets[i] = TestSetManager.getRandomTestSets_CD(testpool, 
+					H_L_R, testSuiteSize, size_ART);
+			testSets[i].index = "" + i;
+			System.out.println("Test set " + i + ": " + testSets[i].toString());			
+		}
+		
+		TestSetManager.saveTestSets(testSets, saveFile);
+		return testSets;
+	}
+	
 	/**2009-10-30: get test sets when ties occur, we will 
 	 * use DUCov as the first factor and CI as the second 
 	 * one to solve it
@@ -4190,7 +4254,51 @@ public class TestSetManager {
 			// 2009-10-15: attach test sets with CI and activation information
 			TestSetManager.attachTSWithCI_Activation_replacement(testSets[0],
 					saveFile);
+		}else if(instruction.equals("getRandomTestSet_CD")){
+			//2009-10-31:construct test sets using only CD information to study how CD can help 
+			//black-box testing
+			String date = args[1];
+			int testSetNum = Integer.parseInt(args[2]);			
+			int testSuiteSize = Integer.parseInt(args[3]);						
+			String H_L_R = args[4];
+			int size_ART = Integer.parseInt(args[5]);
+
+			CFG g = new CFG(System.getProperty("user.dir")
+					+ "/src/ccr/app/TestCFG2.java");
+			Criterion c = null;
+
+			String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ "/20091019/TestPool.txt";
+			TestSet testpool = getTestPool(testPoolFile, true);
+
+			Adequacy.loadTestCase(testPoolFile);
+
+			TestSet[][] testSets = new TestSet[1][];
+			String versionPackageName = "testversion";
+			String saveFile =  null;
+
+			if(H_L_R.equals("H")){
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/" + size_ART + "/"
+					+ "CD-H_" + testSuiteSize + "_"+size_ART + ".txt";
+			}else if(H_L_R.equals("L")){
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/" + size_ART + "/"
+					+ "CD-L_" + testSuiteSize + "_"+size_ART + ".txt";
+			}else if(H_L_R.equals("R")){
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/" + size_ART + "/"
+					+ "CD-L_" + testSuiteSize + "_"+size_ART + ".txt";
+			}
 			
+			testSets[0] = TestSetManager.getTestSets_CD(testpool, 
+					testSetNum, testSuiteSize, saveFile, H_L_R, size_ART);
+
+			saveFile = saveFile.substring(0, saveFile.indexOf(".txt"))
+					+ "_CI.txt";
+			
+			TestSetManager.attachTSWithCI_Activation_replacement(testSets[0],
+					saveFile);
 		}
 		
 		
