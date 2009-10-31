@@ -332,7 +332,39 @@ public class ScriptManager {
 		
 	}
 
+	
+	/**2009-10-30: use DUcoverage-diversity to solve tie cases
+	 * 
+	 * @return
+	 */
+	public static String checkDDTestSet(String date, int testSetNum, int testSetSize, int size_ART){
+		StringBuilder sb = new StringBuilder();
+		
+		String[] criteria = new String[] { 
+				"AllPolicies",
+				"All1ResolvedDU",
+				"All2ResolvedDU",
+		};
+		
 
+		for(int i = 0; i < criteria.length; i ++){
+			//getDUCovCITestSet 20091029 2 AllPolicies -1 new random H 10
+			sb.append("java ccr.test.TestSetManager getDUCovCITestSet "
+					+ date + " " + testSetNum + " " + criteria[i] + " " 
+					+ "-1 new random H " + size_ART).append("&\n");
+		}	
+		
+		for(int i = 0; i < criteria.length; i ++){
+			//java ccr.test.TestingEffectiveManager Load_large 20091026 AllPolicies -99 old random R 99 20091005&
+			sb.append("java ccr.test.TestingEffectiveManager Load_large " 
+					+ date + " " + criteria[i] + " " 
+					+ "-1 new random H " + size_ART + " 20091005").append("\n");	
+		}
+		
+		sb.append("java ccr.test.ResultAnalyzer Load " 
+				+ date + " "  + size_ART).append("\n");
+		return sb.toString();
+	}
 		
 		
 	
@@ -1184,8 +1216,22 @@ public class ScriptManager {
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/Script/getEffectivenessRegression.sh";
 			
-			getTestingEffectivenessRegression(date, saveFile);
+			getTestingEffectivenessRegression(date, saveFile);			
+		}else if(instruction.equals("checkDDTestSet")){
+			String date = args[1];
+			int testSetNum = 100;
+			int testSetSize = -1;
+			int size_ART  = 10;
 			
+			StringBuilder sb = new StringBuilder();
+			sb.append(checkDDTestSet(date, testSetNum, testSetSize, size_ART));
+			
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/genDDTestSet.sh";
+			
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
 		}
 	}
 }
