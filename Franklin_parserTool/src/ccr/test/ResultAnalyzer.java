@@ -2299,7 +2299,7 @@ public class ResultAnalyzer {
 		String size_ART = args[2];
 
 		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/TestPool.txt";
+				+ "/20091019/TestPool.txt";
 
 		// 2009-02-18: load CI of each test case from a file
 		boolean containHeader = true;
@@ -2308,7 +2308,7 @@ public class ResultAnalyzer {
 		// 2009-02-22: load failure rates from a file
 		containHeader = false;
 		String failureRateFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/failureRate.txt";
+				+ "/20091019/failureRate.txt";
 		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
 
 		// 2009-02-24: merge files
@@ -2347,20 +2347,81 @@ public class ResultAnalyzer {
 		// };
 		
 		// 2009-09-21
-		String[] criteria = new String[] {"RandomTestSets_27", "AllPolicies_CA",
-				"AllPolicies_RA-H", "AllPolicies_RA-L", "AllPolicies_RA-R",
+		String[] criteria = new String[] {/*"RandomTestSets_27", "AllPolicies_CA",*/
+				"AllPolicies_RA-H", /*"AllPolicies_RA-L", "AllPolicies_RA-R",*/
 
-				"RandomTestSets_42","All1ResolvedDU_CA", "All1ResolvedDU_RA-H",
-				"All1ResolvedDU_RA-L", "All1ResolvedDU_RA-R",
+				/*"RandomTestSets_42","All1ResolvedDU_CA",*/ "All1ResolvedDU_RA-H",
+				/*"All1ResolvedDU_RA-L", "All1ResolvedDU_RA-R",*/
 
-				"RandomTestSets_50","All2ResolvedDU_CA", "All2ResolvedDU_RA-H",
-				"All2ResolvedDU_RA-L", "All2ResolvedDU_RA-R", 
+				/*"RandomTestSets_50","All2ResolvedDU_CA",*/ "All2ResolvedDU_RA-H",
+				/*"All2ResolvedDU_RA-L", "All2ResolvedDU_RA-R",*/ 
 				
-				"RandomTestSets_RA-H_27","RandomTestSets_RA-L_27","RandomTestSets_RA-R_27",
+				/*"RandomTestSets_RA-H_27","RandomTestSets_RA-L_27","RandomTestSets_RA-R_27",
 				"RandomTestSets_RA-H_42","RandomTestSets_RA-L_42","RandomTestSets_RA-R_42",
-				"RandomTestSets_RA-H_50","RandomTestSets_RA-L_50","RandomTestSets_RA-R_50",
+				"RandomTestSets_RA-H_50","RandomTestSets_RA-L_50","RandomTestSets_RA-R_50",*/
 		};
 
+		//2009-10-31: assemble the testing performance of random test sets constructed with only Context Diversity information
+		if(instruction.equals("ContextDiversityOnly")){
+			criteria = new String[]{
+					"RA-H", "RA-L", "RA-R" 
+			};
+			HashMap criterion_perValidTS = new HashMap();
+			srcDir += "/" + size_ART + "/";
+			String saveFile = null;
+			for(int i = 0; i < criteria.length; i ++ ){
+				saveFile = srcDir + criteria[i] + "_" + size_ART + "_limited_load.txt";
+				String testSetExecutionFile = saveFile;
+				boolean containHeader1 = true;
+				
+				String perValidTSFile = saveFile.substring(0, saveFile
+						.indexOf("_limited_load.txt"))
+						+ "_PerValidTestSet.txt";
+				
+				HashMap perValidTS = ResultAnalyzer.perValidTestSet(
+						testSetExecutionFile, containHeader1, perValidTSFile);
+			}
+			
+			saveFile = srcDir + "/PerValidTS.txt";
+			String[] rename_criteria = criteria;
+			ResultAnalyzer.mergeHashMap_medium(criteria, rename_criteria,
+					criterion_perValidTS, date, saveFile);
+			
+			StringBuilder sb = new StringBuilder();			
+			sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
+				append("\t").append("mediumCI").append("\t").
+				append("maxCI").append("\t").append("stdCI").append("\n");
+			
+			for (int i = 0; i < criteria.length; i++) {
+				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
+					criteria[i] = criteria[i] + "_" + size_ART;
+				}
+				
+				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
+			}
+			
+			sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
+			append("\t").append("mediumAct.").append("\t").
+			append("maxAct.").append("\t").append("stdAct.").append("\n");
+			for (int i = 0; i < criteria.length; i++) {
+				sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
+			}
+
+			sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
+			append("\t").append("mediumReplace.").append("\t").
+			append("maxReplace.").append("\t").append("stdReplace.").append("\n");
+			for (int i = 0; i < criteria.length; i++) {
+				sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
+						criteria[i], rename_criteria[i]));
+			}
+
+			saveFile = srcDir + "/CI_Activation.txt";
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		}
 		
 		if (instruction.equals("Context_Intensity")
 				|| instruction.equals("Limited") || instruction.equals("Load")) {
@@ -2370,6 +2431,7 @@ public class ResultAnalyzer {
 //			String faultFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 //				+ date + "/FaultList.txt";;
 //			ArrayList faultList = loadFaultList(faultFile, false);
+			srcDir += "/" + size_ART + "/";
 			
 			String saveFile = null;
 			for (int i = 0; i < criteria.length; i++) {
@@ -2405,19 +2467,19 @@ public class ResultAnalyzer {
 			// 2009-09-19: rename the default criterion
 			String[] rename_criteria = new String[] {
 			// rename the criteria of Group 1
-					 "R-27",
-					"AS_CA", 
-					"AS_RA-H", "AS_RA-L", "AS_RA-R",
-					 "R-42",
-					"ASU-CA", 
-					"ASU_RA-H", "ASU_RA-L", "ASU_RA-R",
+					 /*"R-27",
+					"AS_CA",*/ 
+					"AS_RA-H", /*"AS_RA-L", "AS_RA-R",*/
+					/* "R-42",
+					"ASU-CA", */
+					"ASU_RA-H", /*"ASU_RA-L", "ASU_RA-R",
 					 "R-50",
-					"A2SU_CA", 
-					"A2SU_RA-H", "A2SU_RA-L", "A2SU_RA-R",
+					"A2SU_CA",*/ 
+					"A2SU_RA-H"/*, "A2SU_RA-L", "A2SU_RA-R",*/
 					
-					"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
+					/*"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
 					"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
-					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"
+					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"*/
 			};
 			//2009-02-25:
 //			ResultAnalyzer.mergeHashMap(criteria, rename_criteria,
@@ -2606,8 +2668,6 @@ public class ResultAnalyzer {
 			String faultFile = srcDir + "/FaultList_" + Hard_Medium_Easy + ".txt";
 			//2009-10-26: change the srcDir
 			srcDir += size_ART + "/";
-			
-			
 			
 			String saveFile = null;
 			for (int i = 0; i < criteria.length; i++) {
