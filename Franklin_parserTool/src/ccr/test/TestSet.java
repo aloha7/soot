@@ -218,8 +218,7 @@ public class TestSet {
 		return tmpTestSet.get(max_index);
 	}
 	
-	/**2009-08-19: RA_R which constructs test sets with evenly-distributed context diversities
-	 * 
+	/**2009-08-19: RA_R which sample a test case which has the largest distance from the existing test set
 	 * @param testset
 	 * @param size_TestSet: the size of ART-constructed test sets(default value = 10)
 	 * @return
@@ -264,8 +263,8 @@ public class TestSet {
 		return tmpTestSet.get(max_index);
 	}
 	
-	/**2009-10-15:RA_R which constructs test sets with evenly-distributed activation
-	 * 
+	/**2009-10-15:RA_R which returns a test case which has the largest distance from 
+	 * the given TestSet in terms of activation
 	 * @param testset
 	 * @param size_TestSet
 	 * @return
@@ -584,6 +583,13 @@ public class TestSet {
 		return testCaseMaxCI;
 	}
 	
+	/**2009-10-30: use ART to sample test cases 
+	 * with the largest activation
+	 * 
+	 * @param H_L
+	 * @param size_TestSet
+	 * @return
+	 */
 	public String getByART_activation(String H_L, int size_TestSet){
 		TestSet tmp = new TestSet();
 		//randomly get a test set S containing 10 test cases 
