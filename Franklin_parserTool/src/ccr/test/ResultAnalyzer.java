@@ -2347,18 +2347,18 @@ public class ResultAnalyzer {
 		// };
 		
 		// 2009-09-21
-		String[] criteria = new String[] {/*"RandomTestSets_27", "AllPolicies_CA",*/
-				"AllPolicies_RA-H", /*"AllPolicies_RA-L", "AllPolicies_RA-R",*/
+		String[] criteria = new String[] {"RandomTestSets_27", "AllPolicies_CA",
+				"AllPolicies_RA-H", "AllPolicies_RA-L", "AllPolicies_RA-R",
 
-				/*"RandomTestSets_42","All1ResolvedDU_CA",*/ "All1ResolvedDU_RA-H",
-				/*"All1ResolvedDU_RA-L", "All1ResolvedDU_RA-R",*/
+				"RandomTestSets_42","All1ResolvedDU_CA", "All1ResolvedDU_RA-H",
+				"All1ResolvedDU_RA-L", "All1ResolvedDU_RA-R",
 
-				/*"RandomTestSets_50","All2ResolvedDU_CA",*/ "All2ResolvedDU_RA-H",
-				/*"All2ResolvedDU_RA-L", "All2ResolvedDU_RA-R",*/ 
+				"RandomTestSets_50","All2ResolvedDU_CA", "All2ResolvedDU_RA-H",
+				"All2ResolvedDU_RA-L", "All2ResolvedDU_RA-R", 
 				
-				/*"RandomTestSets_RA-H_27","RandomTestSets_RA-L_27","RandomTestSets_RA-R_27",
+				"RandomTestSets_RA-H_27","RandomTestSets_RA-L_27","RandomTestSets_RA-R_27",
 				"RandomTestSets_RA-H_42","RandomTestSets_RA-L_42","RandomTestSets_RA-R_42",
-				"RandomTestSets_RA-H_50","RandomTestSets_RA-L_50","RandomTestSets_RA-R_50",*/
+				"RandomTestSets_RA-H_50","RandomTestSets_RA-L_50","RandomTestSets_RA-R_50",
 		};
 
 		//2009-10-31: assemble the testing performance of random test sets constructed with only Context Diversity information
