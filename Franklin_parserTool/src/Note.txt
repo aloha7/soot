@@ -8,13 +8,16 @@ For the Context-Intensity: Context Variable [candidate]
 java ccr.test.TestSetManager 2 Context_Intensity 0.7 0.9 20090919 AllPolicies -1 new random L 20
 
 3). Get the detailed fault detection information of adequate test sets: ccr.test.TestingEffectiveManager.java
-java ccr.test.TestingEffectiveManager Load 20090918 AllPolicies -1 new random H 20
+java ccr.test.TestingEffectiveManager Load_large 20090918 AllPolicies -1 new random H 20
 
 4). Get the fault detection rate of adequate test sets: ccr.test.ResultAnalyzer.java
-
-
 5). Write the script:ccr.test.ScriptManager.java 
 
 Information:
-1. All test cases information is saved in "TestPool.txt"
-2. Failure rates of all faulty versions is in "failureRate.txt"(Especially in /20090312,20091005)
+1. All test cases information is saved in "TestPool.txt" (20091019: it constructs test sets with RA-H, RA-L, RA-R;20091013:it adds activation information; 20091022: it keeps the upper bound of CD improvement;
+20091023: it keeps the upper bound of CD improvement based on random algorithm; 20091026: it keeps the relationship between candidate_set_size and testing effectiveness;
+20091029: it also keeps the relationship between candidate_set_size and testing effectiveness;
+20091030: it keeps the test set which use du-coverage to solve tie cases;
+20091031£º   it)
+2. Failure rates of all faulty versions is in "failureRate.txt"in /20090312 and /20091005 keeps testing results for all test cases.
+3. 20091026: it keeps a significant improvement brought by CD when the candidate test set size is varied.
