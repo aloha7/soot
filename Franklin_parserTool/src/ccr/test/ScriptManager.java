@@ -793,6 +793,44 @@ public class ScriptManager {
 		Logger.getInstance().close();
 	}
 	
+	public static void checkRandomTestSet_CD(String date, int testSetNum, 
+			String saveFile){
+		StringBuilder sb = new StringBuilder();
+		String[] H_L_R = new String[]{
+				"H", "L", "R"
+		};
+		
+		int[] testSuiteSizes = new int[]{
+				27, 43, 51
+		};
+		
+		int size_ART = 100;
+		//1.generate test suites like "getRandomTestSet_CD 20091131 1 27 H 100"
+		for(int i = 0; i < H_L_R.length; i ++){
+			for(int j = 0; j < testSuiteSizes.length; j ++){
+				sb.append("java ccr.test.TestSetManager getRandomTestSet_CD " +
+						date + " " + testSetNum + " " + testSuiteSizes[j] + " " +
+						H_L_R[i] + " " + size_ART + "&\n");		
+			}
+		}
+		
+		//2.execute test suites like "ContextDiversityOnly 20091031 27 H 100 20091005"
+		String exec_history_dir = "20091005"; 
+		for(int i = 0; i < H_L_R.length; i ++){
+			for(int j = 0; j < testSuiteSizes.length; j ++){
+				sb.append("java ccr.test.TestingEffectiveManager ContextDiversityOnly " +
+						date + " " + testSuiteSizes[j] + " " + H_L_R[i] + " " + size_ART 
+						+ " " + exec_history_dir + "&\n");
+			}
+		}
+		
+		//3.analyze the results
+		sb.append("java ccr.test.ResultAnalyzer ContextDiversityOnly " + date +" "+size_ART + "\n");
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	
 	public static void main(String[] args) {
 		System.out
@@ -801,6 +839,16 @@ public class ScriptManager {
 						+ "<Min_TestSuiteSize(1)><Max_TestSuiteSize(58)> <oldOrNew(old, new)> <randomOrCriteria(random, criteria)>");
 		String instruction = args[0];
 		String saveFile = null;
+		if(instruction.equals("checkRandomTestSet_CD")){
+			//2009-11-1: use only context diversity information to construct random test sets		
+			String date = args[1];
+			int testSetNum = Integer.parseInt(args[2]);
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/CheckRandomTestSet_CD.sh";
+			ScriptManager.checkRandomTestSet_CD(date, testSetNum, saveFile);
+			
+		}
+		
 		if (instruction.equals("GenRandomTS")) {
 			int testSetNum = Integer.parseInt(args[1]);
 			String date = args[2];
