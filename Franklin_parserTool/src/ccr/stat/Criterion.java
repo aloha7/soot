@@ -4,10 +4,10 @@ import java.util.*;
 
 public class Criterion implements Cloneable {
 	
-	private NodeMap DUMap;
-	private NodeSet nodes;
+	public NodeMap DUMap;
+	public NodeSet nodes;
 //	private Vector resolutions;
-	private Vector policies;
+	public Vector policies;
 	
 	public Criterion() {
 		
