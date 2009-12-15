@@ -1,11 +1,27 @@
 package ccr.test;
 
+import java.util.HashMap;
+import java.util.Vector;
+
 public class TestCase {
 	
-	public String index;
-	public String length;	
+	public String index; //equivalent to input
+	public String length;		
 	public double CI;
 	public int activation;
+	
+	//2009-12-14: test suite reduction 
+	public long execTime;
+	public String[] execTrace;
+	public HashMap coverage;
+	public Vector hitSet;
+	public int hitCounter; //count how many elements are hit
+	public Object output;
+	
+	
+	public TestCase(){
+		
+	}
 	
 	public TestCase(String testcase){
 		String[] ts = testcase.split("\t");
