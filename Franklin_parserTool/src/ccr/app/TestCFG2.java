@@ -2,6 +2,8 @@ package ccr.app;
 
 import java.util.*;
 
+import ccr.test.Logger;
+
 public class TestCFG2 extends Application {
 	
 //	private final int PATH_LEN = /*100*/100;  // Length of a random path
@@ -22,15 +24,18 @@ public class TestCFG2 extends Application {
 	private double curEstX = 0.0, curEstY = 0.0; // Current estimated location
 //	private int mode = MODE_MIX;
 	
-	private Vector queue;
-	private long timestamp;
-	private Context candidate;
-
+	//2009-12-14: test suite reduction research
+	public Vector queue;
+	public long timestamp;
+	public Context candidate;
+	public Vector PositionQueue = new Vector();
+	public int lastPos = -1;
+	public int activation = 0;
 	public Object application(String testcase) {
 		
 		// Program ID [c]
 		
-		// Ordinary Variable [moved, reliable, error, c, stay, timestamp, counter, t]
+		// Ordinary Variable [location, lastLocation, moved, reliable, displace, error, curEstX, curEstY, c, bPos, cPos, stay, lastPos, timestamp, counter, t, actLoc, estLoc, lastLoc, dist]
 		
 		// Context Variable [candidate]
 		
@@ -40,7 +45,7 @@ public class TestCFG2 extends Application {
 		queue = new Vector();
 		Coordinates location = null;
 		Random rand = new Random(seed);
-		CCRScenarios scenarios = new CCRScenarios(seed);//this input doesn't have any explicit meanings
+		CCRScenarios scenarios = new CCRScenarios(seed);
 		long t;
 		Coordinates actLoc;
 		Coordinates estLoc;
@@ -56,7 +61,7 @@ public class TestCFG2 extends Application {
 		int cPos = -1;
 		int stay = 0;
 	//	int mode = MODE_MIX;
-		int lastPos = -1;
+//		int lastPos = -1;
 		timestamp = System.currentTimeMillis();
 		counter = 0;
 	//	double distance = 0;
@@ -74,7 +79,7 @@ public class TestCFG2 extends Application {
 	//			cPos = rand.nextInt(CCRScenarios.POS_NUM);
 	//		}
 	//	}
-		stay = rand.nextInt(MAX_STAY) + 1;//[1,6]
+		stay = rand.nextInt(MAX_STAY) + 1;
 	//	mode = MODE_MIX; // Experimentation: Variation on mode
 	//	if (mode == MODE_WALK) {
 	//		stay = 1;  // Always walk without stay
@@ -90,7 +95,7 @@ public class TestCFG2 extends Application {
 		actLoc = scenarios.getActLoc(sid, cPos);
 		// Set the estimated location for pos
 		estLoc = scenarios.getEstLoc(sid, cPos);
-		curEstX = estLoc.x; //use to generate candidate
+		curEstX = estLoc.x;
 		curEstY = estLoc.y;
 		
 		// Apply the noise
@@ -112,15 +117,15 @@ public class TestCFG2 extends Application {
 		lastPos = cPos;
 		candidate = generateCtx();
 		resolve();
-		location = toCoordinates(candidate); 
+		location = toCoordinates(candidate);
 	//	System.out.println(counter + ":\t(" + location.x + ", " + location.y + ")");
 	//	distance = distance + Coordinates.calDist(location, lastLocation); // Experiments: calculate distance
 		displace = Math.sqrt((location.x - lastLocation.x) * (location.x - lastLocation.x) + 
-				(location.y - lastLocation.y) * (location.y - lastLocation.y));//lastLocation is actual one while location is the estimated one.
-		moved = moved + toBoolean(displace); //If estimated location is exactly (0,0), then no movement at all. 
+				(location.y - lastLocation.y) * (location.y - lastLocation.y));
+		moved = moved + toBoolean(displace);
 		error = Math.sqrt((actLoc.x - location.x) * (actLoc.x - location.x) + 
 				(actLoc.y - location.y) * (actLoc.y - location.y));
-		lastLocation = location; //lastLocation is used to measure the estimated location
+		lastLocation = location;
 		counter = counter + 1;
 		
 		while (stay > 0) { // initial
@@ -168,11 +173,11 @@ public class TestCFG2 extends Application {
 		while (cPos == -1 || cPos == bPos ||
 			Coordinates.calDist(scenarios.getActLoc(sid, bPos), scenarios.getActLoc(sid, cPos)) < WALK_DIST) {
 			cPos = rand.nextInt(CCRScenarios.POS_NUM);
-		} //continue until there are some movement
+		}
 		stay = rand.nextInt(MAX_STAY) + 1;
 		c = c + stay;
-		bPos = cPos; //keep the latest location
-		stay = stay - 1; // 1 //What is the use of stay?
+		bPos = cPos;
+		stay = stay - 1; // 1
 		actLoc = scenarios.getActLoc(sid, cPos);
 		estLoc = scenarios.getEstLoc(sid, cPos);
 		curEstX = estLoc.x;
@@ -182,9 +187,9 @@ public class TestCFG2 extends Application {
 		lastLoc = scenarios.getActLoc(sid, lastPos); // The actual location for lastPos
 		dist = Coordinates.calDist(lastLoc, actLoc);
 		t = (long) (dist / VELOCITY * 1000); // Experimentation: Estimated time required from lastLoc to actLoc
-		timestamp = timestamp + t; 
+		timestamp = timestamp + t;
 		lastPos = cPos;
-		candidate = generateCtx(); //attach data with timestamp and so on
+		candidate = generateCtx();
 		resolve();
 		location = toCoordinates(candidate);
 	//	distance = distance + Coordinates.calDist(location, lastLocation); // Experiments: calculate distance
@@ -194,8 +199,8 @@ public class TestCFG2 extends Application {
 		error = Math.sqrt((actLoc.x - location.x) * (actLoc.x - location.x) + 
 				(actLoc.y - location.y) * (actLoc.y - location.y));
 		lastLocation = location;
-		counter = counter + 1; //use to judge whether adjacent or not
-		while (stay > 0) { // 1 //one package may stay in the same place for several stays
+		counter = counter + 1;
+		while (stay > 0) { // 1
 			stay = stay - 1;
 			actLoc = scenarios.getActLoc(sid, cPos);
 			estLoc = scenarios.getEstLoc(sid, cPos);
@@ -224,7 +229,7 @@ public class TestCFG2 extends Application {
 			counter = counter + 1;
 		}
 
-		// 2, return is the movement and reliables
+		// 2
 		cPos = rand.nextInt(CCRScenarios.POS_NUM);
 		while (cPos == -1 || cPos == bPos ||
 			Coordinates.calDist(scenarios.getActLoc(sid, bPos), scenarios.getActLoc(sid, cPos)) < WALK_DIST) {
@@ -336,7 +341,7 @@ public class TestCFG2 extends Application {
 		//	distance = distance + Coordinates.calDist(location, lastLocation); // Experiments: calculate distance
 			displace = Math.sqrt((location.x - lastLocation.x) * (location.x - lastLocation.x) + 
 					(location.y - lastLocation.y) * (location.y - lastLocation.y));
-			moved = moved + toBoolean(displace); //when stay, there is no moved at all if there is no changes for two consecutive context
+			moved = moved + toBoolean(displace);
 			error = Math.sqrt((actLoc.x - location.x) * (actLoc.x - location.x) + 
 					(actLoc.y - location.y) * (actLoc.y - location.y));
 			if (error <= ERR) {
@@ -426,7 +431,7 @@ public class TestCFG2 extends Application {
 		lastLoc = scenarios.getActLoc(sid, lastPos); // The actual location for lastPos
 		dist = Coordinates.calDist(lastLoc, actLoc);
 		t = (long) (dist / VELOCITY * 1000); // Experimentation: Estimated time required from lastLoc to actLoc
-		timestamp = timestamp + t; //from one sensor to another sensor
+		timestamp = timestamp + t;
 		lastPos = cPos;
 		candidate = generateCtx();
 		resolve();
@@ -436,7 +441,7 @@ public class TestCFG2 extends Application {
 				(location.y - lastLocation.y) * (location.y - lastLocation.y));
 		moved = moved + toBoolean(displace);
 		error = Math.sqrt((actLoc.x - location.x) * (actLoc.x - location.x) + 
-				(actLoc.y - location.y) * (actLoc.y - location.y)); //Why there is no error statics here?
+				(actLoc.y - location.y) * (actLoc.y - location.y));
 		lastLocation = location;
 		counter = counter + 1;
 		while (stay > 0) { // 5
@@ -449,7 +454,7 @@ public class TestCFG2 extends Application {
 			curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;  // [- NOISE, + NOISE)
 			lastLoc = scenarios.getActLoc(sid, lastPos); // The actual location for lastPos
 			dist = Coordinates.calDist(lastLoc, actLoc);
-			t = STAY_TIME; // Experimentation: stay within the range of a sensor
+			t = STAY_TIME; // Experimentation:
 			timestamp = timestamp + t;
 			lastPos = cPos;
 			candidate = generateCtx();
@@ -721,7 +726,7 @@ public class TestCFG2 extends Application {
 	private int toBoolean(double d) {
 		
 		int result = 0;
-		if (d != (double) 0) { //need to change this line d >= ERR
+		if (d != (double) 0) {
 			result = 1;
 		}
 		return result;
@@ -736,8 +741,8 @@ public class TestCFG2 extends Application {
 	}
 
 	protected void resolve() {
-		
-		boolean consistent = true;//the context is inconsistent when it is inconsistent with any one element in the queue;
+		PositionQueue.add(lastPos);
+		boolean consistent = true;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
 			if (filterLocCons2Stay(ctx, candidate) && !funcLocDistOk(ctx, candidate)) {
@@ -768,17 +773,57 @@ public class TestCFG2 extends Application {
 		}
 		if (consistent) {
 			// Context definition
-			queue.add(0, candidate);
+			queue.add(0, candidate);			
 		} else {
-			candidate = (Context) queue.get(0); //basically speaking, get the head of the queue if it is not consistent
+			candidate = (Context) queue.get(0);
+			activation ++;
 		}
 	//	System.out.println(candidate.get(Context.FLD_OWNER) + ":\t" + candidate.get(Context.FLD_OBJECT));
 	}
 	
+	public int getChanges(Vector queue){
+		int changes = 0;
+		Object last = null;
+		Object previous = null;
+		if(queue.size() == 1){
+			changes = 0;
+		}
+		for(int i = 0; i < queue.size()-1; i ++){
+			previous = queue.get(i);
+			last = queue.get(i +1);
+			if(previous!=last)
+				changes ++;
+		}
+		return changes;
+	}
 	public static void main(String argv[]) {
 		
-		String testcase = "10"; 
-		System.out.println("result = " + (new TestCFG2()).application(testcase));
+		StringBuilder sb = new StringBuilder();
+		sb.append("TestCase" + "\t" + "length" + "\t" +"changes" + "\t" + "CI" +"\n");
+		for(int i = -10000; i < 10000; i ++){
+			String testcase = "" + i;
+			TestCFG2 ins = new TestCFG2();
+			ins.application(testcase);
+		
+			int changes = ins.getChanges(ins.PositionQueue);
+			System.out.println(testcase);
+			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
+					+"\t" + (ins.PositionQueue.size() - changes)) ;
+			
+//			for(int j = 0; j < ins.PositionQueue.size(); j ++){
+//				sb.append(ins.PositionQueue.get(j)+"\t");
+//			}
+			sb.append("\n");
+		}
+		System.out.println(sb.toString());
+		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090309/TestPool.txt";
+
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+		
+//		String testcase = "10"; 
+//		System.out.println("result = " + (new TestCFG2()).application(testcase));
 	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
 
