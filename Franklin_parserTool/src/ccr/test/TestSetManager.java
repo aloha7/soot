@@ -2984,7 +2984,7 @@ public class TestSetManager {
 	 * @param criterion
 	 * @return: HashMap[DU(String), CoverTimes(Integer)]
 	 */
-	private static HashMap countDUCoverage(String[] stringTrace,
+	public static HashMap countDUCoverage(String[] stringTrace,
 			Criterion criterion) {
 		HashMap covered = new HashMap();
 		Node trace[] = new Node[stringTrace.length];
