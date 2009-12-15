@@ -8,7 +8,7 @@ public class TestSet {
 	
 	public static String COVERAGE_TAG = "Coverage:\t";
 	public static String SIZE_TAG = "Size:\t";
-	public Vector testcases;
+	public Vector<String> testcases; //keep the indices of all test cases
 	public double coverage = 0.0;
 	
 	//1/15/2008
