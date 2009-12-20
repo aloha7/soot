@@ -42,11 +42,14 @@ public class ILPSolver {
 			
 			Vector<TestCase> tcArray = new Vector<TestCase>(); 
 			while((str=br.readLine())!= null){
-				tcArray.add(new TestCase(str, true)); 
+				tcArray.add(new TestCase(str, true));				
 			}
 			br.close();
+			if(!containHeader){
+				rowNo = tcArray.get(0).hitSet.size();
+			}
 			
-			//2.create LP file
+			//2.create LP file: convert program element(row) * testcases(column) into the matrix of testcases(row)* program elements(column)
 			StringBuilder sb = new StringBuilder();
 			
 			sb.append("min:");			//objective function
@@ -61,12 +64,13 @@ public class ILPSolver {
 			
 
 			Vector<Integer[]> constraints = new Vector<Integer[]>();		
-			int infeasible_counter = 0;
+			int infeasible_constraint_counter = 0;
+			int equivalent_constraint_counter = 0;
 			for(int i = 0; i < rowNo; i ++){ //for each constraint of a program element				
 				Integer[] constraint = new Integer[tcArray.size()];
 				for(int j = 0; j < constraint.length; j ++){
-					Vector<Integer> hitSet= tcArray.get(j).hitSet;
-					constraint[j] = hitSet.get(i);
+					Vector<Integer> hitSet= tcArray.get(j).hitSet; 
+					constraint[j] = hitSet.get(i); // we list all coverage of test cases with respect to each program element(constraint)  
 				}
 				
 				//eliminate all infeasible program elements				
@@ -75,12 +79,18 @@ public class ILPSolver {
 					sumHit += constraint[j];
 				}
 				if(sumHit != 0){ //a program element is infeasible if no test case can cover it
-					constraints.add(constraint);
+					//2009-12-20: note that we should remove any equivalent constraints here
+					if(!this.isMemberOf(constraints, constraint)){
+						constraints.add(constraint);	
+					}else{
+						equivalent_constraint_counter ++;
+					}
 				}else{
-					infeasible_counter ++;
+					infeasible_constraint_counter ++;
 				}
 			}
-			System.out.println("infeasible element no.:" + infeasible_counter);
+			System.out.println("infeasible element no.:" + infeasible_constraint_counter);
+			System.out.println("equivalent element no.:" + equivalent_constraint_counter);
 			
 			//save all into (coverage matrix of all test cases with respect to program elements)
 			for(int i = 0; i < constraints.size(); i ++){
@@ -88,28 +98,19 @@ public class ILPSolver {
 				for(int j = 0; j < constraint.length; j ++){
 					sb.append(" + " + constraint[j] + " x" + (j+1));
 				}
-				sb.append(">= 1;\n");
+				sb.append(" >= 1;\n");
 			
 			}
 			sb.append("\n");
 			
 			
-			for(int i = 0; i < rowNo; i ++){ //each row is a constraint
-				for(int j = 0; j < tcArray.size(); j ++){
-					Vector<Integer> hitSet = tcArray.get(j).hitSet;
-					sb.append(" + " + hitSet.get(i) + " x" + (j + 1));
-				}
-				sb.append(">= 1;\n");				
-			}
-			sb.append("\n");
-			
-			sb.append("int "); //specify the binary variables			
+			sb.append("bin "); //specify the binary variables			
 			for(int i = 0; i < tcArray.size()-1; i ++){
 				sb.append("x"+ (i + 1) + ", ");
 			}
 			
 			
-			sb.append("x" + (tcArray.size()-1) +";");
+			sb.append("x" + (tcArray.size()) +";");
 			Logger.getInstance().setPath(saveFile, false);
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
@@ -124,15 +125,16 @@ public class ILPSolver {
 				else
 					ret = 5;
 				if(ret == 0){
+					solver.printLp();
+					solver.printObjective();
+					solver.printSolution(1);
+					solver.printConstraints(1);
 					solver.writeLp(saveFile);	
 				}else{
 					System.out.println("cannot get the solution");
 				}
 				
-//				solver.printLp();
-//				solver.printObjective();
-//				solver.printSolution(1);
-//				solver.printConstraints(1);
+//				
 
 			} catch (LpSolveException e) {
 				// TODO Auto-generated catch block
@@ -147,7 +149,23 @@ public class ILPSolver {
 		}
 	}
 	
-	
+	public boolean isMemberOf(Vector<Integer[]> constraints, Integer[] constraint){
+		boolean isMember = false;
+		for(int i = 0; i < constraints.size() && !isMember; i ++){
+			Integer[] constraint_temp = constraints.get(i);
+			int j = 0;
+			for(; j < constraint_temp.length; j ++){
+				if(constraint_temp[j]!= constraint[j]){
+					break; //break the loop if any element is different
+				}
+			}
+			if(j == constraint_temp.length){//find an equivalent constraint
+				isMember = true;
+			}
+		}
+		
+		return isMember;
+	}
 	
 	public static void main(String[] args) {
 		if(args.length ==0){
@@ -156,8 +174,8 @@ public class ILPSolver {
 			String date = args[0];
 			String criterion = args[1];
 			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/" + criterion + "/" + "TestCaseStatistics_" + criterion + "_" 
-				 + "1000_2000.txt";
+				+ date + "/TestCaseStatistics_" + criterion + "_" 
+				 + "0_1000.txt";
 			
 //			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 //				+ date + "/TestCaseStatistics_" + criterion + ".txt";
