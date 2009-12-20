@@ -51,8 +51,10 @@ public class ILPSolver {
 			
 			sb.append("min:");			//objective function
 			for(int i = 0; i < tcArray.size(); i ++){
-				double CI = tcArray.get(i).CI;
-				double weight = alpha - (1-alpha)*CI;
+				//2009-12-20: use CR rather than CD for scaling purpose
+				TestCase tc = tcArray.get(i);		
+				double CR = tc.CI/Double.parseDouble(tc.length);
+				double weight = alpha - (1-alpha)*CR;
 				sb.append(" + " + weight + " x"+ (i + 1));
 			}
 			sb.append(";\n");
