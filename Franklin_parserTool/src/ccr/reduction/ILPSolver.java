@@ -1,6 +1,7 @@
 package ccr.reduction;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,7 +9,6 @@ import java.util.Vector;
 
 import lpsolve.LpSolve;
 import lpsolve.LpSolveException;
-
 import ccr.test.Logger;
 import ccr.test.TestCase;
 
@@ -30,7 +30,6 @@ public class ILPSolver {
 	 */
 	public void createILPModel_biCriteria(String filename, boolean containHeader, double alpha, String saveFile){
 		try {
-			
 			//1. read info of all test cases
 			BufferedReader br = new BufferedReader(new FileReader(filename));
 			String str = null;
@@ -39,7 +38,7 @@ public class ILPSolver {
 				rowNo = br.readLine().split("\t").length - 6;
 			}
 			
-			
+			StringBuilder infoRecorder = new StringBuilder();
 			Vector<TestCase> tcArray = new Vector<TestCase>(); 
 			while((str=br.readLine())!= null){
 				tcArray.add(new TestCase(str, true));				
@@ -48,6 +47,11 @@ public class ILPSolver {
 			if(!containHeader){
 				rowNo = tcArray.get(0).hitSet.size();
 			}
+			
+			infoRecorder.append("Before dimension reduction:").append("\n");
+			infoRecorder.append("ProgramElement:").append(rowNo).append("\n");
+			infoRecorder.append("TestCase:").append(tcArray.size()).append("\n");
+			infoRecorder.append("--------------------------------------------------------------------------").append("\n");
 			
 			//2.create LP file: convert program element(row) * testcases(column) into the matrix of testcases(row)* program elements(column)
 			StringBuilder sb = new StringBuilder();
@@ -89,8 +93,15 @@ public class ILPSolver {
 					infeasible_constraint_counter ++;
 				}
 			}
-			System.out.println("infeasible element no.:" + infeasible_constraint_counter);
-			System.out.println("equivalent element no.:" + equivalent_constraint_counter);
+			
+			infoRecorder.append("After dimension reduction:").append("\n");			
+			infoRecorder.append("ProgramElement:").append(constraints.size()).
+				append("(").append(rowNo).append(" exclude infeasible:").append(infeasible_constraint_counter).append(",").
+				append("equivalent:").append(equivalent_constraint_counter).append(")").append("\n");
+			infoRecorder.append("TestCase:").append(tcArray.size()).append("\n");
+			infoRecorder.append("--------------------------------------------------------------------------").append("\n");
+			
+			
 			
 			//save all into (coverage matrix of all test cases with respect to program elements)
 			for(int i = 0; i < constraints.size(); i ++){
@@ -119,22 +130,44 @@ public class ILPSolver {
 			try {
 				LpSolve solver = LpSolve.readLp(saveFile, LpSolve.CRITICAL, null);
 				
+				long startTime = System.currentTimeMillis();
 				int ret = solver.solve();
+				long exeTime = System.currentTimeMillis() - startTime;
+				infoRecorder.append("Execute Time:").append(exeTime/(double)1000).append(" s\n");
+				
 				if(ret == LpSolve.OPTIMAL)
 					ret = 0;
 				else
 					ret = 5;
-				if(ret == 0){
-					solver.printLp();
-					solver.printObjective();
-					solver.printSolution(1);
-					solver.printConstraints(1);
-					solver.writeLp(saveFile);	
+				
+				if(ret == 0){ //solve the problem successfully
+//					solver.printObjective();
+					
+					infoRecorder.append("Reduced Test Suite Size:").append(solver.getObjective()).append("\n").
+							append("Selected Test Cases:").append("\n");
+					double[] var = solver.getPtrVariables();
+					for(int i = 0; i < var.length; i ++){
+						if(var[i]==1){
+//							System.out.print(i +  ",");
+							String index = tcArray.get(i).index;
+							infoRecorder.append(index + ",");
+						}
+					}
+					
+//					solver.printLp();
+//					solver.printSolution(1);
+//					solver.printConstraints(1);
+//					solver.writeLp(saveFile);	
+					
 				}else{
-					System.out.println("cannot get the solution");
+//					System.out.println("cannot get the solution");
+					infoRecorder.append("cannot get the solution");
 				}
 				
-//				
+				String resultPath = new File(saveFile).getParent() + "\\result.txt";
+				Logger.getInstance().setPath(resultPath, false);
+				Logger.getInstance().write(infoRecorder.toString());
+				Logger.getInstance().close();
 
 			} catch (LpSolveException e) {
 				// TODO Auto-generated catch block
@@ -149,7 +182,9 @@ public class ILPSolver {
 		}
 	}
 	
-	public boolean isMemberOf(Vector<Integer[]> constraints, Integer[] constraint){
+	
+	
+	private boolean isMemberOf(Vector<Integer[]> constraints, Integer[] constraint){
 		boolean isMember = false;
 		for(int i = 0; i < constraints.size() && !isMember; i ++){
 			Integer[] constraint_temp = constraints.get(i);
@@ -174,15 +209,14 @@ public class ILPSolver {
 			String date = args[0];
 			String criterion = args[1];
 			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/TestCaseStatistics_" + criterion + "_" 
-				 + "0_1000.txt";
+				+ date + "/TestCaseStatistics_" + criterion + ".txt"; 
 			
 //			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 //				+ date + "/TestCaseStatistics_" + criterion + ".txt";
 			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/model.lp";
 			double alpha = 1.0;
-			boolean containHeader = false;
+			boolean containHeader = true;
 			new ILPSolver().createILPModel_biCriteria(filename, containHeader, alpha, saveFile);
 		}
 	}
