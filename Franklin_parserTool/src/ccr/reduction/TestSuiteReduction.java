@@ -33,7 +33,7 @@ public class TestSuiteReduction {
 	 * @param filename:file name to save the labeling results.
 	 * @return
 	 */
-	public Vector getProgramEles(Criterion criterion, String filename){
+	public Vector saveProgramEles(Criterion criterion, String filename){
 		Vector programEles = new Vector();
 		
 		NodeMap dus = criterion.DUMap;
@@ -90,38 +90,29 @@ public class TestSuiteReduction {
 		//2.construct the program elements specified by a criterion
 		String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date + "/" + "labelResult.txt";	
-		Vector programEles = this.getProgramEles(c, filename);
+		Vector programEles = this.saveProgramEles(c, filename);
 		
 		//3.load all test cases in the test pool
 		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/" +
 				"TestHarness/TestPool.txt";
 		TestSet testpool = Adequacy.getTestPool(testPoolFile, true);
 		
-		//4.get the statistics of all test cases in the test pool
-		boolean writeHeader = true;
+		//4.get the statistics of all test cases in the test pool		
 		Vector<TestCase> statistics_TestCase = new Vector<TestCase>(); 
 		for(int i = 0; i < testpool.size(); i++){
 			String index = testpool.get(i);
 			System.out.println("Process test case:" + index);
 			TestCase t = this.getStaticsOfTestCase(appClassName, index, c, programEles);
 			statistics_TestCase.add(t);
-			
-			//save the data in bundles 
-			if(i % 1000 == 0){
-				//5.save and return the statistics of all test cases
-				filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date + "/" + criterion + "/" + "TestCaseStatistics_" + criterion + "_"+ 
-					(i-1000) + "_" + i +".txt";
-				
-				this.saveTestCases(statistics_TestCase, programEles, filename, writeHeader);
-				statistics_TestCase.clear();
-				
-				if(writeHeader){
-					writeHeader = false;
-				}
-			}
 		}
 		
+		
+		//5.save and return the statistics of all test cases
+		filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/" + "TestCaseStatistics_" + criterion + ".txt";
+		boolean writeHeader = true;
+		this.saveTestCases(statistics_TestCase, programEles, filename, writeHeader);
+		statistics_TestCase.clear();
 				
 		return statistics_TestCase;
 	}
@@ -199,7 +190,7 @@ public class TestSuiteReduction {
 			sb.append("\n");
 		}
 		
-		Logger.getInstance().setPath(filename, true); // write the data in bundles
+		Logger.getInstance().setPath(filename, false); // write the data in bundles
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
 	}
