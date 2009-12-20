@@ -59,13 +59,47 @@ public class ILPSolver {
 			}
 			sb.append(";\n");
 			
+
+			Vector<Integer[]> constraints = new Vector<Integer[]>();		
+			int infeasible_counter = 0;
+			for(int i = 0; i < rowNo; i ++){ //for each constraint of a program element				
+				Integer[] constraint = new Integer[tcArray.size()];
+				for(int j = 0; j < constraint.length; j ++){
+					Vector<Integer> hitSet= tcArray.get(j).hitSet;
+					constraint[j] = hitSet.get(i);
+				}
+				
+				//eliminate all infeasible program elements				
+				int sumHit = 0;
+				for(int j = 0; j < constraint.length; j++){
+					sumHit += constraint[j];
+				}
+				if(sumHit != 0){ //a program element is infeasible if no test case can cover it
+					constraints.add(constraint);
+				}else{
+					infeasible_counter ++;
+				}
+			}
+			System.out.println("infeasible element no.:" + infeasible_counter);
+			
+			//save all into (coverage matrix of all test cases with respect to program elements)
+			for(int i = 0; i < constraints.size(); i ++){
+				Integer[] constraint = constraints.get(i);
+				for(int j = 0; j < constraint.length; j ++){
+					sb.append(" + " + constraint[j] + " x" + (j+1));
+				}
+				sb.append(">= 1;\n");
+			
+			}
+			sb.append("\n");
+			
 			
 			for(int i = 0; i < rowNo; i ++){ //each row is a constraint
 				for(int j = 0; j < tcArray.size(); j ++){
 					Vector<Integer> hitSet = tcArray.get(j).hitSet;
 					sb.append(" + " + hitSet.get(i) + " x" + (j + 1));
 				}
-				sb.append(">= 1;\n");
+				sb.append(">= 1;\n");				
 			}
 			sb.append("\n");
 			
@@ -130,7 +164,7 @@ public class ILPSolver {
 			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/model.lp";
 			double alpha = 1.0;
-			boolean containHeader = true;
+			boolean containHeader = false;
 			new ILPSolver().createILPModel_biCriteria(filename, containHeader, alpha, saveFile);
 		}
 	}
