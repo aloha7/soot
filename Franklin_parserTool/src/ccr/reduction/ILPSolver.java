@@ -19,17 +19,24 @@ import ccr.test.TestCase;
  *
  */
 public class ILPSolver {
-	
+
 	/**2009-12-18:create a LP file from existing info files,
 	 * then save this LP file. For a bi-criteria ILP model, 
 	 * the objective function considers both coverage and Context
-	 * Diversity of each test case 
+	 * Diversity of each test case. This method returns all test
+	 * cases in the test pool
 	 * 
-	 * @param filename
-	 * @param alpha
-	 * @param saveFile
+	 * @param filename: the file to load test cases
+	 * @param containHeader: indicate whether there is any headers of the test case file
+	 * @param alpha: weighting factors between test suite size and context diversity
+	 * @param modelFile: the file to save constructed ILP model
+	 * @param infoFile:the file to save all info generated during constructing the model 
+	 * @return
 	 */
-	public void createILPModel_biCriteria(String filename, boolean containHeader, double alpha, String saveFile){
+	public Vector<TestCase> createILPModel_biCriteria(String filename, boolean containHeader, 
+			double alpha, String modelFile, String infoFile){
+		
+		Vector<TestCase> tcArray = new Vector<TestCase>(); 
 		try {
 			//1. read info of all test cases
 			BufferedReader br = new BufferedReader(new FileReader(filename));
@@ -40,7 +47,6 @@ public class ILPSolver {
 			}
 			
 			StringBuilder infoRecorder = new StringBuilder();
-			Vector<TestCase> tcArray = new Vector<TestCase>(); 
 			while((str=br.readLine())!= null){
 				tcArray.add(new TestCase(str, true));				
 			}
@@ -123,67 +129,16 @@ public class ILPSolver {
 			
 			
 			sb.append("x" + (tcArray.size()) +";");
-			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().setPath(modelFile, false);
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();	
 			
-			File file = new File(filename);
-			String criterion = file.getName().split("_")[1];
-			String resultPath = file.getParent() + "\\Result_" +
-				  criterion +"_" + alpha + ".txt";
-			Logger.getInstance().setPath(resultPath, true);
+			Logger.getInstance().setPath(infoFile, true);
 			Logger.getInstance().write(infoRecorder.toString());
 			Logger.getInstance().close();
 			
 			System.out.println("Finish to construct the model");
-			System.out.println("Start to solve the model");
-			//3. solve the ILP problem
-			try {
-				LpSolve solver = LpSolve.readLp(saveFile, LpSolve.CRITICAL, null);
-				
-				long startTime = System.currentTimeMillis();
-				int ret = solver.solve();
-				long exeTime = System.currentTimeMillis() - startTime;
-				infoRecorder.append("Execute Time:").append(exeTime/(double)1000).append(" s\n");
-				
-				if(ret == LpSolve.OPTIMAL)
-					ret = 0;
-				else
-					ret = 5;
-				
-				if(ret == 0){ //solve the problem successfully
-//					solver.printObjective();
-					
-					infoRecorder.append("Reduced Test Suite Size:").append(solver.getObjective()).append("\n").
-							append("Selected Test Cases:").append("\n");
-					double[] var = solver.getPtrVariables();
-					for(int i = 0; i < var.length; i ++){
-						if(var[i]==1){
-//							System.out.print(i +  ",");
-							String index = tcArray.get(i).index;
-							infoRecorder.append(index + ",");
-						}
-					}
-					
-//					solver.printLp();
-//					solver.printSolution(1);
-//					solver.printConstraints(1);
-//					solver.writeLp(saveFile);	
-					
-				}else{
-//					System.out.println("cannot get the solution");
-					infoRecorder.append("cannot get the solution");
-				}
-				System.out.println("Finish solving the model");
-				
-				Logger.getInstance().setPath(resultPath, true);
-				Logger.getInstance().write(infoRecorder.toString());
-				Logger.getInstance().close();
-
-			} catch (LpSolveException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -191,9 +146,64 @@ public class ILPSolver {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return tcArray;
 	}
-	
-	
+
+	/**2009-12-21:solve the ILP model with LPSolve and
+	 * save the results into a file. This method returns
+	 * the reduced test suite.
+	 * @param modelFile: the file to load the ILP model 
+	 * @param tcArray: the array of test cases
+	 * @param infoFile: the file to save info collected during solving the model
+	 * @return
+	 */
+	public Vector<String> solveILPModel(String modelFile, Vector<TestCase> tcArray, String infoFile){
+		Vector<String> selectedTestCases = new Vector<String>();
+		
+		StringBuilder infoRecorder = new StringBuilder();
+		try {
+			System.out.println("Start to solve the model");
+			
+			LpSolve solver = LpSolve.readLp(modelFile, LpSolve.CRITICAL, null);
+
+			long startTime = System.currentTimeMillis();
+			int ret = solver.solve();
+			long exeTime = System.currentTimeMillis() - startTime;
+			infoRecorder.append("Execute Time:").append(exeTime/(double)1000).append(" s\n");
+			
+			if(ret == LpSolve.OPTIMAL)
+				ret = 0;
+			else
+				ret = 5;
+			
+			if(ret == 0){ //solve the problem successfully
+				
+				infoRecorder.append("Reduced Test Suite Size:").append(solver.getObjective()).append("\n").
+						append("Selected Test Cases:").append("\n");
+				double[] var = solver.getPtrVariables();
+				for(int i = 0; i < var.length; i ++){
+					if(var[i]==1){
+						String index = tcArray.get(i).index;
+						selectedTestCases.add(index);
+						infoRecorder.append(index + ",");
+					}
+				}
+			}else{
+				infoRecorder.append("cannot get the solution");
+			}
+			System.out.println("Finish solving the model");
+			
+			Logger.getInstance().setPath(infoFile, true);//append execution info into the file
+			Logger.getInstance().write(infoRecorder.toString());
+			Logger.getInstance().close();
+
+		} catch (LpSolveException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return selectedTestCases;
+	}
 	
 	private boolean isMemberOf(Vector<Integer[]> constraints, Integer[] constraint){
 		boolean isMember = false;
@@ -219,16 +229,20 @@ public class ILPSolver {
 		}else{
 			String date = args[0];
 			String criterion = args[1];
-			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/TestCaseStatistics_" + criterion + ".txt"; 
 			
-//			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-//				+ date + "/TestCaseStatistics_" + criterion + ".txt";
-			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/model.lp";
 			double alpha = 1.0;
-			boolean containHeader = true;
-			new ILPSolver().createILPModel_biCriteria(filename, containHeader, alpha, saveFile);
+			boolean containHeader = true;						
+			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestCaseStatistics_" + criterion + ".txt"; 			
+			String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Model_" + criterion + "_" + alpha + ".lp";
+			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Result_" + criterion + "_" + alpha + ".txt";					
+			
+			ILPSolver solver = new ILPSolver();
+			Vector<TestCase> tcArray = solver.createILPModel_biCriteria(filename, containHeader, alpha, modelFile, infoFile);
+			
+			solver.solveILPModel(modelFile, tcArray, infoFile);
 		}
 	}
 
