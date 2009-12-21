@@ -20,7 +20,32 @@ import ccr.test.TestCase;
  *
  */
 public class ILPSolver {
-
+	
+	private Vector<TestCase> getStatisticsOfTestCase(String testcaseFile, boolean containHeader){
+		Vector<TestCase> tcArray = new Vector<TestCase>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(testcaseFile));
+			String str = null;
+			int rowNo = 0;
+			if(containHeader){
+				rowNo = br.readLine().split("\t").length - 6;
+			}
+			
+			StringBuilder infoRecorder = new StringBuilder();
+			while((str=br.readLine())!= null){
+				tcArray.add(new TestCase(str, true));				
+			}
+			br.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return tcArray;
+	}
 	/**2009-12-18:create a LP file from existing info files,
 	 * then save this LP file. For a bi-criteria ILP model, 
 	 * the objective function considers both coverage and Context
@@ -38,25 +63,13 @@ public class ILPSolver {
 	public Vector<TestCase> buildILPModel_biCriteria(String testcaseFile, boolean containHeader, 
 			double alpha, String modelFile, String infoFile, int maxSize){
 		
-		Vector<TestCase> tcArray = new Vector<TestCase>(); 
-		try {
+		Vector<TestCase> tcArray = null; 
 			//1. read info of all test cases
-			BufferedReader br = new BufferedReader(new FileReader(testcaseFile));
-			String str = null;
-			int rowNo = 0;
-			if(containHeader){
-				rowNo = br.readLine().split("\t").length - 6;
-			}
+			tcArray = this.getStatisticsOfTestCase(testcaseFile, containHeader);
+			int rowNo = tcArray.get(0).hitSet.size();
+			
 			
 			StringBuilder infoRecorder = new StringBuilder();
-			while((str=br.readLine())!= null){
-				tcArray.add(new TestCase(str, true));				
-			}
-			br.close();
-			if(!containHeader){
-				rowNo = tcArray.get(0).hitSet.size();
-			}
-			
 			infoRecorder.append("--------------------------------------------------------------------------").append("\n");
 			infoRecorder.append("Weight factor: " + alpha).append("\n");
 			infoRecorder.append("Before dimension reduction:").append("\n");
@@ -149,15 +162,8 @@ public class ILPSolver {
 			Logger.getInstance().write(infoRecorder.toString());
 			Logger.getInstance().close();
 			
-			System.out.println("Finish to construct the model");
+			
 		
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		return tcArray;
 	}
 
@@ -173,9 +179,7 @@ public class ILPSolver {
 		Vector<String> selectedTestCases = new Vector<String>();
 		
 		StringBuilder infoRecorder = new StringBuilder();
-		try {
-			System.out.println("Start to solve the model");
-			
+		try {						
 			LpSolve solver = LpSolve.readLp(modelFile, LpSolve.CRITICAL, null);
 
 			long startTime = System.currentTimeMillis();
@@ -260,7 +264,11 @@ public class ILPSolver {
 				+ date +"/"+ criterion +"/Model_" + criterion + "_" + alpha + ".lp";
 			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/"+ criterion + "/Result_" + criterion + "_" + alpha + ".txt";
+			
+			System.out.println("Start to solve the model with weighting factor " + alpha);
 			Vector<String> testSuite = this.solveILPModel(modelFile, tcArray, infoFile);
+			System.out.println("Finish to construct the model with weighting factor " + alpha);
+			
 			testSuites.put(alpha, testSuite);
 		}
 		
@@ -321,7 +329,14 @@ public class ILPSolver {
 			int maxSize = Integer.parseInt(args[2]);
 			
 			ILPSolver solver = new ILPSolver();
-			solver.buildILPModels(date, criterion, maxSize);
+//			Vector<TestCase> tcArray = solver.buildILPModels(date, criterion, maxSize);
+			
+			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/"+ criterion + "/TestCaseStatistics_" + criterion + ".txt";
+			boolean containHeader = true;
+			Vector<TestCase> tcArray = solver.getStatisticsOfTestCase(testcaseFile, containHeader); 
+			solver.solveILPModels(date, criterion, tcArray);
+			
 //			solver.buildAndSolveILPs(date, criterion, maxSize);
 		}
 	}
