@@ -1,10 +1,11 @@
 package ccr.reduction;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 
 import lpsolve.LpSolve;
@@ -26,20 +27,21 @@ public class ILPSolver {
 	 * Diversity of each test case. This method returns all test
 	 * cases in the test pool
 	 * 
-	 * @param filename: the file to load test cases
+	 * @param testcaseFile: the file to load test cases
 	 * @param containHeader: indicate whether there is any headers of the test case file
 	 * @param alpha: weighting factors between test suite size and context diversity
 	 * @param modelFile: the file to save constructed ILP model
-	 * @param infoFile:the file to save all info generated during constructing the model 
+	 * @param infoFile: the file to save all info generated during constructing the model
+	 * @param maxSize: the upper bound of the reduced test suite size
 	 * @return
 	 */
-	public Vector<TestCase> createILPModel_biCriteria(String filename, boolean containHeader, 
-			double alpha, String modelFile, String infoFile){
+	public Vector<TestCase> createILPModel_biCriteria(String testcaseFile, boolean containHeader, 
+			double alpha, String modelFile, String infoFile, int maxSize){
 		
 		Vector<TestCase> tcArray = new Vector<TestCase>(); 
 		try {
 			//1. read info of all test cases
-			BufferedReader br = new BufferedReader(new FileReader(filename));
+			BufferedReader br = new BufferedReader(new FileReader(testcaseFile));
 			String str = null;
 			int rowNo = 0;
 			if(containHeader){
@@ -55,10 +57,11 @@ public class ILPSolver {
 				rowNo = tcArray.get(0).hitSet.size();
 			}
 			
+			infoRecorder.append("--------------------------------------------------------------------------").append("\n");
+			infoRecorder.append("Weight factor: " + alpha).append("\n");
 			infoRecorder.append("Before dimension reduction:").append("\n");
 			infoRecorder.append("ProgramElement:").append(rowNo).append("\n");
 			infoRecorder.append("TestCase:").append(tcArray.size()).append("\n");
-			infoRecorder.append("--------------------------------------------------------------------------").append("\n");
 			
 			//2.create LP file: convert program element(row) * testcases(column) into the matrix of testcases(row)* program elements(column)
 			StringBuilder sb = new StringBuilder();
@@ -77,6 +80,15 @@ public class ILPSolver {
 			Vector<Integer[]> constraints = new Vector<Integer[]>();		
 			int infeasible_constraint_counter = 0;
 			int equivalent_constraint_counter = 0;
+			
+			//2009-12-21: the first constraint specifies that the upper bound 
+			//of reduced test suite size
+			for(int i = 0; i < tcArray.size(); i ++){				
+				sb.append(" + x" + (i+1));
+			}
+			sb.append(" <= " + maxSize + ";\n");
+
+			
 			for(int i = 0; i < rowNo; i ++){ //for each constraint of a program element				
 				Integer[] constraint = new Integer[tcArray.size()];
 				for(int j = 0; j < constraint.length; j ++){
@@ -133,7 +145,7 @@ public class ILPSolver {
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();	
 			
-			Logger.getInstance().setPath(infoFile, true);
+			Logger.getInstance().setPath(infoFile, false);
 			Logger.getInstance().write(infoRecorder.toString());
 			Logger.getInstance().close();
 			
@@ -176,18 +188,22 @@ public class ILPSolver {
 			else
 				ret = 5;
 			
-			if(ret == 0){ //solve the problem successfully
-				
-				infoRecorder.append("Reduced Test Suite Size:").append(solver.getObjective()).append("\n").
-						append("Selected Test Cases:").append("\n");
+			if(ret == 0){ //solve the problem successfully				
 				double[] var = solver.getPtrVariables();
 				for(int i = 0; i < var.length; i ++){
 					if(var[i]==1){
 						String index = tcArray.get(i).index;
 						selectedTestCases.add(index);
-						infoRecorder.append(index + ",");
+						
 					}
 				}
+				
+				infoRecorder.append("Reduced Test Suite Size:").append(selectedTestCases.size()).append("\n");
+				infoRecorder.append("Selected Test Cases:").append("\n");
+				for(int i = 0; i < selectedTestCases.size(); i ++){
+					infoRecorder.append(selectedTestCases.get(i) + ",");
+				}
+				
 			}else{
 				infoRecorder.append("cannot get the solution");
 			}
@@ -200,9 +216,80 @@ public class ILPSolver {
 		} catch (LpSolveException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}		
+		return selectedTestCases;
+	}
+	
+
+	/**2009-12-21: create and solve the binary ILP model. 
+	 * This method returns the reduced test suite with respect
+	 * to a given weighting factor. 
+	 * 
+	 * @param testcaseFile
+	 * @param containHeader
+	 * @param alpha
+	 * @param modelFile
+	 * @param infoFile
+	 * @return
+	 */
+	public Vector<String> buildAndSolveILP(String testcaseFile, boolean containHeader, double alpha, 
+			String modelFile, String infoFile, int maxSize){
+		Vector<TestCase> tcArray = this.createILPModel_biCriteria(testcaseFile, containHeader, alpha, modelFile, infoFile, maxSize);
+		return this.solveILPModel(modelFile, tcArray, infoFile);
+	}
+	
+	
+	public HashMap<Double, Vector<String>> buildAndSolveILP(String date, String criterion, int maxSize){
+		HashMap<Double, Vector<String>> testSuites = new HashMap<Double, Vector<String>>();
+		boolean containHeader = true;
+		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/"+ criterion + "/TestCaseStatistics_" + criterion + ".txt"; 			
+		
+		for(double alpha = 0.0; alpha <=1.0; alpha = alpha + 0.1){			
+			String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date +"/"+ criterion +"/Model_" + criterion + "_" + alpha + ".lp";
+			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date +"/"+ criterion + "/Result_" + criterion + "_" + alpha + ".txt";	
+			
+			Vector<String> testSuite = this.buildAndSolveILP(testcaseFile, containHeader, 
+					alpha, modelFile, infoFile, maxSize);
+			testSuites.put(alpha, testSuite);
 		}
 		
-		return selectedTestCases;
+		Double[] keys = testSuites.keySet().toArray(new Double[1]); 
+		Arrays.sort(keys);
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("Weigth").append("\t").append("ReducedTestSuiteSize").append("\n");
+		for(int i = 0; i < keys.length; i ++){
+			sb.append(keys[i]).append("\t").append(testSuites.get(keys[i]).size()).append("\n");
+		}
+		System.out.println(sb.toString());
+		
+		return testSuites;
+	}
+	
+	
+	public HashMap<Double, Vector<String>> buildAndSolveILP(String testcaseFile, boolean containHeader, 
+			String modelFile, String infoFile, int maxSize){
+		HashMap<Double, Vector<String>> testSuites = new HashMap<Double, Vector<String>>();
+		for(double alpha = 0.0; alpha <=1.0; alpha = alpha + 0.1){
+			Vector<String> testSuite = this.buildAndSolveILP(testcaseFile, containHeader, 
+					alpha, modelFile, infoFile, maxSize);
+			testSuites.put(alpha, testSuite);
+		}
+		
+		Double[] keys = testSuites.keySet().toArray(new Double[1]); 
+		Arrays.sort(keys);
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("Weigth").append("\t").append("ReducedTestSuiteSize").append("\n");
+		for(int i = 0; i < keys.length; i ++){
+			sb.append(keys[i]).append("\t").append(testSuites.get(keys[i]).size()).append("\n");
+		}
+		System.out.println(sb.toString());
+		
+		return testSuites;
 	}
 	
 	private boolean isMemberOf(Vector<Integer[]> constraints, Integer[] constraint){
@@ -229,20 +316,10 @@ public class ILPSolver {
 		}else{
 			String date = args[0];
 			String criterion = args[1];
-			
-			double alpha = 1.0;
-			boolean containHeader = true;						
-			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/TestCaseStatistics_" + criterion + ".txt"; 			
-			String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/Model_" + criterion + "_" + alpha + ".lp";
-			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/Result_" + criterion + "_" + alpha + ".txt";					
+			int maxSize = Integer.parseInt(args[2]);
 			
 			ILPSolver solver = new ILPSolver();
-			Vector<TestCase> tcArray = solver.createILPModel_biCriteria(filename, containHeader, alpha, modelFile, infoFile);
-			
-			solver.solveILPModel(modelFile, tcArray, infoFile);
+			solver.buildAndSolveILP(date, criterion, maxSize);
 		}
 	}
 
