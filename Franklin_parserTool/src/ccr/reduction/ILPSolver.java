@@ -19,6 +19,7 @@ import ccr.test.TestCase;
  *
  */
 public class ILPSolver {
+	
 	/**2009-12-18:create a LP file from existing info files,
 	 * then save this LP file. For a bi-criteria ILP model, 
 	 * the objective function considers both coverage and Context
@@ -124,8 +125,18 @@ public class ILPSolver {
 			sb.append("x" + (tcArray.size()) +";");
 			Logger.getInstance().setPath(saveFile, false);
 			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();	
+			
+			File file = new File(filename);
+			String criterion = file.getName().split("_")[1];
+			String resultPath = file.getParent() + "\\Result_" +
+				  criterion +"_" + alpha + ".txt";
+			Logger.getInstance().setPath(resultPath, true);
+			Logger.getInstance().write(infoRecorder.toString());
 			Logger.getInstance().close();
 			
+			System.out.println("Finish to construct the model");
+			System.out.println("Start to solve the model");
 			//3. solve the ILP problem
 			try {
 				LpSolve solver = LpSolve.readLp(saveFile, LpSolve.CRITICAL, null);
@@ -163,9 +174,9 @@ public class ILPSolver {
 //					System.out.println("cannot get the solution");
 					infoRecorder.append("cannot get the solution");
 				}
+				System.out.println("Finish solving the model");
 				
-				String resultPath = new File(saveFile).getParent() + "\\result.txt";
-				Logger.getInstance().setPath(resultPath, false);
+				Logger.getInstance().setPath(resultPath, true);
 				Logger.getInstance().write(infoRecorder.toString());
 				Logger.getInstance().close();
 
