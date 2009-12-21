@@ -35,7 +35,7 @@ public class ILPSolver {
 	 * @param maxSize: the upper bound of the reduced test suite size
 	 * @return
 	 */
-	public Vector<TestCase> createILPModel_biCriteria(String testcaseFile, boolean containHeader, 
+	public Vector<TestCase> buildILPModel_biCriteria(String testcaseFile, boolean containHeader, 
 			double alpha, String modelFile, String infoFile, int maxSize){
 		
 		Vector<TestCase> tcArray = new Vector<TestCase>(); 
@@ -220,62 +220,47 @@ public class ILPSolver {
 		return selectedTestCases;
 	}
 	
-
-	/**2009-12-21: create and solve the binary ILP model. 
-	 * This method returns the reduced test suite with respect
-	 * to a given weighting factor. 
+	/**2009-12-21: build multiple ILP models with respect to different weighting factors
 	 * 
-	 * @param testcaseFile
-	 * @param containHeader
-	 * @param alpha
-	 * @param modelFile
-	 * @param infoFile
+	 * @param date: the directory to get the test case statistics 
+	 * @param criterion: the testing criterion
+	 * @param maxSize: the upper bound of the reduced test suite
 	 * @return
 	 */
-	public Vector<String> buildAndSolveILP(String testcaseFile, boolean containHeader, double alpha, 
-			String modelFile, String infoFile, int maxSize){
-		Vector<TestCase> tcArray = this.createILPModel_biCriteria(testcaseFile, containHeader, alpha, modelFile, infoFile, maxSize);
-		return this.solveILPModel(modelFile, tcArray, infoFile);
-	}
-	
-	
-	public HashMap<Double, Vector<String>> buildAndSolveILP(String date, String criterion, int maxSize){
-		HashMap<Double, Vector<String>> testSuites = new HashMap<Double, Vector<String>>();
+	public Vector<TestCase> buildILPModels(String date, String criterion, int maxSize){
+		
+		Vector<TestCase> testpool = null;
 		boolean containHeader = true;
 		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/"+ criterion + "/TestCaseStatistics_" + criterion + ".txt"; 			
+			+ date + "/"+ criterion + "/TestCaseStatistics_" + criterion + ".txt";
 		
 		for(double alpha = 0.0; alpha <=1.0; alpha = alpha + 0.1){			
 			String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/"+ criterion +"/Model_" + criterion + "_" + alpha + ".lp";
 			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date +"/"+ criterion + "/Result_" + criterion + "_" + alpha + ".txt";	
-			
-			Vector<String> testSuite = this.buildAndSolveILP(testcaseFile, containHeader, 
-					alpha, modelFile, infoFile, maxSize);
-			testSuites.put(alpha, testSuite);
+				+ date +"/"+ criterion + "/Result_" + criterion + "_" + alpha + ".txt";			
+			testpool = this.buildILPModel_biCriteria(testcaseFile, containHeader, alpha, modelFile, infoFile, maxSize);
 		}
 		
-		Double[] keys = testSuites.keySet().toArray(new Double[1]); 
-		Arrays.sort(keys);
-		
-		StringBuilder sb = new StringBuilder();
-		sb.append("Weigth").append("\t").append("ReducedTestSuiteSize").append("\n");
-		for(int i = 0; i < keys.length; i ++){
-			sb.append(keys[i]).append("\t").append(testSuites.get(keys[i]).size()).append("\n");
-		}
-		System.out.println(sb.toString());
-		
-		return testSuites;
+		return testpool;
 	}
 	
-	
-	public HashMap<Double, Vector<String>> buildAndSolveILP(String testcaseFile, boolean containHeader, 
-			String modelFile, String infoFile, int maxSize){
+	/**2009-12-21: solve the ILP models with respect to different weighting factors
+	 * 
+	 * @param date: the directory to get the test case statistics 
+	 * @param criterion: the testing criterion
+	 * @param tcArray: the list of test cases
+	 * @return
+	 */
+	public HashMap<Double, Vector<String>> solveILPModels(String date, String criterion, Vector<TestCase> tcArray){
 		HashMap<Double, Vector<String>> testSuites = new HashMap<Double, Vector<String>>();
-		for(double alpha = 0.0; alpha <=1.0; alpha = alpha + 0.1){
-			Vector<String> testSuite = this.buildAndSolveILP(testcaseFile, containHeader, 
-					alpha, modelFile, infoFile, maxSize);
+				
+		for(double alpha = 0.0; alpha <=1.0; alpha = alpha + 0.1){			
+			String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date +"/"+ criterion +"/Model_" + criterion + "_" + alpha + ".lp";
+			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date +"/"+ criterion + "/Result_" + criterion + "_" + alpha + ".txt";
+			Vector<String> testSuite = this.solveILPModel(modelFile, tcArray, infoFile);
 			testSuites.put(alpha, testSuite);
 		}
 		
@@ -291,6 +276,23 @@ public class ILPSolver {
 		
 		return testSuites;
 	}
+	
+
+	/**2009-12-21: create and solve multiple binary ILP model 
+	 * with respect to different weighting factors. 
+	 * This method returns the list of reduced test suite with respect
+	 * to different weighting factors.
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param maxSize
+	 * @return
+	 */
+	public HashMap<Double, Vector<String>> buildAndSolveILPs(String date, String criterion, int maxSize){
+		Vector<TestCase> tcArray = this.buildILPModels(date, criterion, maxSize);
+		return this.solveILPModels(date, criterion, tcArray);
+	}
+		
 	
 	private boolean isMemberOf(Vector<Integer[]> constraints, Integer[] constraint){
 		boolean isMember = false;
@@ -319,7 +321,8 @@ public class ILPSolver {
 			int maxSize = Integer.parseInt(args[2]);
 			
 			ILPSolver solver = new ILPSolver();
-			solver.buildAndSolveILP(date, criterion, maxSize);
+			solver.buildILPModels(date, criterion, maxSize);
+//			solver.buildAndSolveILPs(date, criterion, maxSize);
 		}
 	}
 
