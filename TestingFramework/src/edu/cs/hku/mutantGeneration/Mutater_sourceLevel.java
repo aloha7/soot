@@ -18,11 +18,11 @@ public class Mutater_sourceLevel {
 		"Usage: java cs.hku.hk.mutantGeneration.Mutater_sourceLevel OPTION* (CLASS) + \n" +
 		"Generate mutant versions for each CLASS \n" + 
 		"Example: \njava cs.hku.hk.mutantGeneration.Mutater_sourceLevel \n" +
-				"-p C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\ \n" +
-				"-s C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\src\\trivia\\ \n" +
-				"-l C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\bin\\trivia\\ \n" +
-				"-m C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\mutants\\ \n" +
-				"-j C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\mutants\\ \n" +
+				"-p C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework \n" +
+				"-s C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\src\\trivia \n" +
+				"-l C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\bin\\trivia \n" +
+				"-m C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\mutants \n" +
+				"-j C:\\WangHuai\\Martin\\Eclipse3.3.1\\TestingFramework\\mutants \n" +
 				"-t 111111111111111 \n" +
 				"-c 1111111111111111111111111111 \n" +
 				"trivia\\Mover.java;trivia\\Animal.java\n\n\n" + 
@@ -38,7 +38,7 @@ public class Mutater_sourceLevel {
 	
 	protected final static String copyright = "(C) Copyright 2007-2011 Wang Huai";
 	protected final static String hint = "Try 'java cs.hku.hk.mutantGeneration --help' for more information";
-		
+	
 	/**The ClassLevel mutant operators
 	 * 
 	 */
@@ -165,7 +165,7 @@ public class Mutater_sourceLevel {
 	}
 	
 	public void mutate(){
-		String[] fileList = mutateFiles.split(";");
+		String[] fileList = mutateFiles.split(";");		
 		
 		String[] tradops = BitStringToArray(this.tradList, tm_operators);
 		String[] classops = BitStringToArray(this.classList, cm_operators);
@@ -276,7 +276,7 @@ public class Mutater_sourceLevel {
 					this.source = g.getOptarg();
 					break;
 				case 'l':
-					this.classes = g.getOptarg();
+					this.classes = g.getOptarg();					
 					break;
 				case 'm':
 					this.mutateFiles = g.getOptarg();

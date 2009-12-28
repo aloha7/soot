@@ -144,10 +144,12 @@ public class MutantStatistics {
 	}
 	
 	public static void main(String[] args) {
-		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\TestingFramework\\result\\";
-		String savePath = System.getProperty("user.dir") + File.separator +"result" + 
-				File.separator + "mutantStatistics.txt";
+//		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\TestingFramework\\result\\";
+		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\ContextDiversity\\result\\";
+		String savePath = mutantDir + "mutantStatistics.txt";
+		
 		new MutantStatistics().getMutantStatistics(mutantDir, savePath);
+		
 	}
 
 }
