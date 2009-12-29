@@ -1,7 +1,11 @@
 package edu.cs.hku.mutantGeneration;
 
 import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
+
+
 
 import edu.cs.hku.util.DatabaseManager;
 import edu.cs.hku.util.Logger;
@@ -212,8 +216,164 @@ public class MutantStatistics {
 		DatabaseManager.getInstance().update(sql);
 	}
 	
-	public void reportStatistc(){
-//		DatabaseManager.
+	/**2009-12-29:classify mutants for a class&a method into three categories:
+	 * missing construct, wrong constructs and extraneous constructs 
+	 * @param className
+	 * @param methodName
+	 */
+	public void mutantSum_IncludeMethod(String className, String methodName){
+		String[] missingConstructs = {"AOD", "COD", "LOD", "IHD",
+				"IOD", "ISD", "IPC", "PCD", "OMD", "JTD", "JSD", "JID"};
+		
+		String[] wrongConstructs = {"AOR", "ROR", "COR", "SOR", 
+				"LOR", "ASR", "IOP", "IOR", "PMD", "PPD", "PCC",
+				"PRV", "OMR", "OAC", "EOA", "EOC", "EAM", "EMM"};
+		
+		String[] extraneousConstructs = {"AOI", "COI", "LOI", "IHI", 
+				"ISI", "PNC", "PCI", "JTI", "JSI", "JDC"};
+		
+		StringBuilder report = new StringBuilder();
+		report.append("MissingConstructs").append("\t").append("WrongConstructs").
+			append("\t").append("ExtraneousConstructs").append("\t").append("Total").append("\n");
+		
+		StringBuilder sql = new  StringBuilder();
+		
+		
+		try {
+			//1.get missing constructs
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
+			.append(" AND function ").append("LIKE \'%").append(methodName).append("%\' ").append("And (");		
+			for(int i = 0; i < missingConstructs.length -1; i ++){
+				sql.append("operator LIKE \'%").append(missingConstructs[i]).append("%\' or ");
+			}
+			sql.append("operator LIKE \'%").append(missingConstructs[missingConstructs.length -1]).append("%\')");		
+			ResultSet rs = DatabaseManager.getInstance().query(sql.toString());
+			while(rs.next()){
+				report.append(rs.getInt(1)).append("\t");
+			}		
+			sql.setLength(0);
+			
+			//2.get wrong constructs
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
+			.append(" AND function ").append("LIKE \'%").append(methodName).append("%\' ").append("And (");	
+			for(int i = 0; i < wrongConstructs.length -1; i ++){
+				sql.append("operator LIKE \'%").append(wrongConstructs[i]).append("%\' or ");
+			}
+			sql.append("operator LIKE \'%").append(wrongConstructs[wrongConstructs.length -1]).append("%\')");		
+			rs = DatabaseManager.getInstance().query(sql.toString());
+			while(rs.next()){
+				report.append(rs.getInt(1)).append("\t");
+			}		
+			sql.setLength(0);
+			
+			//3.get extraneous constructs
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
+			.append(" AND function ").append("LIKE \'%").append(methodName).append("%\' ").append("And (");	
+			for(int i = 0; i < extraneousConstructs.length -1; i ++){
+				sql.append("operator LIKE \'%").append(extraneousConstructs[i]).append("%\' or ");
+			}
+			sql.append("operator LIKE \'%").append(extraneousConstructs[extraneousConstructs.length -1]).append("%\')");		
+			rs = DatabaseManager.getInstance().query(sql.toString());
+			while(rs.next()){
+				report.append(rs.getInt(1)).append("\t");
+			}		
+			sql.setLength(0);
+			
+			//4.get mutant sums
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
+			.append(" AND function ").append("LIKE \'%").append(methodName).append("%\' ");
+			rs = DatabaseManager.getInstance().query(sql.toString());
+			while(rs.next()){
+				report.append(rs.getInt(1)).append("\t");
+			}		
+			sql.setLength(0);
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println(report.toString());
+	}
+	
+	/**2009-12-29:classify mutants for a class& a method(exclude) into three categories:
+	 * missing construct, wrong constructs and extraneous constructs 
+	 * 
+	 * @param className
+	 * @param methodName
+	 */
+	public void mutantSum_ExcludeMethod(String className, String methodName){
+		String[] missingConstructs = {"AOD", "COD", "LOD", "IHD",
+				"IOD", "ISD", "IPC", "PCD", "OMD", "JTD", "JSD", "JID"};
+		
+		String[] wrongConstructs = {"AOR", "ROR", "COR", "SOR", 
+				"LOR", "ASR", "IOP", "IOR", "PMD", "PPD", "PCC",
+				"PRV", "OMR", "OAC", "EOA", "EOC", "EAM", "EMM"};
+		
+		String[] extraneousConstructs = {"AOI", "COI", "LOI", "IHI", 
+				"ISI", "PNC", "PCI", "JTI", "JSI", "JDC"};
+		
+		StringBuilder report = new StringBuilder();
+		report.append("MissingConstructs").append("\t").append("WrongConstructs").
+			append("\t").append("ExtraneousConstructs").append("\t").append("Total").append("\n");
+		
+		StringBuilder sql = new  StringBuilder();
+		
+		
+		try {
+			//1.get missing constructs
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
+			.append(" AND function ").append("NOT LIKE \'%").append(methodName).append("%\' ").append("And (");		
+			for(int i = 0; i < missingConstructs.length -1; i ++){
+				sql.append("operator LIKE \'%").append(missingConstructs[i]).append("%\' or ");
+			}
+			sql.append("operator LIKE \'%").append(missingConstructs[missingConstructs.length -1]).append("%\')");		
+			ResultSet rs = DatabaseManager.getInstance().query(sql.toString());
+			while(rs.next()){
+				report.append(rs.getInt(1)).append("\t");
+			}		
+			sql.setLength(0);
+			
+			//2.get wrong constructs
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
+			.append(" AND function ").append("NOT LIKE \'%").append(methodName).append("%\' ").append("And (");	
+			for(int i = 0; i < wrongConstructs.length -1; i ++){
+				sql.append("operator LIKE \'%").append(wrongConstructs[i]).append("%\' or ");
+			}
+			sql.append("operator LIKE \'%").append(wrongConstructs[wrongConstructs.length -1]).append("%\')");		
+			rs = DatabaseManager.getInstance().query(sql.toString());
+			while(rs.next()){
+				report.append(rs.getInt(1)).append("\t");
+			}		
+			sql.setLength(0);
+			
+			//3.get extraneous constructs
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
+			.append(" AND function ").append("NOT LIKE \'%").append(methodName).append("%\' ").append("And (");	
+			for(int i = 0; i < extraneousConstructs.length -1; i ++){
+				sql.append("operator LIKE \'%").append(extraneousConstructs[i]).append("%\' or ");
+			}
+			sql.append("operator LIKE \'%").append(extraneousConstructs[extraneousConstructs.length -1]).append("%\')");		
+			rs = DatabaseManager.getInstance().query(sql.toString());
+			while(rs.next()){
+				report.append(rs.getInt(1)).append("\t");
+			}		
+			sql.setLength(0);
+			
+			//4.get sum of these mutants;
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
+			.append(" AND function ").append("NOT LIKE \'%").append(methodName).append("%\' ");
+			rs = DatabaseManager.getInstance().query(sql.toString());
+			while(rs.next()){
+				report.append(rs.getInt(1)).append("\t");
+			}		
+			sql.setLength(0);			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println(report.toString());
 	}
 	
 	
@@ -225,12 +385,17 @@ public class MutantStatistics {
 		MutantStatistics ins = new MutantStatistics();
 		HashMap<String, HashMap<String, Integer>> classMutants = ins.getStatistics_ClassLevel(mutantDir);
 		ins.saveToFile_ClassLevel(classMutants, saveFile);
-		ins.saveToDB_ClassLevel(classMutants);
+//		ins.saveToDB_ClassLevel(classMutants);
 		
 		saveFile = mutantDir + "statistics_MethodLevel.txt";
 		HashMap<String, HashMap<String, HashMap<String, Integer>>> methodMutants =ins.getStatistic_MethodLevel(mutantDir); 
 		ins.saveToFile_MethodLevel(methodMutants, saveFile);
-		ins.saveToDB_MethodLevel(methodMutants);
+//		ins.saveToDB_MethodLevel(methodMutants);
+		
+		String className = "TestCFG2";
+		String methodName = "application"; 
+		ins.mutantSum_IncludeMethod(className, methodName);
+		ins.mutantSum_ExcludeMethod(className, methodName);
 	}
 
 }
