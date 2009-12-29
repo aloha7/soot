@@ -11,7 +11,17 @@ import edu.cs.hku.util.DatabaseManager;
 import edu.cs.hku.util.Logger;
 
 public class MutantStatistics {
-		
+	String[] missingConstructs = {"AOD", "COD", "LOD", "IHD",
+			"IOD", "ISD", "IPC", "PCD", "OMD", "JTD", "JSD", "JID"};
+	
+	String[] wrongConstructs = {"AOR", "ROR", "COR", "SOR", 
+			"LOR", "ASR", "IOP", "IOR", "PMD", "PPD", "PCC",
+			"PRV", "OMR", "OAC", "EOA", "EOC", "EAM", "EMM"};
+	
+	String[] extraneousConstructs = {"AOI", "COI", "LOI", "IHI", 
+			"ISI", "PNC", "PCI", "JTI", "JSI", "JDC"};
+	
+	
 	public HashMap<String, HashMap<String, Integer>> getStatistics_ClassLevel(String mutantDir){
 		HashMap<String, HashMap<String, Integer>> class_Mutants = 
 			new HashMap<String, HashMap<String, Integer>>();
@@ -216,21 +226,33 @@ public class MutantStatistics {
 		DatabaseManager.getInstance().update(sql);
 	}
 	
-	/**2009-12-29:classify mutants for a class&a method into three categories:
+	
+	private String generateSQLStatement(String colNum, String[] values, boolean include){
+		StringBuilder sql = new StringBuilder();
+		if(include){
+			for(int i = 0; i < values.length -1; i ++){
+				sql.append(colNum).append(" LIKE \'%").append(values[i]).append("%\' or ");
+			}
+			sql.append(colNum).append(" LIKE \'%").append(values[values.length - 1]).append("%\'");	
+		}else{
+			for(int i = 0; i < values.length -1; i ++){
+				sql.append(colNum).append(" NOT LIKE \'%").append(values[i]).append("%\' or ");
+			}
+			sql.append(colNum).append(" NOT LIKE \'%").append(values[values.length - 1]).append("%\'");
+		}
+		
+		return sql.toString();
+	}
+
+	
+	/**2009-12-29:summarize mutants for a class&a method based on three categories:
 	 * missing construct, wrong constructs and extraneous constructs 
-	 * @param className
-	 * @param methodName
+	 * 
+	 * @param classes:class list
+	 * @param methods: method list
+	 * @param includeMethod: include/exclude methods
 	 */
-	public void mutantSum_IncludeMethod(String className, String methodName){
-		String[] missingConstructs = {"AOD", "COD", "LOD", "IHD",
-				"IOD", "ISD", "IPC", "PCD", "OMD", "JTD", "JSD", "JID"};
-		
-		String[] wrongConstructs = {"AOR", "ROR", "COR", "SOR", 
-				"LOR", "ASR", "IOP", "IOR", "PMD", "PPD", "PCC",
-				"PRV", "OMR", "OAC", "EOA", "EOC", "EAM", "EMM"};
-		
-		String[] extraneousConstructs = {"AOI", "COI", "LOI", "IHI", 
-				"ISI", "PNC", "PCI", "JTI", "JSI", "JDC"};
+	public void mutateSum(String[] classes, String[] methods, boolean includeMethod){
 		
 		StringBuilder report = new StringBuilder();
 		report.append("MissingConstructs").append("\t").append("WrongConstructs").
@@ -238,15 +260,19 @@ public class MutantStatistics {
 		
 		StringBuilder sql = new  StringBuilder();
 		
-		
 		try {
 			//1.get missing constructs
-			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
-			.append(" AND function ").append("LIKE \'%").append(methodName).append("%\' ").append("And (");		
-			for(int i = 0; i < missingConstructs.length -1; i ++){
-				sql.append("operator LIKE \'%").append(missingConstructs[i]).append("%\' or ");
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE ").append("(");
+			sql.append(this.generateSQLStatement("class", classes, true));
+			sql.append(")").append(" And ").append("(");
+			if(includeMethod){
+				sql.append(this.generateSQLStatement("function", methods, true));	
+			}else{
+				sql.append(this.generateSQLStatement("function", methods, false));
 			}
-			sql.append("operator LIKE \'%").append(missingConstructs[missingConstructs.length -1]).append("%\')");		
+			sql.append(")").append(" And ").append("(");
+			sql.append(this.generateSQLStatement("operator", missingConstructs, true));
+			sql.append(")");			
 			ResultSet rs = DatabaseManager.getInstance().query(sql.toString());
 			while(rs.next()){
 				report.append(rs.getInt(1)).append("\t");
@@ -254,12 +280,17 @@ public class MutantStatistics {
 			sql.setLength(0);
 			
 			//2.get wrong constructs
-			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
-			.append(" AND function ").append("LIKE \'%").append(methodName).append("%\' ").append("And (");	
-			for(int i = 0; i < wrongConstructs.length -1; i ++){
-				sql.append("operator LIKE \'%").append(wrongConstructs[i]).append("%\' or ");
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE ").append("(");
+			sql.append(this.generateSQLStatement("class", classes, true));
+			sql.append(")").append(" And ").append("(");
+			if(includeMethod){
+				sql.append(this.generateSQLStatement("function", methods, true));	
+			}else{
+				sql.append(this.generateSQLStatement("function", methods, false));
 			}
-			sql.append("operator LIKE \'%").append(wrongConstructs[wrongConstructs.length -1]).append("%\')");		
+			sql.append(")").append(" And ").append("(");
+			sql.append(this.generateSQLStatement("operator", wrongConstructs, true));
+			sql.append(")");			
 			rs = DatabaseManager.getInstance().query(sql.toString());
 			while(rs.next()){
 				report.append(rs.getInt(1)).append("\t");
@@ -267,12 +298,17 @@ public class MutantStatistics {
 			sql.setLength(0);
 			
 			//3.get extraneous constructs
-			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
-			.append(" AND function ").append("LIKE \'%").append(methodName).append("%\' ").append("And (");	
-			for(int i = 0; i < extraneousConstructs.length -1; i ++){
-				sql.append("operator LIKE \'%").append(extraneousConstructs[i]).append("%\' or ");
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE ").append("(");
+			sql.append(this.generateSQLStatement("class", classes, true));
+			sql.append(")").append(" And ").append("(");
+			if(includeMethod){
+				sql.append(this.generateSQLStatement("function", methods, true));	
+			}else{
+				sql.append(this.generateSQLStatement("function", methods, false));
 			}
-			sql.append("operator LIKE \'%").append(extraneousConstructs[extraneousConstructs.length -1]).append("%\')");		
+			sql.append(")").append(" And ").append("(");
+			sql.append(this.generateSQLStatement("operator", extraneousConstructs, true));
+			sql.append(")");			
 			rs = DatabaseManager.getInstance().query(sql.toString());
 			while(rs.next()){
 				report.append(rs.getInt(1)).append("\t");
@@ -280,8 +316,15 @@ public class MutantStatistics {
 			sql.setLength(0);
 			
 			//4.get mutant sums
-			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
-			.append(" AND function ").append("LIKE \'%").append(methodName).append("%\' ");
+			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE ").append("(");
+			sql.append(this.generateSQLStatement("class", classes, true));
+			sql.append(")").append(" And ").append("(");
+			if(includeMethod){
+				sql.append(this.generateSQLStatement("function", methods, true));	
+			}else{
+				sql.append(this.generateSQLStatement("function", methods, false));
+			}		
+			sql.append(")");			
 			rs = DatabaseManager.getInstance().query(sql.toString());
 			while(rs.next()){
 				report.append(rs.getInt(1)).append("\t");
@@ -296,85 +339,8 @@ public class MutantStatistics {
 		System.out.println(report.toString());
 	}
 	
-	/**2009-12-29:classify mutants for a class& a method(exclude) into three categories:
-	 * missing construct, wrong constructs and extraneous constructs 
-	 * 
-	 * @param className
-	 * @param methodName
-	 */
-	public void mutantSum_ExcludeMethod(String className, String methodName){
-		String[] missingConstructs = {"AOD", "COD", "LOD", "IHD",
-				"IOD", "ISD", "IPC", "PCD", "OMD", "JTD", "JSD", "JID"};
-		
-		String[] wrongConstructs = {"AOR", "ROR", "COR", "SOR", 
-				"LOR", "ASR", "IOP", "IOR", "PMD", "PPD", "PCC",
-				"PRV", "OMR", "OAC", "EOA", "EOC", "EAM", "EMM"};
-		
-		String[] extraneousConstructs = {"AOI", "COI", "LOI", "IHI", 
-				"ISI", "PNC", "PCI", "JTI", "JSI", "JDC"};
-		
-		StringBuilder report = new StringBuilder();
-		report.append("MissingConstructs").append("\t").append("WrongConstructs").
-			append("\t").append("ExtraneousConstructs").append("\t").append("Total").append("\n");
-		
-		StringBuilder sql = new  StringBuilder();
-		
-		
-		try {
-			//1.get missing constructs
-			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
-			.append(" AND function ").append("NOT LIKE \'%").append(methodName).append("%\' ").append("And (");		
-			for(int i = 0; i < missingConstructs.length -1; i ++){
-				sql.append("operator LIKE \'%").append(missingConstructs[i]).append("%\' or ");
-			}
-			sql.append("operator LIKE \'%").append(missingConstructs[missingConstructs.length -1]).append("%\')");		
-			ResultSet rs = DatabaseManager.getInstance().query(sql.toString());
-			while(rs.next()){
-				report.append(rs.getInt(1)).append("\t");
-			}		
-			sql.setLength(0);
-			
-			//2.get wrong constructs
-			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
-			.append(" AND function ").append("NOT LIKE \'%").append(methodName).append("%\' ").append("And (");	
-			for(int i = 0; i < wrongConstructs.length -1; i ++){
-				sql.append("operator LIKE \'%").append(wrongConstructs[i]).append("%\' or ");
-			}
-			sql.append("operator LIKE \'%").append(wrongConstructs[wrongConstructs.length -1]).append("%\')");		
-			rs = DatabaseManager.getInstance().query(sql.toString());
-			while(rs.next()){
-				report.append(rs.getInt(1)).append("\t");
-			}		
-			sql.setLength(0);
-			
-			//3.get extraneous constructs
-			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
-			.append(" AND function ").append("NOT LIKE \'%").append(methodName).append("%\' ").append("And (");	
-			for(int i = 0; i < extraneousConstructs.length -1; i ++){
-				sql.append("operator LIKE \'%").append(extraneousConstructs[i]).append("%\' or ");
-			}
-			sql.append("operator LIKE \'%").append(extraneousConstructs[extraneousConstructs.length -1]).append("%\')");		
-			rs = DatabaseManager.getInstance().query(sql.toString());
-			while(rs.next()){
-				report.append(rs.getInt(1)).append("\t");
-			}		
-			sql.setLength(0);
-			
-			//4.get sum of these mutants;
-			sql.append("SELECT SUM( mutantNumber ) FROM mutant WHERE class LIKE \'%").append(className).append("%\'")
-			.append(" AND function ").append("NOT LIKE \'%").append(methodName).append("%\' ");
-			rs = DatabaseManager.getInstance().query(sql.toString());
-			while(rs.next()){
-				report.append(rs.getInt(1)).append("\t");
-			}		
-			sql.setLength(0);			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		System.out.println(report.toString());
-	}
+	
+	 
 	
 	
 	public static void main(String[] args) {
@@ -392,10 +358,13 @@ public class MutantStatistics {
 		ins.saveToFile_MethodLevel(methodMutants, saveFile);
 //		ins.saveToDB_MethodLevel(methodMutants);
 		
-		String className = "TestCFG2";
-		String methodName = "application"; 
-		ins.mutantSum_IncludeMethod(className, methodName);
-		ins.mutantSum_ExcludeMethod(className, methodName);
+		String[] classes = {"TestCFG2"};
+		String[] methods = {"application"};
+		boolean includeMethod = true; //count mutants of the application
+		ins.mutateSum(classes, methods, includeMethod);
+		includeMethod = false; //count mutants of the middleware
+		ins.mutateSum(classes, methods, includeMethod);
+		
 	}
 
 }
