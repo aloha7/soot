@@ -1,11 +1,13 @@
 package edu.cs.hku.mutantGeneration;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-
-
 
 import edu.cs.hku.util.DatabaseManager;
 import edu.cs.hku.util.Logger;
@@ -225,7 +227,167 @@ public class MutantStatistics {
 		String sql = sb.substring(0, sb.lastIndexOf(","));
 		DatabaseManager.getInstance().update(sql);
 	}
+
+	/**2009-12-30: assemble distributed mutant log files (operator:lineNumber:function:description)
+	 * into a complete one
+	 * 
+	 * @param mutantDir
+	 * @param saveFile
+	 */
+	public void saveToFile_mutantLog(String mutantDir, String saveFile){
+		File resultDir = new File(mutantDir);
+		System.out.println(resultDir.getName());
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("class").append("\t").append("operator").append("\t").
+			append("lineNumber").append("\t").append("function").append("\t").append("description").append("\n");
+		
+		if(resultDir.exists()){
+			File[] classesDir = resultDir.listFiles();
+			for(File classDir: classesDir){
+				if(classDir.isDirectory()){
+					System.out.println(classDir.getName());
+					String clazz = classDir.getName();
+					
+					File methodMutantLog = new File(classDir.getAbsolutePath() 
+							+ File.separator + "traditional_mutants" + File.separator + 
+							"mutation_log");
+					if(methodMutantLog.isFile()){
+						try {
+							BufferedReader br = new BufferedReader(new FileReader(methodMutantLog.getAbsolutePath()));
+							String str = null;
+							while((str = br.readLine()) != null){
+								String[] temp = str.split(":");
+								sb.append(clazz).append("\t");
+								for(String tmp: temp){
+									sb.append(tmp).append("\t");	
+								}
+								sb.append("\n");
+							}
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+					File classMutantLog = new File(classDir.getAbsolutePath() 
+							+ File.separator + "class_mutants" + File.separator + 
+							"mutation_log");
+					if(classMutantLog.isFile()){
+						try {
+							BufferedReader br = new BufferedReader(new FileReader(classMutantLog.getAbsolutePath()));
+							String str = null;
+							while((str = br.readLine()) != null){
+								String[] temp = str.split(":");
+								
+								sb.append(clazz).append("\t");
+								sb.append(temp[0]).append("\t");//operator
+								sb.append(temp[1]).append("\t");//lineNumber
+								sb.append("global").append("\t");//function								
+								sb.append(temp[2]).append("\t");//description								
+								sb.append("\n");
+							}
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+			
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		}else{
+			System.out.println("The mutant directory does not exist at all!");
+		}
+	}
 	
+	/**2009-12-30: save the mutant logs (operator:lineNumber:function:description)
+	 * into the database
+	 * @param mutantDir
+	 */
+	public void saveToDB_mutantLog(String mutantDir){
+		File resultDir = new File(mutantDir);
+		System.out.println(resultDir.getName());
+		
+		StringBuilder sql = new StringBuilder();
+//		sb.append("class").append("\t").append("operator").append("\t").
+//		append("lineNumber").append("\t").append("function").append("\t").append("description").append("\n");
+		sql.append("INSERT INTO mutantdetail (class, operator, lineNumber, function, description) VALUES ");
+		
+		if(resultDir.exists()){
+			File[] classesDir = resultDir.listFiles();
+			for(File classDir: classesDir){
+				if(classDir.isDirectory()){
+					System.out.println(classDir.getName());
+					String clazz = classDir.getName();
+					
+					File methodMutantLog = new File(classDir.getAbsolutePath() 
+							+ File.separator + "traditional_mutants" + File.separator + 
+							"mutation_log");
+					if(methodMutantLog.isFile()){
+						try {
+							BufferedReader br = new BufferedReader(new FileReader(methodMutantLog.getAbsolutePath()));
+							String str = null;
+							while((str = br.readLine()) != null){
+								String[] temp = str.split(":");
+//								LOI_632:614:void_resolve():i => ~i
+								sql.append("(\'").append(clazz).append("\'").append(",");
+								sql.append("\'").append(temp[0]).append("\'").append(",");
+								sql.append("\'").append(temp[1]).append("\'").append(",");
+								sql.append("\'").append(temp[2]).append("\'").append(",");		
+								sql.append("\'").append(temp[3]).append("\'").append("),");								
+							}
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+					File classMutantLog = new File(classDir.getAbsolutePath() 
+							+ File.separator + "class_mutants" + File.separator + 
+							"mutation_log");
+					if(classMutantLog.isFile()){
+						try {
+							BufferedReader br = new BufferedReader(new FileReader(classMutantLog.getAbsolutePath()));
+							String str = null;
+							while((str = br.readLine()) != null){
+								String[] temp = str.split(":");
+								
+								sql.append("(\'").append(clazz).append("\'").append(",");
+								sql.append("\'").append(temp[0]).append("\'").append(",");
+								sql.append("\'").append(temp[1]).append("\'").append(",");
+								sql.append("\'").append("global").append("\'").append(",");										
+								sql.append("\'").append(temp[2]).append("\'").append("),");															
+							}
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+			
+			String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+			DatabaseManager.getInstance().update(sqlStmt);
+			
+		}else{
+			System.out.println("The mutant directory does not exist at all!");
+		}
+	}
 	
 	private String generateSQLStatement(String colNum, String[] values, boolean include){
 		StringBuilder sql = new StringBuilder();
@@ -347,17 +509,20 @@ public class MutantStatistics {
 //		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\TestingFramework\\result\\";
 		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\ContextDiversity\\result\\";		
 
+		//1. save class-level mutants into the file/database
 		String saveFile = mutantDir + "statistics_ClassLevel.txt";
 		MutantStatistics ins = new MutantStatistics();
 		HashMap<String, HashMap<String, Integer>> classMutants = ins.getStatistics_ClassLevel(mutantDir);
 		ins.saveToFile_ClassLevel(classMutants, saveFile);
 //		ins.saveToDB_ClassLevel(classMutants);
-		
+
+		//2. save method-level mutants into the file/database
 		saveFile = mutantDir + "statistics_MethodLevel.txt";
 		HashMap<String, HashMap<String, HashMap<String, Integer>>> methodMutants =ins.getStatistic_MethodLevel(mutantDir); 
 		ins.saveToFile_MethodLevel(methodMutants, saveFile);
 //		ins.saveToDB_MethodLevel(methodMutants);
 		
+		//3. get the summary of method-level/class-level mutants into application, middleware
 		String[] classes = {"TestCFG2"};
 		String[] methods = {"application"};
 		boolean includeMethod = true; //count mutants of the application
@@ -365,6 +530,10 @@ public class MutantStatistics {
 		includeMethod = false; //count mutants of the middleware
 		ins.mutateSum(classes, methods, includeMethod);
 		
+		//4. assemble distributed mutant log into a complete file/database
+		saveFile = mutantDir + "mutantLog.txt";
+		ins.saveToFile_mutantLog(mutantDir, saveFile);
+		ins.saveToDB_mutantLog(mutantDir);
 	}
 
 }
