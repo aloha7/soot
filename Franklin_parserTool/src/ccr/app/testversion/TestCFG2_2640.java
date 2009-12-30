@@ -197,7 +197,7 @@ public class TestCFG2_2640 extends ccr.app.Application
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;
             timestamp = timestamp + t;
-            lastPos = ++cPos;
+            lastPos = --cPos;
             candidate = generateCtx();
             resolve();
             location = toCoordinates( candidate );

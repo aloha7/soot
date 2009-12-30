@@ -107,58 +107,6 @@ public class TestCFG2_4394 extends ccr.app.Application
             counter = counter + 1;
         }
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
-        while (cPos == -1 && cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
-            cPos = rand.nextInt( CCRScenarios.POS_NUM );
-        }
-        stay = rand.nextInt( MAX_STAY ) + 1;
-        c = c + stay;
-        bPos = cPos;
-        stay = stay - 1;
-        actLoc = scenarios.getActLoc( sid, cPos );
-        estLoc = scenarios.getEstLoc( sid, cPos );
-        curEstX = estLoc.x;
-        curEstY = estLoc.y;
-        curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-        curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-        lastLoc = scenarios.getActLoc( sid, lastPos );
-        dist = Coordinates.calDist( lastLoc, actLoc );
-        t = (long) (dist / VELOCITY * 1000);
-        timestamp = timestamp + t;
-        lastPos = cPos;
-        candidate = generateCtx();
-        resolve();
-        location = toCoordinates( candidate );
-        displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
-        moved = moved + toBoolean( displace );
-        error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
-        lastLocation = location;
-        counter = counter + 1;
-        while (stay > 0) {
-            stay = stay - 1;
-            actLoc = scenarios.getActLoc( sid, cPos );
-            estLoc = scenarios.getEstLoc( sid, cPos );
-            curEstX = estLoc.x;
-            curEstY = estLoc.y;
-            curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-            curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-            lastLoc = scenarios.getActLoc( sid, lastPos );
-            dist = Coordinates.calDist( lastLoc, actLoc );
-            t = STAY_TIME;
-            timestamp = timestamp + t;
-            lastPos = cPos;
-            candidate = generateCtx();
-            resolve();
-            location = toCoordinates( candidate );
-            displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
-            moved = moved + toBoolean( displace );
-            error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
-            if (error <= ERR) {
-                reliable = reliable + 1;
-            }
-            lastLocation = location;
-            counter = counter + 1;
-        }
-        cPos = rand.nextInt( CCRScenarios.POS_NUM );
         while (cPos == -1 || cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
             cPos = rand.nextInt( CCRScenarios.POS_NUM );
         }
@@ -212,6 +160,58 @@ public class TestCFG2_4394 extends ccr.app.Application
         }
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
         while (cPos == -1 || cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
+            cPos = rand.nextInt( CCRScenarios.POS_NUM );
+        }
+        stay = rand.nextInt( MAX_STAY ) + 1;
+        c = c + stay;
+        bPos = cPos;
+        stay = stay - 1;
+        actLoc = scenarios.getActLoc( sid, cPos );
+        estLoc = scenarios.getEstLoc( sid, cPos );
+        curEstX = estLoc.x;
+        curEstY = estLoc.y;
+        curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+        curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+        lastLoc = scenarios.getActLoc( sid, lastPos );
+        dist = Coordinates.calDist( lastLoc, actLoc );
+        t = (long) (dist / VELOCITY * 1000);
+        timestamp = timestamp + t;
+        lastPos = cPos;
+        candidate = generateCtx();
+        resolve();
+        location = toCoordinates( candidate );
+        displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
+        moved = moved + toBoolean( displace );
+        error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
+        lastLocation = location;
+        counter = counter + 1;
+        while (stay > 0) {
+            stay = stay - 1;
+            actLoc = scenarios.getActLoc( sid, cPos );
+            estLoc = scenarios.getEstLoc( sid, cPos );
+            curEstX = estLoc.x;
+            curEstY = estLoc.y;
+            curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+            curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+            lastLoc = scenarios.getActLoc( sid, lastPos );
+            dist = Coordinates.calDist( lastLoc, actLoc );
+            t = STAY_TIME;
+            timestamp = timestamp + t;
+            lastPos = cPos;
+            candidate = generateCtx();
+            resolve();
+            location = toCoordinates( candidate );
+            displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
+            moved = moved + toBoolean( displace );
+            error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
+            if (error <= ERR) {
+                reliable = reliable + 1;
+            }
+            lastLocation = location;
+            counter = counter + 1;
+        }
+        cPos = rand.nextInt( CCRScenarios.POS_NUM );
+        while (cPos == -1 ^ cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
             cPos = rand.nextInt( CCRScenarios.POS_NUM );
         }
         stay = rand.nextInt( MAX_STAY ) + 1;

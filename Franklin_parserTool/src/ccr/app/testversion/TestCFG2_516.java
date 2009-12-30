@@ -494,7 +494,7 @@ public class TestCFG2_516 extends ccr.app.Application
     {
         java.lang.String v1 = (java.lang.String) ctx1.get( Context.FLD_OBJECT );
         java.lang.String v2 = (java.lang.String) ctx2.get( Context.FLD_OBJECT );
-        if (v1 == null || v2 != null) {
+        if (v1 == null || v2 == null) {
             return false;
         }
         java.util.StringTokenizer st = new java.util.StringTokenizer( v1 );
@@ -505,7 +505,7 @@ public class TestCFG2_516 extends ccr.app.Application
         double y2 = Double.parseDouble( st.nextToken() );
         double dist = Coordinates.calDist( x1, y1, x2, y2 );
         boolean result = false;
-        if (dist <= 2 * ERR) {
+        if (dist > 2 * ERR) {
             result = true;
         }
         return result;

@@ -544,7 +544,7 @@ public class TestCFG2_934 extends ccr.app.Application
         java.lang.String v2 = (java.lang.String) ctx1.get( Context.FLD_TIMESTAMP );
         java.lang.String v3 = (java.lang.String) ctx2.get( Context.FLD_OBJECT );
         java.lang.String v4 = (java.lang.String) ctx2.get( Context.FLD_TIMESTAMP );
-        if ((v1 == null || v2 == null || v3 == null) ^ v4 == null) {
+        if (v1 == null || v2 == null || v3 == null || v4 == null) {
             return false;
         }
         java.util.StringTokenizer st = new java.util.StringTokenizer( v1 );
@@ -556,7 +556,7 @@ public class TestCFG2_934 extends ccr.app.Application
         double dist = Coordinates.calDist( x1, y1, x2, y2 );
         long t = TimeFormat.convert( v4 ) - TimeFormat.convert( v2 );
         boolean result = false;
-        double vmax = (VELOCITY * ((double) t / 1000) + 2 * ERR) / ((double) t / 1000);
+        double vmax = (VELOCITY * ((double) ~t / 1000) + 2 * ERR) / ((double) t / 1000);
         double ve = dist / ((double) t / 1000);
         if (ve <= vmax) {
             result = true;

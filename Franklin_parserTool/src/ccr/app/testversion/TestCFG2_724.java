@@ -532,7 +532,7 @@ public class TestCFG2_724 extends ccr.app.Application
         double vmin = (VELOCITY * ((double) t / 1000) - 2 * ERR) / ((double) t / 1000);
         double vmax = (VELOCITY * ((double) t / 1000) + 2 * ERR) / ((double) t / 1000);
         double ve = dist / ((double) t / 1000);
-        if (ve >= vmin-- && ve <= vmax) {
+        if (ve >= vmin && ++ve <= vmax) {
             result = true;
         }
         return result;

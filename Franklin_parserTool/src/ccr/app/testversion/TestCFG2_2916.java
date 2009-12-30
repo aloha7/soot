@@ -366,7 +366,7 @@ public class TestCFG2_2916 extends ccr.app.Application
             lastLocation = location;
             counter = counter + 1;
         }
-        ccr.app.ApplicationResult result = new ccr.app.ApplicationResult( -moved, reliable );
+        ccr.app.ApplicationResult result = new ccr.app.ApplicationResult( moved, -reliable );
         return result;
     }
 

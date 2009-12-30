@@ -41,7 +41,7 @@ public class TestCFG2_4413 extends ccr.app.Application
         int seed = Integer.parseInt( testcase );
         queue = new java.util.Vector();
         ccr.app.Coordinates location = null;
-        java.util.Random rand = new java.util.Random( seed );
+        java.util.Random rand = new java.util.Random( ~seed );
         ccr.app.CCRScenarios scenarios = new ccr.app.CCRScenarios( seed );
         long t;
         ccr.app.Coordinates actLoc;
@@ -211,7 +211,7 @@ public class TestCFG2_4413 extends ccr.app.Application
             counter = counter + 1;
         }
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
-        while (cPos == -1 && cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
+        while (cPos == -1 || cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
             cPos = rand.nextInt( CCRScenarios.POS_NUM );
         }
         stay = rand.nextInt( MAX_STAY ) + 1;

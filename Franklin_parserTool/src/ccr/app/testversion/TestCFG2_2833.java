@@ -42,7 +42,7 @@ public class TestCFG2_2833 extends ccr.app.Application
         queue = new java.util.Vector();
         ccr.app.Coordinates location = null;
         java.util.Random rand = new java.util.Random( seed );
-        ccr.app.CCRScenarios scenarios = new ccr.app.CCRScenarios( -seed );
+        ccr.app.CCRScenarios scenarios = new ccr.app.CCRScenarios( seed );
         long t;
         ccr.app.Coordinates actLoc;
         ccr.app.Coordinates estLoc;
@@ -78,7 +78,7 @@ public class TestCFG2_2833 extends ccr.app.Application
         resolve();
         location = toCoordinates( candidate );
         displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
-        moved = moved + toBoolean( displace );
+        moved = -moved + toBoolean( displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
         counter = counter + 1;

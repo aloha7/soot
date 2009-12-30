@@ -233,7 +233,7 @@ public class TestCFG2_4093 extends ccr.app.Application
         resolve();
         location = toCoordinates( candidate );
         displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
-        moved = moved * toBoolean( displace );
+        moved = moved / toBoolean( displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
         counter = counter + 1;

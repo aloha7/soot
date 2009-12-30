@@ -629,12 +629,12 @@ public class TestCFG2_5004 extends ccr.app.Application
                 consistent = false;
                 break;
             }
-            if (!(filterLocSkip1Mix( ctx, candidate ) && !funcLocMixVeloOk( ctx, candidate ))) {
+            if (filterLocSkip1Mix( ctx, candidate ) && !funcLocMixVeloOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }
         }
-        if (consistent) {
+        if (!consistent) {
             queue.add( 0, candidate );
         } else {
             candidate = (ccr.app.Context) queue.get( 0 );

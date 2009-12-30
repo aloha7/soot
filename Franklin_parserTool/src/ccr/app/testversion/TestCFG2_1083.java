@@ -227,7 +227,7 @@ public class TestCFG2_1083 extends ccr.app.Application
         lastLoc = scenarios.getActLoc( sid, lastPos );
         dist = Coordinates.calDist( lastLoc, actLoc );
         t = (long) (dist / VELOCITY * 1000);
-        timestamp = timestamp + --t;
+        timestamp = timestamp + t++;
         lastPos = cPos;
         candidate = generateCtx();
         resolve();

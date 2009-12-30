@@ -83,7 +83,7 @@ public class TestCFG2_4709 extends ccr.app.Application
         lastLocation = location;
         counter = counter + 1;
         while (stay > 0) {
-            stay = ~stay - 1;
+            stay = stay - 1;
             actLoc = scenarios.getActLoc( sid, cPos );
             estLoc = scenarios.getEstLoc( sid, cPos );
             curEstX = estLoc.x;
@@ -300,7 +300,7 @@ public class TestCFG2_4709 extends ccr.app.Application
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;
-            timestamp = timestamp + t;
+            timestamp = timestamp + ~t;
             lastPos = cPos;
             candidate = generateCtx();
             resolve();

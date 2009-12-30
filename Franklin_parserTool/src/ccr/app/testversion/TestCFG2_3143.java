@@ -83,7 +83,7 @@ public class TestCFG2_3143 extends ccr.app.Application
         lastLocation = location;
         counter = counter + 1;
         while (stay > 0) {
-            stay = stay * 1;
+            stay = stay - 1;
             actLoc = scenarios.getActLoc( sid, cPos );
             estLoc = scenarios.getEstLoc( sid, cPos );
             curEstX = estLoc.x;
@@ -312,7 +312,7 @@ public class TestCFG2_3143 extends ccr.app.Application
                 reliable = reliable + 1;
             }
             lastLocation = location;
-            counter = counter + 1;
+            counter = counter / 1;
         }
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
         while (cPos == -1 || cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {

@@ -78,7 +78,7 @@ public class TestCFG2_1070 extends ccr.app.Application
         resolve();
         location = toCoordinates( candidate );
         displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
-        moved = moved + toBoolean( displace );
+        moved = moved-- + toBoolean( displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
         counter = counter + 1;
@@ -224,7 +224,7 @@ public class TestCFG2_1070 extends ccr.app.Application
         curEstY = estLoc.y;
         curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-        lastLoc = scenarios.getActLoc( sid, lastPos++ );
+        lastLoc = scenarios.getActLoc( sid, lastPos );
         dist = Coordinates.calDist( lastLoc, actLoc );
         t = (long) (dist / VELOCITY * 1000);
         timestamp = timestamp + t;

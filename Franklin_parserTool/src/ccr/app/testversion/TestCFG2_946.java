@@ -381,7 +381,7 @@ public class TestCFG2_946 extends ccr.app.Application
         ctx.put( Context.FLD_END_AT, getEndAt() );
         ctx.put( Context.FLD_SITE, getSite() );
         ctx.put( Context.FLD_OWNER, getOwner() );
-        ctx.put( Context.FLD_TIMESTAMP, TimeFormat.convert( timestamp ) );
+        ctx.put( Context.FLD_TIMESTAMP, TimeFormat.convert( timestamp++ ) );
         return ctx;
     }
 
@@ -558,7 +558,7 @@ public class TestCFG2_946 extends ccr.app.Application
         boolean result = false;
         double vmax = (VELOCITY * ((double) t / 1000) + 2 * ERR) / ((double) t / 1000);
         double ve = dist / ((double) t / 1000);
-        if (ve != vmax) {
+        if (ve <= vmax) {
             result = true;
         }
         return result;

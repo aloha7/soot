@@ -625,11 +625,11 @@ public class TestCFG2_4999 extends ccr.app.Application
                 consistent = false;
                 break;
             }
-            if (filterLocSkip1Walk( ctx, candidate ) && funcLocWalkSkipVeloOk( ctx, candidate )) {
+            if (filterLocSkip1Walk( ctx, candidate ) && !funcLocWalkSkipVeloOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }
-            if (filterLocSkip1Mix( ctx, candidate ) && !funcLocMixVeloOk( ctx, candidate )) {
+            if (filterLocSkip1Mix( ctx, candidate ) && funcLocMixVeloOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }

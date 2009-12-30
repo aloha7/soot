@@ -73,7 +73,7 @@ public class TestCFG2_2799 extends ccr.app.Application
         curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         t = 0;
         timestamp = timestamp + t;
-        lastPos = cPos;
+        lastPos = -cPos;
         candidate = generateCtx();
         resolve();
         location = toCoordinates( candidate );
@@ -244,7 +244,7 @@ public class TestCFG2_2799 extends ccr.app.Application
             curEstX = estLoc.x;
             curEstY = estLoc.y;
             curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-            curEstY = -curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+            curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;

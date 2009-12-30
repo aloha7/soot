@@ -402,7 +402,7 @@ public class TestCFG2_4973 extends ccr.app.Application
 
     private java.lang.String getObject()
     {
-        return "" + ++curEstX + " " + curEstY;
+        return "" + --curEstX + " " + curEstY;
     }
 
     private java.lang.String getStartFrom()

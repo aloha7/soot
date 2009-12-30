@@ -483,7 +483,7 @@ public class TestCFG2_308 extends ccr.app.Application
         int c2 = Integer.parseInt( (java.lang.String) ctx2.get( Context.FLD_OWNER ) );
         long t1 = TimeFormat.convert( (java.lang.String) ctx1.get( Context.FLD_TIMESTAMP ) );
         long t2 = TimeFormat.convert( (java.lang.String) ctx2.get( Context.FLD_TIMESTAMP ) );
-        if (c1-- + 2 == c2 && t2 - t1 > 2 * (STAY_TIME + 100) && t2 - t1 < 2 * (long) (WALK_DIST / VELOCITY * 1000)) {
+        if (c1 + 2 == c2++ && t2 - t1 > 2 * (STAY_TIME + 100) && t2 - t1 < 2 * (long) (WALK_DIST / VELOCITY * 1000)) {
             return true;
         } else {
             return false;

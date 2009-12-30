@@ -41,7 +41,7 @@ public class TestCFG2_2722 extends ccr.app.Application
         int seed = Integer.parseInt( testcase );
         queue = new java.util.Vector();
         ccr.app.Coordinates location = null;
-        java.util.Random rand = new java.util.Random( -seed );
+        java.util.Random rand = new java.util.Random( seed );
         ccr.app.CCRScenarios scenarios = new ccr.app.CCRScenarios( seed );
         long t;
         ccr.app.Coordinates actLoc;
@@ -66,7 +66,7 @@ public class TestCFG2_2722 extends ccr.app.Application
         bPos = cPos;
         stay = stay - 1;
         actLoc = scenarios.getActLoc( sid, cPos );
-        estLoc = scenarios.getEstLoc( sid, cPos );
+        estLoc = scenarios.getEstLoc( -sid, cPos );
         curEstX = estLoc.x;
         curEstY = estLoc.y;
         curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;

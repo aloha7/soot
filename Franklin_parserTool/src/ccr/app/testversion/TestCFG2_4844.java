@@ -107,7 +107,7 @@ public class TestCFG2_4844 extends ccr.app.Application
             counter = counter + 1;
         }
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
-        while (~cPos == -1 || cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
+        while (cPos == -1 || ~cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
             cPos = rand.nextInt( CCRScenarios.POS_NUM );
         }
         stay = rand.nextInt( MAX_STAY ) + 1;

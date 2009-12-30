@@ -503,7 +503,7 @@ public class TestCFG2_501 extends ccr.app.Application
         st = new java.util.StringTokenizer( v2 );
         double x2 = Double.parseDouble( st.nextToken() );
         double y2 = Double.parseDouble( st.nextToken() );
-        double dist = Coordinates.calDist( x1, -y1, x2, y2 );
+        double dist = Coordinates.calDist( x1, y1, -x2, y2 );
         boolean result = false;
         if (dist <= 2 * ERR) {
             result = true;

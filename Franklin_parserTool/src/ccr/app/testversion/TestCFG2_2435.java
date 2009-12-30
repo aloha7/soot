@@ -72,7 +72,7 @@ public class TestCFG2_2435 extends ccr.app.Application
         curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         t = 0;
-        timestamp = timestamp + --t;
+        timestamp = timestamp + t;
         lastPos = cPos;
         candidate = generateCtx();
         resolve();
@@ -160,7 +160,7 @@ public class TestCFG2_2435 extends ccr.app.Application
         }
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
         while (cPos == -1 || cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
-            cPos = rand.nextInt( CCRScenarios.POS_NUM );
+            cPos = rand.nextInt( CCRScenarios.POS_NUM-- );
         }
         stay = rand.nextInt( MAX_STAY ) + 1;
         c = c + stay;

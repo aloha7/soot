@@ -69,7 +69,7 @@ public class TestCFG2_3502 extends ccr.app.Application
         estLoc = scenarios.getEstLoc( sid, cPos );
         curEstX = estLoc.x;
         curEstY = estLoc.y;
-        curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+        curEstX = curEstX + (double) 2 * rand.nextDouble() - (double) 1 + NOISE;
         curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         t = 0;
         timestamp = timestamp + t;
@@ -113,7 +113,7 @@ public class TestCFG2_3502 extends ccr.app.Application
         stay = rand.nextInt( MAX_STAY ) + 1;
         c = c + stay;
         bPos = cPos;
-        stay = stay * 1;
+        stay = stay - 1;
         actLoc = scenarios.getActLoc( sid, cPos );
         estLoc = scenarios.getEstLoc( sid, cPos );
         curEstX = estLoc.x;

@@ -63,7 +63,7 @@ public class TestCFG2_1979 extends ccr.app.Application
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
         stay = rand.nextInt( MAX_STAY ) + 1;
         c = c + stay;
-        bPos = ++cPos;
+        bPos = cPos;
         stay = stay - 1;
         actLoc = scenarios.getActLoc( sid, cPos );
         estLoc = scenarios.getEstLoc( sid, cPos );
@@ -93,7 +93,7 @@ public class TestCFG2_1979 extends ccr.app.Application
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;
-            timestamp = timestamp + t;
+            timestamp = --timestamp + t;
             candidate = generateCtx();
             resolve();
             location = toCoordinates( candidate );

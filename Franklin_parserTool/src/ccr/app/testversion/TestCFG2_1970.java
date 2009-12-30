@@ -364,7 +364,7 @@ public class TestCFG2_1970 extends ccr.app.Application
                 reliable = reliable + 1;
             }
             lastLocation = location;
-            counter = ++counter + 1;
+            counter = --counter + 1;
         }
         ccr.app.ApplicationResult result = new ccr.app.ApplicationResult( moved, reliable );
         return result;

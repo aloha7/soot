@@ -85,7 +85,7 @@ public class TestCFG2_2917 extends ccr.app.Application
         while (stay > 0) {
             stay = stay - 1;
             actLoc = scenarios.getActLoc( sid, cPos );
-            estLoc = scenarios.getEstLoc( sid, cPos );
+            estLoc = scenarios.getEstLoc( sid, -cPos );
             curEstX = estLoc.x;
             curEstY = estLoc.y;
             curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
@@ -366,7 +366,7 @@ public class TestCFG2_2917 extends ccr.app.Application
             lastLocation = location;
             counter = counter + 1;
         }
-        ccr.app.ApplicationResult result = new ccr.app.ApplicationResult( moved, -reliable );
+        ccr.app.ApplicationResult result = new ccr.app.ApplicationResult( moved, reliable );
         return result;
     }
 

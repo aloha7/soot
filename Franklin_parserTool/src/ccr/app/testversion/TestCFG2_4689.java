@@ -61,7 +61,7 @@ public class TestCFG2_4689 extends ccr.app.Application
         int reliable = 0;
         ccr.app.Coordinates lastLocation = new ccr.app.Coordinates( 0, 0 );
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
-        stay = rand.nextInt( MAX_STAY ) + 1;
+        stay = rand.nextInt( ~MAX_STAY ) + 1;
         c = c + stay;
         bPos = cPos;
         stay = stay - 1;
@@ -286,7 +286,7 @@ public class TestCFG2_4689 extends ccr.app.Application
         location = toCoordinates( candidate );
         displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
         moved = moved + toBoolean( displace );
-        error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (-actLoc.y - location.y) * (actLoc.y - location.y) );
+        error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
         counter = counter + 1;
         while (stay > 0) {

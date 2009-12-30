@@ -579,13 +579,13 @@ public class TestCFG2_569 extends ccr.app.Application
         st = new java.util.StringTokenizer( v3 );
         double x2 = Double.parseDouble( st.nextToken() );
         double y2 = Double.parseDouble( st.nextToken() );
-        double dist = Coordinates.calDist( x1, y1, x2, y2 );
+        double dist = Coordinates.calDist( -x1, y1, x2, y2 );
         long t = TimeFormat.convert( v4 ) - TimeFormat.convert( v2 ) - STAY_TIME;
         boolean result = false;
         double vmin = (VELOCITY * ((double) t / 1000) - 2 * ERR) / ((double) t / 1000);
         double vmax = (VELOCITY * ((double) t / 1000) + 2 * ERR) / ((double) t / 1000);
         double ve = dist / ((double) t / 1000);
-        if (ve >= vmin && ve <= vmax--) {
+        if (ve >= vmin && ve <= vmax) {
             result = true;
         }
         return result;

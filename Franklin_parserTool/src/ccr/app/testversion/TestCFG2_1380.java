@@ -271,7 +271,7 @@ public class TestCFG2_1380 extends ccr.app.Application
         bPos = cPos;
         stay = stay - 1;
         actLoc = scenarios.getActLoc( sid, cPos );
-        estLoc = scenarios.getEstLoc( sid, --cPos );
+        estLoc = scenarios.getEstLoc( sid, cPos++ );
         curEstX = estLoc.x;
         curEstY = estLoc.y;
         curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;

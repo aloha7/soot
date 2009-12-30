@@ -597,7 +597,7 @@ public class TestCFG2_961 extends ccr.app.Application
         if (d != (double) 0) {
             result = 1;
         }
-        return result++;
+        return result--;
     }
 
     private ccr.app.Coordinates toCoordinates( ccr.app.Context ctx )

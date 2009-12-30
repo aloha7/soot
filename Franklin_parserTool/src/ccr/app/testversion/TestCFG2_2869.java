@@ -319,8 +319,8 @@ public class TestCFG2_2869 extends ccr.app.Application
             cPos = rand.nextInt( CCRScenarios.POS_NUM );
         }
         stay = rand.nextInt( MAX_STAY ) + 1;
-        c = -c + stay;
-        bPos = cPos;
+        c = c + stay;
+        bPos = -cPos;
         stay = stay - 1;
         actLoc = scenarios.getActLoc( sid, cPos );
         estLoc = scenarios.getEstLoc( sid, cPos );

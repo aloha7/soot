@@ -88,7 +88,7 @@ public class TestCFG2_3187 extends ccr.app.Application
             estLoc = scenarios.getEstLoc( sid, cPos );
             curEstX = estLoc.x;
             curEstY = estLoc.y;
-            curEstX = curEstX + ((double) 2 / rand.nextDouble() - (double) 1) * NOISE;
+            curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
             curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
@@ -327,7 +327,7 @@ public class TestCFG2_3187 extends ccr.app.Application
         curEstX = estLoc.x;
         curEstY = estLoc.y;
         curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-        curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+        curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) % NOISE;
         lastLoc = scenarios.getActLoc( sid, lastPos );
         dist = Coordinates.calDist( lastLoc, actLoc );
         t = (long) (dist / VELOCITY * 1000);

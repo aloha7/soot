@@ -89,7 +89,7 @@ public class TestCFG2_3398 extends ccr.app.Application
             curEstX = estLoc.x;
             curEstY = estLoc.y;
             curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-            curEstY = curEstY + ((double) 2 - rand.nextDouble() - (double) 1) * NOISE;
+            curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;
@@ -364,7 +364,7 @@ public class TestCFG2_3398 extends ccr.app.Application
                 reliable = reliable + 1;
             }
             lastLocation = location;
-            counter = counter + 1;
+            counter = counter - 1;
         }
         ccr.app.ApplicationResult result = new ccr.app.ApplicationResult( moved, reliable );
         return result;

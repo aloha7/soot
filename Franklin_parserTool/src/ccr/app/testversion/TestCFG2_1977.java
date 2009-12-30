@@ -93,7 +93,7 @@ public class TestCFG2_1977 extends ccr.app.Application
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;
-            timestamp = timestamp + t;
+            timestamp = ++timestamp + t;
             candidate = generateCtx();
             resolve();
             location = toCoordinates( candidate );
@@ -366,7 +366,7 @@ public class TestCFG2_1977 extends ccr.app.Application
             lastLocation = location;
             counter = counter + 1;
         }
-        ccr.app.ApplicationResult result = new ccr.app.ApplicationResult( moved, reliable-- );
+        ccr.app.ApplicationResult result = new ccr.app.ApplicationResult( moved, reliable );
         return result;
     }
 

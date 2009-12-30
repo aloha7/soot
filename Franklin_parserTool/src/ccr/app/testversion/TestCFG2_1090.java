@@ -228,11 +228,11 @@ public class TestCFG2_1090 extends ccr.app.Application
         dist = Coordinates.calDist( lastLoc, actLoc );
         t = (long) (dist / VELOCITY * 1000);
         timestamp = timestamp + t;
-        lastPos = cPos--;
+        lastPos = cPos;
         candidate = generateCtx();
         resolve();
         location = toCoordinates( candidate );
-        displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
+        displace = Math.sqrt( (++location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
         moved = moved + toBoolean( displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;

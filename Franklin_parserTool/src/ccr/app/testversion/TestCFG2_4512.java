@@ -73,7 +73,7 @@ public class TestCFG2_4512 extends ccr.app.Application
         curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         t = 0;
         timestamp = timestamp + t;
-        lastPos = ~cPos;
+        lastPos = cPos;
         candidate = generateCtx();
         resolve();
         location = toCoordinates( candidate );
@@ -180,7 +180,7 @@ public class TestCFG2_4512 extends ccr.app.Application
         candidate = generateCtx();
         resolve();
         location = toCoordinates( candidate );
-        displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
+        displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - -lastLocation.y) );
         moved = moved + toBoolean( displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;

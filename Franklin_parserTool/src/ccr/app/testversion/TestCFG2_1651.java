@@ -85,7 +85,7 @@ public class TestCFG2_1651 extends ccr.app.Application
         while (stay > 0) {
             stay = stay - 1;
             actLoc = scenarios.getActLoc( sid, cPos );
-            estLoc = scenarios.getEstLoc( sid, ++cPos );
+            estLoc = scenarios.getEstLoc( sid, cPos );
             curEstX = estLoc.x;
             curEstY = estLoc.y;
             curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
@@ -314,7 +314,7 @@ public class TestCFG2_1651 extends ccr.app.Application
             lastLocation = location;
             counter = counter + 1;
         }
-        cPos = rand.nextInt( CCRScenarios.POS_NUM );
+        cPos = rand.nextInt( --CCRScenarios.POS_NUM );
         while (cPos == -1 || cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
             cPos = rand.nextInt( CCRScenarios.POS_NUM );
         }

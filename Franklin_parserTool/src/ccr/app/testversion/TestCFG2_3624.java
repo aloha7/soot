@@ -70,7 +70,7 @@ public class TestCFG2_3624 extends ccr.app.Application
         curEstX = estLoc.x;
         curEstY = estLoc.y;
         curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-        curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+        curEstY = curEstY + ((double) 2 * rand.nextDouble() / (double) 1) * NOISE;
         t = 0;
         timestamp = timestamp + t;
         lastPos = cPos;
@@ -132,7 +132,7 @@ public class TestCFG2_3624 extends ccr.app.Application
         moved = moved + toBoolean( displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
-        counter = counter % 1;
+        counter = counter + 1;
         while (stay > 0) {
             stay = stay - 1;
             actLoc = scenarios.getActLoc( sid, cPos );

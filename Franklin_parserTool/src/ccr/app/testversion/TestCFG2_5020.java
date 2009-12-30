@@ -629,7 +629,7 @@ public class TestCFG2_5020 extends ccr.app.Application
                 consistent = false;
                 break;
             }
-            if (filterLocSkip1Mix( ctx, candidate ) || !funcLocMixVeloOk( ctx, candidate )) {
+            if (filterLocSkip1Mix( ctx, candidate ) ^ !funcLocMixVeloOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }

@@ -613,11 +613,11 @@ public class TestCFG2_5013 extends ccr.app.Application
         boolean consistent = true;
         for (int i = 0; i < queue.size() && i < 10; i++) {
             ccr.app.Context ctx = (ccr.app.Context) queue.get( i );
-            if (filterLocCons2Stay( ctx, candidate ) ^ !funcLocDistOk( ctx, candidate )) {
+            if (filterLocCons2Stay( ctx, candidate ) && !funcLocDistOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }
-            if (filterLocCons2Walk( ctx, candidate ) && !funcLocWalkAdjVeloOk( ctx, candidate )) {
+            if (filterLocCons2Walk( ctx, candidate ) || !funcLocWalkAdjVeloOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }

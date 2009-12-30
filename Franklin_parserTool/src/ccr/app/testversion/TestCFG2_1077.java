@@ -78,7 +78,7 @@ public class TestCFG2_1077 extends ccr.app.Application
         resolve();
         location = toCoordinates( candidate );
         displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
-        moved = moved + toBoolean( displace );
+        moved = moved + toBoolean( ++displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
         counter = counter + 1;
@@ -227,7 +227,7 @@ public class TestCFG2_1077 extends ccr.app.Application
         lastLoc = scenarios.getActLoc( sid, lastPos );
         dist = Coordinates.calDist( lastLoc, actLoc );
         t = (long) (dist / VELOCITY * 1000);
-        timestamp = ++timestamp + t;
+        timestamp = timestamp + t;
         lastPos = cPos;
         candidate = generateCtx();
         resolve();

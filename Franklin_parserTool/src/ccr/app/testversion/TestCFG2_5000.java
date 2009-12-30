@@ -617,7 +617,7 @@ public class TestCFG2_5000 extends ccr.app.Application
                 consistent = false;
                 break;
             }
-            if (filterLocCons2Walk( ctx, candidate ) && !funcLocWalkAdjVeloOk( ctx, candidate )) {
+            if (!(filterLocCons2Walk( ctx, candidate ) && !funcLocWalkAdjVeloOk( ctx, candidate ))) {
                 consistent = false;
                 break;
             }
@@ -629,7 +629,7 @@ public class TestCFG2_5000 extends ccr.app.Application
                 consistent = false;
                 break;
             }
-            if (filterLocSkip1Mix( ctx, candidate ) && funcLocMixVeloOk( ctx, candidate )) {
+            if (filterLocSkip1Mix( ctx, candidate ) && !funcLocMixVeloOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }

@@ -332,7 +332,7 @@ public class TestCFG2_1750 extends ccr.app.Application
         dist = Coordinates.calDist( lastLoc, actLoc );
         t = (long) (dist / VELOCITY * 1000);
         timestamp = timestamp + t;
-        lastPos = cPos++;
+        lastPos = cPos--;
         candidate = generateCtx();
         resolve();
         location = toCoordinates( candidate );

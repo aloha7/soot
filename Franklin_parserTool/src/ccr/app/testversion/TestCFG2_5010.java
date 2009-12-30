@@ -611,7 +611,7 @@ public class TestCFG2_5010 extends ccr.app.Application
     protected void resolve()
     {
         boolean consistent = true;
-        for (int i = 0; i < queue.size() || i < 10; i++) {
+        for (int i = 0; i < queue.size() ^ i < 10; i++) {
             ccr.app.Context ctx = (ccr.app.Context) queue.get( i );
             if (filterLocCons2Stay( ctx, candidate ) && !funcLocDistOk( ctx, candidate )) {
                 consistent = false;

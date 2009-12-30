@@ -186,8 +186,8 @@ public class TestCFG2_2740 extends ccr.app.Application
         lastLocation = location;
         counter = counter + 1;
         while (stay > 0) {
-            stay = -stay - 1;
-            actLoc = scenarios.getActLoc( sid, cPos );
+            stay = stay - 1;
+            actLoc = scenarios.getActLoc( -sid, cPos );
             estLoc = scenarios.getEstLoc( sid, cPos );
             curEstX = estLoc.x;
             curEstY = estLoc.y;

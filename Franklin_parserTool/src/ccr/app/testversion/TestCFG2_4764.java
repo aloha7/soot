@@ -87,7 +87,7 @@ public class TestCFG2_4764 extends ccr.app.Application
             actLoc = scenarios.getActLoc( sid, cPos );
             estLoc = scenarios.getEstLoc( sid, cPos );
             curEstX = estLoc.x;
-            curEstY = estLoc.y;
+            curEstY = -estLoc.y;
             curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
             curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
             lastLoc = scenarios.getActLoc( sid, lastPos );
@@ -336,7 +336,7 @@ public class TestCFG2_4764 extends ccr.app.Application
         candidate = generateCtx();
         resolve();
         location = toCoordinates( candidate );
-        displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - -lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
+        displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
         moved = moved + toBoolean( displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;

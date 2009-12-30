@@ -352,7 +352,7 @@ public class TestCFG2_3321 extends ccr.app.Application
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;
-            timestamp = timestamp / t;
+            timestamp = timestamp % t;
             lastPos = cPos;
             candidate = generateCtx();
             resolve();

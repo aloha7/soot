@@ -51,8 +51,8 @@ public class TestCFG2_971 extends ccr.app.Application
         double displace;
         double error;
         int c = 0;
-        int bPos = 1;
-        int cPos = -1;
+        int bPos = -1;
+        int cPos = 1;
         int stay = 0;
         int lastPos = -1;
         timestamp = System.currentTimeMillis();

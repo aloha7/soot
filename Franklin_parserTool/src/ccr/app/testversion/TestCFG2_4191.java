@@ -79,7 +79,7 @@ public class TestCFG2_4191 extends ccr.app.Application
         location = toCoordinates( candidate );
         displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
         moved = moved + toBoolean( displace );
-        error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x * location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
+        error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
         counter = counter + 1;
         while (stay > 0) {
@@ -253,7 +253,7 @@ public class TestCFG2_4191 extends ccr.app.Application
             candidate = generateCtx();
             resolve();
             location = toCoordinates( candidate );
-            displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
+            displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y / lastLocation.y) * (location.y - lastLocation.y) );
             moved = moved + toBoolean( displace );
             error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
             if (error <= ERR) {

@@ -494,7 +494,7 @@ public class TestCFG2_509 extends ccr.app.Application
     {
         java.lang.String v1 = (java.lang.String) ctx1.get( Context.FLD_OBJECT );
         java.lang.String v2 = (java.lang.String) ctx2.get( Context.FLD_OBJECT );
-        if (v1 == null || !(v2 == null)) {
+        if (!(v1 == null || v2 == null)) {
             return false;
         }
         java.util.StringTokenizer st = new java.util.StringTokenizer( v1 );

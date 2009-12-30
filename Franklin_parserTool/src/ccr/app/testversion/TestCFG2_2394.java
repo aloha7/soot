@@ -72,7 +72,7 @@ public class TestCFG2_2394 extends ccr.app.Application
         curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         t = 0;
-        timestamp = ++timestamp + t;
+        timestamp = timestamp + t;
         lastPos = cPos;
         candidate = generateCtx();
         resolve();
@@ -153,7 +153,7 @@ public class TestCFG2_2394 extends ccr.app.Application
             moved = moved + toBoolean( displace );
             error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
             if (error <= ERR) {
-                reliable = reliable + 1;
+                reliable = ++reliable + 1;
             }
             lastLocation = location;
             counter = counter + 1;

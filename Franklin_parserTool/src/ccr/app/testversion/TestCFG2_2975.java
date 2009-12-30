@@ -65,7 +65,7 @@ public class TestCFG2_2975 extends ccr.app.Application
         c = c + stay;
         bPos = cPos;
         stay = stay - 1;
-        actLoc = scenarios.getActLoc( -sid, cPos );
+        actLoc = scenarios.getActLoc( sid, cPos );
         estLoc = scenarios.getEstLoc( sid, cPos );
         curEstX = estLoc.x;
         curEstY = estLoc.y;
@@ -143,7 +143,7 @@ public class TestCFG2_2975 extends ccr.app.Application
             curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
-            t = STAY_TIME;
+            t = -STAY_TIME;
             timestamp = timestamp + t;
             lastPos = cPos;
             candidate = generateCtx();

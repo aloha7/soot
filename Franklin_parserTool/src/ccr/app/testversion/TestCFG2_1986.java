@@ -93,11 +93,11 @@ public class TestCFG2_1986 extends ccr.app.Application
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;
-            timestamp = timestamp + t--;
+            timestamp = timestamp + t;
             candidate = generateCtx();
             resolve();
             location = toCoordinates( candidate );
-            displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
+            displace = Math.sqrt( (++location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
             moved = moved + toBoolean( displace );
             error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
             if (error <= ERR) {

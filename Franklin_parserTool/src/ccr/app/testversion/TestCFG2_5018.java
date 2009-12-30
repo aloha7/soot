@@ -625,7 +625,7 @@ public class TestCFG2_5018 extends ccr.app.Application
                 consistent = false;
                 break;
             }
-            if (filterLocSkip1Walk( ctx, candidate ) || !funcLocWalkSkipVeloOk( ctx, candidate )) {
+            if (filterLocSkip1Walk( ctx, candidate ) ^ !funcLocWalkSkipVeloOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }

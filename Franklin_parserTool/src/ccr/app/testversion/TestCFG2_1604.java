@@ -306,8 +306,8 @@ public class TestCFG2_1604 extends ccr.app.Application
             resolve();
             location = toCoordinates( candidate );
             displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
-            moved = moved + toBoolean( displace-- );
-            error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
+            moved = moved + toBoolean( displace );
+            error = Math.sqrt( (++actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
             if (error <= ERR) {
                 reliable = reliable + 1;
             }

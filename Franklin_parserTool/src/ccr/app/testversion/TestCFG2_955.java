@@ -605,7 +605,7 @@ public class TestCFG2_955 extends ccr.app.Application
         java.util.StringTokenizer st = new java.util.StringTokenizer( (java.lang.String) ctx.get( Context.FLD_OBJECT ) );
         double x = Double.parseDouble( st.nextToken() );
         double y = Double.parseDouble( st.nextToken() );
-        return new ccr.app.Coordinates( -x, y );
+        return new ccr.app.Coordinates( x, -y );
     }
 
     protected void resolve()

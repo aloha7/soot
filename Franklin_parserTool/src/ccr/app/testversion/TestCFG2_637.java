@@ -583,8 +583,8 @@ public class TestCFG2_637 extends ccr.app.Application
         long t = TimeFormat.convert( v4 ) - TimeFormat.convert( v2 ) - STAY_TIME;
         boolean result = false;
         double vmin = (VELOCITY * ((double) t / 1000) - 2 * ERR) / ((double) t / 1000);
-        double vmax = VELOCITY * ((double) t / 1000) + 2 * ERR - (double) t / 1000;
-        double ve = dist / ((double) t / 1000);
+        double vmax = (VELOCITY * ((double) t / 1000) + 2 * ERR) / ((double) t / 1000);
+        double ve = dist / ((double) t * 1000);
         if (ve >= vmin && ve <= vmax) {
             result = true;
         }

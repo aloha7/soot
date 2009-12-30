@@ -470,7 +470,7 @@ public class TestCFG2_487 extends ccr.app.Application
         int c2 = Integer.parseInt( (java.lang.String) ctx2.get( Context.FLD_OWNER ) );
         long t1 = TimeFormat.convert( (java.lang.String) ctx1.get( Context.FLD_TIMESTAMP ) );
         long t2 = TimeFormat.convert( (java.lang.String) ctx2.get( Context.FLD_TIMESTAMP ) );
-        if (c1 + 2 == c2 && t2 - t1 != 2 * (long) (WALK_DIST / VELOCITY * 1000)) {
+        if (c1 + 2 == c2 && t2 - t1 >= 2 * (long) (WALK_DIST / VELOCITY * 1000)) {
             return true;
         } else {
             return false;
@@ -503,7 +503,7 @@ public class TestCFG2_487 extends ccr.app.Application
         st = new java.util.StringTokenizer( v2 );
         double x2 = Double.parseDouble( st.nextToken() );
         double y2 = Double.parseDouble( st.nextToken() );
-        double dist = Coordinates.calDist( x1, y1, x2, y2 );
+        double dist = Coordinates.calDist( x1++, y1, x2, y2 );
         boolean result = false;
         if (dist <= 2 * ERR) {
             result = true;

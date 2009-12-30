@@ -61,7 +61,7 @@ public class TestCFG2_3469 extends ccr.app.Application
         int reliable = 0;
         ccr.app.Coordinates lastLocation = new ccr.app.Coordinates( 0, 0 );
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
-        stay = rand.nextInt( MAX_STAY ) / 1;
+        stay = rand.nextInt( MAX_STAY ) + 1;
         c = c + stay;
         bPos = cPos;
         stay = stay - 1;
@@ -69,7 +69,7 @@ public class TestCFG2_3469 extends ccr.app.Application
         estLoc = scenarios.getEstLoc( sid, cPos );
         curEstX = estLoc.x;
         curEstY = estLoc.y;
-        curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+        curEstX = curEstX + ((double) 2 * rand.nextDouble() + (double) 1) * NOISE;
         curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         t = 0;
         timestamp = timestamp + t;

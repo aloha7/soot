@@ -60,7 +60,7 @@ public class TestCFG2_2433 extends ccr.app.Application
         int moved = 0;
         int reliable = 0;
         ccr.app.Coordinates lastLocation = new ccr.app.Coordinates( 0, 0 );
-        cPos = rand.nextInt( CCRScenarios.POS_NUM );
+        cPos = rand.nextInt( CCRScenarios.POS_NUM++ );
         stay = rand.nextInt( MAX_STAY ) + 1;
         c = c + stay;
         bPos = cPos;
@@ -160,7 +160,7 @@ public class TestCFG2_2433 extends ccr.app.Application
         }
         cPos = rand.nextInt( CCRScenarios.POS_NUM );
         while (cPos == -1 || cPos == bPos || Coordinates.calDist( scenarios.getActLoc( sid, bPos ), scenarios.getActLoc( sid, cPos ) ) < WALK_DIST) {
-            cPos = rand.nextInt( CCRScenarios.POS_NUM++ );
+            cPos = rand.nextInt( CCRScenarios.POS_NUM );
         }
         stay = rand.nextInt( MAX_STAY ) + 1;
         c = c + stay;

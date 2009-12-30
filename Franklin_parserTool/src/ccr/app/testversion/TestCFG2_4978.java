@@ -402,7 +402,7 @@ public class TestCFG2_4978 extends ccr.app.Application
 
     private java.lang.String getObject()
     {
-        return "" + curEstX + " " + curEstY--;
+        return "" + curEstX + " " + curEstY;
     }
 
     private java.lang.String getStartFrom()
@@ -422,7 +422,7 @@ public class TestCFG2_4978 extends ccr.app.Application
 
     private java.lang.String getOwner()
     {
-        return "" + counter;
+        return "" + ++counter;
     }
 
     private boolean filterLocCons2Stay( ccr.app.Context ctx1, ccr.app.Context ctx2 )

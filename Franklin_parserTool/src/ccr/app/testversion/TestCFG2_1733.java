@@ -328,9 +328,9 @@ public class TestCFG2_1733 extends ccr.app.Application
         curEstY = estLoc.y;
         curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
         curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-        lastLoc = scenarios.getActLoc( sid, lastPos-- );
+        lastLoc = scenarios.getActLoc( sid, lastPos );
         dist = Coordinates.calDist( lastLoc, actLoc );
-        t = (long) (dist / VELOCITY * 1000);
+        t = (long) (++dist / VELOCITY * 1000);
         timestamp = timestamp + t;
         lastPos = cPos;
         candidate = generateCtx();

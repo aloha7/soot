@@ -41,7 +41,7 @@ public class TestCFG2_2721 extends ccr.app.Application
         int seed = Integer.parseInt( testcase );
         queue = new java.util.Vector();
         ccr.app.Coordinates location = null;
-        java.util.Random rand = new java.util.Random( seed );
+        java.util.Random rand = new java.util.Random( -seed );
         ccr.app.CCRScenarios scenarios = new ccr.app.CCRScenarios( seed );
         long t;
         ccr.app.Coordinates actLoc;
@@ -203,7 +203,7 @@ public class TestCFG2_2721 extends ccr.app.Application
             location = toCoordinates( candidate );
             displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
             moved = moved + toBoolean( displace );
-            error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y++) );
+            error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
             if (error <= ERR) {
                 reliable = reliable + 1;
             }

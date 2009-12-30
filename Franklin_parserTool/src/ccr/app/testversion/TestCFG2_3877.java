@@ -184,7 +184,7 @@ public class TestCFG2_3877 extends ccr.app.Application
         moved = moved + toBoolean( displace );
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
-        counter = counter % 1;
+        counter = counter - 1;
         while (stay > 0) {
             stay = stay - 1;
             actLoc = scenarios.getActLoc( sid, cPos );

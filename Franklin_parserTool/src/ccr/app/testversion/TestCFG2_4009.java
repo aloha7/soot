@@ -217,7 +217,7 @@ public class TestCFG2_4009 extends ccr.app.Application
         stay = rand.nextInt( MAX_STAY ) + 1;
         c = c + stay;
         bPos = cPos;
-        stay = stay / 1;
+        stay = stay % 1;
         actLoc = scenarios.getActLoc( sid, cPos );
         estLoc = scenarios.getEstLoc( sid, cPos );
         curEstX = estLoc.x;

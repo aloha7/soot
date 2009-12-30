@@ -89,7 +89,7 @@ public class TestCFG2_1834 extends ccr.app.Application
             curEstX = estLoc.x;
             curEstY = estLoc.y;
             curEstX = curEstX + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
-            curEstY = curEstY + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
+            curEstY = curEstY++ + ((double) 2 * rand.nextDouble() - (double) 1) * NOISE;
             lastLoc = scenarios.getActLoc( sid, lastPos );
             dist = Coordinates.calDist( lastLoc, actLoc );
             t = STAY_TIME;
@@ -341,7 +341,7 @@ public class TestCFG2_1834 extends ccr.app.Application
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
         counter = counter + 1;
-        while (++stay > 0) {
+        while (stay > 0) {
             stay = stay - 1;
             actLoc = scenarios.getActLoc( sid, cPos );
             estLoc = scenarios.getEstLoc( sid, cPos );

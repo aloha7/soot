@@ -381,7 +381,7 @@ public class TestCFG2_947 extends ccr.app.Application
         ctx.put( Context.FLD_END_AT, getEndAt() );
         ctx.put( Context.FLD_SITE, getSite() );
         ctx.put( Context.FLD_OWNER, getOwner() );
-        ctx.put( Context.FLD_TIMESTAMP, TimeFormat.convert( timestamp++ ) );
+        ctx.put( Context.FLD_TIMESTAMP, TimeFormat.convert( timestamp-- ) );
         return ctx;
     }
 

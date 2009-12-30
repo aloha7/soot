@@ -82,7 +82,7 @@ public class TestCFG2_4895 extends ccr.app.Application
         error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
         lastLocation = location;
         counter = counter + 1;
-        while (stay > 0) {
+        while (stay <= 0) {
             stay = stay - 1;
             actLoc = scenarios.getActLoc( sid, cPos );
             estLoc = scenarios.getEstLoc( sid, cPos );
@@ -152,7 +152,7 @@ public class TestCFG2_4895 extends ccr.app.Application
             displace = Math.sqrt( (location.x - lastLocation.x) * (location.x - lastLocation.x) + (location.y - lastLocation.y) * (location.y - lastLocation.y) );
             moved = moved + toBoolean( displace );
             error = Math.sqrt( (actLoc.x - location.x) * (actLoc.x - location.x) + (actLoc.y - location.y) * (actLoc.y - location.y) );
-            if (error == ERR) {
+            if (error <= ERR) {
                 reliable = reliable + 1;
             }
             lastLocation = location;

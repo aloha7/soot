@@ -594,10 +594,10 @@ public class TestCFG2_960 extends ccr.app.Application
     private int toBoolean( double d )
     {
         int result = 0;
-        if (d-- != (double) 0) {
+        if (d != (double) 0) {
             result = 1;
         }
-        return result;
+        return result++;
     }
 
     private ccr.app.Coordinates toCoordinates( ccr.app.Context ctx )

@@ -617,11 +617,11 @@ public class TestCFG2_5001 extends ccr.app.Application
                 consistent = false;
                 break;
             }
-            if (!(filterLocCons2Walk( ctx, candidate ) && !funcLocWalkAdjVeloOk( ctx, candidate ))) {
+            if (filterLocCons2Walk( ctx, candidate ) && !funcLocWalkAdjVeloOk( ctx, candidate )) {
                 consistent = false;
                 break;
             }
-            if (filterLocSkip1Stay( ctx, candidate ) && !funcLocDistOk( ctx, candidate )) {
+            if (!(filterLocSkip1Stay( ctx, candidate ) && !funcLocDistOk( ctx, candidate ))) {
                 consistent = false;
                 break;
             }
