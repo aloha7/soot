@@ -148,7 +148,7 @@ public class Logger {
 					}
 					
 					
-				}else if(!src.getName().equals("original")){//exclude "original" directory
+				}else if(!src.getName().equals("original")){//2009-12-30: exclude "original" directory
 					File[] files = src.listFiles();
 					for(File file: files){
 						String path = file.getAbsolutePath();
@@ -188,29 +188,19 @@ public class Logger {
 						if(line.indexOf("package")!=-1){ //change the package						
 							sb.append("package " + packageName + ";\n");
 							sb.append("import ccr.app.*;");
-//							sb.append("import context.test.contextIntensity.*;\n");
-//							sb.append("import context.apps.Tour.*;\n");
 						}else if(line.indexOf("public class")!= -1){//change the class name 
 							int i = line.indexOf("public class") + "public class".length();
 							i = line.indexOf(" ", i);
 							int j = line.indexOf(" ", i + 1);
 							
 							sb.append(line.substring(0, i + 1) + className + line.substring(j) +  "\n");
-						/*}else if(line.indexOf("TourApp")!= -1 && line.indexOf("TourAppFrame")==-1 && line.indexOf("context.apps.Tour.TourApp")==-1){							
-							sb.append(line.replaceAll("TourApp", className) + "\n");
-						}else if(line.indexOf("context.apps.Tour.TourApp")!=-1 ){
-							if( line.indexOf("TourAppFrame")==-1){
-								sb.append(line.replaceAll("context.apps.Tour.TourApp", packageName + "." + className)+ "\n");				
-							}*/
 						}else{
 							sb.append(line + "\n");
 						}
 					}
 					
-//					String content = sb.toString();
-//					content.replaceAll("TourApp", className);
-					
 					br.close();
+					
 					BufferedWriter bw =new BufferedWriter(new FileWriter(destDir));
 					bw.write(sb.toString());
 					bw.close();
@@ -218,7 +208,6 @@ public class Logger {
 					File[] files = src.listFiles();
 					for(File temp: files){
 						if(temp.getName().contains(".java")){
-//							destDir += "/" + temp.getName();
 							String dest = destDir + "/" + temp.getName();
 							this.changePackage(temp.getPath(), dest, packageName);	
 						}
@@ -226,10 +215,8 @@ public class Logger {
 				}
 			}
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -255,15 +242,6 @@ public class Logger {
 			}
 			br.close();
 			
-//			ArrayList temp = new ArrayList();
-//			for(int i = 0; i < clearList.size(); i ++){
-//				String fault = (String)clearList.get(i);
-//				if(!faultList.contains(fault)){
-//					temp.add(fault);
-//				}
-//			}
-			
-			
 			ArrayList temp = new ArrayList();
 			for(int i = 0; i < faultList.size(); i ++){
 				String fault = (String)faultList.get(i);
@@ -280,24 +258,26 @@ public class Logger {
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 	}
 
 	public static void main(String[] args) {
+		//1. change the name of generated mutant and record the mappings
 		String srcDir = "F:/MyProgram/eclipse3.3.1.1/workspace/ContextDiversity/result";
 		String destDir ="F:/MyProgram/eclipse3.3.1.1/workspace/ContextDiversity/MuJava";
-//		String packageName = "a";
 		String type = "java";
-//		Logger.getInstance().delete(destDir);
-		Logger.getInstance().moveFiles(srcDir, destDir, type);
+//		Logger.getInstance().moveFiles(srcDir, destDir, type);
 		
-//		Logger.getInstance().changePackage(destDir, System.getProperty("user.dir") + "/temp/","ccr.app.testversion");
+		//2. change the package name of renamed mutants
+//		srcDir = "F:/MyProgram/eclipse3.3.1.1/workspace/ContextDiversity/MuJava";
+		srcDir = destDir;
+		destDir = new File(destDir).getParent() + "/src/ccr/app/testversion/";
+		String packageName = "ccr.app.testversion";
+		Logger.getInstance().changePackage(srcDir, destDir, packageName);
 		
 //		srcDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090313/";
 //		Logger.getInstance().diffFaults(srcDir);
