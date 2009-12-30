@@ -211,7 +211,6 @@ public class ILPSolver {
 			}else{
 				infoRecorder.append("cannot get the solution");
 			}
-			System.out.println("Finish solving the model");
 			
 			Logger.getInstance().setPath(infoFile, true);//append execution info into the file
 			Logger.getInstance().write(infoRecorder.toString());
@@ -265,9 +264,9 @@ public class ILPSolver {
 			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/"+ criterion + "/Result_" + criterion + "_" + alpha + ".txt";
 			
-			System.out.println("Start to solve the model with weighting factor " + alpha);
+			System.out.println("\nStart to solve the model with weighting factor " + alpha);
 			Vector<String> testSuite = this.solveILPModel(modelFile, tcArray, infoFile);
-			System.out.println("Finish to construct the model with weighting factor " + alpha);
+			System.out.println("Finish to construct the model with weighting factor " + alpha + "\n");
 			
 			testSuites.put(alpha, testSuite);
 		}
@@ -329,14 +328,17 @@ public class ILPSolver {
 			int maxSize = Integer.parseInt(args[2]);
 			
 			ILPSolver solver = new ILPSolver();
+			//1.build models
 //			Vector<TestCase> tcArray = solver.buildILPModels(date, criterion, maxSize);
 			
+			//2. solve models
 			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/"+ criterion + "/TestCaseStatistics_" + criterion + ".txt";
 			boolean containHeader = true;
 			Vector<TestCase> tcArray = solver.getStatisticsOfTestCase(testcaseFile, containHeader); 
 			solver.solveILPModels(date, criterion, tcArray);
 			
+			//3. build and solve models
 //			solver.buildAndSolveILPs(date, criterion, maxSize);
 		}
 	}

@@ -1,8 +1,10 @@
 package ccr.reduction;
 
+import java.util.HashMap;
 import java.util.Vector;
 
-import ccr.app.TestCFG2;
+import ccr.app.ApplicationResult;
+import ccr.app.TestCFG2_CI;
 import ccr.stat.CFG;
 import ccr.stat.Criterion;
 import ccr.stat.Node;
@@ -47,25 +49,34 @@ public class TestSuiteReduction {
 			Node def = dus.getKey(i);
 			NodeSet uses = dus.getValue(i);
 			for(int j = 0; j < uses.size(); j ++){
-				sb.append(def.index).append(":").
-				append(uses.get(j)).append("\t").append(index).append("\n") ;		
-				index ++;
-				programEles.add(def.index + ":" + uses.get(j));
+				String du_pair =def.index + ":" + uses.get(j);
+				if(!programEles.contains(du_pair)){
+					sb.append(def.index).append(":").
+					append(uses.get(j)).append("\t").append(index).append("\n") ;		
+					index ++;
+					programEles.add(du_pair);	
+				}
 			}
 		}	
 		
 		//2.label the nodes
 		for(int i = 0; i < nodes.size(); i++){
-			sb.append(nodes.get(i).index).append("\t").append(index).append("\n");
-			index ++;
-			programEles.add(nodes.get(i).index);
+			String node = nodes.get(i).index;
+			if(!programEles.contains(node)){
+				sb.append(nodes.get(i).index).append("\t").append(index).append("\n");
+				index ++;
+				programEles.add(node);	
+			}
 		}
 		
 		//3.label the policies
 		for(int i = 0; i < policies.size(); i++){
-			sb.append(((Policy)policies.get(i)).index).append("\t").append(index).append("\n");
-			index ++;
-			programEles.add(((Policy)policies.get(i)).index);
+			String policy = ((Policy)policies.get(i)).index;
+			if(!programEles.contains(policy)){
+				sb.append(((Policy)policies.get(i)).index).append("\t").append(index).append("\n");
+				index ++;
+				programEles.add(policy);	
+			}
 		}
 		
 		Logger.getInstance().setPath(filename, false);
@@ -86,10 +97,12 @@ public class TestSuiteReduction {
 			c = g.getAllKResolvedDU(1);
 		else if (criterion.equals("All2ResolvedDU"))
 			c = g.getAllKResolvedDU(2);
+		else if (criterion.equals("AllStatement"))
+			c = g.getAllStmt();
 		
 		//2.construct the program elements specified by a criterion
 		String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/" + "labelResult.txt";	
+			+ date + "/" + "labelResult_" + criterion +".txt";	
 		Vector programEles = this.saveProgramEles(c, filename);
 		
 		//3.load all test cases in the test pool
@@ -117,6 +130,33 @@ public class TestSuiteReduction {
 		return statistics_TestCase;
 	}
 
+//	/**2009-12-30: get CI/activation, executionTime/output, 
+//	 * hitCounter with respect to the statement coverage
+//	 * 
+//	 * @param appClassName
+//	 * @param index
+//	 * @return
+//	 */
+//	public TestCase getStatisticsOfTestCase(String appClassName, String index){
+//		TestCase t = new TestCase();
+//		t.index = index;
+//		
+//		TestCFG2_CI ins = new TestCFG2_CI();
+//		
+//		long startTime = System.currentTimeMillis();
+//		Object output = ins.application(t.index);
+//		t.execTime = System.currentTimeMillis() - startTime;
+//		t.output = output;
+//		
+//		t.length = "" + ins.PositionQueue.size();
+//		t.CI = ins.PositionQueue.size() - ins.getChanges(ins.PositionQueue);
+//		t.activation = ins.activation;
+//		t.execTrace = TestDriver.getTrace(appClassName, t.index);
+//		
+//		
+//		return t;
+//	}
+	
 	/**2009-12-14: get the statistics info of test cases:
 	 * index, context stream length, context diversity, 
 	 * activation, and the execution time/traces/coverage
@@ -130,7 +170,7 @@ public class TestSuiteReduction {
 		TestCase t = new TestCase();
 		t.index = index;
 		
-		TestCFG2 ins = new TestCFG2();
+		TestCFG2_CI ins = new TestCFG2_CI();
 		
 		long startTime = System.currentTimeMillis();
 		Object output = ins.application(t.index);
@@ -143,21 +183,66 @@ public class TestSuiteReduction {
 		
 		t.execTrace = TestDriver.getTrace(appClassName, t.index);
 		
-		t.coverage = TestSetManager.countDUCoverage(t.execTrace, c);		 
+		t.coverFreq = TestSetManager.countDUCoverage(t.execTrace, c);		 
 		Vector hitSet = new Vector(programEles.size());
 		
-		int hitCounter = 0; //count how many elements has been hit
-		for(int i = 0; i < programEles.size(); i++){
-			//check the coverage of each program elements one by one
-			if(t.coverage.containsKey(programEles.get(i))){
-				hitSet.add((Integer)t.coverage.get(programEles.get(i)));
-				hitCounter ++;
-			}else{
-				hitSet.add(0);
+//		//2009-12-30: it may miss the PolicyNode takes the form of c33:P0
+//		int hitCounter = 0; //count how many elements has been hit
+//		for(int i = 0; i < programEles.size(); i++){
+//			//check the coverage of each program elements one by one
+//			if(t.coverFreq.containsKey(programEles.get(i))){
+//				hitSet.add((Integer)t.coverFreq.get(programEles.get(i)));
+//				hitCounter ++;
+//			}else{
+//				hitSet.add(0);
+//			}
+//		}	
+		
+		//2009-12-30: for debugging purpose
+		int hitCounter = 0;
+		HashMap hitSet_ele_coverTimes = new HashMap(); 
+		String[] elems = (String[])t.coverFreq.keySet().toArray(new String[0]);
+		for(int i = 0; i < programEles.size(); i ++){
+			String elem = (String)programEles.get(i);
+			
+			boolean contain = false;
+			
+			for(int j = 0; j < elems.length; j ++){
+				if(elems[j].equals(elem) || (elem.contains("P") && elems[j].contains(elem))){ //elems[j] is a Node like "c72"
+					int cover_now = (Integer)t.coverFreq.get(elems[j]);
+					
+					if(hitSet_ele_coverTimes.containsKey(elem)){// this element has been counted before
+						int cover_before = (Integer)hitSet_ele_coverTimes.get(elem);						
+						hitSet_ele_coverTimes.put(elem, cover_before + cover_now);
+					}else{//this element is the first time to count
+						hitSet_ele_coverTimes.put(elem, cover_now);
+						hitCounter ++;
+					}					
+					contain = true;					
+				}
 			}
-		}		
+			if(!contain){
+				hitSet_ele_coverTimes.put(elem, 0);
+			}
+			int coverTime = (Integer)hitSet_ele_coverTimes.get(elem);
+			hitSet.add(coverTime);
+		}
+		
+//		//validate the hitCounter
+		int counter = 0;
+		for(int i = 0; i < hitSet.size(); i ++){
+			if(((Integer)hitSet.get(i)) > 0){
+				counter ++;
+			}
+		}
+		if(hitCounter != counter){
+			System.out.println("bad data");
+		}
+		
+		
 		t.hitSet = hitSet;
 		t.hitCounter = hitCounter;
+		t.coverage = (double)t.hitCounter/(double)programEles.size();
 		
 		return t;
 	}
@@ -167,11 +252,12 @@ public class TestSuiteReduction {
 		
 		//Header
 		if(writeHeader){
-			sb.append("\t");
+			sb.append("TestCase").append("\t");
 			sb.append("CI").append("\t").append("Activation").append("\t").
 			append("Length").append("\t").append("Time").append("\t").
-			append("HitCounter").append("\t");
-			for(int i = 0; i < programEles.size(); i++){
+			append("HitCounter").append("\t").append("Coverage").append("\t").
+			append("Oracle").append("\t");
+			for(int i = 0; i < programEles.size(); i++){ //index for hitSet
 				sb.append(programEles.get(i)).append("\t");
 			}
 			sb.append("\n");	
@@ -183,7 +269,8 @@ public class TestSuiteReduction {
 			sb.append(t.index).append("\t");
 			sb.append(t.CI).append("\t").append(t.activation).append("\t").
 				append(t.length).append("\t").append(t.execTime).append("\t").
-				append(t.hitCounter).append("\t");
+				append(t.hitCounter).append("\t").append(t.coverage).append("\t");
+			sb.append(((ApplicationResult)t.output).toString()).append("\t");
 			for(int j = 0; j < t.hitSet.size(); j++){
 				sb.append(t.hitSet.get(j)).append("\t");
 			}
