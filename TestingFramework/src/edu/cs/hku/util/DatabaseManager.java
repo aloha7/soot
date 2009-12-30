@@ -79,7 +79,7 @@ public class DatabaseManager {
 		return true;
 	}
 
-	public static ResultSet query(String sql){
+	public ResultSet query(String sql){
 		ResultSet rs = null;
 		Statement s = null;
 		try {
@@ -94,7 +94,7 @@ public class DatabaseManager {
 		return rs;
 	}
 	
-	public static void update(String sql){
+	public void update(String sql){
 		Statement s = null;
 		
 		try {
