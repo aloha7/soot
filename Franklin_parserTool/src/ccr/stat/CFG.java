@@ -692,6 +692,61 @@ public class CFG implements Cloneable {
 		return this.deleteOrdinary(this.getAllFullResolvedDU());
 	}
 	
+	/**2009-12-30: get the program elements specified by statement-coverage criterion
+	 * 
+	 * @return
+	 */
+	public Criterion getAllStmt(){
+		Criterion criterion = new Criterion();
+		
+		Criterion duCriterion = this.getAllPolicies();
+		NodeSet nodes_tmp = new NodeSet();
+		Vector policies = new Vector();
+		
+		//1. for nodes in the duMap
+		NodeMap duMap_tmp = duCriterion.DUMap;
+		 
+		for(int i = 0; i < duMap_tmp.keySize(); i ++){
+			Node def = duMap_tmp.getKey(i); 
+			//1. add the def
+			if(!nodes_tmp.contains(def)){
+				nodes_tmp.add(def);
+				if(def instanceof PolicyNode){
+					policies.add(((PolicyNode)def).policy);
+				}
+			}
+			//2. add the uses			
+			NodeSet uses = duMap_tmp.getValue(i);
+			for(int j = 0; j < uses.size(); j ++){
+				Node use = uses.get(j);
+				if(!nodes_tmp.contains(use)){
+					nodes_tmp.add(use);
+					if(use instanceof PolicyNode){
+						policies.add(((PolicyNode)use).policy);
+					}
+				}
+			}
+		}
+		
+		//2. for nodes in the nodeSet
+		NodeSet nodes_DU = duCriterion.nodes;
+		for(int i = 0; i < nodes_DU.size(); i ++){
+			PolicyNode node = (PolicyNode)nodes_DU.get(i);
+			if(!nodes_tmp.contains(node)){
+				nodes_tmp.add(node);
+			}
+		}
+				
+		//3. for nodes in the Policies
+		criterion.nodes = nodes_tmp;
+		criterion.policies = duCriterion.policies;
+		for(int i = 0; i < policies.size(); i ++){
+			criterion.policies.add((Policy)policies.get(i));
+		}
+				
+		return criterion;
+	}
+	
 	public Criterion getAllPolicies() {
 		
 		Criterion criterion = getAllUses();
@@ -741,6 +796,9 @@ public class CFG implements Cloneable {
 		
 //		CFG g = new CFG("src/ccr/app/SmartAirCondition.java");
 		CFG g = new CFG("src//ccr//app//TestCFG2.java");
+		Criterion criterion = g.getAllStmt();
+		System.out.println(criterion);
+		
 //		System.out.println(g.display());
 	//	System.out.println("DU associations: " + g.getDUAssociations());
 		
@@ -778,45 +836,45 @@ public class CFG implements Cloneable {
 		
 		
 		
-		try{
-			/*
-			String fileName = "src/ccr/experiment/DuPairs.txt";
-			BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
-			String line = "All-Uses: (size " + g.getAllUses().size() + ") " + g.getAllUses()
-					+ "\n" + "All-Policies: (size " + g.getAllPolicies().size() + ") " + g.getAllPolicies()
-					+ "\n" +"All-1-Resolved-DU: (size " + g.getAllKResolvedDU(1).size() + ") " + g.getAllKResolvedDU(1)
-					+ "\n" + "All-2-Resolved-DU: (size " + g.getAllKResolvedDU(2).size() + ") " + g.getAllKResolvedDU(2)
-					+ "\n" +"All-Full-Resolved-DU: (size " + g.getAllFullResolvedDU().size() + ") " + g.getAllFullResolvedDU();
-			bw.write(line);
-			bw.flush();
-			
-			String fileName_noOrdinary = "src/ccr/experiment/DuPairs_noOrdinary.txt";
-			BufferedWriter bw_noOrdinary = new BufferedWriter(new FileWriter(fileName_noOrdinary));
-			String line_noOrdinary = "All-Uses: (size " + g.getAllUses_noOrdinary().size() + ") " + g.getAllUses_noOrdinary()
-					+ "\n" + "All-Policies: (size " + g.getAllPolicies_noOrdinary().size() + ") " + g.getAllPolicies_noOrdinary()
-					+ "\n" +"All-1-Resolved-DU: (size " + g.getAllKResolvedDU_noOrdinary(1).size() + ") " + g.getAllKResolvedDU_noOrdinary(1)
-					+ "\n" + "All-2-Resolved-DU: (size " + g.getAllKResolvedDU_noOrdinary(2).size() + ") " + g.getAllKResolvedDU_noOrdinary(2)
-					+ "\n" +"All-Full-Resolved-DU: (size " + g.getAllFullResolvedDU_noOrdinary().size() + ") " + g.getAllFullResolvedDU_noOrdinary();
-			bw_noOrdinary.write(line_noOrdinary);
-			bw_noOrdinary.flush();
-			
-			bw_noOrdinary.close();					
-	*/
-			String fileName = "src/ccr/experiment/DuPairs.txt";
-			BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
-			String line = "All-Uses: (size " + g.getAllUses().size() + ") " + g.getAllUses();					
-			bw.write(line);
-			bw.flush();
-			
-			String fileName_noOrdinary = "src/ccr/experiment/DuPairs_noOrdinary.txt";
-			BufferedWriter bw_noOrdinary = new BufferedWriter(new FileWriter(fileName_noOrdinary));
-			String line_noOrdinary = "All-Uses: (size " + g.getAllUses_noOrdinary().size() + ") " + g.getAllUses_noOrdinary();					
-			bw_noOrdinary.write(line_noOrdinary);
-			bw_noOrdinary.flush();
-			
-			bw_noOrdinary.close();
-		}catch(Exception e){
-			System.out.println(e);
-		}								
+//		try{
+//			/*
+//			String fileName = "src/ccr/experiment/DuPairs.txt";
+//			BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
+//			String line = "All-Uses: (size " + g.getAllUses().size() + ") " + g.getAllUses()
+//					+ "\n" + "All-Policies: (size " + g.getAllPolicies().size() + ") " + g.getAllPolicies()
+//					+ "\n" +"All-1-Resolved-DU: (size " + g.getAllKResolvedDU(1).size() + ") " + g.getAllKResolvedDU(1)
+//					+ "\n" + "All-2-Resolved-DU: (size " + g.getAllKResolvedDU(2).size() + ") " + g.getAllKResolvedDU(2)
+//					+ "\n" +"All-Full-Resolved-DU: (size " + g.getAllFullResolvedDU().size() + ") " + g.getAllFullResolvedDU();
+//			bw.write(line);
+//			bw.flush();
+//			
+//			String fileName_noOrdinary = "src/ccr/experiment/DuPairs_noOrdinary.txt";
+//			BufferedWriter bw_noOrdinary = new BufferedWriter(new FileWriter(fileName_noOrdinary));
+//			String line_noOrdinary = "All-Uses: (size " + g.getAllUses_noOrdinary().size() + ") " + g.getAllUses_noOrdinary()
+//					+ "\n" + "All-Policies: (size " + g.getAllPolicies_noOrdinary().size() + ") " + g.getAllPolicies_noOrdinary()
+//					+ "\n" +"All-1-Resolved-DU: (size " + g.getAllKResolvedDU_noOrdinary(1).size() + ") " + g.getAllKResolvedDU_noOrdinary(1)
+//					+ "\n" + "All-2-Resolved-DU: (size " + g.getAllKResolvedDU_noOrdinary(2).size() + ") " + g.getAllKResolvedDU_noOrdinary(2)
+//					+ "\n" +"All-Full-Resolved-DU: (size " + g.getAllFullResolvedDU_noOrdinary().size() + ") " + g.getAllFullResolvedDU_noOrdinary();
+//			bw_noOrdinary.write(line_noOrdinary);
+//			bw_noOrdinary.flush();
+//			
+//			bw_noOrdinary.close();					
+//	*/
+////			String fileName = "src/ccr/experiment/DuPairs.txt";
+////			BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
+////			String line = "All-Uses: (size " + g.getAllUses().size() + ") " + g.getAllUses();					
+////			bw.write(line);
+////			bw.flush();
+////			
+////			String fileName_noOrdinary = "src/ccr/experiment/DuPairs_noOrdinary.txt";
+////			BufferedWriter bw_noOrdinary = new BufferedWriter(new FileWriter(fileName_noOrdinary));
+////			String line_noOrdinary = "All-Uses: (size " + g.getAllUses_noOrdinary().size() + ") " + g.getAllUses_noOrdinary();					
+////			bw_noOrdinary.write(line_noOrdinary);
+////			bw_noOrdinary.flush();
+////			
+////			bw_noOrdinary.close();
+//		}catch(Exception e){
+//			System.out.println(e);
+//		}								
 	}	
 }
