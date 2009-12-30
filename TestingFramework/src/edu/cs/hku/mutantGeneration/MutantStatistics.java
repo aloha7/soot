@@ -112,6 +112,7 @@ public class MutantStatistics {
 		}
 		String sql = sb.substring(0, sb.lastIndexOf(","));
 		DatabaseManager.getInstance().update(sql);
+		System.out.println("save class-level mutants into Database");
 	}
 	
 	
@@ -226,6 +227,7 @@ public class MutantStatistics {
 		
 		String sql = sb.substring(0, sb.lastIndexOf(","));
 		DatabaseManager.getInstance().update(sql);
+		System.out.println("save method-level mutants into the Database");
 	}
 
 	/**2009-12-30: assemble distributed mutant log files (operator:lineNumber:function:description)
@@ -383,10 +385,41 @@ public class MutantStatistics {
 			
 			String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 			DatabaseManager.getInstance().update(sqlStmt);
-			
+			System.out.println("save mutant logs into the Database");	
 		}else{
 			System.out.println("The mutant directory does not exist at all!");
 		}
+		
+	}
+	
+	public void saveToDB_mutantMapping(String mutantMappingFile, boolean containHeader){
+		StringBuilder sql = new StringBuilder();
+		sql.append("INSERT INTO mutantmapping (genMutant, mappedMutant) VALUES ");
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(mutantMappingFile));
+			String str = null;
+			if(containHeader){
+				br.readLine();
+			}
+				
+			while((str = br.readLine()) != null ){
+				String[] temp = str.split("\t");
+				
+				sql.append("(\'").append(temp[0]).append("\'").append(",");
+				sql.append("\'").append(temp[1]).append("\'").append("),");
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+		DatabaseManager.getInstance().update(sqlStmt);
+		System.out.println("Save the mutant mapping history into the Database");
 	}
 	
 	private String generateSQLStatement(String colNum, String[] values, boolean include){
@@ -502,9 +535,6 @@ public class MutantStatistics {
 	}
 	
 	
-	 
-	
-	
 	public static void main(String[] args) {
 //		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\TestingFramework\\result\\";
 		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\ContextDiversity\\result\\";		
@@ -533,7 +563,12 @@ public class MutantStatistics {
 		//4. assemble distributed mutant log into a complete file/database
 		saveFile = mutantDir + "mutantLog.txt";
 		ins.saveToFile_mutantLog(mutantDir, saveFile);
-		ins.saveToDB_mutantLog(mutantDir);
+//		ins.saveToDB_mutantLog(mutantDir);
+		
+		//5. save the mutant mapping history into database
+		String mutantMappingFile = new File(mutantDir).getParent() + "\\MuJava\\MappingList.txt";
+		boolean containHeader = false;
+		ins.saveToDB_mutantMapping(mutantMappingFile, containHeader);
 	}
 
 }
