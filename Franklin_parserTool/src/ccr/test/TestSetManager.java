@@ -2976,6 +2976,29 @@ public class TestSetManager {
 		return covered;
 	}
 
+	public static HashMap countStmtCoverage(String[] stringTrace, Criterion criterion){
+		HashMap covered = new HashMap();
+		Node trace[] = new Node[stringTrace.length];
+		for(int i = 0; i < trace.length; i ++){
+			trace[i] = NodeIndex.getInstance().get(stringTrace[i]);
+		}
+		
+		for(int i = 0; i < trace.length; i ++){
+			if(criterion.containsNode(trace[i])){
+				keepDuplicateElem(covered, trace[i].index);
+			}
+			if(trace[i] instanceof PolicyNode){
+				System.out.println("Policy Node");
+			}
+			if (trace[i] instanceof PolicyNode
+					&& criterion.containsPolicy(((PolicyNode) trace[i]).policy)) {
+				keepDuplicateElem(covered, ((PolicyNode) trace[i]).index);
+			}
+		}
+		
+		return covered;
+	}
+	
 	/**
 	 * 2009-10-19:change execution traces of a test case into the meaningful
 	 * du-associations
