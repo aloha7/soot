@@ -44,7 +44,7 @@ public class CCRScenarios {
             posEstLocs[0][i] = new Vector();
             try {
 //            	2009-09-04: 
-            	BufferedReader br = new BufferedReader(new FileReader("data/scenario 0/input/" + i + ".txt"));
+            	BufferedReader br = new BufferedReader(new FileReader("data/scenario 0/input/" + i + ".txt"));            	
 //            	System.out.println(new File("data/scenario 1/input/" + i + ".txt").getAbsolutePath());
 //            	File dataFile = FileOperator.getFile(System.getProperty("java.class.path"), "data/scenario 0/input/" + i + ".txt");
 //                BufferedReader br = new BufferedReader(new FileReader(dataFile));
