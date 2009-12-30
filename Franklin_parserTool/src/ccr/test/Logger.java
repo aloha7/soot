@@ -148,7 +148,7 @@ public class Logger {
 					}
 					
 					
-				}else{
+				}else if(!src.getName().equals("original")){//2009-12-30: exclude "original" directory
 					File[] files = src.listFiles();
 					for(File file: files){
 						String path = file.getAbsolutePath();
