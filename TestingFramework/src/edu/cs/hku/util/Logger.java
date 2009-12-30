@@ -127,7 +127,7 @@ public class Logger {
 					if(srcType.equals(type)){
 						//destFile: TourApp.java -> TourApp_1.java
 						String destFile = srcFile.substring(0, srcFile.indexOf(".")) + "_"+duplicateFlag + srcFile.substring(srcFile.indexOf("."));
-						duplicateFlag ++;
+						duplicateFlag ++;						
 						BufferedWriter bw  = new BufferedWriter(new FileWriter(destDir + "\\" +  destFile));
 						
 						String line = null;
@@ -148,11 +148,11 @@ public class Logger {
 					}
 					
 					
-				}else{
+				}else if(!src.getName().equals("original")){//exclude "original" directory
 					File[] files = src.listFiles();
 					for(File file: files){
 						String path = file.getAbsolutePath();
-						this.moveFiles(file.getPath(), destDir, type);
+						this.moveFiles(path, destDir, type);
 					}
 				}
 					
@@ -290,16 +290,16 @@ public class Logger {
 	}
 
 	public static void main(String[] args) {
-		String srcDir = System.getProperty("user.dir") +"/result";
-		String destDir = System.getProperty("user.dir") + "/MuJava";
+		String srcDir = "F:/MyProgram/eclipse3.3.1.1/workspace/ContextDiversity/result";
+		String destDir ="F:/MyProgram/eclipse3.3.1.1/workspace/ContextDiversity/MuJava";
 //		String packageName = "a";
 		String type = "java";
 //		Logger.getInstance().delete(destDir);
-//		Logger.getInstance().moveFiles(srcDir, destDir, type);
+		Logger.getInstance().moveFiles(srcDir, destDir, type);
 		
 //		Logger.getInstance().changePackage(destDir, System.getProperty("user.dir") + "/temp/","ccr.app.testversion");
 		
-		srcDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090313/";
-		Logger.getInstance().diffFaults(srcDir);
+//		srcDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090313/";
+//		Logger.getInstance().diffFaults(srcDir);
 	}
 }
