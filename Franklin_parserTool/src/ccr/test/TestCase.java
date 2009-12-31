@@ -14,6 +14,7 @@ public class TestCase {
 	//2009-12-14: test suite reduction 
 	public long execTime;
 	public int hitCounter; //count how many elements are hit(For each element, 1:covered; 0: uncovered)
+	public int hitSum; //summary the total numbers of the covered elements(it is an integer rather than binary for each element)
 	public double coverage; //coverage with respect to a criterion
 	public Object output;
 	public String[] execTrace;
