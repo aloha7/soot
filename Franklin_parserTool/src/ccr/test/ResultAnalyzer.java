@@ -723,47 +723,100 @@ public class ResultAnalyzer {
 			boolean containHeader) {
 		HashMap faults = new HashMap();
 
-		try {
-			BufferedReader br = new BufferedReader(new FileReader(
-					testDetailFile));
-			String str = null;
-			if (containHeader)
-				br.readLine();
+		File tmp = new File(testDetailFile); 
+		if(tmp.exists()){//2009-12-31: check the file exists or not
+			try {		
+				BufferedReader br = new BufferedReader(new FileReader(
+						testDetailFile));
+				String str = null;
+				if (containHeader)
+					br.readLine();
 
-			while ((str = br.readLine()) != null) {
-				String[] strs = str.split("\t");
-				String fault = strs[0].substring(strs[0].indexOf("_")
-						+ "_".length());
+				while ((str = br.readLine()) != null) {
+					String[] strs = str.split("\t");
+					String fault = strs[0].substring(strs[0].indexOf("_")
+							+ "_".length());
 
-				if (strs[2].equals("F")) {// if a test case exposes a fault
-					ArrayList testCases;
-					if (faults.containsKey(fault))
-						testCases = (ArrayList) faults.get(fault);
-					else
-						testCases = new ArrayList();
+					if (strs[2].equals("F")) {// if a test case exposes a fault
+						ArrayList testCases;
+						if (faults.containsKey(fault))
+							testCases = (ArrayList) faults.get(fault);
+						else
+							testCases = new ArrayList();
 
-					String testCase = strs[1];
-					if (!testCases.contains(strs[1])) {
-						testCases.add(testCase); // add this valid test case
-					}
-					faults.put(fault, testCases);
-				} else { //
-					if (!faults.containsKey(fault)) {
-						faults.put(fault, new ArrayList());
+						String testCase = strs[1];
+						if (!testCases.contains(strs[1])) {
+							testCases.add(testCase); // add this valid test case
+						}
+						faults.put(fault, testCases);
+					} else { //
+						if (!faults.containsKey(fault)) {
+							faults.put(fault, new ArrayList());
+						}
 					}
 				}
+				br.close();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			br.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
+		
 		return faults;
 	}
 
+	/**2009-12-31: get the failure rate and killed test case set of each fault 
+	 * 
+	 * @param date
+	 * @param containHeader: whether the associated test detail file contains the Header
+	 * @param startVersion: inclusive
+	 * @param endVersion: exclusive
+	 * @param saveFile
+	 */
+	public void saveToFile_failureRates(String date, boolean containHeader, int startVersion, int endVersion, 
+			String saveFile){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Mutant").append("\t").append("FailureRate").append("\t").
+		append("TestCaseKillArray").append("\n");
+		
+		HashMap fault_effectTS = null;
+		for(int i = startVersion; i < endVersion; i ++){
+			String testDetailFile = 
+				 "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date + "/" + "detailed_" + i + "_" + (i+1) + ".txt";
+			
+			fault_effectTS = ResultAnalyzer.getFaultsWithTestCase(testDetailFile, containHeader);
+			if(fault_effectTS.size() == 0){
+				String fault  = ""+ i ;
+				ArrayList effectTS =(ArrayList)fault_effectTS.get(fault); 								 
+				double failureRate = effectTS.size()/(double)TestManager.TEST_POOL_SIZE;  
+				
+				//1. get the fault ID
+				sb.append(fault).append("\t");
+				//2. get the failure rate
+				sb.append(failureRate).append("\t");
+				int TEST_POOL_END_LABEL = TestManager.TEST_POOL_SIZE + TestManager.TEST_POOL_START_LABEL;
+				
+				//3. get the kill matrix of the test pool (set 1(kill the mutant) or 0(pass it) for each ordered test case)
+				for(int j = TestManager.TEST_POOL_START_LABEL; j < TEST_POOL_END_LABEL; j ++){
+					if(effectTS.contains(""+j)){
+						sb.append("1,");
+					}else{
+						sb.append("0,");
+					}
+				}
+				sb.append("\n");
+			}
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	/**
 	 * 2009-02-19: get failure rate of faults according to the execution records
 	 * of test pool
