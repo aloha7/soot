@@ -3,9 +3,21 @@
 
 package ccr.help;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Vector;
 
-import ccr.test.*;
+import ccr.test.Logger;
+import ccr.test.TestDriver;
 
 public class FileOperator {
 		
@@ -117,6 +129,42 @@ public class FileOperator {
 			
 	}
 	
+	public static void getMissingFault(String detectedFaultFile, boolean containHeader, String saveFile){		
+		Vector detectedFaults  = new Vector();
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(detectedFaultFile));
+			if(containHeader){
+				br.readLine();
+			}
+			
+			String str = null;
+		
+			while((str = br.readLine())!= null){
+				detectedFaults.add(Integer.parseInt(str));
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		StringBuilder sb = new StringBuilder();
+		int startVersion = 0;
+		int endVersion = 5024;		
+		for(int i = startVersion; i < endVersion; i ++){
+			if(!detectedFaults.contains(i)){
+				sb.append(i).append("\n");
+			}
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	public static File getFile(String classPath, String fileName){
 //		fileName = fileName.replace('.', '/');
 		for(String clzPath: classPath.split(";")){
@@ -195,14 +243,22 @@ public class FileOperator {
 //		String dest = "src/ccr/app/testversion/TestCFG2_1010.java";
 //		System.out.print(FileOperator.compare(src, dest));
 		
-		String date = args[0];
-		double max_failure_rate = Double.parseDouble(args[1]);
+//		String date = args[0];
+//		double max_failure_rate = Double.parseDouble(args[1]);
+//		
+//		String src_file = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//		+ date + "/PerValidTS.txt";
+//		String dest_file = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//			+ date + "/FaultList_new.txt";
+//		boolean containHeader = true;
+//		FileOperator.filterFiles(src_file, containHeader, max_failure_rate, dest_file);
 		
-		String src_file = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-		+ date + "/PerValidTS.txt";
-		String dest_file = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/FaultList_new.txt";
-		boolean containHeader = true;
-		FileOperator.filterFiles(src_file, containHeader, max_failure_rate, dest_file);
+		String date = "20091230";
+		String detectedFaultFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/detectedFaultList.txt";
+		boolean containHeader = false;
+		String saveFile ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/MissingFaultList.txt";
+		FileOperator.getMissingFault(detectedFaultFile, containHeader, saveFile);
 	}
 }
