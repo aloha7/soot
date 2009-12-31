@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Vector;
 
 public class ScriptManager {
 	
@@ -611,18 +612,26 @@ public class ScriptManager {
 		return sb.toString();
 	}
 
+	/**2009-12-31: generate a script to get failure rates of faults specified 
+	 * by a faultList
+	 * @param date: 
+	 * @param saveFile
+	 * @param faultList: get failure rates of faults specified by a list
+	 * @param startVersion:inclusive
+	 * @param endVersion:exclusive
+	 */
 	public static void genFailureRate_Sequential(String date, String saveFile, 
 			ArrayList faultList, int startVersion, int endVersion){
 		StringBuilder sb = new StringBuilder();
 		for(int i = startVersion; i < endVersion-1; i ++){
 			sb.append("java ccr.test.TestDriver getFailureRate " + date + " " + faultList.get(i) + " "
-					+ faultList.get(i+1) + " a\n");
+					+ faultList.get(i+1) + "\n");
 		}
 		
 		if(startVersion == (endVersion - 1)){ //the last element in the faultList
 			int version = (Integer)faultList.get(startVersion);
 			sb.append("java ccr.test.TestDriver getFailureRate " + date + " " + version + " "
-					+ (version + 1) + " a\n");
+					+ (version + 1) + "\n");
 		}
 		
 		Logger.getInstance().setPath(saveFile, false);
@@ -650,6 +659,7 @@ public class ScriptManager {
 		Logger.getInstance().close();
 	}
 	
+	
 	public static void genFailureRate_TS(int startVersion, int endVersion, int concurrentNumber, String date, String saveFile){
 		int start = startVersion;
 		int end = endVersion; //[140, 2600][2600, 5024]
@@ -660,11 +670,6 @@ public class ScriptManager {
 			interval ++;
 		
 		
-//		String instruction = argv[0];
-//		String date = argv[1];
-//		int startVersion = Integer.parseInt(argv[2]);
-//		int endVersion = Integer.parseInt(argv[3]);
-//		getFailureRate
 		StringBuilder sb = new StringBuilder();
 		
 		for(int i = start; i < end; i = i + interval){
@@ -681,6 +686,109 @@ public class ScriptManager {
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
+	}
+	
+	/**2009-12-31:get failure rates of faults whose fault numbers are within a range
+	 * 
+	 * @param start: inclusive
+	 * @param end: exclusive
+	 * @param concurrent
+	 * @param date
+	 */
+	public static void genFailureRate(int start, int end, int concurrent, String date){
+		
+		int interval = (end - start + 1)/concurrent ;
+		if( (end - start + 1) > interval * concurrent )
+			interval ++;
+		
+		String instruction, saveFile = null;		
+		StringBuilder sb1 = new StringBuilder();
+		for(int i = start; i < end; i = i + interval){
+			int startVersion = i;
+			int endVersion = i + interval;
+			if(endVersion > end)
+				endVersion = end;
+			
+			instruction = "getFailurRate";
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/GetFailureRate_"+startVersion
+				+"_"+endVersion+".sh";
+			
+			sb1.append("./GetFailureRate_"+startVersion
+				+"_"+endVersion+".sh &" + "\n");
+			
+			ScriptManager.genFailureRate_Sequential(date, saveFile, startVersion, endVersion);
+		}
+
+		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/Script/GetFailureRate_Executor_"+start + "_" + end +".sh";
+		ScriptManager.save(sb1.toString(), saveFile);
+	}
+	
+	/**2009-12-31:get failure rates of faults in the faultList
+	 * 
+	 * @param residualFaultList: a file to specify residual faults
+	 * @param containHeader
+	 * @param concurrentNumber
+	 * @param date
+	 */
+	public static void genFailureRate_residualFaultList(String residualFaultList, boolean containHeader, 
+			int concurrentNumber, 
+			String date){
+		
+		ArrayList residualFaults = new ArrayList();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(residualFaultList));
+			String str = null;
+			if(containHeader){
+				br.readLine();
+			}
+			while((str = br.readLine())!= null){
+				residualFaults.add(Integer.parseInt(str));
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		int start = 0;
+		int end = residualFaults.size();
+		int concurrent = concurrentNumber;
+		int counter = 0;
+
+		
+		int interval = (end - start )/concurrent ;
+		if( (end - start) > interval * concurrent )
+			interval ++;
+		
+		String instruction = null;
+		String saveFile = null;
+		
+		StringBuilder sb1 = new StringBuilder(); 
+		for(int i = start; i < end; i = i + interval){
+			int startVersion = i;
+			int endVersion = i + interval + 1;
+			if(endVersion > end){
+				endVersion = end;
+			}
+			
+			instruction = "getFailurRate";
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/GetFailureRate_"+startVersion + "_" + endVersion +".sh";
+			
+			StringBuilder sb = new StringBuilder();
+			ScriptManager.genFailureRate_Sequential("20091005", saveFile, residualFaults, startVersion, endVersion);
+			counter = (counter + 1) % concurrent;
+			sb1.append("./GetFailureRate_"+ startVersion + "_" + endVersion + ".sh &" + "\n");
+		}
+
+		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/Script/GetFailureRate_Executor_"+start + "_" + end +".sh";
+		ScriptManager.save(sb1.toString(), saveFile);
 	}
 	
 	/**2009-10-26: 
@@ -1158,96 +1266,20 @@ public class ScriptManager {
 			
 		}else if(instruction.equals("getFailureRate")){
 			String date = args[1];
-			int start = 4369;
-			int end = 4527; //[140, 3600][3600, 5024]
+			
+			int start = 0;
+			int end = 1; //[140, 3600][3600, 5024]
+			if(args.length == 4){
+				start = Integer.parseInt(args[2]);
+				end = Integer.parseInt(args[3]);
+			}
+			
 			int concurrent = 10;
 			
-			//2.concurrent execution
-//			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-//				+ date + "/Script/GetFailureRate_Executor_"+start + "_" + end +".sh";
-//			
-//			ScriptManager.genFailureRate_TS(start, end, concurrent, date, saveFile);
-			
-			//1. sequential execution
-			int interval = (end - start + 1)/concurrent ;
-			if( (end - start + 1) > interval * concurrent )
-				interval ++;
-			
-			StringBuilder sb1 = new StringBuilder();
-			for(int i = start; i < end; i = i + interval){
-				int startVersion = i;
-				int endVersion = i + interval;
-				if(endVersion > end)
-					endVersion = end;
-				
-				instruction = "getFailurRate";
-				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date + "/Script/GetFailureRate_"+startVersion
-					+"_"+endVersion+".sh";
-				
-				sb1.append("./GetFailureRate_"+startVersion
-					+"_"+endVersion+".sh &" + "\n");
-				
-				ScriptManager.genFailureRate_Sequential(date, saveFile, startVersion, endVersion);
-			}
-
-			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/Script/GetFailureRate_Executor_"+start + "_" + end +".sh";
-			ScriptManager.save(sb1.toString(), saveFile);
-			
-			//3. 2009-03-20: residual execution
-//			int[] residualVersions = new int[]{
-//					2341, 2402,
-//					3434, 3446,
-//					1509, 1532,
-//					3090, 3098,
-//					3249, 3272
-//			};
-//			ArrayList faultList = new ArrayList(); 
-//			for(int i = 0; i < residualVersions.length; i = i +2){
-//				int start = residualVersions[i];
-//				int end  = residualVersions[i + 1];
-//				for(int j = start; j < end; j ++){
-//					faultList.add(j);
-//				}
-//			}
-//			
-//			int start = 0;
-//			int end = faultList.size();
-//			int concurrent = 20;
-//			int counter = 0;
-//			
-//			int interval = (end - start )/concurrent ;
-//			if( (end - start) > interval * concurrent )
-//				interval ++;
-//			
-//			
-//			for(int i = start; i < end; i = i + interval){
-//				int startVersion = i;
-//				int endVersion = i + interval + 1;
-//				if(endVersion > end)
-//					endVersion = end;
-//				
-//				instruction = "getFailurRate";
-//				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-//					+ date + "/Script/GetFailureRate_"+counter +".sh";
-//				
-//				
-//				
-//				StringBuilder sb = new StringBuilder();
-//				ScriptManager.genFailureRate_Sequential(date, saveFile, faultList, startVersion, endVersion);
-//				counter = (counter + 1) % concurrent;
-//			}
-//			
-//			StringBuilder sb1 = new StringBuilder(); 
-//			for(int i = 0; i < counter; i ++){
-//				sb1.append("./GetFailureRate_"+ i + ".sh &" + "\n");
-//			}
-//
-//			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-//				+ date + "/Script/GetFailureRate_Executor_"+start + "_" + end +".sh";
-//			ScriptManager.save(sb1.toString(), saveFile);
-			
+			String residualFaultList = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/MissingFaultList.txt/";
+			boolean containHeader = false;
+			ScriptManager.genFailureRate_residualFaultList(residualFaultList, containHeader, concurrent, date);
 		}else if(instruction.equals("getEffectiveness_Classified")){
 			//2009-10-26: get testing effectiveness based on classified faults.
 			String date = args[1];
