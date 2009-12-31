@@ -768,50 +768,72 @@ public class ResultAnalyzer {
 		return faults;
 	}
 
-	/**2009-12-31: get the failure rate and killed test case set of each fault 
+	/**2009-12-31: get the failure rate and killed test case set of each fault
 	 * 
-	 * @param date
+	 * @param date_detailed: the direcoty of detailed files
 	 * @param containHeader: whether the associated test detail file contains the Header
-	 * @param startVersion: inclusive
-	 * @param endVersion: exclusive
-	 * @param saveFile
+	 * @param startVersion:inclusive
+	 * @param endVersion:exclusive
+	 * @param date_save: directory to save the results
 	 */
-	public void saveToFile_failureRates(String date, boolean containHeader, int startVersion, int endVersion, 
-			String saveFile){
+	public static void saveToFile_failureRates(String date_detailed, boolean containHeader, int startVersion, int endVersion, String date_save){
 		StringBuilder sb = new StringBuilder();
 		sb.append("Mutant").append("\t").append("FailureRate").append("\t").
 		append("TestCaseKillArray").append("\n");
 		
 		HashMap fault_effectTS = null;
+		
+		int TEST_POOL_END_LABEL = TestManager.TEST_POOL_SIZE + TestManager.TEST_POOL_START_LABEL;
+		
 		for(int i = startVersion; i < endVersion; i ++){
 			String testDetailFile = 
 				 "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date + "/" + "detailed_" + i + "_" + (i+1) + ".txt";
+					+ date_detailed + "/" + "detailed_" + i + "_" + (i+1) + ".txt";
 			
 			fault_effectTS = ResultAnalyzer.getFaultsWithTestCase(testDetailFile, containHeader);
-			if(fault_effectTS.size() == 0){
+			if(fault_effectTS.size() == 0 || fault_effectTS == null){
+				String fault  = ""+ i ; 
+				if(i >= 0 && i < 10){
+					fault = "0" + i;
+				}
+								  
+				
+				//1. get the fault ID
+				sb.append(fault).append("\t");
+				//2. get the failure rate
+				sb.append("0.0").append("\t");			
+//				//3. get the kill matrix of the test pool (set 1(kill the mutant) or 0(pass it) for each ordered test case)
+//				for(int j = TestManager.TEST_POOL_START_LABEL; j < TEST_POOL_END_LABEL; j ++){
+//					sb.append("0,");					
+//				}
+				sb.append("\n");
+				
+			}else{				
 				String fault  = ""+ i ;
+				if(i >= 0 && i < 10){
+					fault = "0" + i;
+				}
+				
 				ArrayList effectTS =(ArrayList)fault_effectTS.get(fault); 								 
 				double failureRate = effectTS.size()/(double)TestManager.TEST_POOL_SIZE;  
 				
 				//1. get the fault ID
 				sb.append(fault).append("\t");
 				//2. get the failure rate
-				sb.append(failureRate).append("\t");
-				int TEST_POOL_END_LABEL = TestManager.TEST_POOL_SIZE + TestManager.TEST_POOL_START_LABEL;
-				
-				//3. get the kill matrix of the test pool (set 1(kill the mutant) or 0(pass it) for each ordered test case)
-				for(int j = TestManager.TEST_POOL_START_LABEL; j < TEST_POOL_END_LABEL; j ++){
-					if(effectTS.contains(""+j)){
-						sb.append("1,");
-					}else{
-						sb.append("0,");
-					}
-				}
+				sb.append(failureRate).append("\t");							
+//				//3. get the kill matrix of the test pool (set 1(kill the mutant) or 0(pass it) for each ordered test case)
+//				for(int j = TestManager.TEST_POOL_START_LABEL; j < TEST_POOL_END_LABEL; j ++){
+//					if(effectTS.contains(""+j)){
+//						sb.append("1,");
+//					}else{
+//						sb.append("0,");
+//					}
+//				}
 				sb.append("\n");
 			}
 		}
-		
+		String saveFile = "src/ccr/experiment"
+			+ "/Context-Intensity_backup/TestHarness/" + date_save + "/FailureRateDetails.txt";
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
@@ -2889,13 +2911,13 @@ public class ResultAnalyzer {
 			String size_ART = args[2];
 			String Hard_Medium_Easy = args[3]; //can only be "Hard", "Medium" or "Easy"
 			ResultAnalyzer.saveTestingPerformanceOnFaultCategory(date, size_ART, Hard_Medium_Easy);
+		}else if(instruction.equals("saveFailureRateDetails")){
+			String date_detailed = args[1]; //the directory to load the detailed file
+			boolean containHeader = true;
+			int startVersion = 0;
+			int endVersion = 5024;
+			String date_save = args[2]; // the directory to save the results			
+			ResultAnalyzer.saveToFile_failureRates(date_detailed, containHeader, startVersion, endVersion, date_save);
 		}
-		
-		
-
-
-		
-		
-		
 	} 
 }
