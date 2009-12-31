@@ -2310,7 +2310,7 @@ public class ResultAnalyzer {
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
 	}
-
+	
 	/**
 	 * 2009-10-14: load faults from the fault list
 	 * 
@@ -2342,64 +2342,90 @@ public class ResultAnalyzer {
 		return faultList;
 	}
 
-	public static void main(String[] args) {
-		System.out
-				.println("USAGE: java ccr.test.ResultAnalyzer <Context_Intensity,Limited,Load>"
-						+ "<directory(20090305)>");
-
-		String instruction = args[0];
-		String date = args[1];
-		String size_ART = args[2];
-
-		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ "/20091019/TestPool.txt";
-
-		// 2009-02-18: load CI of each test case from a file
-		boolean containHeader = true;
-		Adequacy.getTestPool(testcaseFile, containHeader);
-
-		// 2009-02-22: load failure rates from a file
-		containHeader = false;
-		String failureRateFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ "/20091019/failureRate.txt";
-		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
-
-		// 2009-02-24: merge files
+	/**2009-12-31: save information (CI, activation, replacement) of CI-enhanced
+	 * random test suite constructed with only Context Diversity information into files
+	 * 
+	 * 
+	 * @param date:save directory
+	 * @param size_ART
+	 */
+	public static void saveContextDiveristyInfo(String date, String size_ART ){
 		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/";
-		containHeader = true;
-		// String[] criteria = new String[]{
-		// //Group 1
-		// "RandomTestSets_27",
-		// "AllPoliciesTestSets_old",
-		// "AllPoliciesTestSets_new",
-		// "RandomTestSets_42",
-		// "All1ResolvedDUTestSets_old",
-		// "All1ResolvedDUTestSets_new",
-		// "RandomTestSets_50",
-		// "All2ResolvedDUTestSets_old",
-		// "All2ResolvedDUTestSets_new",
-		//				
-		// //Group 2
-		// "RandomTestSets_62",
-		// "AllPoliciesTestSets_old_random_62",
-		// "AllPoliciesTestSets_new_random_62",
-		// "All1ResolvedDUTestSets_old_random_62",
-		// "All1ResolvedDUTestSets_new_random_62",
-		// "All2ResolvedDUTestSets_old_random_62",
-		// "All2ResolvedDUTestSets_new_random_62",
-		//
-		// //Group 3
-		// // "RandomTestSets_62",
-		// "AllPoliciesTestSets_old_criteria_62",
-		// "AllPoliciesTestSets_new_criteria_62",
-		// "All1ResolvedDUTestSets_old_criteria_62",
-		// "All1ResolvedDUTestSets_new_criteria_62",
-		// "All2ResolvedDUTestSets_old_criteria_62",
-		// "All2ResolvedDUTestSets_new_criteria_62",
-		// };
+			+ date + "/";
 		
-		// 2009-09-21
+		String[] criteria = new String[]{
+				"RA-H", "RA-L", "RA-R" 
+		};
+		
+		HashMap criterion_perValidTS = new HashMap();
+		srcDir += "/" + size_ART + "/";
+		String saveFile = null;
+		for(int i = 0; i < criteria.length; i ++ ){
+			saveFile = srcDir + criteria[i] + "_" + size_ART + "_limited_load.txt";
+			String testSetExecutionFile = saveFile;
+			boolean containHeader1 = true;
+			
+			String perValidTSFile = saveFile.substring(0, saveFile
+					.indexOf("_limited_load.txt"))
+					+ "_PerValidTestSet.txt";
+			
+			HashMap perValidTS = ResultAnalyzer.perValidTestSet(
+					testSetExecutionFile, containHeader1, perValidTSFile);
+		}
+		
+		saveFile = srcDir + "/PerValidTS.txt";
+		String[] rename_criteria = criteria;
+		ResultAnalyzer.mergeHashMap_medium(criteria, rename_criteria,
+				criterion_perValidTS, date, saveFile);
+		
+		StringBuilder sb = new StringBuilder();			
+		sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
+			append("\t").append("mediumCI").append("\t").
+			append("maxCI").append("\t").append("stdCI").append("\n");
+		
+		boolean containHeader = true;
+		for (int i = 0; i < criteria.length; i++) {
+			if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
+				criteria[i] = criteria[i] + "_" + size_ART;
+			}
+			
+			sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
+		}
+		
+		sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
+		append("\t").append("mediumAct.").append("\t").
+		append("maxAct.").append("\t").append("stdAct.").append("\n");
+		for (int i = 0; i < criteria.length; i++) {
+			sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
+		}
+
+		sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
+		append("\t").append("mediumReplace.").append("\t").
+		append("maxReplace.").append("\t").append("stdReplace.").append("\n");
+		for (int i = 0; i < criteria.length; i++) {
+			sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
+		}
+
+		saveFile = srcDir + "/CI_Activation.txt";
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
+	/**2009-12-31: get the testing effectiveness and other info
+	 * (CI, activation, replacement)of adequate test sets
+	 * 
+	 * @param date
+	 * @param size_ART
+	 */
+	public static void saveTestingPerfomanceOfAdequateTestSet(String date, String size_ART){
+		HashMap criterion_perValidTS = new HashMap();
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/" + size_ART + "/";
+		
 		String[] criteria = new String[] {"RandomTestSets_27", "AllPolicies_CA",
 				"AllPolicies_RA-H", "AllPolicies_RA-L", "AllPolicies_RA-R",
 
@@ -2413,402 +2439,463 @@ public class ResultAnalyzer {
 				"RandomTestSets_RA-H_42","RandomTestSets_RA-L_42","RandomTestSets_RA-R_42",
 				"RandomTestSets_RA-H_50","RandomTestSets_RA-L_50","RandomTestSets_RA-R_50",
 		};
+		
+		String saveFile = null;
+		for (int i = 0; i < criteria.length; i++) {
+			if(criteria[i].contains("RandomTestSets") && !criteria[i].contains("RandomTestSets_R")){
+				saveFile = srcDir + criteria[i] + "_limited_load.txt";
+			}else{
+				saveFile = srcDir + criteria[i] + "_" + size_ART
+				+ "_limited_load.txt";	
+			}
+			
 
-		//2009-10-31: assemble the testing performance of random test sets constructed with only Context Diversity information
-		if(instruction.equals("ContextDiversityOnly")){
-			criteria = new String[]{
-					"RA-H", "RA-L", "RA-R" 
-			};
-			HashMap criterion_perValidTS = new HashMap();
-			srcDir += "/" + size_ART + "/";
-			String saveFile = null;
-			for(int i = 0; i < criteria.length; i ++ ){
-				saveFile = srcDir + criteria[i] + "_" + size_ART + "_limited_load.txt";
-				String testSetExecutionFile = saveFile;
-				boolean containHeader1 = true;
-				
-				String perValidTSFile = saveFile.substring(0, saveFile
-						.indexOf("_limited_load.txt"))
-						+ "_PerValidTestSet.txt";
-				
-				HashMap perValidTS = ResultAnalyzer.perValidTestSet(
-						testSetExecutionFile, containHeader1, perValidTSFile);
-			}
-			
-			saveFile = srcDir + "/PerValidTS.txt";
-			String[] rename_criteria = criteria;
-			ResultAnalyzer.mergeHashMap_medium(criteria, rename_criteria,
-					criterion_perValidTS, date, saveFile);
-			
-			StringBuilder sb = new StringBuilder();			
-			sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
-				append("\t").append("mediumCI").append("\t").
-				append("maxCI").append("\t").append("stdCI").append("\n");
-			
-			for (int i = 0; i < criteria.length; i++) {
-				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
-					criteria[i] = criteria[i] + "_" + size_ART;
-				}
-				
-				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
-			
-			sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
-			append("\t").append("mediumAct.").append("\t").
-			append("maxAct.").append("\t").append("stdAct.").append("\n");
-			for (int i = 0; i < criteria.length; i++) {
-				sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
+			String testSetExecutionFile = saveFile;
+			boolean containHeader1 = true;
 
-			sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
-			append("\t").append("mediumReplace.").append("\t").
-			append("maxReplace.").append("\t").append("stdReplace.").append("\n");
-			for (int i = 0; i < criteria.length; i++) {
-				sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
+			String perValidTSFile = saveFile.substring(0, saveFile
+					.indexOf("_limited_load.txt"))
+					+ "_PerValidTestSet.txt";
+			
+			//2009-2-23:
+			HashMap perValidTS = ResultAnalyzer.perValidTestSet(
+					testSetExecutionFile, containHeader1, perValidTSFile);
+			
+			//2009-10-14:
+//			HashMap perValidTS = ResultAnalyzer.perValidTestSet(faultList, 
+//					testSetExecutionFile, containHeader, saveFile);
+			
+			criterion_perValidTS.put(criteria[i], perValidTS);
+		}
 
-			saveFile = srcDir + "/CI_Activation.txt";
-			Logger.getInstance().setPath(saveFile, false);
-			Logger.getInstance().write(sb.toString());
-			Logger.getInstance().close();
+		saveFile = srcDir + "/PerValidTS.txt";
+
+
+		// 2009-09-19: rename the default criterion
+		String[] rename_criteria = new String[] {
+		// rename the criteria of Group 1
+				 /*"R-27",
+				"AS_CA",*/ 
+				"AS_RA-H", /*"AS_RA-L", "AS_RA-R",*/
+				/* "R-42",
+				"ASU-CA", */
+				"ASU_RA-H", /*"ASU_RA-L", "ASU_RA-R",
+				 "R-50",
+				"A2SU_CA",*/ 
+				"A2SU_RA-H"/*, "A2SU_RA-L", "A2SU_RA-R",*/
+				
+				/*"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
+				"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
+				"R-RA-H-50","R-RA-L-50", "R-RA-R-50"*/
+		};
+		//2009-02-25:
+//		ResultAnalyzer.mergeHashMap(criteria, rename_criteria,
+//				criterion_perValidTS, date, saveFile);
+		
+		//2009-10-20: get the mediume testing effectiveness
+		ResultAnalyzer.mergeHashMap_medium(criteria, rename_criteria,
+				criterion_perValidTS, date, saveFile);
+		
+		// 2009-02-25: to explore the CI distributions of different testing
+		// criteria
+		StringBuilder sb = new StringBuilder();			
+//		sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t"
+//				+ "maxCI" + "\t" + "stdCI" + "\n");
+		sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
+			append("\t").append("mediumCI").append("\t").
+			append("maxCI").append("\t").append("stdCI").append("\n");
+		
+		//2009-10-20:get CI distribution
+		boolean containHeader = true;
+		for (int i = 0; i < criteria.length; i++) {
+			if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
+				criteria[i] = criteria[i] + "_" + size_ART;
+			}
+			
+			//2009-02-25:
+//			sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader,
+//					criteria[i]));
+			sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
 		}
 		
-		if (instruction.equals("Context_Intensity")
-				|| instruction.equals("Limited") || instruction.equals("Load")) {
-			HashMap criterion_perValidTS = new HashMap();
-
-			// 2009-10-14: load the fault list
-//			String faultFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-//				+ date + "/FaultList.txt";;
-//			ArrayList faultList = loadFaultList(faultFile, false);
-			srcDir += "/" + size_ART + "/";
-			
-			String saveFile = null;
-			for (int i = 0; i < criteria.length; i++) {
-				if(criteria[i].contains("RandomTestSets") && !criteria[i].contains("RandomTestSets_R")){
-					saveFile = srcDir + criteria[i] + "_limited_load.txt";
-				}else{
-					saveFile = srcDir + criteria[i] + "_" + size_ART
-					+ "_limited_load.txt";	
-				}
-				
-
-				String testSetExecutionFile = saveFile;
-				boolean containHeader1 = true;
-
-				String perValidTSFile = saveFile.substring(0, saveFile
-						.indexOf("_limited_load.txt"))
-						+ "_PerValidTestSet.txt";
-				
-				//2009-2-23:
-				HashMap perValidTS = ResultAnalyzer.perValidTestSet(
-						testSetExecutionFile, containHeader1, perValidTSFile);
-				
-				//2009-10-14:
-//				HashMap perValidTS = ResultAnalyzer.perValidTestSet(faultList, 
-//						testSetExecutionFile, containHeader, saveFile);
-				
-				criterion_perValidTS.put(criteria[i], perValidTS);
-			}
-
-			saveFile = srcDir + "/PerValidTS.txt";
-
-
-			// 2009-09-19: rename the default criterion
-			String[] rename_criteria = new String[] {
-			// rename the criteria of Group 1
-					 /*"R-27",
-					"AS_CA",*/ 
-					"AS_RA-H", /*"AS_RA-L", "AS_RA-R",*/
-					/* "R-42",
-					"ASU-CA", */
-					"ASU_RA-H", /*"ASU_RA-L", "ASU_RA-R",
-					 "R-50",
-					"A2SU_CA",*/ 
-					"A2SU_RA-H"/*, "A2SU_RA-L", "A2SU_RA-R",*/
-					
-					/*"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
-					"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
-					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"*/
-			};
-			//2009-02-25:
-//			ResultAnalyzer.mergeHashMap(criteria, rename_criteria,
-//					criterion_perValidTS, date, saveFile);
-			//2009-10-20: get the mediume testing effectiveness
-			ResultAnalyzer.mergeHashMap_medium(criteria, rename_criteria,
-					criterion_perValidTS, date, saveFile);
-			
-			// 2009-02-25: to explore the CI distributions of different testing
-			// criteria
-			StringBuilder sb = new StringBuilder();			
-//			sb.append("criteria" + "\t" + "minCI" + "\t" + "meanCI" + "\t"
-//					+ "maxCI" + "\t" + "stdCI" + "\n");
-			sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
-				append("\t").append("mediumCI").append("\t").
-				append("maxCI").append("\t").append("stdCI").append("\n");
-			
-			//2009-10-20:get CI distribution
-			for (int i = 0; i < criteria.length; i++) {
-				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
-					criteria[i] = criteria[i] + "_" + size_ART;
-				}
-				
-				//2009-02-25:
-//				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader,
-//						criteria[i]));
-				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
-			
-			//2009-10-20:get Activation distribution
-			sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
-			append("\t").append("mediumAct.").append("\t").
-			append("maxAct.").append("\t").append("stdAct.").append("\n");
-			for (int i = 0; i < criteria.length; i++) {
-				sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
-
-			//2009-10-20:get Replacement distribution
-			sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
-			append("\t").append("mediumReplace.").append("\t").
-			append("maxReplace.").append("\t").append("stdReplace.").append("\n");
-			for (int i = 0; i < criteria.length; i++) {
-				sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
-
-			saveFile = srcDir + "/CI_Activation.txt";
-			Logger.getInstance().setPath(saveFile, false);
-			Logger.getInstance().write(sb.toString());
-			Logger.getInstance().close();
-		} else if (instruction.equals("getSizePerformance")) {
-			// 2009-03-06: get the correlations between test set size and fault
-			// detection rate of each criterion
-
-			// refine the criteria
-			criteria = new String[] {
-					// //Group 1
-					// "AllPoliciesTestSets_old",
-					// "AllPoliciesTestSets_new",
-					// "All1ResolvedDUTestSets_old",
-					// "All1ResolvedDUTestSets_new",
-					// "All2ResolvedDUTestSets_old",
-					// "All2ResolvedDUTestSets_new",
-
-					// Group 2
-					"RandomTestSets",
-					"AllPoliciesTestSets_old_random",
-					"AllPoliciesTestSets_new_random",
-					"All1ResolvedDUTestSets_old_random",
-					"All1ResolvedDUTestSets_new_random",
-					"All2ResolvedDUTestSets_old_random",
-					"All2ResolvedDUTestSets_new_random",
-
-					// Group 3
-					// "RandomTestSets",
-					"AllPoliciesTestSets_old_criteria",
-					"AllPoliciesTestSets_new_criteria",
-					"All1ResolvedDUTestSets_old_criteria",
-					"All1ResolvedDUTestSets_new_criteria",
-					"All2ResolvedDUTestSets_old_criteria",
-					"All2ResolvedDUTestSets_new_criteria", };
-
-			HashMap criterion_sizePerformance = new HashMap();
-			// srcDir += "/oldNewRegression/";
-			String saveFile = srcDir + "/Size_Performance.txt";
-			for (int i = 0; i < criteria.length; i++) {
-				String criterion = criteria[i];
-				containHeader = true;
-				criterion_sizePerformance
-						.put(criteria[i], ResultAnalyzer.getTSPerValidTestSet(
-								srcDir, criterion, containHeader));
-			}
-
-			ResultAnalyzer.getCorrelationTSPeformance(criteria,
-					criterion_sizePerformance, saveFile);
-		} else if (instruction.equals("getCIPerformance")) {
-			// 2009-03-10: get the correlations between CI of test sets and
-			// fault detection rate of each criterion
-			criteria = new String[] { "AllPolicies", "All1ResolvedDU",
-					"All2ResolvedDU", "TestCases", };
-
-			// 2009-02-25: to explore the CI distributions of different testing
-			// criteria
-			HashMap criterion_CIs = new HashMap();
-			for (int i = 0; i < criteria.length; i++) {
-				String pattern = criteria[i]
-						+ "\\_[0-9]+\\.0\\_[0-9]+\\.0\\_CI.txt";
-				criterion_CIs.put(criteria[i], ResultAnalyzer.getCriterialCI(
-						srcDir, containHeader, criteria[i], pattern));
-			}
-
-			HashMap criterion_CIPerformance = new HashMap();
-			String saveFile = srcDir + "/CI_Performance.txt";
-			for (int i = 0; i < criteria.length; i++) {
-				String criterion = criteria[i];
-				containHeader = true;
-				criterion_CIPerformance
-						.put(criterion, ResultAnalyzer.getCIPerValidTestSet(
-								srcDir, criterion, containHeader));
-			}
-			ResultAnalyzer.getCorrelationCIPeformance(criteria, criterion_CIs,
-					criterion_CIPerformance, saveFile);
-		} else if (instruction.equals("getCoveredElementsPerformance")) {
-			// 2009-03-31: get the correlation between covered elements and
-			// testing performance, this correlation
-			// can explain why CI does matter with testing effectiveness
-
-			// 1. get the correlations between CI and covered elements
-			String pattern = "TestCases"
-					+ "\\_[0-9]+\\.0\\_[0-9]+\\.0\\_coveredElements.txt";
-			containHeader = true;
-			HashMap CI_coveredElements = ResultAnalyzer.getCICoveredElements(
-					srcDir, containHeader, pattern);
-
-			// 2. get the correlations between CI and testing
-			// performances(measured by fault detection rate)
-			pattern = "TestCases"
-					+ "\\_[0-9]+\\.0\\_[0-9]+\\.0\\_limited_load.txt";
-			// HashMap CI_Performance =
-			// ResultAnalyzer.getCIPerValidTestSet(srcDir, containHeader,
-			// pattern);
-			HashMap CI_Performance = ResultAnalyzer.getCIExposedFaults(srcDir,
-					containHeader, pattern);
-			String saveFile = srcDir + "/CI_CoveredElements_Performance.txt";
-
-			// 3. merge the results
-			saveFile = srcDir + "/CI_CoveredElements_Performance.txt";
-			ResultAnalyzer.getCorrelation_CI_CoverEle_Testing(
-					CI_coveredElements, CI_Performance, saveFile);
-		} else if (instruction.equals("mergeFiles")) {
-			containHeader = true;
-			String prefix = args[2];
-			String pattern = prefix + "\\_[0-9]+\\_[0-9]+\\.txt";
-			String saveFile = srcDir + prefix + ".txt";
-			ResultAnalyzer.mergeFiles(srcDir, containHeader, pattern, saveFile);
-		} else if (instruction.equals("getLostTests")) {
-			criteria = new String[] {
-					// Group 2
-					"RandomTestSets",
-					"AllPoliciesTestSets_old_random",
-					"AllPoliciesTestSets_new_random",
-					"All1ResolvedDUTestSets_old_random",
-					"All1ResolvedDUTestSets_new_random",
-					"All2ResolvedDUTestSets_old_random",
-					"All2ResolvedDUTestSets_new_random",
-
-					//Group 3					
-					"AllPoliciesTestSets_old_criteria",
-					"AllPoliciesTestSets_new_criteria",
-					"All1ResolvedDUTestSets_old_criteria",
-					"All1ResolvedDUTestSets_new_criteria",
-					"All2ResolvedDUTestSets_old_criteria",
-					"All2ResolvedDUTestSets_new_criteria", };
-			int start = Integer.parseInt(args[2]);
-			int end = Integer.parseInt(args[3]);
-			ResultAnalyzer.getLostTest(criteria, srcDir, start, end);
-		}else if(instruction.equals("Load_Classified")){
-			//2009-10-26: a new analyzer to get the testing effectiveness on different categories of fault like hard, medium and easy.
-			HashMap criterion_perValidTS = new HashMap();
-			
-			//2009-10-26: add a parameter to indicate the fault category
-			String Hard_Medium_Easy = args[3];
-			//2009-10-26: change the fault list
-			String faultFile = srcDir + "/FaultList_" + Hard_Medium_Easy + ".txt";
-			//2009-10-26: change the srcDir
-			srcDir += size_ART + "/";
-			
-			String saveFile = null;
-			for (int i = 0; i < criteria.length; i++) {
-				if(criteria[i].contains("RandomTestSets") && !criteria[i].contains("RandomTestSets_R")){
-					saveFile = srcDir + criteria[i] + "_limited_load.txt";
-				}else{
-					saveFile = srcDir + criteria[i] + "_" + size_ART
-					+ "_limited_load.txt";	
-				}
-				
-
-				String testSetExecutionFile = saveFile;
-				boolean containHeader1 = true;
-
-				//2009-10-26: change the save file
-				String perValidTSFile = saveFile.substring(0, saveFile
-						.indexOf("_limited_load.txt"))
-						+ "_PerValidTestSet_" + Hard_Medium_Easy + ".txt";
-				
-				HashMap perValidTS = ResultAnalyzer.perValidTestSet(
-						testSetExecutionFile, containHeader1, perValidTSFile);
-				
-				
-				criterion_perValidTS.put(criteria[i], perValidTS);
-			}
-
-			saveFile = srcDir + "/PerValidTS_" + Hard_Medium_Easy+ ".txt";
-
-
-			String[] rename_criteria = new String[] {
-					 "R-27",
-					"AS_CA", 
-					"AS_RA-H", "AS_RA-L", "AS_RA-R",
-					 "R-42",
-					"ASU-CA", 
-					"ASU_RA-H", "ASU_RA-L", "ASU_RA-R",
-					 "R-50",
-					"A2SU_CA", 
-					"A2SU_RA-H", "A2SU_RA-L", "A2SU_RA-R",
-					
-					"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
-					"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
-					"R-RA-H-50","R-RA-L-50", "R-RA-R-50"
-			};
-			//2009-10-26: get the testing effectiveness based on classified fault
-			
-			ResultAnalyzer.mergeHashMap_medium_classify(criteria, 
-					rename_criteria, criterion_perValidTS, faultFile, saveFile);
-			
-			// 2009-02-25: to explore the CI distributions of different testing
-			// criteria
-			StringBuilder sb = new StringBuilder();			
-			sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
-				append("\t").append("mediumCI").append("\t").
-				append("maxCI").append("\t").append("stdCI").append("\n");
-			
-			//2009-10-20:get CI distribution
-			for (int i = 0; i < criteria.length; i++) {
-				if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
-					criteria[i] = criteria[i] + "_" + size_ART;
-				}
-				
-				sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
-			
-			//2009-10-20:get Activation distribution
-			sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
-			append("\t").append("mediumAct.").append("\t").
-			append("maxAct.").append("\t").append("stdAct.").append("\n");
-			for (int i = 0; i < criteria.length; i++) {
-				sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
-
-			//2009-10-20:get Replacement distribution
-			sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
-			append("\t").append("mediumReplace.").append("\t").
-			append("maxReplace.").append("\t").append("stdReplace.").append("\n");
-			for (int i = 0; i < criteria.length; i++) {
-				sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
-						criteria[i], rename_criteria[i]));
-			}
-
-			saveFile = srcDir + "/CI_Activation_" + Hard_Medium_Easy+ ".txt";
-			Logger.getInstance().setPath(saveFile, false);
-			Logger.getInstance().write(sb.toString());
-			Logger.getInstance().close();
+		//2009-10-20:get Activation distribution
+		sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
+		append("\t").append("mediumAct.").append("\t").
+		append("maxAct.").append("\t").append("stdAct.").append("\n");
+		for (int i = 0; i < criteria.length; i++) {
+			sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
 		}
+
+		//2009-10-20:get Replacement distribution
+		sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
+		append("\t").append("mediumReplace.").append("\t").
+		append("maxReplace.").append("\t").append("stdReplace.").append("\n");
+		for (int i = 0; i < criteria.length; i++) {
+			sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
+		}
+
+		saveFile = srcDir + "/CI_Activation.txt";
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
+	/**2009-10-26: a new analyzer to get the testing 
+	 * effectiveness on different categories of fault like hard, medium and easy.
+	 * 
+	 * @param date
+	 * @param size_ART
+	 * @param Hard_Medium_Easy
+	 */
+	public static void saveTestingPerformanceOnFaultCategory(String date, String size_ART, String Hard_Medium_Easy ){
+		HashMap criterion_perValidTS = new HashMap();
+		
+		 String[] criteria = new String[]{
+		 //Group 1
+		 "RandomTestSets_27",
+		 "AllPoliciesTestSets_old",
+		 "AllPoliciesTestSets_new",
+		 "RandomTestSets_42",
+		 "All1ResolvedDUTestSets_old",
+		 "All1ResolvedDUTestSets_new",
+		 "RandomTestSets_50",
+		 "All2ResolvedDUTestSets_old",
+		 "All2ResolvedDUTestSets_new",
+						
+		 //Group 2
+		 "RandomTestSets_62",
+		 "AllPoliciesTestSets_old_random_62",
+		 "AllPoliciesTestSets_new_random_62",
+		 "All1ResolvedDUTestSets_old_random_62",
+		 "All1ResolvedDUTestSets_new_random_62",
+		 "All2ResolvedDUTestSets_old_random_62",
+		 "All2ResolvedDUTestSets_new_random_62",
+		
+		 //Group 3
+		 // "RandomTestSets_62",
+		 "AllPoliciesTestSets_old_criteria_62",
+		 "AllPoliciesTestSets_new_criteria_62",
+		 "All1ResolvedDUTestSets_old_criteria_62",
+		 "All1ResolvedDUTestSets_new_criteria_62",
+		 "All2ResolvedDUTestSets_old_criteria_62",
+		 "All2ResolvedDUTestSets_new_criteria_62",
+		 };
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date ;
+		String faultFile = srcDir + "/FaultList_" + Hard_Medium_Easy + ".txt";
+		//2009-10-26: change the srcDir
+		srcDir += size_ART + "/";
+		
+		String saveFile = null;
+		for (int i = 0; i < criteria.length; i++) {
+			if(criteria[i].contains("RandomTestSets") && !criteria[i].contains("RandomTestSets_R")){
+				saveFile = srcDir + criteria[i] + "_limited_load.txt";
+			}else{
+				saveFile = srcDir + criteria[i] + "_" + size_ART
+				+ "_limited_load.txt";	
+			}
+			
+
+			String testSetExecutionFile = saveFile;
+			boolean containHeader1 = true;
+
+			//2009-10-26: change the save file
+			String perValidTSFile = saveFile.substring(0, saveFile
+					.indexOf("_limited_load.txt"))
+					+ "_PerValidTestSet_" + Hard_Medium_Easy + ".txt";
+			
+			HashMap perValidTS = ResultAnalyzer.perValidTestSet(
+					testSetExecutionFile, containHeader1, perValidTSFile);
+			
+			
+			criterion_perValidTS.put(criteria[i], perValidTS);
+		}
+
+		saveFile = srcDir + "/PerValidTS_" + Hard_Medium_Easy+ ".txt";
+
+
+		String[] rename_criteria = new String[] {
+				 "R-27",
+				"AS_CA", 
+				"AS_RA-H", "AS_RA-L", "AS_RA-R",
+				 "R-42",
+				"ASU-CA", 
+				"ASU_RA-H", "ASU_RA-L", "ASU_RA-R",
+				 "R-50",
+				"A2SU_CA", 
+				"A2SU_RA-H", "A2SU_RA-L", "A2SU_RA-R",
+				
+				"R-RA-H-27","R-RA-L-27", "R-RA-R-27",
+				"R-RA-H-42","R-RA-L-42", "R-RA-R-42",
+				"R-RA-H-50","R-RA-L-50", "R-RA-R-50"
+		};
+		//2009-10-26: get the testing effectiveness based on classified fault
+		
+		ResultAnalyzer.mergeHashMap_medium_classify(criteria, 
+				rename_criteria, criterion_perValidTS, faultFile, saveFile);
+		
+		// 2009-02-25: to explore the CI distributions of different testing
+		// criteria
+		StringBuilder sb = new StringBuilder();			
+		sb.append("criterion").append("\t").append("minCI").append("\t").append("meanCI").
+			append("\t").append("mediumCI").append("\t").
+			append("maxCI").append("\t").append("stdCI").append("\n");
+		
+		//2009-10-20:get CI distribution
+		boolean containHeader = true;
+		for (int i = 0; i < criteria.length; i++) {
+			if(!criteria[i].contains("RandomTestSets") || criteria[i].contains("RandomTestSets_R")){
+				criteria[i] = criteria[i] + "_" + size_ART;
+			}
+			
+			sb.append(ResultAnalyzer.getCriteriaCI(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
+		}
+		
+		//2009-10-20:get Activation distribution
+		sb.append("\n").append("criterion").append("\t").append("minAct.").append("\t").append("meanAct.").
+		append("\t").append("mediumAct.").append("\t").
+		append("maxAct.").append("\t").append("stdAct.").append("\n");
+		for (int i = 0; i < criteria.length; i++) {
+			sb.append(ResultAnalyzer.getActivation(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
+		}
+
+		//2009-10-20:get Replacement distribution
+		sb.append("\n").append("criterion").append("\t").append("minReplace.").append("\t").append("meanReplace.").
+		append("\t").append("mediumReplace.").append("\t").
+		append("maxReplace.").append("\t").append("stdReplace.").append("\n");
+		for (int i = 0; i < criteria.length; i++) {
+			sb.append(ResultAnalyzer.getReplacement(srcDir, containHeader, 
+					criteria[i], rename_criteria[i]));
+		}
+
+		saveFile = srcDir + "/CI_Activation_" + Hard_Medium_Easy+ ".txt";
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();	
+	}
+	
+	/**2009-12-31: get the correlation between test suite size 
+	 * and testing performance
+	 * 
+	 * @param date
+	 */
+	public static void saveCorrelationSizePerformance(String date){
+		String[] criteria = new String[] {
+				// //Group 1
+				// "AllPoliciesTestSets_old",
+				// "AllPoliciesTestSets_new",
+				// "All1ResolvedDUTestSets_old",
+				// "All1ResolvedDUTestSets_new",
+				// "All2ResolvedDUTestSets_old",
+				// "All2ResolvedDUTestSets_new",
+
+				// Group 2
+				"RandomTestSets",
+				"AllPoliciesTestSets_old_random",
+				"AllPoliciesTestSets_new_random",
+				"All1ResolvedDUTestSets_old_random",
+				"All1ResolvedDUTestSets_new_random",
+				"All2ResolvedDUTestSets_old_random",
+				"All2ResolvedDUTestSets_new_random",
+
+				// Group 3
+				// "RandomTestSets",
+				"AllPoliciesTestSets_old_criteria",
+				"AllPoliciesTestSets_new_criteria",
+				"All1ResolvedDUTestSets_old_criteria",
+				"All1ResolvedDUTestSets_new_criteria",
+				"All2ResolvedDUTestSets_old_criteria",
+				"All2ResolvedDUTestSets_new_criteria", };
+
+		HashMap criterion_sizePerformance = new HashMap();
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date ;		
+		boolean containHeader = true;
+		for (int i = 0; i < criteria.length; i++) {
+			String criterion = criteria[i];
+			
+			criterion_sizePerformance
+					.put(criteria[i], ResultAnalyzer.getTSPerValidTestSet(
+							srcDir, criterion, containHeader));
+		}
+		
+		String saveFile = srcDir + "/Size_Performance.txt";
+		ResultAnalyzer.getCorrelationTSPeformance(criteria,
+				criterion_sizePerformance, saveFile);
+	}
+	
+	/**2009-12-31: get the correlation between CI of adequate test sets
+	 * and testing performance
+	 * 
+	 * @param date
+	 */
+	public static void saveCorrelationCIPerformance(String date){
+		String[] criteria = new String[] { "AllPolicies", "All1ResolvedDU",
+				"All2ResolvedDU", "TestCases", };
+
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date ;	
+		boolean containHeader = true;
+		// 2009-02-25: to explore the CI distributions of different testing
+		// criteria
+		HashMap criterion_CIs = new HashMap();
+		for (int i = 0; i < criteria.length; i++) {
+			String pattern = criteria[i]
+					+ "\\_[0-9]+\\.0\\_[0-9]+\\.0\\_CI.txt";
+			criterion_CIs.put(criteria[i], ResultAnalyzer.getCriterialCI(
+					srcDir, containHeader, criteria[i], pattern));
+		}
+
+		HashMap criterion_CIPerformance = new HashMap();
+		String saveFile = srcDir + "/CI_Performance.txt";
+		for (int i = 0; i < criteria.length; i++) {
+			String criterion = criteria[i];
+			criterion_CIPerformance
+					.put(criterion, ResultAnalyzer.getCIPerValidTestSet(
+							srcDir, criterion, containHeader));
+		}
+		ResultAnalyzer.getCorrelationCIPeformance(criteria, criterion_CIs,
+				criterion_CIPerformance, saveFile);
+	}
+
+	/**2009-12-31:get the correlation between coveredElements of adequate test sets
+	 * and testing performance
+	 * 
+	 * @param date
+	 */
+	public static void saveCorrelationCoveredElemsPerformance(String date){
+		// 2009-03-31: get the correlation between covered elements and
+		// testing performance, this correlation
+		// can explain why CI does matter with testing effectiveness
+
+		// 1. get the correlations between CI and covered elements
+		String pattern = "TestCases"
+				+ "\\_[0-9]+\\.0\\_[0-9]+\\.0\\_coveredElements.txt";
+		
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date ;	
+		boolean containHeader = true;
+		HashMap CI_coveredElements = ResultAnalyzer.getCICoveredElements(
+				srcDir, containHeader, pattern);
+
+		// 2. get the correlations between CI and testing
+		// performances(measured by fault detection rate)
+		pattern = "TestCases"
+				+ "\\_[0-9]+\\.0\\_[0-9]+\\.0\\_limited_load.txt";
+		// HashMap CI_Performance =
+		// ResultAnalyzer.getCIPerValidTestSet(srcDir, containHeader,
+		// pattern);
+		HashMap CI_Performance = ResultAnalyzer.getCIExposedFaults(srcDir,
+				containHeader, pattern);
+		String saveFile = srcDir + "/CI_CoveredElements_Performance.txt";
+
+		// 3. merge the results
+		saveFile = srcDir + "/CI_CoveredElements_Performance.txt";
+		ResultAnalyzer.getCorrelation_CI_CoverEle_Testing(
+				CI_coveredElements, CI_Performance, saveFile);
+	}
+	
+		
+	/**2009-12-31: merge files based on some patterns
+	 * 
+	 * @param date
+	 * @param prefix
+	 */
+	public static void saveMergedFile(String date, String prefix){
+		boolean containHeader = true;		
+		String pattern = prefix + "\\_[0-9]+\\_[0-9]+\\.txt";
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date ;	
+		String saveFile = srcDir + prefix + ".txt";
+		ResultAnalyzer.mergeFiles(srcDir, containHeader, pattern, saveFile);
+	}
+	
+	/**2009-12-31: get lost tests with respect to an adequate testing criterion
+	 * 
+	 * @param startVersion
+	 * @param endVersion
+	 * @param date
+	 */
+	public static void saveLostTests(String startVersion, String endVersion, String date){
+		String[] criteria = new String[] {
+				// Group 2
+				"RandomTestSets",
+				"AllPoliciesTestSets_old_random",
+				"AllPoliciesTestSets_new_random",
+				"All1ResolvedDUTestSets_old_random",
+				"All1ResolvedDUTestSets_new_random",
+				"All2ResolvedDUTestSets_old_random",
+				"All2ResolvedDUTestSets_new_random",
+
+				//Group 3					
+				"AllPoliciesTestSets_old_criteria",
+				"AllPoliciesTestSets_new_criteria",
+				"All1ResolvedDUTestSets_old_criteria",
+				"All1ResolvedDUTestSets_new_criteria",
+				"All2ResolvedDUTestSets_old_criteria",
+				"All2ResolvedDUTestSets_new_criteria", };
+		int start = Integer.parseInt(startVersion);
+		int end = Integer.parseInt(endVersion);
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date ;
+		ResultAnalyzer.getLostTest(criteria, srcDir, start, end);
+	}
+	
+	public static void main(String[] args) {
+
+//		// 2009-02-18: load CI of each test case from a file
+//		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//			+ "/20091019/TestPool.txt";
+//		boolean containHeader = true;		
+//		Adequacy.getTestPool(testcaseFile, containHeader);
+//
+//		// 2009-02-22: load failure rates from a file
+//		containHeader = false;
+//		String failureRateFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//				+ "/20091019/failureRate.txt";
+//		ResultAnalyzer.loadFailureRate(failureRateFile, containHeader);
+
+		//2009-12-31: reformat all the methods
+		String instruction = args[0];
+		
+		if(instruction.equals("ContextDiversityOnly")){
+			String date = args[1];
+			String size_ART = args[2];
+			ResultAnalyzer.saveContextDiveristyInfo(date, size_ART);			
+		}else if(instruction.equals("Context_Intensity")
+				|| instruction.equals("Limited") || instruction.equals("Load")){
+			String date = args[1];
+			String size_ART = args[2];
+			ResultAnalyzer.saveTestingPerfomanceOfAdequateTestSet(date, size_ART);			
+		}else if (instruction.equals("getSizePerformance")) {
+			String date = args[1];
+			ResultAnalyzer.saveCorrelationSizePerformance(date);
+		}else if (instruction.equals("getCIPerformance")) {
+			String date = args[1];
+			ResultAnalyzer.saveCorrelationCIPerformance(date);
+		}else if (instruction.equals("getCoveredElementsPerformance")) {
+			String date = args[1];
+			ResultAnalyzer.saveCorrelationCoveredElemsPerformance(date);
+		}else if (instruction.equals("mergeFiles")) {
+			String date = args[1];
+			String prefix = args[2];
+			ResultAnalyzer.saveMergedFile(date, prefix);
+		} else if (instruction.equals("getLostTests")) {
+			String date = args[1];
+			String startVersion = args[2];
+			String endVersion = args[3];
+			ResultAnalyzer.saveLostTests(startVersion, endVersion, date);
+		}else if(instruction.equals("Load_Classified")){
+			String date = args[1];
+			String size_ART = args[2];
+			String Hard_Medium_Easy = args[3]; //can only be "Hard", "Medium" or "Easy"
+			ResultAnalyzer.saveTestingPerformanceOnFaultCategory(date, size_ART, Hard_Medium_Easy);
+		}
+		
+		
+
+
+		
+		
+		
 	} 
 }
