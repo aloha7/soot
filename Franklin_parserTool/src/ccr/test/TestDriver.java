@@ -972,8 +972,8 @@ public class TestDriver {
 	
 	/**2009-10-05: get all faulty versions whose serial numbers are within specified ranges 
 	 * 
-	 * @param startVersion
-	 * @param endVersion
+	 * @param startVersion: inclusive
+	 * @param endVersion: exclusive
 	 * @return: a list of faulty versions(faulty version(string)-> failure rate(double))
 	 */
 	public static HashMap getFaultList(String versionPackageName, String oracleClassName, int startVersion, int endVersion){
@@ -1010,8 +1010,8 @@ public class TestDriver {
 	 * @param oracleClassName
 	 * @param testpool
 	 * @param reportDir
-	 * @param startVersion
-	 * @param endVersion
+	 * @param startVersion:inclusive
+	 * @param endVersion:exclusive
 	 */
 	public static void getFailureRate_efficient(String versionPackageName, String oracleClassName, TestSet testpool, String reportDir,
 			int startVersion, int endVersion){
@@ -1416,9 +1416,11 @@ public class TestDriver {
 			String reportDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/";
 			
 			if(argv.length == 2){
-				TestDriver.getFailureRate(versionPackageName, oracleClassName, testpool, reportDir);
-//				getFailureRate("testversion", "TestCFG2", Adequacy.getTestPool(testcaseFile, true),
-//						"src/ccr/experiment/Context-Intensity_backup/TestHarness/" + date + "/");	
+//				TestDriver.getFailureRate(versionPackageName, oracleClassName, testpool, reportDir);				
+				//2009-12-31: the default startVersion and endVersion are 0 and 5023, respectively
+				int startVersion = 0;
+				int endVersion = 5024;
+				TestDriver.getFailureRate_efficient(versionPackageName, oracleClassName, testpool, reportDir, startVersion, endVersion);
 			}else if(argv.length == 4){
 				int startVersion = Integer.parseInt(argv[2]);
 				int endVersion = Integer.parseInt(argv[3]);
