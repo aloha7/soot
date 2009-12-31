@@ -102,7 +102,7 @@ public class TestSuiteReduction {
 		
 		//2.construct the program elements specified by a criterion
 		String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/" + "labelResult_" + criterion +".txt";	
+			+ date + "/" + "ElemLabels_" + criterion +".txt";	
 		Vector programEles = this.saveProgramEles(c, filename);
 		
 		//3.load all test cases in the test pool
@@ -200,6 +200,7 @@ public class TestSuiteReduction {
 		
 		//2009-12-30: for debugging purpose
 		int hitCounter = 0;
+		int hitSum = 0;
 		HashMap hitSet_ele_coverTimes = new HashMap(); 
 		String[] elems = (String[])t.coverFreq.keySet().toArray(new String[0]);
 		for(int i = 0; i < programEles.size(); i ++){
@@ -226,22 +227,27 @@ public class TestSuiteReduction {
 			}
 			int coverTime = (Integer)hitSet_ele_coverTimes.get(elem);
 			hitSet.add(coverTime);
+			hitSum += coverTime;
 		}
 		
-//		//validate the hitCounter
+//		//2009-12-30(testing purpose): validate the hitCounter
 		int counter = 0;
+		int sum = 0;
 		for(int i = 0; i < hitSet.size(); i ++){
-			if(((Integer)hitSet.get(i)) > 0){
+			int cover =(Integer)hitSet.get(i); 
+			if( cover > 0){
 				counter ++;
+				sum += cover; 
 			}
 		}
-		if(hitCounter != counter){
+		if(hitCounter != counter || hitSum != sum){
 			System.out.println("bad data");
 		}
 		
 		
 		t.hitSet = hitSet;
 		t.hitCounter = hitCounter;
+		t.hitSum = hitSum;
 		t.coverage = (double)t.hitCounter/(double)programEles.size();
 		
 		return t;
@@ -255,8 +261,8 @@ public class TestSuiteReduction {
 			sb.append("TestCase").append("\t");
 			sb.append("CI").append("\t").append("Activation").append("\t").
 			append("Length").append("\t").append("Time").append("\t").
-			append("HitCounter").append("\t").append("Coverage").append("\t").
-			append("Oracle").append("\t");
+			append("HitCounter").append("\t").append("HitSum").append("\t").
+			append("Coverage").append("\t").append("Oracle").append("\t");
 			for(int i = 0; i < programEles.size(); i++){ //index for hitSet
 				sb.append(programEles.get(i)).append("\t");
 			}
@@ -269,7 +275,8 @@ public class TestSuiteReduction {
 			sb.append(t.index).append("\t");
 			sb.append(t.CI).append("\t").append(t.activation).append("\t").
 				append(t.length).append("\t").append(t.execTime).append("\t").
-				append(t.hitCounter).append("\t").append(t.coverage).append("\t");
+				append(t.hitCounter).append("\t").append(t.hitSum).append("\t").
+				append(t.coverage).append("\t");
 			sb.append(((ApplicationResult)t.output).toString()).append("\t");
 			for(int j = 0; j < t.hitSet.size(); j++){
 				sb.append(t.hitSet.get(j)).append("\t");
