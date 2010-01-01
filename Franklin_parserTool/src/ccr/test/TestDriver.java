@@ -670,6 +670,8 @@ public class TestDriver {
 		}
 	}
 	
+	
+	
 	/**2009-03-30: Compared with "getFaultSimilarity()", the threshold for this method is 1.0 by default, that is,
 	 * if two faults are equivalent, then the number of valid test cases for them are exactly the same  
 	 * 
@@ -1045,15 +1047,15 @@ public class TestDriver {
 				
 				if(failureRate.containsKey(faultyVersion)){
 					int detected = 0;
-					System.out.println("Start version:" + faultyVersion);
+					System.out.print("Start version:" + faultyVersion + ";");
+					long startTime1 = System.currentTimeMillis();
 					for(int j = 0; j < testpool.size(); j ++){
-						long startTime1 = System.currentTimeMillis();
+						
 						String appClassName  = APPLICATION_PACKAGE + "." + versionPackageName + "." 
 							+ oracleClassName + "_" + faultyVersion;
 						
 						ApplicationResult result = (ApplicationResult) run(
 								appClassName, testpool.get(j));
-						long last = System.currentTimeMillis() - startTime1;
 						
 						//fault version
 						sb.append(appClassName.substring(appClassName.indexOf("_")+"_".length()));
@@ -1084,8 +1086,12 @@ public class TestDriver {
 							sb.append("\n");
 						}
 					}
+					long last = System.currentTimeMillis() - startTime1;
+					System.out.println("Time:" + last +";");
 				}
 			}
+			long wholeTime = System.currentTimeMillis() - startTime;
+			System.out.println("TotalTime:" + wholeTime + ";");
 			
 			//detailed result
 			BufferedWriter bw = new BufferedWriter(new FileWriter(reportDir + "/detailed_"+startVersion+ "_"+ endVersion+".txt"));
@@ -1419,7 +1425,7 @@ public class TestDriver {
 //				TestDriver.getFailureRate(versionPackageName, oracleClassName, testpool, reportDir);				
 				//2009-12-31: the default startVersion and endVersion are 0 and 5023, respectively
 				int startVersion = 0;
-				int endVersion = 5024;
+				int endVersion = 2;
 				TestDriver.getFailureRate_efficient(versionPackageName, oracleClassName, testpool, reportDir, startVersion, endVersion);
 			}else if(argv.length == 4){
 				int startVersion = Integer.parseInt(argv[2]);
