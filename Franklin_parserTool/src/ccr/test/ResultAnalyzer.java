@@ -767,44 +767,240 @@ public class ResultAnalyzer {
 		
 		return faults;
 	}
+	
+	/**2010-01-01:give a set of mutants in a fault list, get the killed mutant numbers 
+	 * of each test case in the test pool
+	 * 
+	 * @param date_detailed
+	 * @param containHeader_detailed
+	 * @param faultList
+	 * @param containHeader_fault
+	 * @param date_save
+	 */
+	public static void saveToFile_TestPool_faultList(String date_detailed, boolean containHeader_detailed, String faultList, boolean containHeader_fault, String date_save){
+		StringBuilder sb = new StringBuilder();
+		sb.append("TestCase").append("\t").append("KilledNumber").append("\t").
+		append("MutantKillArray").append("\n");
+		
+		int fault_counter = 0;
+		ArrayList faultArray = new ArrayList();
+		File tmp = new File(faultList);
+		if(tmp.exists()){
+			//1. load the fault list
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(faultList));
+				if(containHeader_fault){
+					br.readLine();
+				}
+				
+				String str = null;
+				while((str = br.readLine())!= null){
+					faultArray.add(str);
+					fault_counter ++;
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			//2. initialize the testcase_faultKilled array
+			HashMap fault_effectTS = null;			
+			HashMap testcase_faultKilled = new HashMap(); 
+			int TEST_POOL_END_LABEL = TestManager.TEST_POOL_SIZE + TestManager.TEST_POOL_START_LABEL;
+			for(int i = TestManager.TEST_POOL_START_LABEL; i < TEST_POOL_END_LABEL; i ++){
+				testcase_faultKilled.put(""+i, new ArrayList());
+			}
+			
+			//3. for each fault in the fault array
+			for(int i = 0 ; i < faultArray.size(); i ++){
+				int fault_int = Integer.parseInt((String)faultArray.get(i));
+				String fault = "" + fault_int;
+				if(fault_int >= 0 && fault_int < 10){
+					fault = "0" + fault_int;
+				}
+				
+				String testDetailFile = 
+					 "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+						+ date_detailed + "/" + "detailed_" + fault_int + "_" + (fault_int + 1) + ".txt";
+				
+				fault_effectTS = ResultAnalyzer.getFaultsWithTestCase(testDetailFile, containHeader_detailed);
+				if(fault_effectTS.size() == 0){ // 2. This file does not exist means 
+					//This fault throws some exceptions or runs out of time,
+					//then each test case can kill this fault
+					Iterator it_tc = testcase_faultKilled.keySet().iterator();
+					String testcase;
+					ArrayList killed = null;
+					while(it_tc.hasNext()){
+						testcase = (String)it_tc.next();
+						killed = (ArrayList)testcase_faultKilled.get(testcase);
+						killed.add(fault);
+						testcase_faultKilled.put(testcase, killed);
+					}				
+				}else if(fault_effectTS.size() > 0){ 
+					ArrayList effectTS = (ArrayList)fault_effectTS.get(fault);
+					if(effectTS.size() > 0){//some test cases kill this fault
+						String testcase;
+						ArrayList killed = null;
+						for(int j = 0; j < effectTS.size(); j ++){
+							testcase = (String)effectTS.get(j);
+							killed = (ArrayList)testcase_faultKilled.get(testcase);
+							killed.add(fault);
+							testcase_faultKilled.put(testcase, killed);
+						}					
+					}
+				}	
+			}
+			
+			//3. record the information
+			for(int i = TestManager.TEST_POOL_START_LABEL; i < TEST_POOL_END_LABEL; i ++){
+				String testcase = "" + i;
+				ArrayList killed = (ArrayList)testcase_faultKilled.get(testcase);
+				sb.append(testcase).append("\t");
+				sb.append(killed.size()).append("\t");
+//				for(int j = 0; j < killed.size(); j ++){
+//					String faultKilled = (String)killed.get(j);
+//					sb.append(faultKilled).append(",");
+//				}
+				sb.append("\n");
+			}
+			
+			String saveFile = "src/ccr/experiment"
+				+ "/Context-Intensity_backup/TestHarness/" + date_save + "/TestCaseDetails_" 
+				+ fault_counter + ".txt";
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			
+		}else{
+			System.out.println("The fault list:" + faultList + " does not exist");
+		}
+	}
+	
+	/**2009-12-31:get the killed mutant numbers of each test case in the test pool
+	 * 
+	 * @param date_detailed: the directory of detailed files
+	 * @param containHeader: whether the associated test detail file contains the Header
+	 * @param startVersion: inclusive
+	 * @param endVersion: exclusive
+	 * @param date_save: directory to save the results
+	 */
+	public static void saveToFile_TestPool(String date_detailed, boolean containHeader, int startVersion, int endVersion, String date_save){
+		StringBuilder sb = new StringBuilder();
+		sb.append("TestCase").append("\t").append("KilledNumber").append("\t").
+		append("MutantKillArray").append("\n");
+		
+		HashMap fault_effectTS = null;
+		int fault_counter = 0;
+		HashMap testcase_faultKilled = new HashMap(); 
+		int TEST_POOL_END_LABEL = TestManager.TEST_POOL_SIZE + TestManager.TEST_POOL_START_LABEL;
+		for(int i = TestManager.TEST_POOL_START_LABEL; i < TEST_POOL_END_LABEL; i ++){
+			testcase_faultKilled.put(""+i, new ArrayList());
+		}
+		
+		for(int i = startVersion; i < endVersion; i ++){
+			fault_counter ++;
+			String testDetailFile = 
+				 "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+					+ date_detailed + "/" + "detailed_" + i + "_" + (i+1) + ".txt";
+			
+			//1. check each test case to see whether it can kill this fault
+			String fault  = ""+ i ; 
+			if(i >= 0 && i < 10){
+				fault = "0" + i;
+			}
+			
+			fault_effectTS = ResultAnalyzer.getFaultsWithTestCase(testDetailFile, containHeader);
+			if(fault_effectTS.size() == 0){ // 2. This file does not exist means 
+				//This fault throws some exceptions or runs out of time,
+				//then each test case can kill this fault
+				Iterator it_tc = testcase_faultKilled.keySet().iterator();
+				String testcase;
+				ArrayList killed = null;
+				while(it_tc.hasNext()){
+					testcase = (String)it_tc.next();
+					killed = (ArrayList)testcase_faultKilled.get(testcase);
+					killed.add(fault);
+					testcase_faultKilled.put(testcase, killed);
+				}				
+			}else if(fault_effectTS.size() > 0){ 
+				ArrayList effectTS = (ArrayList)fault_effectTS.get(fault);
+				if(effectTS.size() > 0){//some test cases kill this fault
+					String testcase;
+					ArrayList killed = null;
+					for(int j = 0; j < effectTS.size(); j ++){
+						testcase = (String)effectTS.get(j);
+						killed = (ArrayList)testcase_faultKilled.get(testcase);
+						killed.add(fault);
+						testcase_faultKilled.put(testcase, killed);
+					}					
+				}
+				//no test case can kill it				
+			}									
+		}
+		
+		//3. record the information
+		for(int i = TestManager.TEST_POOL_START_LABEL; i < TEST_POOL_END_LABEL; i ++){
+			String testcase = "" + i;
+			ArrayList killed = (ArrayList)testcase_faultKilled.get(testcase);
+			sb.append(testcase).append("\t");
+			sb.append(killed.size()).append("\t");
+//			for(int j = 0; j < killed.size(); j ++){
+//				String faultKilled = (String)killed.get(j);
+//				sb.append(faultKilled).append(",");
+//			}
+			sb.append("\n");
+		}
+		
+		String saveFile = "src/ccr/experiment"
+			+ "/Context-Intensity_backup/TestHarness/" + date_save + "/TestCaseDetails_" 
+			+ fault_counter + ".txt";
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
 
 	/**2009-12-31: get the failure rate and killed test case set of each fault
 	 * 
-	 * @param date_detailed: the direcoty of detailed files
+	 * @param date_detailed: the directory of detailed files
 	 * @param containHeader: whether the associated test detail file contains the Header
 	 * @param startVersion:inclusive
 	 * @param endVersion:exclusive
 	 * @param date_save: directory to save the results
 	 */
-	public static void saveToFile_failureRates(String date_detailed, boolean containHeader, int startVersion, int endVersion, String date_save){
+	public static void saveToFile_failureRates(String date_detailed, boolean containHeader, int startVersion, 
+			int endVersion, String date_save){
 		StringBuilder sb = new StringBuilder();
 		sb.append("Mutant").append("\t").append("FailureRate").append("\t").
 		append("TestCaseKillArray").append("\n");
 		
 		HashMap fault_effectTS = null;
-		
+		int fault_counter = 0;
 		int TEST_POOL_END_LABEL = TestManager.TEST_POOL_SIZE + TestManager.TEST_POOL_START_LABEL;
 		
 		for(int i = startVersion; i < endVersion; i ++){
+			fault_counter ++;
 			String testDetailFile = 
 				 "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 					+ date_detailed + "/" + "detailed_" + i + "_" + (i+1) + ".txt";
 			
 			fault_effectTS = ResultAnalyzer.getFaultsWithTestCase(testDetailFile, containHeader);
-			if(fault_effectTS.size() == 0 || fault_effectTS == null){
+			if(fault_effectTS.size() == 0 ){
+				//this fault must throw out some exceptions or run out of time
 				String fault  = ""+ i ; 
 				if(i >= 0 && i < 10){
 					fault = "0" + i;
 				}
-								  
 				
 				//1. get the fault ID
 				sb.append(fault).append("\t");
 				//2. get the failure rate
-				sb.append("0.0").append("\t");			
+				sb.append("1.0").append("\t");			
 //				//3. get the kill matrix of the test pool (set 1(kill the mutant) or 0(pass it) for each ordered test case)
 //				for(int j = TestManager.TEST_POOL_START_LABEL; j < TEST_POOL_END_LABEL; j ++){
-//					sb.append("0,");					
+//					sb.append("1,");					
 //				}
 				sb.append("\n");
 				
@@ -820,7 +1016,8 @@ public class ResultAnalyzer {
 				//1. get the fault ID
 				sb.append(fault).append("\t");
 				//2. get the failure rate
-				sb.append(failureRate).append("\t");							
+				sb.append(failureRate).append("\t");	
+				
 //				//3. get the kill matrix of the test pool (set 1(kill the mutant) or 0(pass it) for each ordered test case)
 //				for(int j = TestManager.TEST_POOL_START_LABEL; j < TEST_POOL_END_LABEL; j ++){
 //					if(effectTS.contains(""+j)){
@@ -833,7 +1030,8 @@ public class ResultAnalyzer {
 			}
 		}
 		String saveFile = "src/ccr/experiment"
-			+ "/Context-Intensity_backup/TestHarness/" + date_save + "/FailureRateDetails.txt";
+			+ "/Context-Intensity_backup/TestHarness/" + date_save + "/FailureRateDetails"
+			+ fault_counter + ".txt";
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
@@ -2918,6 +3116,7 @@ public class ResultAnalyzer {
 			int endVersion = 5024;
 			String date_save = args[2]; // the directory to save the results			
 			ResultAnalyzer.saveToFile_failureRates(date_detailed, containHeader, startVersion, endVersion, date_save);
+//			ResultAnalyzer.saveToFile_TestPool(date_detailed, containHeader, startVersion, endVersion, date_save);
 		}
 	} 
 }
