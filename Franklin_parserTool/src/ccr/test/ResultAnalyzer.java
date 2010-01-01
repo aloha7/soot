@@ -711,6 +711,14 @@ public class ResultAnalyzer {
 		}
 	}
 
+	public static ArrayList getFaultWithTestCase(String testDetailFile, boolean containHeader){
+		HashMap faults = getFaultsWithTestCase(testDetailFile, containHeader);
+		if(faults.size() == 1){
+			System.out.println("ResultAnalyzer(getFaultsWithTestCase()):more than one fault");
+		}
+		return (ArrayList)faults.values().iterator().next();
+	}
+	
 	/**
 	 * 2009-02-19: the result is a table with faults as rows and valid test
 	 * cases to expose such a fault as columns
@@ -876,6 +884,161 @@ public class ResultAnalyzer {
 			
 		}else{
 			System.out.println("The fault list:" + faultList + " does not exist");
+		}
+	}
+	
+	/**2010-01-01: get the equivalent faults who are specified in a fault list
+	 * 
+	 * @param date_faultList: the directory to load fault list
+	 * @param containHeader_faultList:
+	 * @param date_detailed: the directory to load the test case execution detailed files
+	 * @param containHeader_detailed
+	 * @param saveFile
+	 */
+	public static void saveFaultSimilarity_Strict(String date_faultList, boolean containHeader_faultList, 
+			String date_detailed, boolean containHeader_detailed, String date_save){
+		String faultList = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+			+ date_faultList + "/PotentialEquivalentFaults.txt";
+		File faultListFile = new File(faultList);
+		
+		if(faultListFile.exists()){
+			
+			HashMap failureRate_faultArray = new HashMap();//group faults which share the same failure rate
+			HashMap faultPair_equivalent = new HashMap();
+			
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(faultListFile));
+				if(containHeader_faultList){
+					br.readLine();
+				}
+				
+				//1. classify all faults based on the failure rate
+				String str = null;
+				while((str = br.readLine())!= null){
+					String[] strs = str.split(",");
+					String failureRate = strs[1];
+					int fault_int = Integer.parseInt(strs[0].substring(
+							strs[0].indexOf("_")+"_".length(), strs[0].indexOf(".")));
+					
+					ArrayList faults = new ArrayList();
+					if(failureRate_faultArray.containsKey(failureRate)){
+						faults = (ArrayList)failureRate_faultArray.get(failureRate);						
+					}
+					if(!faults.contains(""+fault_int)){
+						faults.add(""+fault_int);	
+					}
+					failureRate_faultArray.put(failureRate, faults);					
+				}
+				
+				//2. derive all equivalent faults
+				Iterator it_failureRate = failureRate_faultArray.keySet().iterator();
+				while(it_failureRate.hasNext()){
+					String failureRate = (String)it_failureRate.next();
+					ArrayList faults = (ArrayList)failureRate_faultArray.get(failureRate);
+					if(faults.size() > 1){
+						//3. dervie all equivalent faults which share the same failure rate
+						
+						ArrayList fault_effecientTS = new ArrayList();
+						String testDetailFile = null;
+						//3.1 load all efficent testcases firstly
+						for(int i = 0; i < faults.size(); i++){
+							String fault = (String)faults.get(i);
+							int fault_int = Integer.parseInt(fault);
+							testDetailFile = 
+								 "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+									+ date_detailed + "/" + "detailed_" + fault_int 
+									+ "_" + (fault_int + 1) + ".txt";
+							
+							fault_effecientTS.add(ResultAnalyzer.getFaultsWithTestCase(
+									testDetailFile, containHeader_detailed));							
+						}
+						//3.2 check all equivalent faults sharing this failure rate
+						for(int i = 0; i < fault_effecientTS.size(); i ++){
+							//3.2.1 extract the fault and its efficient test cases
+							HashMap fault_efficientTCs_src = (HashMap)fault_effecientTS.get(i);
+							String fault_src = (String)fault_efficientTCs_src.keySet().iterator().next();
+							ArrayList testSet_src = (ArrayList)fault_efficientTCs_src.get(fault_src);
+							for(int j = i + 1; j < fault_effecientTS.size(); j ++){
+								
+								//3.2.2 extract the fault and its efficient test cases
+								HashMap fault_efficientTCs_dest = (HashMap)fault_effecientTS.get(j);
+								String fault_dest = (String)fault_efficientTCs_dest.keySet().iterator().next();
+								ArrayList testSet_dest = (ArrayList)fault_efficientTCs_dest.get(fault_dest);
+								
+								//3.2.3 check the equivalent relationship
+								ArrayList sharedTCs = TestDriver.getSharedTestCases(testSet_src, testSet_dest);
+								if(sharedTCs.size() == testSet_src.size() && sharedTCs.size() == testSet_dest.size()){
+									
+									//3.2.4 save the equivalent faulty versions
+									if(faultPair_equivalent.containsKey(fault_src)){
+										ArrayList equivalent = (ArrayList)faultPair_equivalent.get(fault_src);
+										if(!equivalent.contains(fault_dest)){ 
+											equivalent.add(fault_dest);
+											faultPair_equivalent.put(fault_src, equivalent);
+										}
+									}else{
+										ArrayList equivalent  = new ArrayList();
+										equivalent.add(fault_dest);
+										faultPair_equivalent.put(fault_src, equivalent);
+									}
+									
+									if(faultPair_equivalent.containsKey(fault_dest)){
+										ArrayList equivalent = (ArrayList)faultPair_equivalent.get(fault_dest);
+										if(!equivalent.contains(fault_src)){ //this pair has been recorded
+											equivalent.add(fault_src);
+											faultPair_equivalent.put(fault_dest, equivalent);
+										}
+									}else{
+										ArrayList equivalent  = new ArrayList();
+										equivalent.add(fault_src);
+										faultPair_equivalent.put(fault_dest, equivalent);
+									}
+								}
+							}
+						}
+						
+					}
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			int equivalentCounter = 0;
+			StringBuilder sb = new StringBuilder();
+			Iterator it_fault = faultPair_equivalent.keySet().iterator();
+			ArrayList reportedFaults = new ArrayList();
+			while(it_fault.hasNext()){
+				String fault = (String)it_fault.next();
+				if(!reportedFaults.contains(fault)){//has never been reported
+					reportedFaults.add(fault);
+					sb.append(fault).append("\t");
+					equivalentCounter ++;
+					ArrayList equivalents = (ArrayList)faultPair_equivalent.get(fault);
+					for(int i = 0; i < equivalents.size(); i ++){
+						String equivalentFault =(String)equivalents.get(i); 
+						if(!reportedFaults.contains(equivalentFault)){
+							sb.append(equivalentFault).append("\t");
+							reportedFaults.add(equivalentFault);
+							equivalentCounter ++;
+						}
+					}
+					sb.append("\n");	
+				}
+				
+			}
+			
+			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+				+ date_save + "/EquivalentFaults.txt";
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();		
+			System.out.println("Equivalent mutants:" + equivalentCounter);
+		}else{
+			System.out.println("fault list file:" + faultList + " does not exist at all!");
 		}
 	}
 	
@@ -3117,6 +3280,13 @@ public class ResultAnalyzer {
 			String date_save = args[2]; // the directory to save the results			
 			ResultAnalyzer.saveToFile_failureRates(date_detailed, containHeader, startVersion, endVersion, date_save);
 //			ResultAnalyzer.saveToFile_TestPool(date_detailed, containHeader, startVersion, endVersion, date_save);
+		}else if(instruction.equals("getEquivalentMutants")){
+			String date_detailed = args[1];
+			boolean containHeader_detailed = true;
+			String date_faultList = args[2];
+			boolean containHeader_faultList = true;
+			String date_save = args[3];			
+			ResultAnalyzer.saveFaultSimilarity_Strict(date_faultList, containHeader_faultList, date_detailed, containHeader_detailed, date_save);
 		}
 	} 
 }
