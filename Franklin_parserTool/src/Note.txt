@@ -21,3 +21,40 @@ Information:
 20091031£º   it)
 2. Failure rates of all faulty versions is in "failureRate.txt"in /20090312 and /20091005 keeps testing results for all test cases.
 3. 20091026: it keeps a significant improvement brought by CD when the candidate test set size is varied.
+4. prediction.cs.hku.hk server 2009-10-05: data in this folder is the most important; local 20091019: data in this folder is the most imporant
+
+SQL statements:
+1.all generated mutants (4884):
+SELECT count(*) FROM mutantmapping m
+
+2.get all application-level mutants(4002):
+SELECT * FROM mutantdetail m inner join mutantmapping f WHERE (m.class LIKE '%TestCFG2%') And (m.function LIKE '%application%') And (m.operator = f.genMutant)
+get all middleware-level mutants(882):
+SELECT * FROM mutantdetail m inner join mutantmapping f WHERE (m.class LIKE '%TestCFG2%') And (m.function NOT LIKE '%application%') And (m.operator = f.genMutant)
+
+3.all golden-version-equivalent mutants (2280):
+ SELECT count(*) FROM mutantfailurerate f inner join mutantmapping m where f.mappedMutant = m.mappedMutant and f.failurerate='0.0'
+all gloden-version-equivalent application-level mutants(1958):
+SELECT count(*) from mutantfailurerate F inner join mutantdetail D, mutantmapping M where F.failureRate='0.0' And F.mappedMutant=M.mappedMutant and M.genMutant=D.operator and D.class LIKE '%TestCFG2%' And D.function like '%application%'
+all gloden-version-equivalent middleware-level mutants(322):
+SELECT count(*) from mutantfailurerate F inner join mutantdetail D, mutantmapping M where F.failureRate='0.0' And F.mappedMutant=M.mappedMutant and M.genMutant=D.operator and D.class LIKE '%TestCFG2%' And D.function like '%application%'
+ 
+ 
+4.mutants throw exceptions or run out of time (30 minutes; 4 minutes usually)(670):
+SELECT count(*) FROM mutantfailurerate f inner join mutantmapping m where f.mappedMutant = m.mappedMutant and f.failurerate='1.0'
+application-level mutants throw exceptions or run out of time (30 minutes; 4 minutes usually)(670):
+SELECT count(*) from mutantfailurerate F inner join mutantdetail D, mutantmapping M where F.failureRate='1.0' And F.mappedMutant=M.mappedMutant and M.genMutant=D.operator and D.class LIKE '%TestCFG2%' And D.function like '%application%'
+middleware-level mutants throw exceptions or run out of time (30 minutes; 4 minutes usually)(670):
+SELECT count(*) from mutantfailurerate F inner join mutantdetail D, mutantmapping M where F.failureRate='1.0' And F.mappedMutant=M.mappedMutant and M.genMutant=D.operator and D.class LIKE '%TestCFG2%' And D.function not like '%application%'
+
+5.other mutants whose failure rates are neither 0.0 nor 1.0(1934):
+SELECT f.mappedMutant, f.failureRate FROM mutantfailurerate f inner join mutantmapping m where f.mappedMutant = m.mappedMutant and f.failurerate!='1.0' and f.failurerate!='0.0'
+
+6.failure rate distribution of non-equivalent mutants(1085): 
+SELECT m.mappedMutant, m.failureRate FROM mutantfailurerate m inner join nonequivalentmutant f where m.mappedMutant=f.mappedMutant
+failure rate distribution of non-equivalent application-level mutants(897):
+SELECT F.mappedMutant, F.failureRate from mutantfailurerate F inner join mutantdetail D, mutantmapping M, nonequivalentmutant N where F.mappedMutant=N.mappedMutant and F.mappedMutant=M.mappedMutant and M.genMutant=D.operator and D.class LIKE '%TestCFG2%' And D.function like '%application%'
+failure rate distribution of non-equivalent middleware-level mutants(188):
+SELECT F.mappedMutant, F.failureRate from mutantfailurerate F inner join mutantdetail D, mutantmapping M, nonequivalentmutant N where F.mappedMutant=N.mappedMutant and F.mappedMutant=M.mappedMutant and M.genMutant=D.operator and D.class LIKE '%TestCFG2%' And D.function Not like '%application%'
+
+8. 
