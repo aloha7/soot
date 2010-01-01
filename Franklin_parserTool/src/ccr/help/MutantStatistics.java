@@ -441,6 +441,43 @@ public class MutantStatistics {
 	}
 
 	
+	public void saveToDB_failureRate(String failureRateFile, boolean containHeader){
+		File tmp =  new File(failureRateFile);
+		StringBuilder sql = new StringBuilder();
+		sql.append("INSERT INTO mutantfailurerate ( mappedMutant, failureRate) VALUES ");
+		
+		try {
+			if(tmp.isFile()){
+				BufferedReader br =  new BufferedReader(new FileReader(failureRateFile));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				String str = null;
+
+				
+				while((str = br.readLine())!= null){
+					String[] temp = str.split("\t");
+					
+					sql.append("(\'").append("TestCFG2_" + temp[0] +".java").append("\'").append(",");
+					sql.append("\'").append(temp[1]).append("\'").append("),");
+				}
+			}else{
+				System.out.println("The file:" + failureRateFile+ " does not exist!");
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+		DatabaseManager.getInstance().update(sqlStmt);
+		System.out.println("Save the mutant failure rates into the Database");
+	}
+	
 	/**2009-12-29:summarize mutants for a class&a method based on three categories:
 	 * missing construct, wrong constructs and extraneous constructs 
 	 * 
@@ -536,40 +573,50 @@ public class MutantStatistics {
 	}
 	
 	
+	
 	public static void main(String[] args) {
 //		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\TestingFramework\\result\\";
 		String mutantDir = "F:\\MyProgram\\eclipse3.3.1.1\\workspace\\ContextDiversity\\result\\";		
-
-		//1. save class-level mutants into the file/database
-		String saveFile = mutantDir + "statistics_ClassLevel.txt";
+		String instruction = args[0];
+		
 		MutantStatistics ins = new MutantStatistics();
-		HashMap<String, HashMap<String, Integer>> classMutants = ins.getStatistics_ClassLevel(mutantDir);
-		ins.saveToFile_ClassLevel(classMutants, saveFile);
-//		ins.saveToDB_ClassLevel(classMutants);
-
-		//2. save method-level mutants into the file/database
-		saveFile = mutantDir + "statistics_MethodLevel.txt";
-		HashMap<String, HashMap<String, HashMap<String, Integer>>> methodMutants =ins.getStatistic_MethodLevel(mutantDir); 
-		ins.saveToFile_MethodLevel(methodMutants, saveFile);
-//		ins.saveToDB_MethodLevel(methodMutants);
-		
-		//3. get the summary of method-level/class-level mutants into application, middleware
-		String[] classes = {"TestCFG2"};
-		String[] methods = {"application"};
-		boolean includeMethod = true; //count mutants of the application
-		ins.mutateSum(classes, methods, includeMethod);
-		includeMethod = false; //count mutants of the middleware
-		ins.mutateSum(classes, methods, includeMethod);
-		
-		//4. assemble distributed mutant log into a complete file/database
-		saveFile = mutantDir + "mutantLog.txt";
-		ins.saveToFile_mutantLog(mutantDir, saveFile);
-//		ins.saveToDB_mutantLog(mutantDir);
-		
-		//5. save the mutant mapping history into database
-		String mutantMappingFile = new File(mutantDir).getParent() + "\\MuJava\\MappingList.txt";
-		boolean containHeader = false;
-		ins.saveToDB_mutantMapping(mutantMappingFile, containHeader);
+		if(instruction.equals("saveMutants_ClassLevel")){
+			//1. save class-level mutants into the file/database		
+			String saveFile = mutantDir + "statistics_ClassLevel.txt";			
+			HashMap<String, HashMap<String, Integer>> classMutants = ins.getStatistics_ClassLevel(mutantDir);
+			ins.saveToFile_ClassLevel(classMutants, saveFile);
+			ins.saveToDB_ClassLevel(classMutants);			
+		}else if(instruction.equals("saveMutants_MethodLevel")){
+			//2. save method-level mutants into the file/database
+			String saveFile = mutantDir + "statistics_MethodLevel.txt";
+			HashMap<String, HashMap<String, HashMap<String, Integer>>> methodMutants =ins.getStatistic_MethodLevel(mutantDir); 
+			ins.saveToFile_MethodLevel(methodMutants, saveFile);
+			ins.saveToDB_MethodLevel(methodMutants);			
+		}else if(instruction.equals("classifyMutants")){
+			//3. get the summary of method-level/class-level mutants into application, middleware
+			String[] classes = {"TestCFG2"};
+			String[] methods = {"application"};
+			boolean includeMethod = true; //count mutants of the application
+			ins.mutateSum(classes, methods, includeMethod);
+			includeMethod = false; //count mutants of the middleware
+			ins.mutateSum(classes, methods, includeMethod);
+		}else if(instruction.equals("saveMutantLog")){
+			//4. assemble distributed mutant log into a complete file/database
+			String saveFile = mutantDir + "mutantLog.txt";
+			ins.saveToFile_mutantLog(mutantDir, saveFile);
+			ins.saveToDB_mutantLog(mutantDir);
+		}else if(instruction.equals("saveMutantMapping")){
+			//5. save the mutant mapping history into database
+			String mutantMappingFile = new File(mutantDir).getParent() + "\\MuJava\\MappingList.txt";
+			boolean containHeader = false;
+			ins.saveToDB_mutantMapping(mutantMappingFile, containHeader);
+		}else if(instruction.equals("saveFailureRates")){
+			//6. save the failure rate into database
+			String failureRateFile = new File(mutantDir).getParent() + "\\src\\ccr" +
+					"\\experiment\\Context-Intensity_backup\\TestHarness\\20091230\\FailureRateDetails_5024.txt";
+			boolean containHeader = true;
+			ins.saveToDB_failureRate(failureRateFile, containHeader);			
+		}
 	}
 
 }
