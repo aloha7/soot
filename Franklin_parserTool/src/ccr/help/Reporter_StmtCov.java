@@ -48,7 +48,7 @@ public class Reporter_StmtCov {
 	public double getCoverageReport(String gretelFile, String exclFile, String logFile, String testCaseId){
 		double percentage = 0.0;
 		try {
-			Map<String, Collection<LinePair>> exclusion = generateExclusion(exclFile);
+//			Map<String, Collection<LinePair>> exclusion = generateExclusion(exclFile);
 			
 			ListHits.setConfigFile(gretelFile);
 			Map<String, HashMap<Integer, Integer>> hits = ListHits.getHits();
@@ -74,10 +74,10 @@ public class Reporter_StmtCov {
 				
 				
 //				Collection<LinePair> excludedLinePairs = exclusion.containsKey(file) ? exclusion.get(file) : null;
-				Collection<LinePair> excludedLinePairs = exclusion.get(file);
+//				Collection<LinePair> excludedLinePairs = exclusion.get(file);
 				for (Map.Entry<Integer, Integer> coveredEntry : lines.entrySet()) {
 					Integer line = coveredEntry.getKey();
-					if (excludedLinePairs != null && this.isExcluded(excludedLinePairs, line)) continue;
+//					if (excludedLinePairs != null && this.isExcluded(excludedLinePairs, line)) continue;
 					allFile.add(line);
 					
 					Integer count = coveredEntry.getValue();
@@ -98,9 +98,9 @@ public class Reporter_StmtCov {
 				}
 				Set<Integer> allFile = all.get(file);
 				
-				Collection<LinePair> excludedLinePairs = exclusion.get(file);
+//				Collection<LinePair> excludedLinePairs = exclusion.get(file);
 				for (Integer line : lines) {
-					if (excludedLinePairs != null && this.isExcluded(excludedLinePairs, line)) continue;
+//					if (excludedLinePairs != null && this.isExcluded(excludedLinePairs, line)) continue;
 					allFile.add(line);
 				}
 			}
@@ -141,6 +141,7 @@ public class Reporter_StmtCov {
 				}
 				if (misses.containsKey(file)) {
 					for (Integer line : misses.get(file)) {
+						if (covered.containsKey(file) && covered.get(file).containsKey(line)) continue;
 						bw.write(file + "\t" + line + "\t0\n");
 					}
 				}
