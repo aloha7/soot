@@ -364,6 +364,55 @@ public class TestCaseStatistics {
 		 
 	}
 	
+	public static void saveToDB_TestCaseKillMutants(String testCaseFile, boolean containHeader){
+		File tmp = new File(testCaseFile);
+		if(tmp.exists()){
+			StringBuilder sql = new StringBuilder();
+			try {
+				BufferedReader br = new	BufferedReader(new FileReader(testCaseFile));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				int counter = 0; 
+				String str = null;
+				
+				sql.append("INSERT INTO testcasekillmutant (testcase, killmutantnum) VALUES ");
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					
+					String index = strs[0];
+					String killNum = strs[1];
+					sql.append("(\'").append(index).append("\'").append(",");								
+					sql.append("\'").append(killNum).append("\'").append("),");
+					counter ++;
+					if(counter% 500 == 0){
+						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+						DatabaseManager.getInstance().update(sqlStmt);
+						sql.setLength(0); //clear the sql
+						sql.append("INSERT INTO testcasekillmutant (testcase, killmutantnum) VALUES ");
+					}
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(sql.substring(sql.lastIndexOf("VALUES ") + "VALUES ".length()).length() > 0){
+				//still have some values need to save
+				String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+				DatabaseManager.getInstance().update(sqlStmt);
+				sql.setLength(0); //clear the sql
+			}
+			
+			System.out.println("save test case kill mutants into the Database");
+		}else{
+			System.out.println("the test case file:" + testCaseFile +" does not exist at all");
+		}
+	}
+	
 	
 	public static void main(String[] args) {
 		if(args.length == 0){
