@@ -229,6 +229,40 @@ public class FileOperator {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public static void saveFaultList(String srcFile, boolean containHeader, String saveFile){
+		File tmp = new File(srcFile);
+		if(tmp.exists()){
+			StringBuilder sb = null;
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(srcFile));
+				if(containHeader){
+					br.readLine();				
+				}
+				
+				sb = new StringBuilder();
+				String str = null;
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					String fault = strs[0].substring(
+							strs[0].indexOf("_") + "_".length(), strs[0].indexOf(".java"));
+					sb.append(fault).append("\n");
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		}else{
+			System.out.println("The fault list file:" + srcFile + " does not exist");
+		}
 		
 	}
 	
@@ -256,9 +290,14 @@ public class FileOperator {
 		String date = "20091230";
 		String detectedFaultFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date + "/detectedFaultList.txt";
-		boolean containHeader = false;
+		boolean containHeader = true;
 		String saveFile ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date + "/MissingFaultList.txt";
-		FileOperator.getMissingFault(detectedFaultFile, containHeader, saveFile);
+//		FileOperator.getMissingFault(detectedFaultFile, containHeader, saveFile);
+		String srcFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/nonEquivalentFaults_middlewareLevel.txt";
+		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/NonEquivalentFaults_middlewareLevel.txt";
+		FileOperator.saveFaultList(srcFile, containHeader, saveFile);
 	}
 }
