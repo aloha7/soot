@@ -131,18 +131,20 @@ public class Reporter_StmtCov {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(logFile));
 			bw.write(testCaseId + "\t" + totalCoverTimes_sum + "\t" + coveredLines_sum + "\t" + (new DecimalFormat("0.00").format(percentage)) + "\n");
 			
-//			for(String file: all.keySet()){
-//				int totalLines = all.get(file).size();
-//				int coveredLines = covered.containsKey(file)?covered.get(file).size():0;
-//				if (covered.containsKey(file)) {
-//					for (Map.Entry<Integer, Integer> entry : covered.get(file).entrySet()) {
-//						bw.write(file + "\t" + entry.getKey() + "\t" + entry.getValue() + "\n");
-//					}
-//				}
-//				else if (misses.containsKey(file)) {
-//					for 
-//				}
-//			}			
+			for(String file: all.keySet()){
+				int totalLines = all.get(file).size();
+				int coveredLines = covered.containsKey(file)?covered.get(file).size():0;
+				if (covered.containsKey(file)) {
+					for (Map.Entry<Integer, Integer> entry : covered.get(file).entrySet()) {
+						bw.write(file + "\t" + entry.getKey() + "\t" + entry.getValue() + "\n");
+					}
+				}
+				if (misses.containsKey(file)) {
+					for (Integer line : misses.get(file)) {
+						bw.write(file + "\t" + line + "\t0\n");
+					}
+				}
+			}			
 			
 			bw.close();
 		} catch (IOException e) {
