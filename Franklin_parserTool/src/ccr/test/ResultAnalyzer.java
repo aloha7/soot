@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Vector;
 
 public class ResultAnalyzer {
 	public static final int TESTPOOL_SIZE = 20000;
@@ -720,8 +721,8 @@ public class ResultAnalyzer {
 	}
 	
 	/**
-	 * 2009-02-19: the result is a table with faults as rows and valid test
-	 * cases to expose such a fault as columns
+	 * 2009-02-19: the result is a table with faults(String) as rows and valid test
+	 * cases(String) to expose such a fault as columns
 	 * 
 	 * @param testDetailFile
 	 * @param containHeader
@@ -901,7 +902,8 @@ public class ResultAnalyzer {
 			+ date_faultList + "/PotentialEquivalentFaults.txt";
 		File faultListFile = new File(faultList);
 		
-		ArrayList nonEquivalentFault = new ArrayList();
+		ArrayList allFaults = new ArrayList();
+		
 		
 		if(faultListFile.exists()){
 			
@@ -929,7 +931,9 @@ public class ResultAnalyzer {
 					if(!faults.contains(""+fault_int)){
 						faults.add(""+fault_int);	
 					}
-					failureRate_faultArray.put(failureRate, faults);					
+					
+					failureRate_faultArray.put(failureRate, faults);
+					allFaults.add(""+fault_int);
 				}
 				
 				//2. derive all equivalent faults
@@ -998,9 +1002,6 @@ public class ResultAnalyzer {
 								}
 							}
 						}
-						
-					}else if(faults.size() == 1){//2010-01-01: save non-equivalent faults
-						nonEquivalentFault.add((String)faults.get(0));
 					}
 				}
 			} catch (FileNotFoundException e) {
@@ -1015,6 +1016,7 @@ public class ResultAnalyzer {
 			StringBuilder sb = new StringBuilder();
 			Iterator it_fault = faultPair_equivalent.keySet().iterator();//fault->(equivalentFaults)
 			ArrayList reportedFaults = new ArrayList();
+			ArrayList equivalentFaults = new ArrayList();
 			while(it_fault.hasNext()){
 				String fault = (String)it_fault.next();
 				
@@ -1023,7 +1025,7 @@ public class ResultAnalyzer {
 					sb.append(fault).append("\t");
 					
 					//2010-01-01:for equivalent faults, only receive the first one
-					nonEquivalentFault.add(fault);
+					
 					
 					ArrayList equivalents = (ArrayList)faultPair_equivalent.get(fault);
 					for(int i = 0; i < equivalents.size(); i ++){
@@ -1033,12 +1035,16 @@ public class ResultAnalyzer {
 							reportedFaults.add(equivalentFault);
 							equivalentCounter ++;
 						}
+						
+						if(!equivalentFaults.contains(equivalentFault)){
+							equivalentFaults.add(equivalentFault);
+						}
 					}
 					sb.append("\n");	
 				}				
 			}
 			
-			sb.append("Equivalent mutants:" + equivalentCounter).append("\n");
+			
 			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 				+ date_save + "/EquivalentFaults.txt";
 			Logger.getInstance().setPath(saveFile, false);
@@ -1047,13 +1053,18 @@ public class ResultAnalyzer {
 			System.out.println("Equivalent mutants:" + equivalentCounter);
 			
 			sb.setLength(0);
-			int nonEquivalent_counter = 0;
-			for(int i = 0; i < nonEquivalentFault.size(); i ++){
-				sb.append(nonEquivalentFault.get(i)).append("\n");
-				nonEquivalent_counter ++;
-			}
 			
-			sb.append("Non-equivalent mutants:" + nonEquivalent_counter);
+			int nonEquivalent_counter = 0;
+			ArrayList nonEquivalentFault = new ArrayList();
+			for(int i = 0 ; i < allFaults.size(); i ++){
+				String fault = (String)allFaults.get(i);
+				if(!equivalentFaults.contains(fault)){
+					nonEquivalentFault.add(fault);
+					nonEquivalent_counter ++;
+					sb.append(fault).append("\n");
+				}
+			}					
+			
 			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 				+ date_save + "/NonEquivalentFaults.txt";
 			Logger.getInstance().setPath(saveFile, false);
@@ -1304,6 +1315,40 @@ public class ResultAnalyzer {
 		Logger.getInstance().close();
 	}
 
+	/**2010-01-03: load the CI of all test cases
+	 * 
+	 * 
+	 * @param testcaseFile
+	 * @param containHeader
+	 * @return
+	 */
+	private static HashMap getCIs(String testcaseFile, boolean containHeader){
+		HashMap input_CI = new HashMap();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(testcaseFile));
+			String str = null;
+			int rowNo = 0;
+			if(containHeader){
+				rowNo = br.readLine().split("\t").length - 6;
+			}
+			
+			StringBuilder infoRecorder = new StringBuilder();
+			while((str=br.readLine())!= null){
+				String[] strs = str.split("\t");
+				input_CI.put(strs[0], Double.parseDouble(strs[1]));							
+			}
+			br.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return input_CI;
+	}
+	
 	/**2009-12-31: get the failure rate and killed test case set of each fault
 	 * 
 	 * @param date_detailed: the directory of detailed files
@@ -1314,15 +1359,23 @@ public class ResultAnalyzer {
 	 */
 	public static void saveToFile_failureRates(String date_detailed, boolean containHeader, int startVersion, 
 			int endVersion, String date_save){
+		
+		//1. 2010-01-03: load the CIs
+		String testcaseFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/20091230/TestCaseStatistics.txt";
+		HashMap tc_CI = ResultAnalyzer.getCIs(testcaseFile, true);
+		
+		
 		StringBuilder sb = new StringBuilder();
 		sb.append("Mutant").append("\t").append("FailureRate").append("\t").
-		append("TestCaseKillArray").append("\n");
-		
+//		append("TestCaseKillArray").append("\n");
+		append("Average CD").append("\n"); //2010-01-03:get the correlation between CD and failure rates
+
 		HashMap fault_effectTS = null;
 		int fault_counter = 0;
 		int TEST_POOL_END_LABEL = TestManager.TEST_POOL_SIZE + TestManager.TEST_POOL_START_LABEL;
 		
 		for(int i = startVersion; i < endVersion; i ++){
+			System.out.println("Processing mutant version:" + i);
 			fault_counter ++;
 			String testDetailFile = 
 				 "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
@@ -1331,7 +1384,7 @@ public class ResultAnalyzer {
 			fault_effectTS = ResultAnalyzer.getFaultsWithTestCase(testDetailFile, containHeader);
 			if(fault_effectTS.size() == 0 ){
 				//this fault must throw out some exceptions or run out of time
-				String fault  = ""+ i ; 
+				String fault  = "TestCFG2_" + i +".java"; 
 				if(i >= 0 && i < 10){
 					fault = "0" + i;
 				}
@@ -1344,6 +1397,8 @@ public class ResultAnalyzer {
 //				for(int j = TestManager.TEST_POOL_START_LABEL; j < TEST_POOL_END_LABEL; j ++){
 //					sb.append("1,");					
 //				}
+				
+				
 				sb.append("\n");
 				
 			}else{				
@@ -1368,11 +1423,19 @@ public class ResultAnalyzer {
 //						sb.append("0,");
 //					}
 //				}
+				
+				//2010-01-03: failure rate <-> CD
+				double sum_CD = 0;
+				for(int j =0; j < effectTS.size(); j ++){
+					sum_CD += Double.parseDouble((String)effectTS.get(j));
+				}
+				double average_CD = sum_CD/(double)effectTS.size();
+				sb.append(average_CD);	
 				sb.append("\n");
 			}
 		}
 		String saveFile = "src/ccr/experiment"
-			+ "/Context-Intensity_backup/TestHarness/" + date_save + "/FailureRateDetails"
+			+ "/Context-Intensity_backup/TestHarness/" + date_save + "/FailureRate_CI"
 			+ fault_counter + ".txt";
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
@@ -3457,8 +3520,16 @@ public class ResultAnalyzer {
 			int startVersion = 0;
 			int endVersion = 5024;
 			String date_save = args[2]; // the directory to save the results			
-			ResultAnalyzer.saveToFile_failureRates(date_detailed, containHeader, startVersion, endVersion, date_save);
+//			ResultAnalyzer.saveToFile_failureRates(date_detailed, containHeader, startVersion, endVersion, date_save);
 //			ResultAnalyzer.saveToFile_TestPool(date_detailed, containHeader, startVersion, endVersion, date_save);
+			
+			//2010-01-01:
+			boolean containHeader_detailed = true;
+			String faultList = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+				+ date_save + "/NonEquivalentFaults.txt";			
+			boolean containHeader_fault = true;
+			ResultAnalyzer.saveToFile_TestPool_faultList(date_detailed, containHeader_detailed, faultList, containHeader_fault, date_save);
+			
 		}else if(instruction.equals("getEquivalentMutants")){
 			String date_detailed = args[1];
 			boolean containHeader_detailed = true;
