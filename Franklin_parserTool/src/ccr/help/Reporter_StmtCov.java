@@ -2,6 +2,8 @@ package ccr.help;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -186,14 +188,73 @@ public class Reporter_StmtCov {
 		}
 		return false;
 	}
-
-
-	public static void main(String[] args){
-		if(args.length == 0){
-			System.out.println("Please specify the .gretel files");			
-		}else{
-			new Reporter_StmtCov().getCoverageReport(args[0], args[1], args[2], args[3]);	
+	
+	public void getStatisticsOfTestCases(String testCaseDir, String exclusiveFile, String saveFile){
+		File tmp = new File(testCaseDir);
+		if(!tmp.exists()){
+			System.out.println("The test case dir:" + testCaseDir + " does not exist!");
+			return;
 		}
 		
-	}	
+		Map<String, Collection<LinePair>> exclusion = generateExclusion(exclusiveFile);
+
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile)); 
+			for (int caseId = -10000; caseId < 10000; caseId++) {
+				String filename = testCaseDir + "\\TestCase_" + caseId + ".txt";
+				
+				System.out.println("Processing test case #" + caseId + " ...\n");
+				File file = new File(filename);
+				if (!file.exists()) continue;
+							
+				int hitCount = 0;
+				int hitSum = 0;
+				int lineCount = 0;
+				
+				BufferedReader br = new BufferedReader(new FileReader(filename));
+				String str = br.readLine();				
+				while ((str = br.readLine()) != null) {
+					if (str.equals("")) break;
+					String[] strs = str.split("\t");
+					String fn = strs[0];
+					int line = Integer.parseInt(strs[1]);
+					if (exclusion.containsKey(fn) && isExcluded(exclusion.get(fn), line)) continue;
+					
+					int freq = Integer.parseInt(strs[2]);
+					
+					if (freq > 0) hitCount++;
+					hitSum += freq;
+					lineCount++;
+				}				
+				br.close();
+				
+				bw.write(caseId + "\t" + hitSum + "\t" + hitCount + "\t" + (new DecimalFormat("0.00").format(hitCount * 100.0 / lineCount)) + "\n");
+			}			
+			bw.close();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void main(String[] args){
+		String date = "20091230";
+		String testCaseDir = System.getProperty("user.dir")+ "\\src\\ccr" +
+		"\\experiment\\Context-Intensity_backup\\TestHarness\\"+date+"\\TestCaseCov";;
+		String exclusiveFile = System.getProperty("user.dir")+"\\src\\ccr" +
+		"\\experiment\\Context-Intensity_backup\\TestHarness\\"+date+"\\TestCaseCov\\exclusion_list.txt";
+		String saveFile = System.getProperty("user.dir")+ "\\src\\ccr" +
+		"\\experiment\\Context-Intensity_backup\\TestHarness\\"+date+"\\TestCaseCov.txt";
+		new Reporter_StmtCov().getStatisticsOfTestCases(testCaseDir, exclusiveFile, saveFile);
+	}
+
+//	F:\MyProgram\eclipse3.3.1.1\workspace\ContextDiversity\bin\ccr\app\TestCFG2.gretel F:\MyProgram\eclipse3.3.1.1\workspace\Gretel\exclusion_list.txt F:\3.txt 1
+//	public static void main(String[] args){
+//		if(args.length == 0){
+//			System.out.println("Please specify the .gretel files");			
+//		}else{
+//			new Reporter_StmtCov().getCoverageReport(args[0], args[1], args[2], args[3]);	
+//		}
+//		
+//	}	
 }
