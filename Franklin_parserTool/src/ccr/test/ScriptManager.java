@@ -1,11 +1,13 @@
 package ccr.test;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Vector;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class ScriptManager {
 	
@@ -939,6 +941,28 @@ public class ScriptManager {
 		Logger.getInstance().close();
 	}
 	
+	/**2010-01-01: generate the .bat file to collect statement coverage
+	 * information for each test case 
+	 * 
+	 * @param saveFile
+	 */
+	public static void genBatFile(String saveFile){
+		StringBuilder sb = new StringBuilder();
+		String currentDir = System.getProperty("user.dir");
+//		for(int i = 0; i < 2; i ++){
+		for(int i = TestDriver.TEST_POOL_START_LABEL; i < 10000; i ++){
+			sb.append("@echo Start processing case #" + i + " ...\n");
+			sb.append("@copy ").append( currentDir + File.separator + "hitTable").append(" ").
+			append(currentDir + File.separator + "bin\\ccr\\app\\").append("\n");
+			
+			sb.append("@java ccr.app.TestCFG2 ").append(i).append("\n");
+			sb.append("@java ccr.help.Reporter_StmtCov F:\\MyProgram\\eclipse3.3.1.1\\workspace\\ContextDiversity\\bin\\ccr\\app\\TestCFG2.gretel " +
+					"F:\\MyProgram\\eclipse3.3.1.1\\workspace\\Gretel\\exclusion_list.txt " + "TestCase_" + i + ".txt " + i).append("\n");					
+		}
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
 	
 	public static void main(String[] args) {
 		System.out
@@ -1312,6 +1336,9 @@ public class ScriptManager {
 			Logger.getInstance().setPath(saveFile, false);
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
+		}else if(instruction.equals("genBat")){
+			saveFile = "./bin/StmtBat.bat";
+			ScriptManager.genBatFile(saveFile);
 		}
 	}
 }
