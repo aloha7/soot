@@ -439,31 +439,28 @@ public class MutantStatistics {
 		
 		return sql.toString();
 	}
-
 	
-	public void saveToDB_failureRate(String failureRateFile, boolean containHeader){
-		File tmp =  new File(failureRateFile);
+	public void saveToDB_nonEquivalentFaults(String faultList, boolean containHeader){
+		File tmp =  new File(faultList);
 		StringBuilder sql = new StringBuilder();
-		sql.append("INSERT INTO mutantfailurerate ( mappedMutant, failureRate) VALUES ");
+		sql.append("INSERT INTO nonequivalentmutant ( mappedMutant ) VALUES ");
 		
 		try {
 			if(tmp.isFile()){
-				BufferedReader br =  new BufferedReader(new FileReader(failureRateFile));
+				BufferedReader br =  new BufferedReader(new FileReader(faultList));
 				if(containHeader){
 					br.readLine();
 				}
 				
 				String str = null;
-
 				
 				while((str = br.readLine())!= null){
 					String[] temp = str.split("\t");
 					
-					sql.append("(\'").append("TestCFG2_" + temp[0] +".java").append("\'").append(",");
-					sql.append("\'").append(temp[1]).append("\'").append("),");
+					sql.append("(\'").append("TestCFG2_" + temp[0] +".java").append("\'").append("),");					
 				}
 			}else{
-				System.out.println("The file:" + failureRateFile+ " does not exist!");
+				System.out.println("The file:" + faultList+ " does not exist!");
 			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -475,7 +472,87 @@ public class MutantStatistics {
 		
 		String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 		DatabaseManager.getInstance().update(sqlStmt);
-		System.out.println("Save the mutant failure rates into the Database");
+		System.out.println("Save the non-equivalent mutants into the Database");
+
+	}
+	
+	public void saveToDB_failureRate(String failureRateFile, boolean containHeader){
+		File tmp =  new File(failureRateFile);
+	
+		
+		try {
+			if(tmp.isFile()){
+				BufferedReader br =  new BufferedReader(new FileReader(failureRateFile));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				String str = null;
+				
+				StringBuilder sql = new StringBuilder();
+				sql.append("INSERT INTO mutantfailurerate ( mappedMutant, failureRate) VALUES ");
+				
+				while((str = br.readLine())!= null){
+					String[] temp = str.split("\t");
+					
+					sql.append("(\'").append("TestCFG2_" + temp[0] +".java").append("\'").append(",");
+					sql.append("\'").append(temp[1]).append("\'").append("),");
+				}
+				
+				String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+				DatabaseManager.getInstance().update(sqlStmt);
+				System.out.println("Save the mutant failure rates into the Database");
+				
+			}else{
+				System.out.println("The file:" + failureRateFile+ " does not exist!");
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
+	public void saveToDB_interfaceMutants(String faultList, boolean containHeader){
+		File tmp =  new File(faultList);
+		
+		try {
+			if(tmp.isFile()){
+				BufferedReader br =  new BufferedReader(new FileReader(faultList));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				String str = null;
+			
+				StringBuilder sql = new StringBuilder();
+				sql.append("INSERT INTO  interfacemutant ( genMutant ) VALUES ");
+				
+				while((str = br.readLine())!= null){
+					sql.append("(\'").append(str).append("\')").append(",");					
+				}
+				
+				String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+				DatabaseManager.getInstance().update(sqlStmt);
+				System.out.println("Save the interface-level mutants into the Database");
+				
+			}else{
+				System.out.println("The file:" + faultList+ " does not exist!");
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
 	}
 	
 	/**2009-12-29:summarize mutants for a class&a method based on three categories:
@@ -522,6 +599,8 @@ public class MutantStatistics {
 				sql.append(this.generateSQLStatement("function", methods, false));
 			}
 			sql.append(")").append(" And ").append("(");
+			System.out.println(sql.toString());
+			
 			sql.append(this.generateSQLStatement("operator", wrongConstructs, true));
 			sql.append(")");			
 			rs = DatabaseManager.getInstance().query(sql.toString());
@@ -585,7 +664,7 @@ public class MutantStatistics {
 			String saveFile = mutantDir + "statistics_ClassLevel.txt";			
 			HashMap<String, HashMap<String, Integer>> classMutants = ins.getStatistics_ClassLevel(mutantDir);
 			ins.saveToFile_ClassLevel(classMutants, saveFile);
-			ins.saveToDB_ClassLevel(classMutants);			
+//			ins.saveToDB_ClassLevel(classMutants);			
 		}else if(instruction.equals("saveMutants_MethodLevel")){
 			//2. save method-level mutants into the file/database
 			String saveFile = mutantDir + "statistics_MethodLevel.txt";
@@ -616,6 +695,18 @@ public class MutantStatistics {
 					"\\experiment\\Context-Intensity_backup\\TestHarness\\20091230\\FailureRateDetails_5024.txt";
 			boolean containHeader = true;
 			ins.saveToDB_failureRate(failureRateFile, containHeader);			
+		}else if(instruction.equals("saveNonEquivalentMutant")){
+			String date = args[1];
+			String faultList = new File(mutantDir).getParent() + "\\src\\ccr" +
+			"\\experiment\\Context-Intensity_backup\\TestHarness\\"+date+"\\NonEquivalentFaults.txt";
+			boolean containHeader = false;
+			ins.saveToDB_nonEquivalentFaults(faultList, containHeader);
+		}else if(instruction.equals("saveInterfaceMutant")){
+			String date = args[1];
+			String faultList = new File(mutantDir).getParent() + "\\src\\ccr" +
+			"\\experiment\\Context-Intensity_backup\\TestHarness\\"+date+"\\interfaceLevelFaults.txt";
+			boolean containHeader = false;
+			ins.saveToDB_interfaceMutants(faultList, containHeader);			
 		}
 	}
 
