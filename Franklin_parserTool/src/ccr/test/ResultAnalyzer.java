@@ -1366,10 +1366,10 @@ public class ResultAnalyzer {
 		
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append("Mutant").append("\t").append("FailureRate").append("\t").
+		sb.append("Mutant").append("\t").append("FailureRate").append("\t");
 //		append("TestCaseKillArray").append("\n");
-		append("Average CD").append("\n"); //2010-01-03:get the correlation between CD and failure rates
-
+//		append("Average CD").append("\n"); //2010-01-03:get the correlation between CD and failure rates
+		
 		HashMap fault_effectTS = null;
 		int fault_counter = 0;
 		int TEST_POOL_END_LABEL = TestManager.TEST_POOL_SIZE + TestManager.TEST_POOL_START_LABEL;
@@ -1424,18 +1424,43 @@ public class ResultAnalyzer {
 //					}
 //				}
 				
-				//2010-01-03: failure rate <-> CD
-				double sum_CD = 0;
-				for(int j =0; j < effectTS.size(); j ++){
-					sum_CD += Double.parseDouble((String)effectTS.get(j));
+				//2010-01-03: failure rate <-> CD				
+				double[] CDArray = new double[effectTS.size()];
+				for(int j = 0; j < effectTS.size(); j ++){
+					String tc = (String)effectTS.get(j);
+					CDArray[j] = (Double)tc_CI.get(tc);
+					sb.append(CDArray[j]).append("\t");
 				}
-				double average_CD = sum_CD/(double)effectTS.size();
-				sb.append(average_CD);	
+//				sb.append("\n");
+//				Arrays.sort(CDArray);
+//				
+//				double max_CD = CDArray[CDArray.length - 1];
+//				double min_CD = CDArray[0];
+//				double sum_CD = 0;
+//				for(int j = 0; j < CDArray.length; j ++){
+//					sum_CD += CDArray[j];
+//				}
+//				double average_CD = sum_CD/(double)CDArray.length;
+				
+//				double median = 0.0;
+//				double top_quarter = 0.0;
+//				double bottom_quarter = 0.0;
+//				if(CDArray.length/2 == 0){
+//					median = ;
+//					top_quarter = 0.0;
+//					bottom_quarter = 0.0;
+//				}else{
+//					median = CDArray[(CDArray.length-1)/2];
+//					top_quarter = CDArray[];
+//					bottom_quarter = 0.0;
+//				}
+				
+//				sb.append(average_CD);	
 				sb.append("\n");
 			}
 		}
 		String saveFile = "src/ccr/experiment"
-			+ "/Context-Intensity_backup/TestHarness/" + date_save + "/FailureRate_CI"
+			+ "/Context-Intensity_backup/TestHarness/" + date_save + "/FailureRate_CI_"
 			+ fault_counter + ".txt";
 		Logger.getInstance().setPath(saveFile, false);
 		Logger.getInstance().write(sb.toString());
@@ -3515,6 +3540,7 @@ public class ResultAnalyzer {
 			String Hard_Medium_Easy = args[3]; //can only be "Hard", "Medium" or "Easy"
 			ResultAnalyzer.saveTestingPerformanceOnFaultCategory(date, size_ART, Hard_Medium_Easy);
 		}else if(instruction.equals("saveFailureRateDetails")){
+			
 			String date_detailed = args[1]; //the directory to load the detailed file
 			boolean containHeader = true;
 			int startVersion = 0;
@@ -3527,7 +3553,7 @@ public class ResultAnalyzer {
 			boolean containHeader_detailed = true;
 			String faultList = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 				+ date_save + "/NonEquivalentFaults.txt";			
-			boolean containHeader_fault = true;
+			boolean containHeader_fault = false;
 			ResultAnalyzer.saveToFile_TestPool_faultList(date_detailed, containHeader_detailed, faultList, containHeader_fault, date_save);
 			
 		}else if(instruction.equals("getEquivalentMutants")){
