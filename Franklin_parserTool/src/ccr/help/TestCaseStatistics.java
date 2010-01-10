@@ -413,14 +413,117 @@ public class TestCaseStatistics {
 		}
 	}
 	
+	public static void updateDB_Length(String testCaseFile, boolean containHeader){
+		File tmp = new File(testCaseFile);
+		if(tmp.exists()){
+			StringBuilder sql = new StringBuilder();
+			try {
+				BufferedReader br = new	BufferedReader(new FileReader(testCaseFile));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				int counter = 0; 
+				String str = null;
+				
+				
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					
+					String testcase = ""+(Integer.parseInt(strs[0])-10000);
+					System.out.println("Processing test case:" + testcase);
+					String Length = strs[2];
+					sql.append("update testcasedetail D set D.length = \'").append(Length).append("\'").
+					append(" where D.input = \'").append(testcase).append("\';").append("\n");	
+					String sqlStmt = sql.toString();
+					DatabaseManager.getInstance().update(sqlStmt);
+					sql.setLength(0); //clear the sql
+					
+//					counter ++;
+//					if(counter% 2 == 0){
+//						String sqlStmt = sql.toString();
+//						DatabaseManager.getInstance().update(sqlStmt);
+//						sql.setLength(0); //clear the sql					
+//					}
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+//			if(sql.substring(sql.lastIndexOf("set")).length() > 0){
+//				String sqlStmt = sql.toString();
+//				DatabaseManager.getInstance().update(sqlStmt);
+//				sql.setLength(0); //clear the sql
+//			}
+			
+			System.out.println("save test case coverage into the Database");
+		}else{
+			System.out.println("the test case file:" + testCaseFile +" does not exist at all");
+		}
+	}
+	
+	public static void saveToDB_TestCaseCoverage(String testCaseCovFile, boolean containHeader){
+		File tmp = new File(testCaseCovFile);
+		if(tmp.exists()){
+			StringBuilder sql = new StringBuilder();
+			try {
+				BufferedReader br = new	BufferedReader(new FileReader(testCaseCovFile));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				int counter = 0; 
+				String str = null;
+				
+				sql.append("INSERT INTO testcasecoverage (testcase, hitsum, hitcounter, coverage ) VALUES ");
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					
+					String testcase = strs[0];
+					String hitsum = strs[1];
+					String hitcounter = strs[2];
+					String coverage = strs[3];
+					
+					sql.append("(\'").append(testcase).append("\'").append(",");
+					sql.append("\'").append(hitsum).append("\'").append(",");
+					sql.append("\'").append(hitcounter).append("\'").append(",");					
+					sql.append("\'").append(coverage).append("\'").append("),");
+					counter ++;
+					if(counter% 500 == 0){
+						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+						DatabaseManager.getInstance().update(sqlStmt);
+						sql.setLength(0); //clear the sql
+						sql.append("INSERT INTO testcasecoverage (testcase, hitsum, hitcounter, coverage ) VALUES ");
+					}
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(sql.substring(sql.lastIndexOf("VALUES ") + "VALUES ".length()).length() > 0){
+				//still have some values need to save
+				String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+				DatabaseManager.getInstance().update(sqlStmt);
+				sql.setLength(0); //clear the sql
+			}
+			
+			System.out.println("save test case coverage into the Database");
+		}else{
+			System.out.println("the test case file:" + testCaseCovFile +" does not exist at all");
+		}
+	}
 	
 	public static void main(String[] args) {
-		if(args.length == 0){
-			System.out.println("Please specify the date to save the results");
-		}else{
-			//1. get the test case statistic and save them into the file
-			String date = args[0];
-			String criterion = args[1];
+		String instruction = args[0];
+		if(instruction.equals("saveTestCaseStatistics")){
+			String date = args[1];
+			String criterion = args[2];
 
 			TestCaseStatistics ins = new TestCaseStatistics();
 //			String appClassName = "TestCFG2_ins";			
@@ -430,8 +533,32 @@ public class TestCaseStatistics {
 			String testCaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/" + "TestCaseStatistics_" + criterion + ".txt";
 			boolean containHeader = true;			
-			ins.saveToDB_TestCaseStatistic(testCaseFile, containHeader);
+			ins.saveToDB_TestCaseStatistic(testCaseFile, containHeader);	
+		}else if(instruction.equals("saveTestCaseKillMutant")){
+			String date = args[1];
+			String faultNumber = args[2];
 			
+			String testCaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/FailureRate_nonEuqivalent/" + "TestCaseDetails_" + faultNumber + ".txt";
+			boolean containHeader = true;
+			TestCaseStatistics ins = new TestCaseStatistics();
+			ins.saveToDB_TestCaseKillMutants(testCaseFile, containHeader);
+		}else if(instruction.equals("saveTestCaseCov")){
+			String date = args[1];			
+			
+			String testCaseCovFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/" + "TestCaseCov.txt";
+			boolean containHeader = false;
+			TestCaseStatistics ins = new TestCaseStatistics();
+			ins.saveToDB_TestCaseCoverage(testCaseCovFile, containHeader);
+			
+		}else if(instruction.equals("updateLength")){
+			String date = args[1];
+			String testCaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/" + "Length.txt";
+			boolean containHeader = false;
+			TestCaseStatistics ins = new TestCaseStatistics();
+			ins.updateDB_Length(testCaseFile, containHeader);			
 		}
 		
 	}
