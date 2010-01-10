@@ -776,9 +776,9 @@ public class TestCFG2 extends Application {
 	}
 	
 	public static void main(String argv[]) {
-		
-		String testcase = "10"; 
-		System.out.println("result = " + (new TestCFG2()).application(testcase));
+		String testcase = argv[0];
+		new TestCFG2().application(testcase);	
+//		System.out.println("result = " + (new TestCFG2()).application(testcase));
 	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
 
