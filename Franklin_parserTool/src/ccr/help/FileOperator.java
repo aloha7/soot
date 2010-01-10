@@ -295,9 +295,9 @@ public class FileOperator {
 			+ date + "/MissingFaultList.txt";
 //		FileOperator.getMissingFault(detectedFaultFile, containHeader, saveFile);
 		String srcFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/nonEquivalentFaults_middlewareLevel.txt";
+			+ date + "/NonEquivalentFaults.txt";
 		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/NonEquivalentFaults_middlewareLevel.txt";
+			+ date + "/NonEquivalentFaults.txt";
 		FileOperator.saveFaultList(srcFile, containHeader, saveFile);
 	}
 }
