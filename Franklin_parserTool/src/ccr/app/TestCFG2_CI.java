@@ -117,7 +117,7 @@ public class TestCFG2_CI extends Application {
 		lastPos = cPos;
 		candidate = generateCtx();
 		resolve();
-		location = toCoordinates(candidate);
+		location = toCoordinates(candidate); //2010-01-11:may add this into the PositionQueue
 	//	System.out.println(counter + ":\t(" + location.x + ", " + location.y + ")");
 	//	distance = distance + Coordinates.calDist(location, lastLocation); // Experiments: calculate distance
 		displace = Math.sqrt((location.x - lastLocation.x) * (location.x - lastLocation.x) + 
@@ -741,7 +741,7 @@ public class TestCFG2_CI extends Application {
 	}
 
 	protected void resolve() {
-		PositionQueue.add(lastPos);
+		PositionQueue.add(lastPos); 
 		boolean consistent = true;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
@@ -798,33 +798,33 @@ public class TestCFG2_CI extends Application {
 	}
 	public static void main(String argv[]) {
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append("TestCase" + "\t" + "length" + "\t" +"changes" + "\t" + "CI" +"\n");
-		for(int i = -10000; i < 10000; i ++){
-			String testcase = "" + i;
-			TestCFG2_CI ins = new TestCFG2_CI();
-			ins.application(testcase);
-		
-			int changes = ins.getChanges(ins.PositionQueue);
-			System.out.println(testcase);
-			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
-					+"\t" + (ins.PositionQueue.size() - changes)) ;
-			
-//			for(int j = 0; j < ins.PositionQueue.size(); j ++){
-//				sb.append(ins.PositionQueue.get(j)+"\t");
-//			}
-			sb.append("\n");
-		}
-		System.out.println(sb.toString());
-		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090309/TestPool.txt";
-
-		Logger.getInstance().setPath(saveFile, false);
-		Logger.getInstance().write(sb.toString());
-		Logger.getInstance().close();
-		
-//		String testcase = "10"; 
-//		System.out.println("result = " + (new TestCFG2()).application(testcase));
-	//	System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
+//		StringBuilder sb = new StringBuilder();
+//		sb.append("TestCase" + "\t" + "length" + "\t" +"changes" + "\t" + "CI" +"\n");
+//		for(int i = -10000; i < 10000; i ++){
+//			String testcase = "" + i;
+//			TestCFG2_CI ins = new TestCFG2_CI();
+//			ins.application(testcase);
+//		
+//			int changes = ins.getChanges(ins.PositionQueue);
+//			System.out.println(testcase);
+//			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
+//					+"\t" + (ins.PositionQueue.size() - changes)) ;
+//			
+////			for(int j = 0; j < ins.PositionQueue.size(); j ++){
+////				sb.append(ins.PositionQueue.get(j)+"\t");
+////			}
+//			sb.append("\n");
+//		}
+//		System.out.println(sb.toString());
+//		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090309/TestPool.txt";
+//
+//		Logger.getInstance().setPath(saveFile, false);
+//		Logger.getInstance().write(sb.toString());
+//		Logger.getInstance().close();
+//		
+		String testcase = "10"; 
+		System.out.println("result = " + (new TestCFG2_CI()).application(testcase));
+//		System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
 
 }
