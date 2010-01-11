@@ -873,7 +873,7 @@ public class TestCFG2_CI extends Application {
 		StringBuilder sb = new StringBuilder();	
 		DecimalFormat formater = new DecimalFormat("0.00");
 		
-		for(double alpha = alpha_max; alpha > alpha_min; alpha = alpha - alpha_interval){
+		for(double alpha = alpha_max; alpha >= alpha_min; alpha = alpha - alpha_interval){
 			double[] lengths = new double[20000];
 			double[] CIs = new double[20000];
 			double[] rates = new double[20000];
@@ -1018,10 +1018,11 @@ public class TestCFG2_CI extends Application {
 	}
 	
 	public static void main(String argv[]) {
-		double alpha_min = 0.4;
-		double alpha_max = 0.5;
+		double alpha_min = 0.46;
+		double alpha_max = 0.46;
 		double alpha_interval = 0.01;
-		TestCFG2_CI.getSummaries_alpha(alpha_min, alpha_max, alpha_interval);
+//		TestCFG2_CI.getSummaries_alpha(alpha_min, alpha_max, alpha_interval);
+		TestCFG2_CI.getDetails_alpha(alpha_min, alpha_max, alpha_interval);
 	
 
 //		String testcase = "-10000";
