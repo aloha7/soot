@@ -1,6 +1,10 @@
 package ccr.app;
 
-import java.util.*;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import ccr.test.Logger;
 
@@ -172,6 +176,7 @@ public class TestCFG2_CI extends Application {
 		cPos = rand.nextInt(CCRScenarios.POS_NUM);
 		while (cPos == -1 || cPos == bPos ||
 			Coordinates.calDist(scenarios.getActLoc(sid, bPos), scenarios.getActLoc(sid, cPos)) < WALK_DIST) {
+			//WALK_DIST is the default distance to determine whether two locations are the same one
 			cPos = rand.nextInt(CCRScenarios.POS_NUM);
 		}
 		stay = rand.nextInt(MAX_STAY) + 1;
@@ -741,7 +746,7 @@ public class TestCFG2_CI extends Application {
 	}
 
 	protected void resolve() {
-		PositionQueue.add(lastPos); 
+		PositionQueue.add(this.toCoordinates(candidate)); 
 		boolean consistent = true;
 		for (int i = 0; i < queue.size() && i < 10; i++) {
 			Context ctx = (Context) queue.get(i);
@@ -783,47 +788,256 @@ public class TestCFG2_CI extends Application {
 	
 	public int getChanges(Vector queue){
 		int changes = 0;
-		Object last = null;
 		Object previous = null;
+		Object last = null;
 		if(queue.size() == 1){
 			changes = 0;
 		}
-		for(int i = 0; i < queue.size()-1; i ++){
+		
+		for(int i = 0; i < queue.size() - 1; i ++){
 			previous = queue.get(i);
-			last = queue.get(i +1);
-			if(previous!=last)
+			last = queue.get(i+1);
+			if(previous != last){
 				changes ++;
+			}
+		}
+		
+		return changes;
+	}
+	
+	public int getChanges(double alpha, Vector queue){
+		int changes = 0;
+		Coordinates last = null;
+		Coordinates previous = null;
+		
+		if(queue.size() == 1){
+			changes = 0;
+		}
+		double[] dists = new double[queue.size()-1];
+		for(int i = 0; i < queue.size()-1; i ++){
+			previous = (Coordinates)queue.get(i);
+			last = (Coordinates)queue.get(i +1);
+			dists[i] = Coordinates.calDist(previous, last);			
+		}
+		
+		for(int i = 0; i < queue.size()-1; i++){
+			double dist = dists[i];			
+			if(dist >= alpha*WALK_DIST){
+				changes ++;
+			}
 		}
 		return changes;
 	}
-	public static void main(String argv[]) {
+	
+	public static HashMap getStatistics(double[] numArray){
+		HashMap statistics = new HashMap();
+		double sum = 0.0;
+		double mean = 0.0;
+		double min = Double.MAX_VALUE;
+		double max = Double.MIN_VALUE;
+		double std = 0.0;
 		
-//		StringBuilder sb = new StringBuilder();
-//		sb.append("TestCase" + "\t" + "length" + "\t" +"changes" + "\t" + "CI" +"\n");
-//		for(int i = -10000; i < 10000; i ++){
-//			String testcase = "" + i;
+		for(int i = 0; i < numArray.length; i ++){
+			double num = numArray[i];
+			sum += num;
+			
+			if(num < min){
+				min = num;
+			}else if(num > max){
+				max = num;
+			}
+		}
+		
+		mean = sum / numArray.length;
+		double temp = 0.0;
+		for(int i = 0; i < numArray.length; i ++){
+			temp += (numArray[i] - mean) * (numArray[i]-mean);
+		}
+		
+		std = Math.sqrt(temp/numArray.length);
+		statistics.put("min", min);
+		statistics.put("mean", mean);
+		statistics.put("max", max);
+		statistics.put("std", std);
+		
+		return statistics;
+	}
+	
+	/**given a alpha range and the increase/decrease steps,
+	 * we need to get the details of test cases (length, CI, CI/length) 
+	 * @param alpha_min:inclusive
+	 * @param alpha_max:inclusive
+	 * @param alpha_interval
+	 */
+	public static void getDetails_alpha(double alpha_min, double alpha_max, double alpha_interval){
+		StringBuilder sb = new StringBuilder();	
+		DecimalFormat formater = new DecimalFormat("0.00");
+		
+		for(double alpha = alpha_max; alpha > alpha_min; alpha = alpha - alpha_interval){
+			double[] lengths = new double[20000];
+			double[] CIs = new double[20000];
+			double[] rates = new double[20000];
+			
+			sb.append("TestCase").append("\t").append("Length").append("\t").append("CI")
+			.append("\t").append("Rate").append("\n");
+			
+			for(int i = -10000; i < 10000; i ++){
+				String testcase = "" + i;
+				TestCFG2_CI ins = new TestCFG2_CI();
+				ins.application(testcase);
+			
+				double length = ins.PositionQueue.size();				
+				double CI = ins.getChanges(alpha, ins.PositionQueue);
+				double rate =Double.parseDouble(formater.format((double)CI/(double)ins.PositionQueue.size())); 
+				System.out.println(formater.format(alpha) + ":" + testcase);			
+				sb.append(testcase).append("\t").append(length).append("\t")
+				.append(CI).append("\t").append(rate).append("\n");
+				
+				lengths[i+10000] = length;
+				CIs[i+10000] =  CI;
+				rates[i+10000] = rate;
+			}			
+			
+			sb.append("Length statistics").append("\n");			
+			HashMap statistics = TestCFG2_CI.getStatistics(lengths);
+			sb.append("min:").append(statistics.get("min")).append("\n");
+			sb.append("mean:").append(statistics.get("mean")).append("\n");
+			sb.append("max:").append(statistics.get("max")).append("\n");
+			sb.append("std:").append(statistics.get("std")).append("\n");
+			
+			sb.append("CI statistics").append("\n");			
+			statistics = TestCFG2_CI.getStatistics(CIs);
+			sb.append("min:").append(statistics.get("min")).append("\n");
+			sb.append("mean:").append(statistics.get("mean")).append("\n");
+			sb.append("max:").append(statistics.get("max")).append("\n");
+			sb.append("std:").append(statistics.get("std")).append("\n");
+			
+			sb.append("Rate statistics").append("\n");			
+			statistics = TestCFG2_CI.getStatistics(rates);
+			sb.append("min:").append(statistics.get("min")).append("\n");
+			sb.append("mean:").append(statistics.get("mean")).append("\n");
+			sb.append("max:").append(statistics.get("max")).append("\n");
+			sb.append("std:").append(statistics.get("std")).append("\n");
+			
+			String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
+					"/TestHarness/20091230/TestPool_"+formater.format(alpha)+".txt";
+
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			sb.setLength(0);
+		}
+	}
+	
+	/**the default range and interval are 0.0(min and inclusive), 
+	 * 1.0 (max and inclusive), 0.1(interval) 
+	 * 
+	 */
+	public static void getDetails(){
+		double alpha_min = 0.0;
+		double alpha_max = 1.0;
+		double alpha_interval = 0.1;	
+		getDetails_alpha(alpha_min, alpha_max, alpha_interval);		
+	}
+	
+	/**Given a alpha range and the interval, we report
+	 * the descriptive statistics of test case information(length, CI, CI/length)
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
+	 */
+	public static void getSummaries_alpha(double alpha_min, double alpha_max, double alpha_interval){
+		StringBuilder sb = new StringBuilder();	
+		DecimalFormat formater = new DecimalFormat("0.00");
+		
+		sb.append("Alpha").append("\t").
+		append("Length_Min").append("\t").append("Length_Mean").append("\t").append("Length_Max").append("\t").append("Length_STD").append("\t").
+		append("CI_Min").append("\t").append("CI_Mean").append("\t").append("CI_Max").append("\t").append("CI_STD").append("\t").
+		append("Rate_Min").append("\t").append("Rate_Mean").append("\t").append("Rate_Max").append("\t").append("Rate_STD").append("\t").
+		append("\n");
+		
+		for(double alpha = alpha_max; alpha >= alpha_min; alpha = alpha - alpha_interval){
+			double[] lengths = new double[20000];
+			double[] CIs = new double[20000];
+			double[] rates = new double[20000];
+			
+			for(int i = -10000; i < 10000; i ++){
+				String testcase = "" + i;
+				TestCFG2_CI ins = new TestCFG2_CI();
+				ins.application(testcase);
+			
+				double length = ins.PositionQueue.size();				
+				double CI = ins.getChanges(alpha, ins.PositionQueue);
+				double rate =Double.parseDouble(formater.format((double)CI/(double)ins.PositionQueue.size())); 
+				System.out.println(formater.format(alpha) + ":" + testcase);											
+				lengths[i+10000] = length;
+				CIs[i+10000] =  CI;
+				rates[i+10000] = rate;
+			}			
+			sb.append(formater.format(alpha)).append("\t");
+			
+			HashMap statistics = TestCFG2_CI.getStatistics(lengths);
+			sb.append(formater.format(statistics.get("min"))).append("\t");
+			sb.append(formater.format(statistics.get("mean"))).append("\t");
+			sb.append(formater.format(statistics.get("max"))).append("\t");
+			sb.append(formater.format(statistics.get("std"))).append("\t");
+			
+			statistics = TestCFG2_CI.getStatistics(CIs);
+			sb.append(formater.format(statistics.get("min"))).append("\t");
+			sb.append(formater.format(statistics.get("mean"))).append("\t");
+			sb.append(formater.format(statistics.get("max"))).append("\t");
+			sb.append(formater.format(statistics.get("std"))).append("\t");
+						
+			statistics = TestCFG2_CI.getStatistics(rates);
+			sb.append(formater.format(statistics.get("min"))).append("\t");
+			sb.append(formater.format(statistics.get("mean"))).append("\t");
+			sb.append(formater.format(statistics.get("max"))).append("\t");
+			sb.append(formater.format(statistics.get("std"))).append("\t");
+			sb.append("\n");
+			
+		}
+		String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
+		"/TestHarness/20091230/TestPool_summary_"+formater.format(alpha_min)
+		+"_"+ formater.format(alpha_max)+".txt";
+
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+		sb.setLength(0);
+	}
+	
+	/**the default range and interval are 0.0(min and inclusive), 
+	 * 1.0 (max and inclusive), 0.1(interval) 
+	 * 
+	 */
+	public static void getSummaries(){
+		double alpha_min = 0.0;
+		double alpha_max = 1.0;
+		double alpha_interval = 0.1;
+		getSummaries_alpha(alpha_min, alpha_max, alpha_interval);
+	}
+	
+	public static void main(String argv[]) {
+		double alpha_min = 0.4;
+		double alpha_max = 0.5;
+		double alpha_interval = 0.01;
+		TestCFG2_CI.getSummaries_alpha(alpha_min, alpha_max, alpha_interval);
+	
+
+//		String testcase = "-10000";
+//		sb.append("Alpha").append("\t").append("length").append("\t").
+//		append("CI").append("\t").append("Rate").append("\n");
+//		
+//		for(double alpha = 1.0; alpha > 0.0; alpha = alpha - 0.1){
 //			TestCFG2_CI ins = new TestCFG2_CI();
 //			ins.application(testcase);
-//		
-//			int changes = ins.getChanges(ins.PositionQueue);
-//			System.out.println(testcase);
-//			sb.append(testcase + "\t"+ins.PositionQueue.size() +"\t" + changes 
-//					+"\t" + (ins.PositionQueue.size() - changes)) ;
-//			
-////			for(int j = 0; j < ins.PositionQueue.size(); j ++){
-////				sb.append(ins.PositionQueue.get(j)+"\t");
-////			}
-//			sb.append("\n");
+//			int changes = ins.getChanges(alpha, ins.PositionQueue);
+//			sb.append(alpha).append("\t").append(ins.PositionQueue.size()).append("\t")
+//			.append(changes).append("\t").append(formater.format((double)changes/(double)ins.PositionQueue.size()))
+//			.append("\n");			
 //		}
 //		System.out.println(sb.toString());
-//		String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/20090309/TestPool.txt";
-//
-//		Logger.getInstance().setPath(saveFile, false);
-//		Logger.getInstance().write(sb.toString());
-//		Logger.getInstance().close();
-//		
-		String testcase = "10"; 
-		System.out.println("result = " + (new TestCFG2_CI()).application(testcase));
+//		System.out.println("result = " + (new TestCFG2_CI()).application(testcase));
 //		System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
 
