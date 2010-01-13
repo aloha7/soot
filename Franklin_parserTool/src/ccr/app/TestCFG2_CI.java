@@ -1,5 +1,10 @@
 package ccr.app;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Random;
@@ -805,6 +810,16 @@ public class TestCFG2_CI extends Application {
 		return changes;
 	}
 	
+	public int getChanges(double alpha, String[] CoordinateArray){
+		Vector contextStream = new Vector();
+		//the first element is the test case id rather than context stream fragment
+		for(int i = 1; i < CoordinateArray.length; i ++){
+			Coordinates ins = new Coordinates(CoordinateArray[i]);
+			contextStream.add(ins);
+		}
+		return this.getChanges(alpha, contextStream);
+	}
+	
 	public int getChanges(double alpha, Vector queue){
 		int changes = 0;
 		Coordinates last = null;
@@ -829,7 +844,7 @@ public class TestCFG2_CI extends Application {
 		return changes;
 	}
 	
-	public static HashMap getStatistics(double[] numArray){
+	public HashMap getStatistics(double[] numArray){
 		HashMap statistics = new HashMap();
 		double sum = 0.0;
 		double mean = 0.0;
@@ -863,13 +878,108 @@ public class TestCFG2_CI extends Application {
 		return statistics;
 	}
 	
+	
+	/**2010-01-13: load context stream from the file
+	 * 
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
+	 * @param date
+	 * @param containHeader
+	 */
+	public void getDetails_alpha_offline(double alpha_min, double alpha_max, double alpha_interval, 
+			String date, boolean containHeader){
+		
+		String contextStreamFile = "src/ccr/experiment/Context-Intensity_backup" +
+		"/TestHarness/" + date +"/ContextStream_-10000_10000.txt";
+		
+		File tmp = new File(contextStreamFile);
+		if(tmp.exists()){
+			DecimalFormat formater = new DecimalFormat("0.0000");
+			StringBuilder sb = new StringBuilder();
+			
+			for(double alpha = alpha_min; alpha < alpha_max; alpha = alpha + alpha_interval){
+
+				double[] lengths = new double[20000];
+				double[] CIs = new double[20000];
+				double[] rates = new double[20000];
+				
+				sb.append("TestCase").append("\t").append("CI").append("\t").append("Length")
+				.append("\t").append("Rate").append("\n");
+				
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(contextStreamFile));
+					if(containHeader)
+						br.readLine();
+					
+					String str = null;
+					int i = 0;
+					while((str = br.readLine())!= null){
+						String[] strs = str.split("\t");
+						
+						double length = strs.length - 1;				
+						double CI = getChanges(alpha, strs);
+						double rate =Double.parseDouble(formater.format((double)CI/(double)length)); 
+						System.out.println(formater.format(alpha) + ":" + strs[0]);											
+						lengths[i] = length;
+						CIs[i] =  CI;
+						rates[i] = rate;
+						i ++ ;
+						sb.append(strs[0]).append("\t").append(CI).append("\t").append(length).append("\t").
+						append(rate).append("\n");
+					}
+				} catch (NumberFormatException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}									
+				
+				sb.append("CI statistics").append("\n");			
+				HashMap statistics = getStatistics(CIs);
+				sb.append("min:").append(statistics.get("min")).append("\n");
+				sb.append("mean:").append(statistics.get("mean")).append("\n");
+				sb.append("max:").append(statistics.get("max")).append("\n");
+				sb.append("std:").append(statistics.get("std")).append("\n");
+				
+				sb.append("Length statistics").append("\n");			
+				statistics = getStatistics(lengths);
+				sb.append("min:").append(statistics.get("min")).append("\n");
+				sb.append("mean:").append(statistics.get("mean")).append("\n");
+				sb.append("max:").append(statistics.get("max")).append("\n");
+				sb.append("std:").append(statistics.get("std")).append("\n");
+				
+				sb.append("Rate statistics").append("\n");			
+				statistics = getStatistics(rates);
+				sb.append("min:").append(statistics.get("min")).append("\n");
+				sb.append("mean:").append(statistics.get("mean")).append("\n");
+				sb.append("max:").append(statistics.get("max")).append("\n");
+				sb.append("std:").append(statistics.get("std")).append("\n");
+				
+				String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
+						"/TestHarness/"+date+"/TestPool_Alpha/TestPool_"+formater.format(alpha)+".txt";
+
+				Logger.getInstance().setPath(saveFile, false);
+				Logger.getInstance().write(sb.toString());
+				Logger.getInstance().close();
+				sb.setLength(0);
+			}		
+		}else{
+			System.out.println("Context stream file does not exist:" + tmp.getAbsolutePath());
+		}
+	}
+	
 	/**given a alpha range and the increase/decrease steps,
 	 * we need to get the details of test cases (length, CI, CI/length) 
 	 * @param alpha_min:inclusive
 	 * @param alpha_max:inclusive
 	 * @param alpha_interval
 	 */
-	public static void getDetails_alpha(double alpha_min, double alpha_max, double alpha_interval, String date){
+	public void getDetails_alpha_online(double alpha_min, double alpha_max, double alpha_interval, String date){
 		StringBuilder sb = new StringBuilder();	
 		DecimalFormat formater = new DecimalFormat("0.0000");
 		
@@ -899,21 +1009,21 @@ public class TestCFG2_CI extends Application {
 			}			
 			
 			sb.append("Length statistics").append("\n");			
-			HashMap statistics = TestCFG2_CI.getStatistics(lengths);
+			HashMap statistics = getStatistics(lengths);
 			sb.append("min:").append(statistics.get("min")).append("\n");
 			sb.append("mean:").append(statistics.get("mean")).append("\n");
 			sb.append("max:").append(statistics.get("max")).append("\n");
 			sb.append("std:").append(statistics.get("std")).append("\n");
 			
 			sb.append("CI statistics").append("\n");			
-			statistics = TestCFG2_CI.getStatistics(CIs);
+			statistics = getStatistics(CIs);
 			sb.append("min:").append(statistics.get("min")).append("\n");
 			sb.append("mean:").append(statistics.get("mean")).append("\n");
 			sb.append("max:").append(statistics.get("max")).append("\n");
 			sb.append("std:").append(statistics.get("std")).append("\n");
 			
 			sb.append("Rate statistics").append("\n");			
-			statistics = TestCFG2_CI.getStatistics(rates);
+			statistics = getStatistics(rates);
 			sb.append("min:").append(statistics.get("min")).append("\n");
 			sb.append("mean:").append(statistics.get("mean")).append("\n");
 			sb.append("max:").append(statistics.get("max")).append("\n");
@@ -929,24 +1039,107 @@ public class TestCFG2_CI extends Application {
 		}
 	}
 	
-	/**the default range and interval are 0.0(min and inclusive), 
-	 * 1.0 (max and inclusive), 0.1(interval) 
+
+	/**load context stream of each test case from the file
 	 * 
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
+	 * @param date
+	 * @param containHeader: whether context stream file contains the header or not
 	 */
-	public static void getDetails(String date){
-		double alpha_min = 0.0;
-		double alpha_max = 1.0;
-		double alpha_interval = 0.1;	
-		getDetails_alpha(alpha_min, alpha_max, alpha_interval, date);		
+	public void getSummaries_alpha_offline(double alpha_min, double alpha_max, double alpha_interval, String date, boolean containHeader){
+		
+		String contextStreamFile = "src/ccr/experiment/Context-Intensity_backup" +
+		"/TestHarness/" + date +"/ContextStream_-10000_10000.txt";
+		File tmp = new File(contextStreamFile);
+		if(tmp.exists()){
+			
+			DecimalFormat formater = new DecimalFormat("0.0000");
+			StringBuilder sb = new StringBuilder();
+			
+			for(double alpha = alpha_min; alpha < alpha_max; alpha = alpha + alpha_interval){
+				
+				sb.append("Alpha").append("\t");
+				sb.append("CI_Min").append("\t").append("CI_Mean").append("\t").append("CI_Max").append("\t").append("CI_STD").append("\t");
+				sb.append("Length_Min").append("\t").append("Length_Mean").append("\t").append("Length_Max").append("\t").append("Length_STD").append("\t");
+				sb.append("Rate_Min").append("\t").append("Rate_Mean").append("\t").append("Rate_Max").append("\t").append("Rate_STD").append("\n");				
+				
+				double[] lengths = new double[20000];
+				double[] CIs = new double[20000];
+				double[] rates = new double[20000];
+				
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(contextStreamFile));
+					if(containHeader)
+						br.readLine();
+					
+					String str = null;
+					int i = 0;
+					while((str = br.readLine())!= null){
+						String[] strs = str.split("\t");
+						
+						double length = strs.length - 1;				
+						double CI = getChanges(alpha, strs);
+						double rate =Double.parseDouble(formater.format((double)CI/(double)length)); 
+						System.out.println(formater.format(alpha) + ":" + strs[0]);											
+						lengths[i] = length;
+						CIs[i] =  CI;
+						rates[i] = rate;
+						i ++ ;
+					}
+					
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				sb.append(formater.format(alpha)).append("\t");						
+				
+				HashMap statistics = getStatistics(CIs);
+				sb.append(formater.format(statistics.get("min"))).append("\t");
+				sb.append(formater.format(statistics.get("mean"))).append("\t");
+				sb.append(formater.format(statistics.get("max"))).append("\t");
+				sb.append(formater.format(statistics.get("std"))).append("\t");
+				
+				statistics = getStatistics(lengths);
+				sb.append(formater.format(statistics.get("min"))).append("\t");
+				sb.append(formater.format(statistics.get("mean"))).append("\t");
+				sb.append(formater.format(statistics.get("max"))).append("\t");
+				sb.append(formater.format(statistics.get("std"))).append("\t");
+							
+				statistics = getStatistics(rates);
+				sb.append(formater.format(statistics.get("min"))).append("\t");
+				sb.append(formater.format(statistics.get("mean"))).append("\t");
+				sb.append(formater.format(statistics.get("max"))).append("\t");
+				sb.append(formater.format(statistics.get("std"))).append("\t");
+				sb.append("\n");
+			}
+			
+			String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
+			"/TestHarness/" + date +"/TestPool_summary_"+formater.format(alpha_min)
+			+"_"+ formater.format(alpha_max)+".txt";
+
+			Logger.getInstance().setPath(saveFile, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+
+			
+		}else{
+			System.out.println("Context stream file does not exist:" + tmp.getAbsolutePath());
+		}
 	}
 	
-	/**Given a alpha range and the interval, we report
+	/**2010-01-13:Given a alpha range and the interval, we report
 	 * the descriptive statistics of test case information(length, CI, CI/length)
 	 * @param alpha_min
 	 * @param alpha_max
 	 * @param alpha_interval
 	 */
-	public static void getSummaries_alpha(double alpha_min, double alpha_max, double alpha_interval, String date){
+	public void getSummaries_alpha_online(double alpha_min, double alpha_max, double alpha_interval, String date){
 		StringBuilder sb = new StringBuilder();	
 		DecimalFormat formater = new DecimalFormat("0.0000");
 		
@@ -976,19 +1169,19 @@ public class TestCFG2_CI extends Application {
 			}			
 			sb.append(formater.format(alpha)).append("\t");
 			
-			HashMap statistics = TestCFG2_CI.getStatistics(lengths);
+			HashMap statistics = getStatistics(lengths);
 			sb.append(formater.format(statistics.get("min"))).append("\t");
 			sb.append(formater.format(statistics.get("mean"))).append("\t");
 			sb.append(formater.format(statistics.get("max"))).append("\t");
 			sb.append(formater.format(statistics.get("std"))).append("\t");
 			
-			statistics = TestCFG2_CI.getStatistics(CIs);
+			statistics = getStatistics(CIs);
 			sb.append(formater.format(statistics.get("min"))).append("\t");
 			sb.append(formater.format(statistics.get("mean"))).append("\t");
 			sb.append(formater.format(statistics.get("max"))).append("\t");
 			sb.append(formater.format(statistics.get("std"))).append("\t");
 						
-			statistics = TestCFG2_CI.getStatistics(rates);
+			statistics = getStatistics(rates);
 			sb.append(formater.format(statistics.get("min"))).append("\t");
 			sb.append(formater.format(statistics.get("mean"))).append("\t");
 			sb.append(formater.format(statistics.get("max"))).append("\t");
@@ -1009,12 +1202,15 @@ public class TestCFG2_CI extends Application {
 	/**save the context stream fragments of test cases within a range 
 	 * 
 	 * @param tc_min: inclusive
-	 * @param tc_max: inclusive
+	 * @param tc_max: exclusive
 	 * @param date
 	 */
-	public static void getContextStream(int tc_min, int tc_max, String date){
-		StringBuilder sb = new StringBuilder();		
-		for(int i = tc_min; i <= tc_max; i ++){
+	public void getContextStream(int tc_min, int tc_max, String date){
+		StringBuilder sb = new StringBuilder();
+		
+		for(int i = tc_min; i < tc_max; i ++){
+			System.out.println("Processing test case:" + i);
+			
 			//1.record the test case index
 			sb.append(i).append("\t");
 			
@@ -1026,7 +1222,6 @@ public class TestCFG2_CI extends Application {
 				Coordinates location = (Coordinates)ins.PositionQueue.get(j);
 				sb.append(location.toString()).append("\t");				
 			}
-			
 			sb.append("\n");
 		}
 		
@@ -1043,61 +1238,51 @@ public class TestCFG2_CI extends Application {
 	 * 1.0 (max and inclusive), 0.1(interval) 
 	 * 
 	 */
-	public static void getSummaries(String date){
+	public void getSummaries_online(String date){
 		double alpha_min = 0.0;
 		double alpha_max = 1.0;
 		double alpha_interval = 0.1;
-		getSummaries_alpha(alpha_min, alpha_max, alpha_interval, date);
+		getSummaries_alpha_online(alpha_min, alpha_max, alpha_interval, date);
 	}
 	
 	public static void main(String argv[]) {
 		String instruction = argv[0];
+		TestCFG2_CI ins = new TestCFG2_CI();
+		
 		if(instruction.equals("getSummary")){
 			
 			double alpha_min = Double.parseDouble(argv[1]);//0.440
 			double alpha_max = Double.parseDouble(argv[2]);//0.450
 			double alpha_interval = Double.parseDouble(argv[3]); //0.001
 			String date = "20100113";
-			TestCFG2_CI.getSummaries_alpha(alpha_min, 
-					alpha_max, alpha_interval, date);
 			
+//			ins.getSummaries_alpha_online(alpha_min, 
+//					alpha_max, alpha_interval, date);
+			
+			boolean containHeader = false;
+			ins.getSummaries_alpha_offline(alpha_min, alpha_max, alpha_interval, 
+					date, containHeader);
 		}else if(instruction.equals("getDetails")){
 			
 			double alpha_min = Double.parseDouble(argv[1]);//0.440
 			double alpha_max = Double.parseDouble(argv[2]);//0.450
 			double alpha_interval = Double.parseDouble(argv[3]); //0.001
 			String date = "20100113";
-			TestCFG2_CI.getDetails_alpha(alpha_min,
-					alpha_max, alpha_interval, date);
+//			ins.getDetails_alpha_online(alpha_min,
+//					alpha_max, alpha_interval, date);
+			
+			boolean containHeader = false;
+			ins.getDetails_alpha_offline(alpha_min,
+					alpha_max, alpha_interval, date, containHeader);
 			
 		}else if(instruction.equals("getContextStream")){
 			
 			String date = argv[1];
 			int testcase_min = Integer.parseInt(argv[2]);
 			int testcase_max = Integer.parseInt(argv[3]);
-			TestCFG2_CI.getContextStream(testcase_min, testcase_max, date);
+			ins.getContextStream(testcase_min, testcase_max, date);
 			
 		}
 		
-		
-		
-	
-
-//		String testcase = "-10000";
-//		sb.append("Alpha").append("\t").append("length").append("\t").
-//		append("CI").append("\t").append("Rate").append("\n");
-//		
-//		for(double alpha = 1.0; alpha > 0.0; alpha = alpha - 0.1){
-//			TestCFG2_CI ins = new TestCFG2_CI();
-//			ins.application(testcase);
-//			int changes = ins.getChanges(alpha, ins.PositionQueue);
-//			sb.append(alpha).append("\t").append(ins.PositionQueue.size()).append("\t")
-//			.append(changes).append("\t").append(formater.format((double)changes/(double)ins.PositionQueue.size()))
-//			.append("\n");			
-//		}
-//		System.out.println(sb.toString());
-//		System.out.println("result = " + (new TestCFG2_CI()).application(testcase));
-//		System.out.println((new TestCFG2()).application(testcase).equals((new TestCFG2()).application(testcase)));
 	}
-
 }
