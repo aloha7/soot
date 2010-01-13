@@ -881,8 +881,8 @@ public class TestCFG2_CI extends Application {
 	
 	/**2010-01-13: load context stream from the file
 	 * 
-	 * @param alpha_min
-	 * @param alpha_max
+	 * @param alpha_min: inclusive
+	 * @param alpha_max: exclusive
 	 * @param alpha_interval
 	 * @param date
 	 * @param containHeader
@@ -904,7 +904,7 @@ public class TestCFG2_CI extends Application {
 				double[] CIs = new double[20000];
 				double[] rates = new double[20000];
 				
-				sb.append("TestCase").append("\t").append("CI").append("\t").append("Length")
+				sb.append("TestCase").append("\t").append("Length").append("\t").append("CI")
 				.append("\t").append("Rate").append("\n");
 				
 				try {
@@ -925,7 +925,7 @@ public class TestCFG2_CI extends Application {
 						CIs[i] =  CI;
 						rates[i] = rate;
 						i ++ ;
-						sb.append(strs[0]).append("\t").append(CI).append("\t").append(length).append("\t").
+						sb.append(strs[0]).append("\t").append(length).append("\t").append(CI).append("\t").
 						append(rate).append("\n");
 					}
 				} catch (NumberFormatException e) {
@@ -1042,8 +1042,8 @@ public class TestCFG2_CI extends Application {
 
 	/**load context stream of each test case from the file
 	 * 
-	 * @param alpha_min
-	 * @param alpha_max
+	 * @param alpha_min: inclusive
+	 * @param alpha_max: exclusive
 	 * @param alpha_interval
 	 * @param date
 	 * @param containHeader: whether context stream file contains the header or not
@@ -1058,12 +1058,12 @@ public class TestCFG2_CI extends Application {
 			DecimalFormat formater = new DecimalFormat("0.0000");
 			StringBuilder sb = new StringBuilder();
 			
+			sb.append("Alpha").append("\t");
+			sb.append("CI_Min").append("\t").append("CI_Mean").append("\t").append("CI_Max").append("\t").append("CI_STD").append("\t");
+			sb.append("Length_Min").append("\t").append("Length_Mean").append("\t").append("Length_Max").append("\t").append("Length_STD").append("\t");
+			sb.append("Rate_Min").append("\t").append("Rate_Mean").append("\t").append("Rate_Max").append("\t").append("Rate_STD").append("\n");
+			
 			for(double alpha = alpha_min; alpha < alpha_max; alpha = alpha + alpha_interval){
-				
-				sb.append("Alpha").append("\t");
-				sb.append("CI_Min").append("\t").append("CI_Mean").append("\t").append("CI_Max").append("\t").append("CI_STD").append("\t");
-				sb.append("Length_Min").append("\t").append("Length_Mean").append("\t").append("Length_Max").append("\t").append("Length_STD").append("\t");
-				sb.append("Rate_Min").append("\t").append("Rate_Mean").append("\t").append("Rate_Max").append("\t").append("Rate_STD").append("\n");				
 				
 				double[] lengths = new double[20000];
 				double[] CIs = new double[20000];
@@ -1120,7 +1120,7 @@ public class TestCFG2_CI extends Application {
 			}
 			
 			String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
-			"/TestHarness/" + date +"/TestPool_summary_"+formater.format(alpha_min)
+			"/TestHarness/" + date +"/TestPool_Alpha/TestPool_summary_"+formater.format(alpha_min)
 			+"_"+ formater.format(alpha_max)+".txt";
 
 			Logger.getInstance().setPath(saveFile, false);
@@ -1135,8 +1135,8 @@ public class TestCFG2_CI extends Application {
 	
 	/**2010-01-13:Given a alpha range and the interval, we report
 	 * the descriptive statistics of test case information(length, CI, CI/length)
-	 * @param alpha_min
-	 * @param alpha_max
+	 * @param alpha_min:inclusive
+	 * @param alpha_max:exclusive
 	 * @param alpha_interval
 	 */
 	public void getSummaries_alpha_online(double alpha_min, double alpha_max, double alpha_interval, String date){
@@ -1149,7 +1149,7 @@ public class TestCFG2_CI extends Application {
 		append("Rate_Min").append("\t").append("Rate_Mean").append("\t").append("Rate_Max").append("\t").append("Rate_STD").append("\t").
 		append("\n");
 		
-		for(double alpha = alpha_max; alpha >= alpha_min; alpha = alpha - alpha_interval){
+		for(double alpha = alpha_min; alpha < alpha_max; alpha = alpha - alpha_interval){
 			double[] lengths = new double[20000];
 			double[] CIs = new double[20000];
 			double[] rates = new double[20000];
@@ -1169,13 +1169,13 @@ public class TestCFG2_CI extends Application {
 			}			
 			sb.append(formater.format(alpha)).append("\t");
 			
-			HashMap statistics = getStatistics(lengths);
+			HashMap statistics = getStatistics(CIs);
 			sb.append(formater.format(statistics.get("min"))).append("\t");
 			sb.append(formater.format(statistics.get("mean"))).append("\t");
 			sb.append(formater.format(statistics.get("max"))).append("\t");
 			sb.append(formater.format(statistics.get("std"))).append("\t");
 			
-			statistics = getStatistics(CIs);
+			statistics = getStatistics(lengths);
 			sb.append(formater.format(statistics.get("min"))).append("\t");
 			sb.append(formater.format(statistics.get("mean"))).append("\t");
 			sb.append(formater.format(statistics.get("max"))).append("\t");
@@ -1190,7 +1190,7 @@ public class TestCFG2_CI extends Application {
 			
 		}
 		String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
-		"/TestHarness/" + date +"/TestPool_summary_"+formater.format(alpha_min)
+		"/TestHarness/" + date +"/TestPool_Alpha/TestPool_summary_"+formater.format(alpha_min)
 		+"_"+ formater.format(alpha_max)+".txt";
 
 		Logger.getInstance().setPath(saveFile, false);
@@ -1251,11 +1251,11 @@ public class TestCFG2_CI extends Application {
 		
 		if(instruction.equals("getSummary")){
 			
-			double alpha_min = Double.parseDouble(argv[1]);//0.440
-			double alpha_max = Double.parseDouble(argv[2]);//0.450
-			double alpha_interval = Double.parseDouble(argv[3]); //0.001
-			String date = "20100113";
-			
+			String date = argv[1];
+			double alpha_min = Double.parseDouble(argv[2]);//0.440
+			double alpha_max = Double.parseDouble(argv[3]);//0.450
+			double alpha_interval = Double.parseDouble(argv[4]); //0.001
+
 //			ins.getSummaries_alpha_online(alpha_min, 
 //					alpha_max, alpha_interval, date);
 			
@@ -1263,11 +1263,11 @@ public class TestCFG2_CI extends Application {
 			ins.getSummaries_alpha_offline(alpha_min, alpha_max, alpha_interval, 
 					date, containHeader);
 		}else if(instruction.equals("getDetails")){
+			String date = argv[1];
+			double alpha_min = Double.parseDouble(argv[2]);//0.440
+			double alpha_max = Double.parseDouble(argv[3]);//0.450
+			double alpha_interval = Double.parseDouble(argv[4]); //0.001
 			
-			double alpha_min = Double.parseDouble(argv[1]);//0.440
-			double alpha_max = Double.parseDouble(argv[2]);//0.450
-			double alpha_interval = Double.parseDouble(argv[3]); //0.001
-			String date = "20100113";
 //			ins.getDetails_alpha_online(alpha_min,
 //					alpha_max, alpha_interval, date);
 			
