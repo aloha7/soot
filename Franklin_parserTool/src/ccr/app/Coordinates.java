@@ -4,12 +4,19 @@ public class Coordinates {
 
     public double x = 0.0, y = 0.0;
 
+    
     public Coordinates(double _x, double _y) {
 
         x = _x;
         y = _y;
     }
 
+    public Coordinates(String ins){
+    	String[] strs = ins.split(":");
+    	x = Double.parseDouble(strs[0]);
+    	y = Double.parseDouble(strs[1]);
+    }
+    
     public static double calDist(Coordinates l1, Coordinates l2) {
 
         double dist = (l2.x - l1.x) * (l2.x - l1.x) + (l2.y - l1.y) * (l2.y - l1.y);
@@ -24,6 +31,13 @@ public class Coordinates {
         dist = Math.sqrt(dist);
 
         return dist;
+    }
+    
+    /**2010-01-13: 
+     * 
+     */
+    public String toString(){
+    	return x+":"+y;
     }
 
 }
