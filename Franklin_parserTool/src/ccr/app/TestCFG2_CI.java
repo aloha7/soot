@@ -869,9 +869,9 @@ public class TestCFG2_CI extends Application {
 	 * @param alpha_max:inclusive
 	 * @param alpha_interval
 	 */
-	public static void getDetails_alpha(double alpha_min, double alpha_max, double alpha_interval){
+	public static void getDetails_alpha(double alpha_min, double alpha_max, double alpha_interval, String date){
 		StringBuilder sb = new StringBuilder();	
-		DecimalFormat formater = new DecimalFormat("0.00");
+		DecimalFormat formater = new DecimalFormat("0.0000");
 		
 		for(double alpha = alpha_max; alpha >= alpha_min; alpha = alpha - alpha_interval){
 			double[] lengths = new double[20000];
@@ -920,7 +920,7 @@ public class TestCFG2_CI extends Application {
 			sb.append("std:").append(statistics.get("std")).append("\n");
 			
 			String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
-					"/TestHarness/20091230/TestPool_"+formater.format(alpha)+".txt";
+					"/TestHarness/"+date+"/TestPool_"+formater.format(alpha)+".txt";
 
 			Logger.getInstance().setPath(saveFile, false);
 			Logger.getInstance().write(sb.toString());
@@ -933,11 +933,11 @@ public class TestCFG2_CI extends Application {
 	 * 1.0 (max and inclusive), 0.1(interval) 
 	 * 
 	 */
-	public static void getDetails(){
+	public static void getDetails(String date){
 		double alpha_min = 0.0;
 		double alpha_max = 1.0;
 		double alpha_interval = 0.1;	
-		getDetails_alpha(alpha_min, alpha_max, alpha_interval);		
+		getDetails_alpha(alpha_min, alpha_max, alpha_interval, date);		
 	}
 	
 	/**Given a alpha range and the interval, we report
@@ -946,9 +946,9 @@ public class TestCFG2_CI extends Application {
 	 * @param alpha_max
 	 * @param alpha_interval
 	 */
-	public static void getSummaries_alpha(double alpha_min, double alpha_max, double alpha_interval){
+	public static void getSummaries_alpha(double alpha_min, double alpha_max, double alpha_interval, String date){
 		StringBuilder sb = new StringBuilder();	
-		DecimalFormat formater = new DecimalFormat("0.00");
+		DecimalFormat formater = new DecimalFormat("0.0000");
 		
 		sb.append("Alpha").append("\t").
 		append("Length_Min").append("\t").append("Length_Mean").append("\t").append("Length_Max").append("\t").append("Length_STD").append("\t").
@@ -997,7 +997,7 @@ public class TestCFG2_CI extends Application {
 			
 		}
 		String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
-		"/TestHarness/20091230/TestPool_summary_"+formater.format(alpha_min)
+		"/TestHarness/" + date +"/TestPool_summary_"+formater.format(alpha_min)
 		+"_"+ formater.format(alpha_max)+".txt";
 
 		Logger.getInstance().setPath(saveFile, false);
@@ -1006,23 +1006,81 @@ public class TestCFG2_CI extends Application {
 		sb.setLength(0);
 	}
 	
+	/**save the context stream fragments of test cases within a range 
+	 * 
+	 * @param tc_min: inclusive
+	 * @param tc_max: inclusive
+	 * @param date
+	 */
+	public static void getContextStream(int tc_min, int tc_max, String date){
+		StringBuilder sb = new StringBuilder();		
+		for(int i = tc_min; i <= tc_max; i ++){
+			//1.record the test case index
+			sb.append(i).append("\t");
+			
+			TestCFG2_CI ins = new TestCFG2_CI();
+			ins.application(""+i);			
+			
+			//2.record the context stream fragment. 
+			for(int j = 0; j < ins.PositionQueue.size(); j ++){
+				Coordinates location = (Coordinates)ins.PositionQueue.get(j);
+				sb.append(location.toString()).append("\t");				
+			}
+			
+			sb.append("\n");
+		}
+		
+		String filename = "src/ccr/experiment/Context-Intensity_backup" +
+		"/TestHarness/" + date +"/ContextStream_"+tc_min
+		+"_"+ tc_max +".txt";
+		
+		Logger.getInstance().setPath(filename, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	/**the default range and interval are 0.0(min and inclusive), 
 	 * 1.0 (max and inclusive), 0.1(interval) 
 	 * 
 	 */
-	public static void getSummaries(){
+	public static void getSummaries(String date){
 		double alpha_min = 0.0;
 		double alpha_max = 1.0;
 		double alpha_interval = 0.1;
-		getSummaries_alpha(alpha_min, alpha_max, alpha_interval);
+		getSummaries_alpha(alpha_min, alpha_max, alpha_interval, date);
 	}
 	
 	public static void main(String argv[]) {
-		double alpha_min = 0.46;
-		double alpha_max = 0.46;
-		double alpha_interval = 0.01;
-//		TestCFG2_CI.getSummaries_alpha(alpha_min, alpha_max, alpha_interval);
-		TestCFG2_CI.getDetails_alpha(alpha_min, alpha_max, alpha_interval);
+		String instruction = argv[0];
+		if(instruction.equals("getSummary")){
+			
+			double alpha_min = Double.parseDouble(argv[1]);//0.440
+			double alpha_max = Double.parseDouble(argv[2]);//0.450
+			double alpha_interval = Double.parseDouble(argv[3]); //0.001
+			String date = "20100113";
+			TestCFG2_CI.getSummaries_alpha(alpha_min, 
+					alpha_max, alpha_interval, date);
+			
+		}else if(instruction.equals("getDetails")){
+			
+			double alpha_min = Double.parseDouble(argv[1]);//0.440
+			double alpha_max = Double.parseDouble(argv[2]);//0.450
+			double alpha_interval = Double.parseDouble(argv[3]); //0.001
+			String date = "20100113";
+			TestCFG2_CI.getDetails_alpha(alpha_min,
+					alpha_max, alpha_interval, date);
+			
+		}else if(instruction.equals("getContextStream")){
+			
+			String date = argv[1];
+			int testcase_min = Integer.parseInt(argv[2]);
+			int testcase_max = Integer.parseInt(argv[3]);
+			TestCFG2_CI.getContextStream(testcase_min, testcase_max, date);
+			
+		}
+		
+		
+		
 	
 
 //		String testcase = "-10000";
