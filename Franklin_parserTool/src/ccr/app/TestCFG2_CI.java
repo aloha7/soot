@@ -879,8 +879,8 @@ public class TestCFG2_CI extends Application {
 	}
 	
 	
-	/**2010-01-13: load context stream from the file
-	 * 
+	/**2010-01-13: load context stream from the file, and 
+	 * get the context diversity of each test input
 	 * @param alpha_min: inclusive
 	 * @param alpha_max: exclusive
 	 * @param alpha_interval
@@ -888,10 +888,10 @@ public class TestCFG2_CI extends Application {
 	 * @param containHeader
 	 */
 	public void getDetails_alpha_offline(double alpha_min, double alpha_max, double alpha_interval, 
-			String date, boolean containHeader){
+			String date, int tc_min, int tc_max, boolean containHeader){
 		
 		String contextStreamFile = "src/ccr/experiment/Context-Intensity_backup" +
-		"/TestHarness/" + date +"/ContextStream_-10000_10000.txt";
+		"/TestHarness/" + date +"/ContextStream_"+tc_min + "_"+ tc_max + ".txt";
 		
 		File tmp = new File(contextStreamFile);
 		if(tmp.exists()){
@@ -961,7 +961,9 @@ public class TestCFG2_CI extends Application {
 				sb.append("std:").append(statistics.get("std")).append("\n");
 				
 				String saveFile = "src/ccr/experiment/Context-Intensity_backup" +
-						"/TestHarness/"+date+"/TestPool_Alpha/TestPool_"+formater.format(alpha)+".txt";
+						"/TestHarness/"+date+"/TestPool_Alpha/TestPool_"+
+						formater.format(alpha)+"_"+ tc_min + "_" + tc_max
+						+ ".txt";
 
 				Logger.getInstance().setPath(saveFile, false);
 				Logger.getInstance().write(sb.toString());
@@ -1039,19 +1041,24 @@ public class TestCFG2_CI extends Application {
 		}
 	}
 	
-
-	/**load context stream of each test case from the file
+	/**load context stream of each test case from the file, 
+	 * and parse the min, max, mean and std of context diveristy/context length 
+	 * of each test case
 	 * 
-	 * @param alpha_min: inclusive
+	 * @param alpha_min:inclusive
 	 * @param alpha_max: exclusive
 	 * @param alpha_interval
 	 * @param date
-	 * @param containHeader: whether context stream file contains the header or not
+	 * @param min_tc:inclusive
+	 * @param max_tc: exclusive
+	 * @param containHeader:whether context stream file contains the header or not
 	 */
-	public void getSummaries_alpha_offline(double alpha_min, double alpha_max, double alpha_interval, String date, boolean containHeader){
+	public void getSummaries_alpha_offline(double alpha_min, double alpha_max, double alpha_interval, 
+			String date, int min_tc, int max_tc, boolean containHeader){
 		
 		String contextStreamFile = "src/ccr/experiment/Context-Intensity_backup" +
-		"/TestHarness/" + date +"/ContextStream_-10000_10000.txt";
+		"/TestHarness/" + date +"/ContextStream_"+min_tc + "_"+ max_tc+".txt";
+		
 		File tmp = new File(contextStreamFile);
 		if(tmp.exists()){
 			
@@ -1255,33 +1262,52 @@ public class TestCFG2_CI extends Application {
 			double alpha_min = Double.parseDouble(argv[2]);//0.440
 			double alpha_max = Double.parseDouble(argv[3]);//0.450
 			double alpha_interval = Double.parseDouble(argv[4]); //0.001
-
+			int tc_min = -10000;
+			int tc_max = 10000;
 //			ins.getSummaries_alpha_online(alpha_min, 
 //					alpha_max, alpha_interval, date);
 			
 			boolean containHeader = false;
 			ins.getSummaries_alpha_offline(alpha_min, alpha_max, alpha_interval, 
-					date, containHeader);
+					date, tc_min, tc_max, containHeader);
 		}else if(instruction.equals("getDetails")){
 			String date = argv[1];
 			double alpha_min = Double.parseDouble(argv[2]);//0.440
 			double alpha_max = Double.parseDouble(argv[3]);//0.450
 			double alpha_interval = Double.parseDouble(argv[4]); //0.001
+			int tc_min = -10000;
+			int tc_max = 10000;
 			
 //			ins.getDetails_alpha_online(alpha_min,
 //					alpha_max, alpha_interval, date);
 			
 			boolean containHeader = false;
 			ins.getDetails_alpha_offline(alpha_min,
-					alpha_max, alpha_interval, date, containHeader);
+					alpha_max, alpha_interval, date, tc_min, tc_max, containHeader);
 			
 		}else if(instruction.equals("getContextStream")){
 			
 			String date = argv[1];
 			int testcase_min = Integer.parseInt(argv[2]);
 			int testcase_max = Integer.parseInt(argv[3]);
-			ins.getContextStream(testcase_min, testcase_max, date);
+			ins.getContextStream(testcase_min, testcase_max, date);			
+		}else if(instruction.equals("genAndGetContextDiversity")){
+			String date = argv[1];
+			int tc_min = Integer.parseInt(argv[2]);
+			int tc_max = Integer.parseInt(argv[3]);
+			double alpha_min = 0.43;
+			double alpha_max = 0.44;
+			double alpha_interval = 0.01;
+			if(argv.length == 7){
+				alpha_min = Double.parseDouble(argv[4]);
+				alpha_max = Double.parseDouble(argv[5]);
+				alpha_interval = Double.parseDouble(argv[6]);
+			}
 			
+			ins.getContextStream(tc_min, tc_max, date);
+			boolean containHeader = false;
+			
+			ins.getDetails_alpha_offline(alpha_min, alpha_max, alpha_interval, date, tc_min, tc_max, containHeader);
 		}
 		
 	}
