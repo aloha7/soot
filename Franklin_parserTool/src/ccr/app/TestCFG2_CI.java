@@ -879,12 +879,14 @@ public class TestCFG2_CI extends Application {
 	}
 	
 	
-	/**2010-01-13: load context stream from the file, and 
+	/**2010-01-13: load context stream from the file, and
 	 * get the context diversity of each test input
 	 * @param alpha_min: inclusive
 	 * @param alpha_max: exclusive
 	 * @param alpha_interval
 	 * @param date
+	 * @param tc_min: inclusive
+	 * @param tc_max: exclusive
 	 * @param containHeader
 	 */
 	public void getDetails_alpha_offline(double alpha_min, double alpha_max, double alpha_interval, 
@@ -978,14 +980,14 @@ public class TestCFG2_CI extends Application {
 	/**given a alpha range and the increase/decrease steps,
 	 * we need to get the details of test cases (length, CI, CI/length) 
 	 * @param alpha_min:inclusive
-	 * @param alpha_max:inclusive
+	 * @param alpha_max:exclusive
 	 * @param alpha_interval
 	 */
 	public void getDetails_alpha_online(double alpha_min, double alpha_max, double alpha_interval, String date){
 		StringBuilder sb = new StringBuilder();	
 		DecimalFormat formater = new DecimalFormat("0.0000");
 		
-		for(double alpha = alpha_max; alpha >= alpha_min; alpha = alpha - alpha_interval){
+		for(double alpha = alpha_min; alpha < alpha_max; alpha = alpha + alpha_interval){
 			double[] lengths = new double[20000];
 			double[] CIs = new double[20000];
 			double[] rates = new double[20000];
