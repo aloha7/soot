@@ -14,9 +14,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Random;
 import java.util.Vector;
 
 import ccr.test.Logger;
+import ccr.test.ResultAnalyzer;
+import ccr.test.TestCase;
 import ccr.test.TestDriver;
 
 public class FileOperator {
@@ -78,9 +84,6 @@ public class FileOperator {
 		return succ;		
 	}
 	
-	//How to make folder?
-	
-	//
 	public static boolean compare(String src, String dest){
 		boolean result = true;
 		File src_file = new File(src);
@@ -266,7 +269,236 @@ public class FileOperator {
 		
 	}
 	
+	/**2010-01-21: a new version to merge files
+	 * 
+	 * @param date
+	 * @param prefix
+	 */
+	public static void mergeFiles(String date, String prefix){
+		boolean containHeader = true;		
+		String pattern = prefix + "\\_-?[0-9]+\\_-?[0-9]+\\.txt";
+		String srcDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+			+ date + "//TestPool_Alpha//" ;	
+		String saveFile = srcDir + prefix + ".txt";
+		ResultAnalyzer.mergeFiles(srcDir, containHeader, pattern, saveFile); 
+	}
+	
+	public static void mapIDInputs(String date, boolean containHeader, String alpha, 
+			String tc_min, String tc_max){
+		String testPool_old = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+			+ date + "/TestPool_Alpha/TestPool_old.txt" ;
+		
+		String testPool_new  = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+			+ date + "/TestPool_Alpha/TestPool_"+ alpha + "_" + tc_min + "_" + tc_max+".txt" ;
+		
+		File tmp_1 = new File(testPool_old);
+		File tmp_2 = new File(testPool_new);
+		if(tmp_1.exists() && tmp_2.exists()){
+			//ID of test cases-> test cases
+			HashMap<Integer, TestCase> id_tc = new HashMap<Integer, TestCase>();
+			try {
+				
+				//1. read the old test pool
+				BufferedReader br = new BufferedReader(new FileReader(testPool_old));		
+				if(containHeader)
+					br.readLine();
+				
+				String str = null;
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					if(strs.length > 2){
+						int id = Integer.parseInt(strs[0]);
+						String length = strs[1];
+						String cd = strs[2];
+						
+						TestCase tc = new TestCase();
+						tc.index = "" + id;
+						tc.length = "" + Double.parseDouble(length);
+						tc.CI = Double.parseDouble(cd);
+						id_tc.put(id, tc);	
+					}
+				}
+				br.close();
+				
+				
+				//length -> CD* -> TestCases*
+				HashMap<String, HashMap<Double, ArrayList<String>>> length_CD_inputList = new 
+					HashMap<String, HashMap<Double,ArrayList<String>>>();
+								
+				//2. read the new test pool
+				int counter = 0;
+				BufferedReader br_1 = new BufferedReader(new FileReader(testPool_new));
+				if(containHeader)
+					br_1.readLine();
+				
+				while((str = br_1.readLine())!= null){
+					String[] strs = str.split("\t");
+					if(strs.length > 2){
+						String input = strs[0];
+						String length = "" + Double.parseDouble(strs[1]);
+						double cd = Double.parseDouble(strs[2]);
+						
+						if(length_CD_inputList.containsKey(length)){
+							HashMap<Double, ArrayList<String>> CD_inputList = length_CD_inputList.get(length);
+							ArrayList<String> inputList = null;
+							
+							if(CD_inputList.containsKey(cd)){
+								inputList = CD_inputList.get(cd);
+							}else{
+								inputList = new ArrayList<String>();
+							}	
+							
+							inputList.add(input);
+							CD_inputList.put(cd, inputList);
+							length_CD_inputList.put(length, CD_inputList);
+							counter ++;
+						}else{
+							ArrayList<String> inputList = new ArrayList<String>();
+							inputList.add(input);
+							
+							HashMap<Double, ArrayList<String>> CD_inputList = new 
+							HashMap<Double, ArrayList<String>>();
+							CD_inputList.put(cd, inputList);
+							length_CD_inputList.put(length, CD_inputList);
+							counter ++;
+						}
+					}
+				}
+				br_1.close();
+				System.out.println(counter);
+				
+				//3. map the id of test cases and inputs
+				HashMap<Integer, String> id_input = new HashMap<Integer, String>(); //keep the mapping between ids of test cases and inputs
+				ArrayList<Integer> missedID = new ArrayList<Integer>(); //keep all the missed test cases
+				
+				Integer[] idArray = id_tc.keySet().toArray(new Integer[0]);
+				Arrays.sort(idArray);
+				for(int i = 0; i < idArray.length; i ++){
+					int id = idArray[i];
+					if(id == 8325){
+						System.out.println("");
+					}
+					TestCase tc = id_tc.get(id);
+					String length = tc.length;
+					double CD = tc.CI;
+					
+					String input = getInput(length_CD_inputList, length, CD);
+					if(input == null){
+//						missedID.add(id);
+						double len = Double.parseDouble(length);						
+						if(len >= CD){
+						
+							double k = 1.0;
+							do{								
+								input = getInput(length_CD_inputList, "" + (len + k), CD);
+								k ++;
+							}while((len + k) < 31.0 && input == null);
+							
+							if(input == null){
+								missedID.add(id);	
+							}else{
+								id_input.put(id, input);
+							}
+						}else{
+							missedID.add(id);
+						}
+					}else{
+						id_input.put(id, input);
+					}
+				}
+				
+				StringBuilder sb = new StringBuilder();
+				sb.append("ID\tInput\n");
+				for(int i = 0; i < idArray.length; i ++){
+					int id = idArray[i];
+					String input = id_input.get(id);
+					if(input != null){
+						sb.append(id).append("\t").append(input).append("\n");	
+					}					
+				}
+				
+				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+					+ date + "/TestPool_Alpha/ID_Input.txt";
+				Logger.getInstance().setPath(saveFile, false);
+				Logger.getInstance().write(sb.toString());
+				Logger.getInstance().close();
+				
+				sb.setLength(0);				
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+					+ date + "/TestPool_Alpha/MissedID.txt";
+				for(int i = 0; i < missedID.size(); i ++){
+					sb.append(missedID.get(i)).append("\n");
+				}				
+				System.out.println("missed id:" + missedID.size());
+				Logger.getInstance().setPath(saveFile, false);
+				Logger.getInstance().write(sb.toString());
+				Logger.getInstance().close();
+				
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static String getInput(HashMap<String, HashMap<Double, ArrayList<String>>> length_CD_inputList, String length, double CD){
+		String input = null;
+		
+		if(length_CD_inputList.containsKey(length)){
+			HashMap<Double, ArrayList<String>>  CD_inputList = length_CD_inputList.get(length);
+			if(CD_inputList.containsKey(CD)){
+				ArrayList<String> inputList = CD_inputList.get(CD);
+				if(inputList.size() > 0){	
+					Random rand = new Random();
+					int k = rand.nextInt(inputList.size());
+					input = inputList.get(k);					
+					inputList.remove(k); //remove the used inputs
+				}
+			}
+		}
+		return input;
+	}
+	
 	public static void main(String[] args){
+		String instruction = args[0];
+		if(instruction.equals("getMissingFault")){
+			String date = args[1]; //20091230
+			String detectedFaultFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/detectedFaultList.txt";
+			boolean containHeader = true;
+			String saveFile ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/MissingFaultList.txt";
+			FileOperator.getMissingFault(detectedFaultFile, containHeader, saveFile);			
+		}else if(instruction.equals("saveFaultList")){
+			String date = args[1];
+			String srcFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/NonEquivalentFaults.txt";
+			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/NonEquivalentFaults.txt";
+			boolean containHeader = true;
+			FileOperator.saveFaultList(srcFile, containHeader, saveFile);
+		}else if(instruction.equals("mergeFiles")){
+			String date = args[1];
+			String alpha = args[2];
+			boolean containHeader = true;
+			String prefix = "TestPool_" + alpha;
+			FileOperator.mergeFiles(date, prefix);
+		}else if(instruction.equals("mapIDInputs")){
+			String date = args[1];
+			boolean containHeader = true;
+			String alpha = args[2];
+			String tc_min = args[3];
+			String tc_max = args[4];
+			FileOperator.mapIDInputs(date, containHeader, alpha, tc_min, tc_max);
+		}
+		
+		
 	//	FileOperator.copyFile("B.java");
 	//	System.out.println(FileOperator.deleteFile("B.java"));
 		
@@ -286,18 +518,5 @@ public class FileOperator {
 //			+ date + "/FaultList_new.txt";
 //		boolean containHeader = true;
 //		FileOperator.filterFiles(src_file, containHeader, max_failure_rate, dest_file);
-		
-		String date = "20091230";
-		String detectedFaultFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/detectedFaultList.txt";
-		boolean containHeader = true;
-		String saveFile ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/MissingFaultList.txt";
-//		FileOperator.getMissingFault(detectedFaultFile, containHeader, saveFile);
-		String srcFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/NonEquivalentFaults.txt";
-		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/NonEquivalentFaults.txt";
-		FileOperator.saveFaultList(srcFile, containHeader, saveFile);
 	}
 }
