@@ -385,52 +385,48 @@ public class FileOperator {
 					String input = getInput(length_CD_inputList, length, CD);
 					if(input == null){
 						missedID.add(id);
-						double len = Double.parseDouble(length);						
-						if(len >= CD){
-						
-							double k = 1.0;
-							do{								
-								input = getInput(length_CD_inputList, "" + (len + k), CD);
-								k ++;
-							}while((len + k) < 31.0 && input == null);
-							
-							if(input == null){
-								missedID.add(id);	
-							}else{
-								id_input.put(id, input);
-							}
-						}else{
-							missedID.add(id);
-						}
 					}else{
 						id_input.put(id, input);
 					}
 				}
 				
 				System.out.println("missed test cases before processing:" + missedID.size());
-//				//4. for these missed test cases
-//				String input = null;
-//				
-//				for(int i = 0; i < missedID.size(); i ++){
-//					int id = missedID.get(i);
-//					TestCase tc = id_tc.get(id);
-//					String length = tc.length;
-//					double CD = tc.CI;
-//					
-//					
-//					//first attempt : fix the CD but increasing CD
-//					double len = Double.parseDouble(length);
-//					double k = 1.0;
-//					do{
-//						input = getInput(length_CD_inputList, ""+ (len + k) , CD);
-//						k ++;
-//					}while((len + k) < 31.0 && input == null);
-//					
-//					if(input != null){
-//						id_input.put(id, input);
-//						missedID.remove(i);
-//					}
-//				}
+
+				//4. for these missed test cases
+				for(int i = 0; i < missedID.size(); i ++){
+					int id = missedID.get(i);
+					TestCase tc = id_tc.get(id);
+					String length = tc.length;
+					double CD = tc.CI;
+					
+					String input = null;
+					//first attempt : fix the CD but increasing CD
+					double len = Double.parseDouble(length);
+					double k = 1.0;
+					do{
+						input = getInput(length_CD_inputList, ""+ (len + k) , CD);
+						k ++;
+					}while((len + k) < 31.0 && input == null);
+					
+					if(input != null){
+						id_input.put(id, input);
+						missedID.remove(i);
+						i --; //2010-01-21: keep this index unchanged
+					}else{
+						//second attempt: fix the CD but decreasing CD
+						k = 1.0;
+						do{
+							input = getInput(length_CD_inputList, "" + (len - k), CD);
+							k ++;
+						}while((len - k) >= CD && input == null);
+						
+						if(input != null){
+							id_input.put(id, input);
+							missedID.remove(i);
+							i --;
+						}
+					}
+				}
 				System.out.println("missed ids after processing:" + missedID.size());
 				
 				StringBuilder sb = new StringBuilder();
