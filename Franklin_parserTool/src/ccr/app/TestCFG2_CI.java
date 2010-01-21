@@ -893,7 +893,7 @@ public class TestCFG2_CI extends Application {
 			String date, int tc_min, int tc_max, boolean containHeader){
 		
 		String contextStreamFile = "src/ccr/experiment/Context-Intensity_backup" +
-		"/TestHarness/" + date +"/ContextStream_"+tc_min + "_"+ tc_max + ".txt";
+		"/TestHarness/" + date +"/ContextStream/ContextStream_"+tc_min + "_"+ tc_max + ".txt";
 		
 		File tmp = new File(contextStreamFile);
 		if(tmp.exists()){
@@ -902,9 +902,9 @@ public class TestCFG2_CI extends Application {
 			
 			for(double alpha = alpha_min; alpha < alpha_max; alpha = alpha + alpha_interval){
 
-				double[] lengths = new double[20000];
-				double[] CIs = new double[20000];
-				double[] rates = new double[20000];
+				double[] lengths = new double[tc_max - tc_min];
+				double[] CIs = new double[tc_max - tc_min];
+				double[] rates = new double[tc_max - tc_min];
 				
 				sb.append("TestCase").append("\t").append("Length").append("\t").append("CI")
 				.append("\t").append("Rate").append("\n");
@@ -1059,7 +1059,7 @@ public class TestCFG2_CI extends Application {
 			String date, int min_tc, int max_tc, boolean containHeader){
 		
 		String contextStreamFile = "src/ccr/experiment/Context-Intensity_backup" +
-		"/TestHarness/" + date +"/ContextStream_"+min_tc + "_"+ max_tc+".txt";
+		"/TestHarness/" + date +"/ContextStream/ContextStream_"+min_tc + "_"+ max_tc+".txt";
 		
 		File tmp = new File(contextStreamFile);
 		if(tmp.exists()){
@@ -1235,7 +1235,7 @@ public class TestCFG2_CI extends Application {
 		}
 		
 		String filename = "src/ccr/experiment/Context-Intensity_backup" +
-		"/TestHarness/" + date +"/ContextStream_"+tc_min
+		"/TestHarness/" + date +"/ContextStream/ContextStream_"+tc_min
 		+"_"+ tc_max +".txt";
 		
 		Logger.getInstance().setPath(filename, false);
@@ -1272,13 +1272,18 @@ public class TestCFG2_CI extends Application {
 			boolean containHeader = false;
 			ins.getSummaries_alpha_offline(alpha_min, alpha_max, alpha_interval, 
 					date, tc_min, tc_max, containHeader);
-		}else if(instruction.equals("getDetails")){
+		}else if(instruction.equals("getDetails_ContextDiversity")){
 			String date = argv[1];
-			double alpha_min = Double.parseDouble(argv[2]);//0.440
-			double alpha_max = Double.parseDouble(argv[3]);//0.450
-			double alpha_interval = Double.parseDouble(argv[4]); //0.001
-			int tc_min = -10000;
-			int tc_max = 10000;
+			int tc_min = Integer.parseInt(argv[2]);
+			int tc_max = Integer.parseInt(argv[3]);
+			double alpha_min = 0.43;
+			double alpha_max = 0.44;
+			double alpha_interval = 0.01;
+			if(argv.length == 7){
+				alpha_min = Double.parseDouble(argv[4]);
+				alpha_max = Double.parseDouble(argv[5]);
+				alpha_interval = Double.parseDouble(argv[6]);
+			}					
 			
 //			ins.getDetails_alpha_online(alpha_min,
 //					alpha_max, alpha_interval, date);
