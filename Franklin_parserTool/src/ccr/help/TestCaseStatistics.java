@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -294,7 +295,56 @@ public class TestCaseStatistics {
 		Logger.getInstance().close();
 	}
 
-	
+	public void saveToDB_IDInputMaps(String mapFile, boolean containHeader){		
+		File tmp = new File(mapFile);
+		if(tmp.exists()){
+			StringBuilder sql = new StringBuilder();
+			try {
+				BufferedReader br = new	BufferedReader(new FileReader(mapFile));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				int counter = 0; 
+				String str = null;
+				
+				sql.append("INSERT INTO id_input_maps (id, input) VALUES ");
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					
+					String id = strs[0];
+					String input = strs[1];
+					
+					sql.append("(\'").append(id).append("\'").append(",");							
+					sql.append("\'").append(input).append("\'").append("),");
+					counter ++;
+					if(counter% 1000 == 0){
+						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+						DatabaseManager.getInstance().update(sqlStmt);
+						sql.setLength(0); //clear the sql
+						sql.append("INSERT INTO id_input_maps (id, input) VALUES ");
+					}
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(sql.substring(sql.lastIndexOf("VALUES ") + "VALUES ".length()).length() > 0){
+				//still have some values need to save
+				String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+				DatabaseManager.getInstance().update(sqlStmt);
+				sql.setLength(0); //clear the sql
+			}
+			
+			System.out.println("save id input mappings into the Database");
+			
+		}else{
+			System.out.println("the id input mapping file does not exist at all");
+		}
+	}
 		
 	public void saveToDB_TestCaseStatistic(String testCaseFile, boolean containHeader){
 		File testpool = new File(testCaseFile);
@@ -465,6 +515,81 @@ public class TestCaseStatistics {
 		}
 	}
 	
+	public static void saveToDB_RenewTestCase(String testCaseFile, boolean containHeader){
+		File tmp = new File(testCaseFile);
+		if(tmp.exists()){
+			StringBuilder sql = new StringBuilder();
+			try {
+				BufferedReader br = new	BufferedReader(new FileReader(testCaseFile));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				int counter = 0; 
+				String str = null;
+				
+				sql.append("INSERT INTO testcaserenew (input, length, contextdiversity) VALUES ");
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					
+					if(strs.length > 2){
+						String input = strs[0];
+						System.out.println("Processing test case:" + input);
+						int length = (int)Double.parseDouble(strs[1]);
+						String contextDiversity = strs[2];
+											
+						sql.append("(\'").append(input).append("\'").append(",");
+						sql.append("\'").append(""+length).append("\'").append(",");
+						sql.append("\'").append(contextDiversity).append("\'").append("),");
+						counter ++;
+						if(counter% 10000 == 0){
+							String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+							DatabaseManager.getInstance().update(sqlStmt);
+							sql.setLength(0); //clear the sql
+							sql.append("INSERT INTO testcaserenew (input, length, contextdiversity) VALUES ");
+						}
+					}
+				}
+				
+//				while((str = br.readLine())!= null){
+//					String[] strs = str.split("\t");
+//					
+//					String input = strs[0];
+//					System.out.println("Processing test case:" + input);
+//					String length = strs[1];
+//					String contextDiversity = strs[2];
+//					sql.append("update testcaserenew R set R.length = \'").append(length).append("\'").
+//					append(", R.contextdiversity = \'").append(contextDiversity).append("\'").
+//					append(" where R.input = \'").append(input).append("\',").append("\n");	
+//					
+//					
+//					counter ++;
+//					if(counter% 500 == 0){
+//						String sqlStmt = sql.toString();
+//						DatabaseManager.getInstance().update(sqlStmt);
+//						sql.setLength(0); //clear the sql					
+//					}
+//				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(sql.substring(sql.lastIndexOf("VALUES ") + "VALUES ".length()).length() > 0){
+				//still have some values need to save
+				String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+				DatabaseManager.getInstance().update(sqlStmt);
+				sql.setLength(0); //clear the sql
+			}
+			
+			System.out.println("save renewed test case into the Database");
+		}else{
+			System.out.println("the test case file:" + testCaseFile +" does not exist at all");
+		}
+	}
+	
 	public static void saveToDB_TestCaseCoverage(String testCaseCovFile, boolean containHeader){
 		File tmp = new File(testCaseCovFile);
 		if(tmp.exists()){
@@ -559,6 +684,25 @@ public class TestCaseStatistics {
 			boolean containHeader = false;
 			TestCaseStatistics ins = new TestCaseStatistics();
 			ins.updateDB_Length(testCaseFile, containHeader);			
+		}else if(instruction.equals("saveRenewedTestCase")){
+			String date = args[1];
+			String alpha = args[2];
+			String tc_min = args[3];
+			String tc_max = args[4];
+			String testCaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestPool_Alpha/TestPool_" + new DecimalFormat("0.0000").format(Double.parseDouble(alpha))
+				+ "_"+ tc_min + "_" + tc_max + ".txt";
+			boolean containHeader = true;
+			TestCaseStatistics ins = new TestCaseStatistics();
+			ins.saveToDB_RenewTestCase(testCaseFile, containHeader);			
+		}else if(instruction.equals("saveIdInputMaps")){
+			String date = args[1];
+			String mapFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/TestPool_Alpha/ID_Input.txt";
+			boolean containHeader = true;
+			TestCaseStatistics ins = new TestCaseStatistics();
+			ins.saveToDB_IDInputMaps(mapFile, containHeader);
+			
 		}
 		
 	}
