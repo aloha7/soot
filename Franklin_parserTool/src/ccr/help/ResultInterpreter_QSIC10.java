@@ -202,15 +202,17 @@ public class ResultInterpreter_QSIC10 {
 	}
 	
 	/**2010-01-13:print the length, CD, mutant scores and the number of test cases
-	 * sharing the same CD, but also need to solve the slope of linear regression
-	 * between CD and mutant score
+	 * sharing the same CD (length-equivalent set), but also need to solve the slope of linear regression
+	 * between CD and mutant score. When the size of length-equivalent set is lower than
+	 * size_min, then this set cannot be considered 
 	 * 
 	 * @param len_CD_MS
 	 * @param len_CD_tcList
+	 * @param size_min
 	 * @return
 	 */
 	public static OutputFormat print(HashMap<Integer, HashMap<Integer, Double>> len_CD_MS, 
-			HashMap<Integer, HashMap<Integer, ArrayList>> len_CD_tcList){
+			HashMap<Integer, HashMap<Integer, ArrayList>> len_CD_tcList, int size_min){
 		OutputFormat format = new OutputFormat();
 		StringBuilder sb = new StringBuilder();
 		Integer[] lengths= (Integer[])len_CD_MS.keySet().toArray(new Integer[0]);
@@ -238,7 +240,7 @@ public class ResultInterpreter_QSIC10 {
 				
 				
 				sb.append(size).append("\t").append(CD).append("\t").append(MS).append("\n");
-				if(size >= 5){
+				if(size >= size_min){
 					sum_CD += CD;
 					sum_MS +=  MS;
 					sum_CD_Squre += CD *CD;
@@ -247,14 +249,49 @@ public class ResultInterpreter_QSIC10 {
 				}
 			}					
 			double a =  (n *sum_CDByMS - sum_CD * sum_MS )/(n*sum_CD_Squre - sum_CD*sum_CD);
+			double b = sum_MS/n - a* sum_CD/n;
+			format.slopeSequence.add(a);
+			
 			if(a < 0){
 				format.negativeLength.add(length);
 			}
-			sb.append(a).append("\n");
+			sb.append(a).append("\t").append(b).append("\n");
 		}
 //		System.out.println(sb.toString());
 		format.content = sb.toString();
 		return format;
+	}
+	
+	
+	/**
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public double getPearsonCorrelationTest(double[] x, double[] y){
+		double PearsonCorrelationEfficient = 0.0;
+		double sum_x = 0.0;
+		double sum_y = 0.0;
+		
+		for(int i = 0; i < x.length; i ++){
+			sum_x += x[i];
+			sum_y += y[i];			
+		}
+		double avg_x = sum_x /x.length;
+		double avg_y = sum_y /x.length;
+		
+		double sum_xy = 0.0;
+		double sum_xx = 0.0;
+		double sum_yy = 0.0;
+		for(int i = 0; i < x.length; i ++){
+			sum_xy += (x[i] - avg_x)*(y[i] - avg_y);
+			sum_xx += (x[i] - avg_x)*(x[i] - avg_x);
+			sum_yy += (y[i] - avg_y)*(y[i] - avg_y);
+		}
+		PearsonCorrelationEfficient = (double)sum_xx / (double)Math.sqrt(sum_xx*sum_yy);
+		
+		return PearsonCorrelationEfficient;
 	}
 	
 	public static String print(HashMap<Integer, HashMap<Integer, Double>> len_CD_MS){
@@ -278,8 +315,11 @@ public class ResultInterpreter_QSIC10 {
 		return sb.toString();
 	}
 	
-	public static void saveToFile_CD_MS_FixLen(String date, double alpha){
-		StringBuilder sb = new StringBuilder();		
+	public static void saveToFile_CD_MS_FixLen(String date, double alpha, 
+			int lengthEquivalentSetSize_min){
+		StringBuilder sb = new StringBuilder();
+		StringBuilder sb_slope = new StringBuilder();
+		
 		boolean containHeader = true;
 		int mutantNumber = 1934;
 		HashMap<String, Double> tc_mutationscore = 
@@ -291,46 +331,65 @@ public class ResultInterpreter_QSIC10 {
 		HashMap<Integer, HashMap<Integer, Double>> len_CD_MS = 
 			ResultInterpreter_QSIC10.getCorr_CD_MS_FixLen(len_CD_tcList, tc_mutationscore);
 		if(len_CD_tcList.size() > 0  && len_CD_MS.size() >0){
-			OutputFormat format= ResultInterpreter_QSIC10.print(len_CD_MS, len_CD_tcList);
+			OutputFormat format= ResultInterpreter_QSIC10.print(len_CD_MS, len_CD_tcList, lengthEquivalentSetSize_min);
 			format.alpah = alpha;
 			
 			if(format.negativeLength.size() == 0){
 				sb.append("*********************************************");
 				sb.append("Find a feasible alpha:" + alpha);
 				sb.append("*********************************************").append("\n");
-				
-//				System.out.println("*********************************************");
-//				System.out.println("Find a feasible alpha:" + alpha);
-//				System.out.println("*********************************************");
+
+				//record the slope of each length curve for this alpha
+//				sb_slope.append(format.alpah).append("\t");
+//				for(int i = 0; i < format.slopeSequence.size(); i ++){
+//					sb_slope.append(format.slopeSequence.get(i)).append("\t");
+//				}
+//				sb_slope.append("\n");
+			
 			}else{
+
 				sb.append("Alpha:" + 
 						new DecimalFormat("0.0000").format(format.alpah)
 						+ ";"+ format.negativeLength.size() 
 						+" lengths sharing negative slopes:");
 				
-//				System.out.print("Alpha:" + 
-//						format.alpah + ";"+ format.negativeLength.size() 
-//						+" lengths sharing negative slopes:");
 				for(int k = 0; k < format.negativeLength.size(); k ++){
 					sb.append(format.negativeLength.get(k) + "\t");
-//					System.out.print(format.negativeLength.get(k) + "\t");
 				}
 				sb.append("\n");
-//				System.out.println("\n");
+				
 			}
 			
+			//2010-01-14:record the slope of each length curve for this alpha
+			sb_slope.append(format.alpah).append("\t");
+			for(int i = 0; i < format.slopeSequence.size(); i ++){
+				sb_slope.append(format.slopeSequence.get(i)).append("\t");
+			}
+			sb_slope.append("\n");
 			
 			String file =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/Result/CD_MS_FixedLen/FixLen_CI_MS_"+ new DecimalFormat("0.0000").format(alpha) + ".txt";
+				+ date + "/Result/CD_MS_FixedLen/FixLen_CI_MS_"+ new DecimalFormat("0.0000").format(alpha) 
+				+"_"+ lengthEquivalentSetSize_min +".txt";
+			
 			Logger.getInstance().setPath(file, false);
 			Logger.getInstance().write(format.content);
 			Logger.getInstance().close();	
 			
 			String summaryFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/Result/CD_MS_FixedLen/CI_MS_CorrelationSummary.txt";
+				+ date + "/Result/CD_MS_FixedLen/CI_MS_CorrelationSummary_" + 
+				lengthEquivalentSetSize_min + ".txt"; 
+						
 			Logger.getInstance().setPath(summaryFile, true);
 			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			
+			String slopeFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Result/CD_MS_FixedLen/CI_MS_CorrelationSlope_"+lengthEquivalentSetSize_min+".txt";
+			
+			Logger.getInstance().setPath(slopeFile, true);
+			Logger.getInstance().write(sb_slope.toString());
 			Logger.getInstance().close();	
+			
 		}else{
 			System.out.println("Missing alpha:" + new DecimalFormat("0.0000").format(alpha));
 		}
@@ -523,6 +582,7 @@ public class ResultInterpreter_QSIC10 {
 		if(instruction.equals("getCorre_CD_MS_fixedLen_single")){
 			String date = args[1];
 			double alpha = Double.parseDouble(args[2]);
+			int lengthEquivalentSetSize_min = Integer.parseInt(args[3]);
 			
 			//delete the summary file before continuing
 			String summaryFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
@@ -531,12 +591,15 @@ public class ResultInterpreter_QSIC10 {
 			if(tmp.exists()){
 				tmp.delete();
 			}
-			ResultInterpreter_QSIC10.saveToFile_CD_MS_FixLen(date, alpha);
+			
+			ResultInterpreter_QSIC10.saveToFile_CD_MS_FixLen(date, alpha, lengthEquivalentSetSize_min);
+			
 		}else if(instruction.equals("getCorre_CD_MS_fixedLen_multiple")){
 			String date = args[1];
 			double alpha_min = Double.parseDouble(args[2]);//inclusive
 			double alpha_max = Double.parseDouble(args[3]);//inclusive
 			double alpha_interval = Double.parseDouble(args[4]);
+			int lengthEquivalentSetSize_min = Integer.parseInt(args[5]);
 			
 			//delete the summary file before continuing
 			String summaryFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
@@ -546,9 +609,17 @@ public class ResultInterpreter_QSIC10 {
 				tmp.delete();
 			}
 			
-			for(double alpha = alpha_max; alpha >= alpha_min; alpha = alpha - alpha_interval){
-				ResultInterpreter_QSIC10.saveToFile_CD_MS_FixLen(date, alpha);
+			String slopeFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Result/CD_MS_FixedLen/CI_MS_CorrelationSlope.txt";
+			tmp = new File(slopeFile);			
+			if(tmp.exists()){
+				tmp.delete();
 			}
+			
+			for(double alpha = alpha_max; alpha >= alpha_min; alpha = alpha - alpha_interval){
+				ResultInterpreter_QSIC10.saveToFile_CD_MS_FixLen(date, alpha, lengthEquivalentSetSize_min);
+			}
+			
 		}else if(instruction.equals("getCorre_CD_MS")){
 			String date = args[1];
 			int mutantNumber = Integer.parseInt(args[2]);
