@@ -384,7 +384,7 @@ public class FileOperator {
 					
 					String input = getInput(length_CD_inputList, length, CD);
 					if(input == null){
-//						missedID.add(id);
+						missedID.add(id);
 						double len = Double.parseDouble(length);						
 						if(len >= CD){
 						
@@ -407,6 +407,32 @@ public class FileOperator {
 					}
 				}
 				
+				System.out.println("missed test cases before processing:" + missedID.size());
+//				//4. for these missed test cases
+//				String input = null;
+//				
+//				for(int i = 0; i < missedID.size(); i ++){
+//					int id = missedID.get(i);
+//					TestCase tc = id_tc.get(id);
+//					String length = tc.length;
+//					double CD = tc.CI;
+//					
+//					
+//					//first attempt : fix the CD but increasing CD
+//					double len = Double.parseDouble(length);
+//					double k = 1.0;
+//					do{
+//						input = getInput(length_CD_inputList, ""+ (len + k) , CD);
+//						k ++;
+//					}while((len + k) < 31.0 && input == null);
+//					
+//					if(input != null){
+//						id_input.put(id, input);
+//						missedID.remove(i);
+//					}
+//				}
+				System.out.println("missed ids after processing:" + missedID.size());
+				
 				StringBuilder sb = new StringBuilder();
 				sb.append("ID\tInput\n");
 				for(int i = 0; i < idArray.length; i ++){
@@ -415,25 +441,26 @@ public class FileOperator {
 					if(input != null){
 						sb.append(id).append("\t").append(input).append("\n");	
 					}					
-				}
+				}				
 				
+				
+				//5. save the id and input mappings
 				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 					+ date + "/TestPool_Alpha/ID_Input.txt";
 				Logger.getInstance().setPath(saveFile, false);
 				Logger.getInstance().write(sb.toString());
-				Logger.getInstance().close();
-				
+				Logger.getInstance().close();				
 				sb.setLength(0);				
+				
+				//6. save the missed ids
 				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 					+ date + "/TestPool_Alpha/MissedID.txt";
 				for(int i = 0; i < missedID.size(); i ++){
 					sb.append(missedID.get(i)).append("\n");
-				}				
-				System.out.println("missed id:" + missedID.size());
+				}								
 				Logger.getInstance().setPath(saveFile, false);
 				Logger.getInstance().write(sb.toString());
-				Logger.getInstance().close();
-				
+				Logger.getInstance().close();				
 			} catch (NumberFormatException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
