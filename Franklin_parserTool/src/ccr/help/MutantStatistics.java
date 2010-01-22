@@ -22,6 +22,11 @@ public class MutantStatistics {
 			"LOR", "ASR", "IOP", "IOR", "PMD", "PPD", "PCC",
 			"PRV", "OMR", "OAC", "EOA", "EOC", "EAM", "EMM"};
 	
+	
+	
+	
+	
+	public 
 	String[] extraneousConstructs = {"AOI", "COI", "LOI", "IHI", 
 			"ISI", "PNC", "PCI", "JTI", "JSI", "JDC"};
 	
