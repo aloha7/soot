@@ -283,13 +283,12 @@ public class FileOperator {
 		ResultAnalyzer.mergeFiles(srcDir, containHeader, pattern, saveFile); 
 	}
 	
-	public static void mapIDInputs_left(String date, boolean containHeader, String alpha, 
-			String tc_min, String tc_max){
+	public static void mapIDInputs_left(String date, boolean containHeader, String alpha){
 		String testPool_old = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 			+ date + "/TestPool_Alpha/TestPool_old.txt" ;
 		
 		String testPool_new  = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
-			+ date + "/TestPool_Alpha/TestPool_"+ alpha + "_" + tc_min + "_" + tc_max+".txt" ;
+			+ date + "/TestPool_Alpha/TestPool_"+ alpha + ".txt" ;
 		
 		String testCase_left = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 			+ date + "/TestPool_Alpha/MissedID.txt" ;
@@ -448,13 +447,12 @@ public class FileOperator {
 		}
 	}
 	
-	public static void mapIDInputs(String date, boolean containHeader, String alpha, 
-			String tc_min, String tc_max){
+	public static void mapIDInputs(String date, boolean containHeader, String alpha){
 		String testPool_old = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 			+ date + "/TestPool_Alpha/TestPool_old.txt" ;
 		
 		String testPool_new  = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
-			+ date + "/TestPool_Alpha/TestPool_"+ alpha + "_" + tc_min + "_" + tc_max+".txt" ;
+			+ date + "/TestPool_Alpha/TestPool_"+ alpha + ".txt" ;
 		
 		File tmp_1 = new File(testPool_old);
 		File tmp_2 = new File(testPool_new);
@@ -677,11 +675,9 @@ public class FileOperator {
 		}else if(instruction.equals("mapIDInputs")){
 			String date = args[1];
 			boolean containHeader = true;
-			String alpha = args[2];
-			String tc_min = args[3];
-			String tc_max = args[4];
-//			FileOperator.mapIDInputs(date, containHeader, alpha, tc_min, tc_max);
-			FileOperator.mapIDInputs_left(date, containHeader, alpha, tc_min, tc_max);
+			String alpha = args[2];	
+//			FileOperator.mapIDInputs(date, containHeader, alpha);
+			FileOperator.mapIDInputs_left(date, containHeader, alpha);
 		}
 		
 		
