@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import ccr.test.Logger;
@@ -24,6 +25,43 @@ public class MutantStatistics {
 	String[] extraneousConstructs = {"AOI", "COI", "LOI", "IHI", 
 			"ISI", "PNC", "PCI", "JTI", "JSI", "JDC"};
 	
+	/**2010-01-22: load mutants from the file via the offline way.
+	 * 
+	 * @param date
+	 * @param containHeader
+	 * @return
+	 */
+	public static ArrayList<String> loadMutants_offline(String date, boolean containHeader){
+		ArrayList<String> mutantList = new ArrayList<String>();
+		String mutantFile = "/src/ccr" +
+			"/experiment/Context-Intensity_backup/TestHarness/"+ date
+			+ "/Mutant/FaultList.txt";
+		
+		File tmp = new File(mutantFile);
+		if(!tmp.exists()){
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(mutantFile));
+				if(containHeader)
+					br.readLine();
+				
+				String str = null;
+				if((str = br.readLine())!= null){
+					mutantList.add(str);
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}else{
+			System.out.println("Mutant file " + mutantFile + " does not exist");
+		}
+		
+		return mutantList;
+	}
 	
 	public HashMap<String, HashMap<String, Integer>> getStatistics_ClassLevel(String mutantDir){
 		HashMap<String, HashMap<String, Integer>> class_Mutants = 
@@ -116,9 +154,6 @@ public class MutantStatistics {
 		System.out.println("save class-level mutants into Database");
 	}
 	
-	
-	
-		
 	public HashMap<String, HashMap<String, HashMap<String, Integer>>> getStatistic_MethodLevel(String mutantDir){
 		HashMap<String, HashMap<String, HashMap<String, Integer>>> method_Mutants = 
 			new HashMap<String, HashMap<String, HashMap<String, Integer>>>();
