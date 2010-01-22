@@ -1261,9 +1261,14 @@ public class TestCFG2_CI extends Application {
 		if(instruction.equals("getSummary")){
 			
 			String date = argv[1];
-			double alpha_min = Double.parseDouble(argv[2]);//0.440
-			double alpha_max = Double.parseDouble(argv[3]);//0.450
-			double alpha_interval = Double.parseDouble(argv[4]); //0.001
+			double alpha_min = 0.570;
+			double alpha_max = 0.571;
+			double alpha_interval = 0.001;
+			if(argv.length == 5){
+				alpha_min = Double.parseDouble(argv[2]);
+				alpha_max = Double.parseDouble(argv[3]);
+				alpha_interval = Double.parseDouble(argv[4]);
+			}			
 			int tc_min = -10000;
 			int tc_max = 10000;
 //			ins.getSummaries_alpha_online(alpha_min, 
@@ -1276,8 +1281,8 @@ public class TestCFG2_CI extends Application {
 			String date = argv[1];
 			int tc_min = Integer.parseInt(argv[2]);
 			int tc_max = Integer.parseInt(argv[3]);
-			double alpha_min = 0.43;
-			double alpha_max = 0.44;
+			double alpha_min = 0.570;
+			double alpha_max = 0.571;
 			double alpha_interval = 0.01;
 			if(argv.length == 7){
 				alpha_min = Double.parseDouble(argv[4]);
@@ -1302,9 +1307,9 @@ public class TestCFG2_CI extends Application {
 			String date = argv[1];
 			int tc_min = Integer.parseInt(argv[2]);
 			int tc_max = Integer.parseInt(argv[3]);
-			double alpha_min = 0.43;
-			double alpha_max = 0.44;
-			double alpha_interval = 0.01;
+			double alpha_min = 0.570;
+			double alpha_max = 0.571;
+			double alpha_interval = 0.001;
 			if(argv.length == 7){
 				alpha_min = Double.parseDouble(argv[4]);
 				alpha_max = Double.parseDouble(argv[5]);
