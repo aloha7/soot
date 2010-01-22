@@ -34,7 +34,52 @@ import ccr.test.TestSetManager;
  *
  */
 public class TestCaseStatistics {
+	
+	/**2010-01-22: load the test pool from the existing file in the 
+	 * offline way
+	 * @param date
+	 * @param containHeader
+	 * @param alpha
+	 * @return
+	 */
+	public static HashMap<String, TestCase> getTestPool(String date,
+			boolean containHeader, double alpha){
+		HashMap<String, TestCase> id_tc = new HashMap<String, TestCase>();
+		String testPoolFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/TestPool_Alpha/TestPool_"+ new DecimalFormat("0.0000").format(alpha) + ".txt";
+		File tmp = new File(testPoolFile);
+		if(tmp.exists()){
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(testPoolFile));
+				if(containHeader)
+					br.readLine();
+				
+				String str = null;
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					if(strs.length >= 3){
+						String index = strs[0];
+						TestCase tc = new TestCase(str);						
+						id_tc.put(index, tc);
+					}					
+				}
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}else{
+			System.out.println("Test pool file does not exist:" + tmp.getAbsolutePath());
+		}
 		
+		return id_tc;
+	}
+	
 	/**2009-12-14: label the program elements with sequential numbers
 	 * 
 	 * @param criterion:can be "AllPolicies", "All1ResolvedDU" or "All2ResolvedDU"
