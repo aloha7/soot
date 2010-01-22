@@ -964,6 +964,57 @@ public class ScriptManager {
 		Logger.getInstance().close();
 	}
 	
+	
+	public static void getTestPool_Sequential(String date, String saveFile, 
+			int startVersion, int endVersion, int interval){
+		StringBuilder sb = new StringBuilder();
+		for(int i = startVersion; i < endVersion; i += interval){	
+			if(i + interval >= endVersion){
+				sb.append("java -Xmx1600m ccr.app.TestCFG2_CI genAndGetContextDiversity " 
+						+ date + " " + i + " "
+						+ endVersion + " 0.570 0.571 0.001\n");
+			}else{
+				sb.append("java -Xmx1600m ccr.app.TestCFG2_CI genAndGetContextDiversity " 
+						+ date + " " + i + " "
+						+ (i + interval) + " 0.570 0.571 0.001\n");	
+			}
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
+	public static void getTestPool(int tc_min, int tc_max, 
+			int concurrentNumber, String date){
+		int interval = (tc_max - tc_min + 1)/concurrentNumber ;
+		if( (tc_max - tc_min + 1) > interval * concurrentNumber )
+			interval ++;
+		
+		String instruction, saveFile = null;		
+		StringBuilder sb1 = new StringBuilder();
+		for(int i = tc_min; i < tc_max; i = i + interval){
+			int startVersion = i;
+			int endVersion = i + interval;
+			if(endVersion > tc_max)
+				endVersion = tc_max;
+			
+			instruction = "genAndGetContextDiversity";
+			saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/Script/GetTestPool_"+startVersion
+				+"_"+endVersion+".sh";
+			
+			sb1.append("./GetFailureRate_"+startVersion
+				+"_"+endVersion+".sh &" + "\n");
+			int interval_1 = 500000;
+			ScriptManager.getTestPool_Sequential(date, saveFile, startVersion, endVersion, interval_1);
+		}
+
+		saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/Script/GetTestPool_Executor_"+tc_min + "_" + tc_max +".sh";
+		ScriptManager.save(sb1.toString(), saveFile);
+	}
+	
 	public static void main(String[] args) {
 		System.out
 				.println("USAGE: java ccr.test.ScriptManager <testSetNum(100)> <Context_Intensity> <min_CI(0.7)> "
@@ -1339,6 +1390,12 @@ public class ScriptManager {
 		}else if(instruction.equals("genBat")){
 			saveFile = "./bin/StmtBat.bat";
 			ScriptManager.genBatFile(saveFile);
+		}else if(instruction.equals("getTestPool")){
+			String date = args[1];
+			int tc_min = Integer.parseInt(args[2]);
+			int tc_max = Integer.parseInt(args[3]);
+			int concurrentNumber = Integer.parseInt(args[4]);
+			ScriptManager.getTestPool(tc_min, tc_max, concurrentNumber, date);
 		}
 	}
 }
