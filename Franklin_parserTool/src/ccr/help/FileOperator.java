@@ -283,6 +283,171 @@ public class FileOperator {
 		ResultAnalyzer.mergeFiles(srcDir, containHeader, pattern, saveFile); 
 	}
 	
+	public static void mapIDInputs_left(String date, boolean containHeader, String alpha, 
+			String tc_min, String tc_max){
+		String testPool_old = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+			+ date + "/TestPool_Alpha/TestPool_old.txt" ;
+		
+		String testPool_new  = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+			+ date + "/TestPool_Alpha/TestPool_"+ alpha + "_" + tc_min + "_" + tc_max+".txt" ;
+		
+		String testCase_left = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+			+ date + "/TestPool_Alpha/MissedID.txt" ;
+		
+		File tmp_1 = new File(testPool_old);
+		File tmp_2 = new File(testPool_new);
+		File tmp_3 = new File(testCase_left);
+		if(tmp_1.exists() && tmp_2.exists() && tmp_3.exists()){			
+			//ID of test cases-> test cases
+			HashMap<Integer, TestCase> id_tc = new HashMap<Integer, TestCase>();
+			try {
+				//1. read the left test case
+				ArrayList<Integer> tc_left = new ArrayList<Integer>();
+				
+				BufferedReader br_2 = new BufferedReader(new FileReader(testCase_left));
+				if(containHeader){
+					br_2.readLine();
+				}
+				String str = null;
+				while((str = br_2.readLine())!= null){
+					String[] strs = str.split("\t");
+					int id = Integer.parseInt(strs[0]);
+					tc_left.add(id);
+				}
+				br_2.close();
+				System.out.println("missed test cases before processing:" + tc_left.size());
+				
+				//2. read the old test pool
+				BufferedReader br = new BufferedReader(new FileReader(testPool_old));		
+				if(containHeader)
+					br.readLine();				
+				str = null;
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					if(strs.length > 2){
+						int id = Integer.parseInt(strs[0]);
+						if(tc_left.contains(id)){ //only care about the left test cases
+							String length = strs[1];
+							String cd = strs[2];
+							TestCase tc = new TestCase();
+							tc.index = "" + id;
+							tc.length = "" + Double.parseDouble(length);
+							tc.CI = Double.parseDouble(cd);
+							id_tc.put(id, tc);	
+						}
+					}
+				}
+				br.close();
+				
+				
+				//length -> CD* -> TestCases*
+				HashMap<String, HashMap<Double, ArrayList<String>>> length_CD_inputList = new 
+					HashMap<String, HashMap<Double,ArrayList<String>>>();
+								
+				//2. read the new test pool
+				int counter = 0;
+				BufferedReader br_1 = new BufferedReader(new FileReader(testPool_new));
+				if(containHeader)
+					br_1.readLine();
+				
+				while((str = br_1.readLine())!= null){
+					String[] strs = str.split("\t");
+					if(strs.length > 2){
+						String input = strs[0];
+						String length = "" + Double.parseDouble(strs[1]);
+						double cd = Double.parseDouble(strs[2]);
+						
+						if(length_CD_inputList.containsKey(length)){
+							HashMap<Double, ArrayList<String>> CD_inputList = length_CD_inputList.get(length);
+							ArrayList<String> inputList = null;
+							
+							if(CD_inputList.containsKey(cd)){
+								inputList = CD_inputList.get(cd);
+							}else{
+								inputList = new ArrayList<String>();
+							}	
+							
+							inputList.add(input);
+							CD_inputList.put(cd, inputList);
+							length_CD_inputList.put(length, CD_inputList);
+							counter ++;
+						}else{
+							ArrayList<String> inputList = new ArrayList<String>();
+							inputList.add(input);
+							
+							HashMap<Double, ArrayList<String>> CD_inputList = new 
+							HashMap<Double, ArrayList<String>>();
+							CD_inputList.put(cd, inputList);
+							length_CD_inputList.put(length, CD_inputList);
+							counter ++;
+						}
+					}
+				}
+				br_1.close();
+				System.out.println(counter);
+				
+				//3. map the id of test cases and inputs
+				HashMap<Integer, String> id_input = new HashMap<Integer, String>(); //keep the mapping between ids of test cases and inputs
+				ArrayList<Integer> missedID = new ArrayList<Integer>(); //keep all the missed test cases
+				
+				Integer[] idArray = id_tc.keySet().toArray(new Integer[0]);
+				Arrays.sort(idArray);
+				for(int i = 0; i < idArray.length; i ++){
+					int id = idArray[i];
+					TestCase tc = id_tc.get(id);
+					String length = tc.length;
+					double CD = tc.CI;
+					
+					String input = getInput(length_CD_inputList, length, CD);
+					if(input == null){
+						missedID.add(id);
+					}else{
+						id_input.put(id, input);
+					}
+				}
+				
+				System.out.println("missed test cases after processing:" + missedID.size());
+				
+				StringBuilder sb = new StringBuilder();
+				sb.append("ID\tInput\n");
+				for(int i = 0; i < idArray.length; i ++){
+					int id = idArray[i];
+					String input = id_input.get(id);
+					if(input != null){
+						sb.append(id).append("\t").append(input).append("\n");	
+					}					
+				}				
+				
+				//5. save the id and input mappings
+				String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+					+ date + "/TestPool_Alpha/ID_Input_Left.txt";
+				Logger.getInstance().setPath(saveFile, false);
+				Logger.getInstance().write(sb.toString());
+				Logger.getInstance().close();				
+				sb.setLength(0);				
+				
+				//6. save the missed ids
+				saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+					+ date + "/TestPool_Alpha/MissedID_Left.txt";
+				for(int i = 0; i < missedID.size(); i ++){
+					sb.append(missedID.get(i)).append("\n");
+				}								
+				Logger.getInstance().setPath(saveFile, false);
+				Logger.getInstance().write(sb.toString());
+				Logger.getInstance().close();				
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public static void mapIDInputs(String date, boolean containHeader, String alpha, 
 			String tc_min, String tc_max){
 		String testPool_old = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
@@ -375,9 +540,6 @@ public class FileOperator {
 				Arrays.sort(idArray);
 				for(int i = 0; i < idArray.length; i ++){
 					int id = idArray[i];
-					if(id == 8325){
-						System.out.println("");
-					}
 					TestCase tc = id_tc.get(id);
 					String length = tc.length;
 					double CD = tc.CI;
@@ -392,42 +554,42 @@ public class FileOperator {
 				
 				System.out.println("missed test cases before processing:" + missedID.size());
 
-				//4. for these missed test cases
-				for(int i = 0; i < missedID.size(); i ++){
-					int id = missedID.get(i);
-					TestCase tc = id_tc.get(id);
-					String length = tc.length;
-					double CD = tc.CI;
-					
-					String input = null;
-					//first attempt : fix the CD but increasing CD
-					double len = Double.parseDouble(length);
-					double k = 1.0;
-					do{
-						input = getInput(length_CD_inputList, ""+ (len + k) , CD);
-						k ++;
-					}while((len + k) < 31.0 && input == null);
-					
-					if(input != null){
-						id_input.put(id, input);
-						missedID.remove(i);
-						i --; //2010-01-21: keep this index unchanged
-					}else{
-						//second attempt: fix the CD but decreasing CD
-						k = 1.0;
-						do{
-							input = getInput(length_CD_inputList, "" + (len - k), CD);
-							k ++;
-						}while((len - k) >= CD && input == null);
-						
-						if(input != null){
-							id_input.put(id, input);
-							missedID.remove(i);
-							i --;
-						}
-					}
-				}
-				System.out.println("missed ids after processing:" + missedID.size());
+//				//4. for these missed test cases
+//				for(int i = 0; i < missedID.size(); i ++){
+//					int id = missedID.get(i);
+//					TestCase tc = id_tc.get(id);
+//					String length = tc.length;
+//					double CD = tc.CI;
+//					
+//					String input = null;
+//					//first attempt : fix the CD but increasing CD
+//					double len = Double.parseDouble(length);
+//					double k = 1.0;
+//					do{
+//						input = getInput(length_CD_inputList, ""+ (len + k) , CD);
+//						k ++;
+//					}while((len + k) < 31.0 && input == null);
+//					
+//					if(input != null){
+//						id_input.put(id, input);
+//						missedID.remove(i);
+//						i --; //2010-01-21: keep this index unchanged
+//					}else{
+//						//second attempt: fix the CD but decreasing CD
+//						k = 1.0;
+//						do{
+//							input = getInput(length_CD_inputList, "" + (len - k), CD);
+//							k ++;
+//						}while((len - k) >= CD && input == null);
+//						
+//						if(input != null){
+//							id_input.put(id, input);
+//							missedID.remove(i);
+//							i --;
+//						}
+//					}
+//				}
+//				System.out.println("missed ids after processing:" + missedID.size());
 				
 				StringBuilder sb = new StringBuilder();
 				sb.append("ID\tInput\n");
@@ -518,7 +680,8 @@ public class FileOperator {
 			String alpha = args[2];
 			String tc_min = args[3];
 			String tc_max = args[4];
-			FileOperator.mapIDInputs(date, containHeader, alpha, tc_min, tc_max);
+//			FileOperator.mapIDInputs(date, containHeader, alpha, tc_min, tc_max);
+			FileOperator.mapIDInputs_left(date, containHeader, alpha, tc_min, tc_max);
 		}
 		
 		
