@@ -31,14 +31,26 @@ public class DatabaseManager {
 		}
 	}
 	
+	
 	public static DatabaseManager getInstance(){
 		if(instance != null){
 			return instance;
 		}else{
-			instance =  new DatabaseManager("root", "wh19830", 
-					"localhost", "contextdiversity");//the default uID, pwd, hostname, dbname			
+			//2010-01-22: set the parameters correctly.
+			userID = (userID == null? "root": userID);
+			password = (password == null? "wh19830": password);
+			hostname = (hostname == null? "localhost": hostname);
+			dbName = (dbName == null? "contextdiversity": dbName);
+			
+			instance = new DatabaseManager(userID, password, hostname, dbName);
+//			instance =  new DatabaseManager("root", "wh19830", 
+//					"localhost", "contextdiversity");//the default uID, pwd, hostname, dbname			
 			return instance;
 		}
+	}
+	
+	public static void setDatabase(String database){
+		dbName =database;
 	}
 	
 	private static boolean connect(String URL){
