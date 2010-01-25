@@ -350,9 +350,7 @@ public class TestCaseStatistics {
 					br.readLine();
 				}
 				
-				int counter = 0; 
 				String str = null;
-				
 				sql.append("INSERT INTO id_input_maps (id, input) VALUES ");
 				while((str = br.readLine())!= null){
 					String[] strs = str.split("\t");
@@ -362,8 +360,7 @@ public class TestCaseStatistics {
 					
 					sql.append("(\'").append(id).append("\'").append(",");							
 					sql.append("\'").append(input).append("\'").append("),");
-					counter ++;
-					if(counter% 1000 == 0){
+					if(sql.length() > 768*1024){
 						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 						DatabaseManager.getInstance().update(sqlStmt);
 						sql.setLength(0); //clear the sql
@@ -401,9 +398,7 @@ public class TestCaseStatistics {
 					br.readLine();
 				}
 				
-				int counter = 0; 
 				String str = null;
-				
 				sql.append("INSERT INTO testcasedetail (input, oracle, " +
 						"contextdiversity, activation, length, time, hitcounter, hitsum, coverage) VALUES ");
 				while((str = br.readLine())!= null){
@@ -428,8 +423,7 @@ public class TestCaseStatistics {
 					sql.append("\'").append(hitCounter).append("\'").append(",");
 					sql.append("\'").append(hitSum).append("\'").append(",");				
 					sql.append("\'").append(coverage).append("\'").append("),");
-					counter ++;
-					if(counter% 500 == 0){
+					if(sql.length() > 768*1024){
 						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 						DatabaseManager.getInstance().update(sqlStmt);
 						sql.setLength(0); //clear the sql
@@ -469,7 +463,6 @@ public class TestCaseStatistics {
 					br.readLine();
 				}
 				
-				int counter = 0; 
 				String str = null;
 				
 				sql.append("INSERT INTO testcasekillmutant (testcase, killmutantnum) VALUES ");
@@ -480,8 +473,7 @@ public class TestCaseStatistics {
 					String killNum = strs[1];
 					sql.append("(\'").append(index).append("\'").append(",");								
 					sql.append("\'").append(killNum).append("\'").append("),");
-					counter ++;
-					if(counter% 500 == 0){
+					if(sql.length() > 768*1024){ //when the size > 768KB
 						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 						DatabaseManager.getInstance().update(sqlStmt);
 						sql.setLength(0); //clear the sql
@@ -570,7 +562,6 @@ public class TestCaseStatistics {
 					br.readLine();
 				}
 				
-				int counter = 0; 
 				String str = null;
 				
 				sql.append("INSERT INTO testcaserenew (input, length, contextdiversity) VALUES ");
@@ -586,8 +577,8 @@ public class TestCaseStatistics {
 						sql.append("(\'").append(input).append("\'").append(",");
 						sql.append("\'").append(""+length).append("\'").append(",");
 						sql.append("\'").append(contextDiversity).append("\'").append("),");
-						counter ++;
-						if(counter% 10000 == 0){
+						
+						if(sql.length() > 768*1024){
 							String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 							DatabaseManager.getInstance().update(sqlStmt);
 							sql.setLength(0); //clear the sql
@@ -645,7 +636,6 @@ public class TestCaseStatistics {
 					br.readLine();
 				}
 				
-				int counter = 0; 
 				String str = null;
 				
 				sql.append("INSERT INTO testcasecoverage (testcase, hitsum, hitcounter, coverage ) VALUES ");
@@ -661,8 +651,7 @@ public class TestCaseStatistics {
 					sql.append("\'").append(hitsum).append("\'").append(",");
 					sql.append("\'").append(hitcounter).append("\'").append(",");					
 					sql.append("\'").append(coverage).append("\'").append("),");
-					counter ++;
-					if(counter% 500 == 0){
+					if(sql.length() > 768 * 1024){ // when the size > 768 KB
 						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 						DatabaseManager.getInstance().update(sqlStmt);
 						sql.setLength(0); //clear the sql
@@ -732,14 +721,21 @@ public class TestCaseStatistics {
 		}else if(instruction.equals("saveRenewedTestCase")){
 			String date = args[1];
 			String alpha = args[2];
-			String tc_min = args[3];
-			String tc_max = args[4];
+			
+//			String tc_min = args[3];
+//			String tc_max = args[4];
+//			String testCaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+//				+ date + "/TestPool_Alpha/TestPool_" + new DecimalFormat("0.0000").format(Double.parseDouble(alpha))
+//				+ "_"+ tc_min + "_" + tc_max + ".txt";
+			
 			String testCaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/TestPool_Alpha/TestPool_" + new DecimalFormat("0.0000").format(Double.parseDouble(alpha))
-				+ "_"+ tc_min + "_" + tc_max + ".txt";
+				+ date + "/TestPool_Alpha/TestPool_" + 
+				new DecimalFormat("0.0000").format(Double.parseDouble(alpha)) + ".txt";
+			
 			boolean containHeader = true;
 			TestCaseStatistics ins = new TestCaseStatistics();
 			ins.saveToDB_RenewTestCase(testCaseFile, containHeader);			
+			
 		}else if(instruction.equals("saveIdInputMaps")){
 			String date = args[1];
 			String mapFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"

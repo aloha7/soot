@@ -5,11 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import ccr.app.Application;
 import ccr.test.TestSet;
@@ -185,29 +184,42 @@ public class TestSetStatistics {
 		if(testSets.size() > 0){
 			String tableName = "testset_"+new File(testSetFile).getName();
 			tableName = tableName.substring(0, tableName.indexOf("."));
-			StringBuilder sql = new StringBuilder();
+			StringBuilder sql = new StringBuilder(); 
+			StringBuilder sql_1 = new StringBuilder();
 			String sqlStmt = null;
 			
 			DatabaseManager.setDatabase(database);
+			String tableName_2 = tableName + "_testcases";
 			if(!append){
-				//1. delete the existing table								
-				sqlStmt = "drop table if exists " + tableName;
+				//1. delete the existing table 
+				
+				//1.1. this table keeps all information of a test suite except test cases 
+				sqlStmt = "drop table if exists " + tableName; // tableName = "testset_allpolicies_ca_64";
+				DatabaseManager.getInstance().update(sqlStmt);
+				
+				//1.2. this table keeps only the test case information of a test suite
+				sqlStmt = "drop table if exists " + tableName_2;
 				DatabaseManager.getInstance().update(sqlStmt);
 			}
 			
-			
-					//2. create the table if it is empty
+			//2. create tables if they are empty
 			sqlStmt = "create table if not exists " + tableName + " " +
 						"(id varchar(45), size varchar(45), coverage varchar(45)," +
-						" gentime varchar(45), replacecounter varchar(45), " +
-						"tieactivationCI varchar(45))";
+						" gentime varchar(45), tiecase varchar(45), " +
+						"situationactivation varchar(45))";
 			DatabaseManager.getInstance().update(sqlStmt);
 			
+			sqlStmt = "create table if not exists " + tableName_2 + " " +
+						"(testSet varchar(45), testCase_index varchar(45))";
+			DatabaseManager.getInstance().update(sqlStmt);
 			DecimalFormat format = new DecimalFormat("0.0000000");
 			
-			
+			//3. fill in the tables
 			sql.append("INSERT INTO ").append(tableName).append(" (id, size, " +
-					"coverage, gentime, replacecounter,tieactivationCI ) VALUES ");			
+					"coverage, gentime, tiecase,situationactivation ) VALUES ");		
+			sql_1.append("INSERT INTO ").append(tableName_2).append(" (testSet, " +
+					"testCase_index) VALUES ");
+			
 			for(int i = 0; i < testSets.size(); i ++){
 				TestSet ts = testSets.get(i);
 				String id = ts.index;
@@ -217,14 +229,29 @@ public class TestSetStatistics {
 				String replaceCounter = "" + ts.replaceCounter;
 				String tie_activation_CI = "" + ts.tie_activation_CI;
 				
+				//3.1. all information except test cases
 				sql.append("(\'").append(id).append("\'").append(",");
 				sql.append("\'").append(size).append("\'").append(",");
 				sql.append("\'").append(coverage).append("\'").append(",");					
 				sql.append("\'").append(gentime).append("\'").append(",");
 				sql.append("\'").append(replaceCounter).append("\'").append(",");				
-				sql.append("\'").append(tie_activation_CI).append("\'").append("),");			
-			}			
+				sql.append("\'").append(tie_activation_CI).append("\'").append("),");
+				
+				//3.2. only test cases
+				Vector<String> tcList = ts.testcases;
+				for(int j = 0; j < tcList.size(); j ++){
+					String tc = tcList.get(j);
+					sql_1.append("(\'").append(i).append("\'").append(",");
+					sql_1.append("\'").append(tc).append("\'").append("),");	
+				}
+				
+			}
+			
+			//4. save two tables
 			sqlStmt = sql.substring(0, sql.lastIndexOf(","));
+			DatabaseManager.getInstance().update(sqlStmt);
+			
+			sqlStmt = sql_1.substring(0, sql_1.lastIndexOf(","));
 			DatabaseManager.getInstance().update(sqlStmt);
 		}		
 	}
