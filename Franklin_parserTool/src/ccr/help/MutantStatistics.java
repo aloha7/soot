@@ -22,13 +22,128 @@ public class MutantStatistics {
 			"LOR", "ASR", "IOP", "IOR", "PMD", "PPD", "PCC",
 			"PRV", "OMR", "OAC", "EOA", "EOC", "EAM", "EMM"};
 	
-	
-	
-	
-	
-	public 
 	String[] extraneousConstructs = {"AOI", "COI", "LOI", "IHI", 
 			"ISI", "PNC", "PCI", "JTI", "JSI", "JDC"};
+	
+	/**2010-01-25: load all valid test cases with respect to a given mutant
+	 * 
+	 * @param fileName
+	 * @param containHeader
+	 * @return
+	 */
+	private ArrayList<String> loadValidTestCases(String fileName, boolean containHeader){
+		ArrayList<String> validTestCases = new ArrayList<String>();		
+		File tmp = new File(fileName);
+		if(tmp.exists()){
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				if(containHeader)
+					br.readLine();
+				
+				String str = null;
+				String testcase = null;
+				String PorF = null;
+				int counter = 0;
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					testcase = strs[1];
+					PorF = strs[2];
+					if(PorF.equals("F")){
+						validTestCases.add(testcase);
+					}
+					counter ++;
+				}
+				
+				if(counter != 20000){
+					System.out.println("Total test cases:" + counter);
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}else{
+			System.out.println(tmp.getName() + " does not exist");
+		}
+		
+		return validTestCases;
+	}
+	
+	/**2010-01-25: save fault -> valid test cases(*) into database
+	 * 
+	 * @param date
+	 * @param containHeader: whether the testing detail file contains header or not
+	 * @param startVersion: inclusive
+	 * @param endVersion: exclusive
+	 * @param append: whether append the data into existing table
+	 */
+	public void saveToDB_Fault_ValidTestCases(String date, boolean containHeader, int startVersion, int endVersion, 
+			boolean append){
+		String database = "icdcs_10";
+		String tableName = "mutant_validtestcases";
+		ArrayList<String> mutantList = new ArrayList<String>();
+		String mutantDetailDir = System.getProperty("user.dir") + "/src/ccr" +
+			"/experiment/Context-Intensity_backup/TestHarness/"+ date
+			+ "/Mutant/";
+		
+		File tmp = new File(mutantDetailDir);	
+		
+		if(tmp.exists()){			
+			DatabaseManager.setDatabase(database);
+			String sqlStmt = null;
+			
+			//1. delete the existing table
+			if(!append){
+				sqlStmt = "drop table if exists " + tableName; // tableName = "testset_allpolicies_ca_64";
+				DatabaseManager.getInstance().update(sqlStmt);
+			}
+			
+			//2. create tables if it is empty
+			sqlStmt = "create table if not exists " + tableName + " " +
+						"(mutant varchar(45), validTestCase varchar(45))";
+			DatabaseManager.getInstance().update(sqlStmt);
+			
+			//3. fill in the table
+			StringBuilder sb = new StringBuilder();
+			sb.append("INSERT INTO ").append(tableName).append(" (mutant, validTestCase) VALUES ");
+			
+			String mutantDetailFile = null;
+			for(int i = startVersion; i < endVersion; i ++){
+				System.out.println("Processing faulty version:" + i);
+				mutantDetailFile = mutantDetailDir + "/detailed_"+ i + "_" + (i+1) + ".txt";				
+				ArrayList<String> validTestCases = loadValidTestCases(mutantDetailFile, containHeader);
+				if(validTestCases.size() == 0){ //for never-failed mutants
+					sb.append("(\'").append(i).append("\'").append(",");
+					sb.append("\'none\'").append("),");
+				}else{ //for must-failed mutants and other mutants
+					for(int j = 0; j < validTestCases.size(); j ++){				
+						String testcase = validTestCases.get(j);
+						sb.append("(\'").append(i).append("\'").append(",");
+						sb.append("\'").append(testcase).append("\'").append("),");	
+					}	
+				}				
+				
+				if(sb.length() > 768 * 1024){ //when the size > 768KB
+					sqlStmt = sb.substring(0, sb.lastIndexOf(","));
+					DatabaseManager.getInstance().update(sqlStmt);
+					sb.setLength(0); //clear the sql
+					sb.append("INSERT INTO ").append(tableName).append(" (mutant, validTestCase) VALUES ");
+				}
+			}
+			
+			if(sb.substring(sb.lastIndexOf("VALUES ") + "VALUES ".length()).length() > 0){
+				//still have some values need to save
+				sqlStmt = sb.substring(0, sb.lastIndexOf(","));
+				DatabaseManager.getInstance().update(sqlStmt);
+				sb.setLength(0); //clear the sql
+			}
+		}else{
+			System.out.println("The testing detail directory " + mutantDetailDir + " does not exist");
+		}
+	}
 	
 	/**2010-01-22: load mutants from the file via the offline way.
 	 * 
@@ -590,9 +705,6 @@ public class MutantStatistics {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
 	}
 	
 	/**2009-12-29:summarize mutants for a class&a method based on three categories:
@@ -747,6 +859,18 @@ public class MutantStatistics {
 			"\\experiment\\Context-Intensity_backup\\TestHarness\\"+date+"\\interfaceLevelFaults.txt";
 			boolean containHeader = false;
 			ins.saveToDB_interfaceMutants(faultList, containHeader);			
+		}else if(instruction.equals("saveMutantValidTestCases")){
+			String date = args[1];			
+			int startVersion = 0;			
+			int endVersion = 5024;
+			if(args.length > 3){
+				startVersion = Integer.parseInt(args[2]);
+				endVersion = Integer.parseInt(args[3]);
+			}
+			
+			boolean append = false;
+			boolean containHeader = true;
+			ins.saveToDB_Fault_ValidTestCases(date, containHeader, startVersion, endVersion, append);
 		}
 	}
 
