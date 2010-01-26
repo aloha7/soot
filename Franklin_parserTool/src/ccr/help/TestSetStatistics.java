@@ -15,7 +15,7 @@ import ccr.test.TestSet;
 
 public class TestSetStatistics {
 	
-	public static ArrayList<TestSet> loadTestSet_offline(boolean containHeader, String testSetFile){		
+	public static ArrayList<TestSet> loadTestSet_offline(String testSetFile, boolean containHeader){		
 		ArrayList<TestSet> testSets = new ArrayList<TestSet>();		
 		
 		File tmp = new File(testSetFile);
@@ -180,7 +180,7 @@ public class TestSetStatistics {
 	 * @param database: the name of database
 	 */
 	public static void saveToDB_TestSet(boolean append, String testSetFile, boolean containHeader, String database){
-		ArrayList<TestSet> testSets = loadTestSet_offline(containHeader, testSetFile);		
+		ArrayList<TestSet> testSets = loadTestSet_offline(testSetFile, containHeader);		
 		if(testSets.size() > 0){
 			String tableName = "testset_"+new File(testSetFile).getName();
 			tableName = tableName.substring(0, tableName.indexOf("."));
@@ -238,7 +238,7 @@ public class TestSetStatistics {
 				sql.append("\'").append(tie_activation_CI).append("\'").append("),");
 				
 				//3.2. only test cases
-				Vector<String> tcList = ts.testcases;
+				ArrayList<String> tcList = ts.testcases;
 				for(int j = 0; j < tcList.size(); j ++){
 					String tc = tcList.get(j);
 					sql_1.append("(\'").append(i).append("\'").append(",");
