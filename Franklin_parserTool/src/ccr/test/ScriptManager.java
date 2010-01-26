@@ -970,11 +970,11 @@ public class ScriptManager {
 		StringBuilder sb = new StringBuilder();
 		for(int i = startVersion; i < endVersion; i += interval){	
 			if(i + interval >= endVersion){
-				sb.append("java -Xmx1600m ccr.app.TestCFG2_CI genAndGetContextDiversity " 
+				sb.append("java -Xmx2000m ccr.app.TestCFG2_CI genAndGetContextDiversity " 
 						+ date + " " + i + " "
 						+ endVersion + " 0.570 0.571 0.001\n");
 			}else{
-				sb.append("java -Xmx1600m ccr.app.TestCFG2_CI genAndGetContextDiversity " 
+				sb.append("java -Xmx2000m ccr.app.TestCFG2_CI genAndGetContextDiversity " 
 						+ date + " " + i + " "
 						+ (i + interval) + " 0.570 0.571 0.001\n");	
 			}
@@ -1004,7 +1004,7 @@ public class ScriptManager {
 				+ date + "/Script/GetTestPool_"+startVersion
 				+"_"+endVersion+".sh";
 			
-			sb1.append("./GetFailureRate_"+startVersion
+			sb1.append("./GetTestPool_"+startVersion
 				+"_"+endVersion+".sh &" + "\n");
 			int interval_1 = 500000;
 			ScriptManager.getTestPool_Sequential(date, saveFile, startVersion, endVersion, interval_1);
