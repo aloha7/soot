@@ -34,7 +34,7 @@ public class MutantStatistics {
 	 *            exclusive
 	 * @return
 	 */
-	private ArrayList<String> loadValidTestCases(String fileName,
+	public static ArrayList<String> loadValidTestCases(String fileName,
 			boolean containHeader, int tc_min, int tc_max) {
 		ArrayList<String> validTestCases = new ArrayList<String>();
 		File tmp = new File(fileName);
@@ -97,6 +97,7 @@ public class MutantStatistics {
 			boolean append) {
 		String database = "icdcs_10";
 		String tableName = "mutant_validtestcases";
+//		String tableName = "test";
 		int tc_min = -10000;
 		int tc_max = 10000;
 		ArrayList<String> mutantList = new ArrayList<String>();
@@ -105,7 +106,7 @@ public class MutantStatistics {
 				+ "/Mutant/";
 
 		File tmp = new File(mutantDetailDir);
-
+		long startTime = System.currentTimeMillis();
 		if (tmp.exists()) {
 			DatabaseManager.setDatabase(database);
 			String sqlStmt = null;
@@ -146,7 +147,7 @@ public class MutantStatistics {
 					}
 				}
 
-				if (sb.length() > 500 * 1024) { // when the size > 768KB
+				if (sb.length() > DatabaseManager.max_allowed_packet) { // when the size > 768KB
 					sqlStmt = sb.substring(0, sb.lastIndexOf(","));
 					DatabaseManager.getInstance().update(sqlStmt);
 					sb.setLength(0); // clear the sql
@@ -166,6 +167,8 @@ public class MutantStatistics {
 			System.out.println("The testing detail directory "
 					+ mutantDetailDir + " does not exist");
 		}
+		long duration = System.currentTimeMillis() - startTime;
+		System.out.println("Duration:" + (duration/(1000*60)) + " minutes");
 	}
 
 	/**2010-01-25: save mutant lists into the database
