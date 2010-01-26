@@ -360,7 +360,7 @@ public class TestCaseStatistics {
 					
 					sql.append("(\'").append(id).append("\'").append(",");							
 					sql.append("\'").append(input).append("\'").append("),");
-					if(sql.length() > 768*1024){
+					if(sql.length() > DatabaseManager.max_allowed_packet){
 						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 						DatabaseManager.getInstance().update(sqlStmt);
 						sql.setLength(0); //clear the sql
@@ -423,7 +423,7 @@ public class TestCaseStatistics {
 					sql.append("\'").append(hitCounter).append("\'").append(",");
 					sql.append("\'").append(hitSum).append("\'").append(",");				
 					sql.append("\'").append(coverage).append("\'").append("),");
-					if(sql.length() > 768*1024){
+					if(sql.length() > DatabaseManager.max_allowed_packet){
 						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 						DatabaseManager.getInstance().update(sqlStmt);
 						sql.setLength(0); //clear the sql
@@ -473,7 +473,7 @@ public class TestCaseStatistics {
 					String killNum = strs[1];
 					sql.append("(\'").append(index).append("\'").append(",");								
 					sql.append("\'").append(killNum).append("\'").append("),");
-					if(sql.length() > 768*1024){ //when the size > 768KB
+					if(sql.length() > DatabaseManager.max_allowed_packet){ //when the size > 768KB
 						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 						DatabaseManager.getInstance().update(sqlStmt);
 						sql.setLength(0); //clear the sql
@@ -578,7 +578,7 @@ public class TestCaseStatistics {
 						sql.append("\'").append(""+length).append("\'").append(",");
 						sql.append("\'").append(contextDiversity).append("\'").append("),");
 						
-						if(sql.length() > 768*1024){
+						if(sql.length() > DatabaseManager.max_allowed_packet){
 							String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 							DatabaseManager.getInstance().update(sqlStmt);
 							sql.setLength(0); //clear the sql
@@ -651,7 +651,7 @@ public class TestCaseStatistics {
 					sql.append("\'").append(hitsum).append("\'").append(",");
 					sql.append("\'").append(hitcounter).append("\'").append(",");					
 					sql.append("\'").append(coverage).append("\'").append("),");
-					if(sql.length() > 768 * 1024){ // when the size > 768 KB
+					if(sql.length() > DatabaseManager.max_allowed_packet){ // when the size > 768 KB
 						String sqlStmt = sql.substring(0, sql.lastIndexOf(","));
 						DatabaseManager.getInstance().update(sqlStmt);
 						sql.setLength(0); //clear the sql
