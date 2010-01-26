@@ -1,10 +1,14 @@
 package ccr.reduction;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Vector;
 
 import ccr.app.ApplicationResult;
 import ccr.app.TestCFG2_CI;
+import ccr.help.MutantStatistics;
+import ccr.help.TestSetStatistics;
 import ccr.stat.CFG;
 import ccr.stat.Criterion;
 import ccr.stat.Node;
@@ -28,14 +32,14 @@ import ccr.test.TestSetManager;
  *
  */
 public class TestSuiteReduction {
-		
+
 	/**2009-12-14: label the program elements with sequential numbers
 	 * 
 	 * @param criterion:can be "AllPolicies", "All1ResolvedDU" or "All2ResolvedDU"
 	 * @param filename:file name to save the labeling results.
 	 * @return
 	 */
-	public Vector saveProgramEles(Criterion criterion, String filename){
+	public static Vector saveProgramEles(Criterion criterion, String filename){
 		Vector programEles = new Vector();
 		
 		NodeMap dus = criterion.DUMap;
@@ -86,7 +90,7 @@ public class TestSuiteReduction {
 		return programEles;
 	}
 	
-	public Vector getStatisticsOfTestPool(String appClassName, String date, String criterion){
+	public static Vector getStatisticsOfTestPool(String appClassName, String date, String criterion){
 		//1.get the testing criterion
 		CFG g = new CFG(System.getProperty("user.dir")
 				+ "/src/ccr/app/TestCFG2.java");
@@ -103,7 +107,7 @@ public class TestSuiteReduction {
 		//2.construct the program elements specified by a criterion
 		String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date + "/" + "ElemLabels_" + criterion +".txt";	
-		Vector programEles = this.saveProgramEles(c, filename);
+		Vector programEles = saveProgramEles(c, filename);
 		
 		//3.load all test cases in the test pool
 		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/" +
@@ -115,7 +119,7 @@ public class TestSuiteReduction {
 		for(int i = 0; i < testpool.size(); i++){
 			String index = testpool.get(i);
 			System.out.println("Process test case:" + index);
-			TestCase t = this.getStaticsOfTestCase(appClassName, index, c, programEles);
+			TestCase t = getStaticsOfTestCase(appClassName, index, c, programEles);
 			statistics_TestCase.add(t);
 		}
 		
@@ -124,38 +128,12 @@ public class TestSuiteReduction {
 		filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date + "/" + "TestCaseStatistics_" + criterion + ".txt";
 		boolean writeHeader = true;
-		this.saveTestCases(statistics_TestCase, programEles, filename, writeHeader);
+		saveTestCases(statistics_TestCase, programEles, filename, writeHeader);
 		statistics_TestCase.clear();
 				
 		return statistics_TestCase;
 	}
 
-//	/**2009-12-30: get CI/activation, executionTime/output, 
-//	 * hitCounter with respect to the statement coverage
-//	 * 
-//	 * @param appClassName
-//	 * @param index
-//	 * @return
-//	 */
-//	public TestCase getStatisticsOfTestCase(String appClassName, String index){
-//		TestCase t = new TestCase();
-//		t.index = index;
-//		
-//		TestCFG2_CI ins = new TestCFG2_CI();
-//		
-//		long startTime = System.currentTimeMillis();
-//		Object output = ins.application(t.index);
-//		t.execTime = System.currentTimeMillis() - startTime;
-//		t.output = output;
-//		
-//		t.length = "" + ins.PositionQueue.size();
-//		t.CI = ins.PositionQueue.size() - ins.getChanges(ins.PositionQueue);
-//		t.activation = ins.activation;
-//		t.execTrace = TestDriver.getTrace(appClassName, t.index);
-//		
-//		
-//		return t;
-//	}
 	
 	/**2009-12-14: get the statistics info of test cases:
 	 * index, context stream length, context diversity, 
@@ -166,7 +144,7 @@ public class TestSuiteReduction {
 	 * @param index
 	 * @return
 	 */
-	public TestCase getStaticsOfTestCase(String appClassName, String index, Criterion c, Vector programEles){
+	public static TestCase getStaticsOfTestCase(String appClassName, String index, Criterion c, Vector programEles){
 		TestCase t = new TestCase();
 		t.index = index;
 		
@@ -253,7 +231,7 @@ public class TestSuiteReduction {
 		return t;
 	}
 	
-	public void saveTestCases(Vector testCases, Vector programEles, String filename, boolean writeHeader){
+	public static void saveTestCases(Vector testCases, Vector programEles, String filename, boolean writeHeader){
 		StringBuilder sb = new StringBuilder();
 		
 		//Header
@@ -291,17 +269,14 @@ public class TestSuiteReduction {
 	
 	
 	public static void main(String[] args) {
-		if(args.length == 0){
-			System.out.println("Please specify the date to save the results");
-		}else{
-			String date = args[0];
-			String criterion = args[1];
+		String instruction = args[0];
+		if(instruction.equals("constructILPModel")){
+			String date = args[1];
+			String criterion = args[2];
 			
-			TestSuiteReduction ins = new TestSuiteReduction();
 			String appClassName = "TestCFG2_ins";			
-			ins.getStatisticsOfTestPool(appClassName, date, criterion);
+			getStatisticsOfTestPool(appClassName, date, criterion);
 		}
-		
 	}
 
 }
