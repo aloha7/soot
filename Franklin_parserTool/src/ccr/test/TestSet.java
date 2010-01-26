@@ -8,7 +8,7 @@ public class TestSet {
 	
 	public static String COVERAGE_TAG = "Coverage:\t";
 	public static String SIZE_TAG = "Size:\t";
-	public Vector<String> testcases; //keep the indices of all test cases
+	public ArrayList<String> testcases; //keep the indices of all test cases
 	public double coverage = 0.0;
 	
 	//1/15/2008
@@ -25,14 +25,14 @@ public class TestSet {
 	
 	public TestSet() {
 		
-		testcases = new Vector();
+		testcases = new ArrayList();
 	}
 	
 	public TestSet(String s) {
 		index = s.substring(0, s.indexOf("\t"));
 		
 		s = s.substring(s.indexOf("\t")+"\t".length());
-		testcases = new Vector();
+		testcases = new ArrayList();
 		int i = s.indexOf(Application.SET_PREFIX);
 		int j = s.indexOf(Application.SET_POSTFIX, i);
 		String set = s.substring(i + Application.SET_PREFIX.length(), j);
