@@ -10,7 +10,9 @@ public class DatabaseManager {
 	
 	private static DatabaseManager instance = null;
 	
-	static String userID, password, hostname, dbName, URL;
+	public static int max_allowed_packet = 10*1024*1024;//10M
+	
+	private static String userID, password, hostname, dbName, URL;
 	static Connection conn;
 	
 	private DatabaseManager(String uID, String pwd, String hostname, String database){
