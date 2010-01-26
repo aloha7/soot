@@ -1120,7 +1120,7 @@ public class TestSetManager {
 		// 1).select one and replace it randomly
 
 		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
-		Vector testcases = testSet.testcases;
+		ArrayList testcases = testSet.testcases;
 		ArrayList replaced = new ArrayList();
 		// keep all test cases in the test set that has lower CI values in
 		// ascending orders
@@ -1215,7 +1215,7 @@ public class TestSetManager {
 			HashMap testcase_uniqueCovers, String testcase, String[] stringTrace) {
 		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
 
-		Vector testcases = testSet.testcases;
+		ArrayList testcases = testSet.testcases;
 		ArrayList replaced = new ArrayList(); // keep all test cases in the
 												// test set that has lower CI in
 												// ascending orders
@@ -1302,7 +1302,7 @@ public class TestSetManager {
 
 		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
 
-		Vector testcases = testSet.testcases;
+		ArrayList testcases = testSet.testcases;
 		ArrayList replaced = new ArrayList(); // keep all test cases in the
 												// test set that has higher CI
 												// in ascending orders
@@ -1488,7 +1488,7 @@ public class TestSetManager {
 
 		int activation = ((TestCase) (Adequacy.testCases.get(testcase))).activation;
 
-		Vector testcases = testSet.testcases;
+		ArrayList testcases = testSet.testcases;
 		ArrayList replaced = new ArrayList(); // keep all test cases in the
 												// test set that has lower CI in
 												// ascending orders
@@ -1946,7 +1946,7 @@ public class TestSetManager {
 
 		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
 
-		Vector testcases = testSet.testcases;
+		ArrayList testcases = testSet.testcases;
 		ArrayList replaced = new ArrayList(); // keep all test cases in the
 												// test set that has lower CI in
 												// ascending orders
@@ -2078,7 +2078,7 @@ public class TestSetManager {
 
 		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
 
-		Vector testcases = testSet.testcases;
+		ArrayList testcases = testSet.testcases;
 		ArrayList replaced = new ArrayList(); // keep all test cases in the
 												// test set that has lower CI in
 												// ascending orders
@@ -2197,7 +2197,7 @@ public class TestSetManager {
 
 		double CI = ((TestCase) (Adequacy.testCases.get(testcase))).CI;
 
-		Vector testcases = testSet.testcases;
+		ArrayList testcases = testSet.testcases;
 		ArrayList replaced = new ArrayList(); // keep all test cases in the
 												// test set that has lower CI in
 												// ascending orders

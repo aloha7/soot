@@ -1350,11 +1350,8 @@ public class TestDriver {
 	
 	public static void getFaultDetail(String srcDir,  boolean containHeader){
 		try {
-			
-			
 			StringBuilder sb = new StringBuilder();
 			sb.append("FaultyVersion\t"  + "FailureRate\t" + "MinCI\t" + "MeanCI\t"+"MaxCI\t" + "SD.CI\t\n");
-
 			
 			HashMap fault_validTestCases = new HashMap();
 			String faultList = srcDir + "/FaultList.txt";

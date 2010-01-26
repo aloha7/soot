@@ -190,7 +190,7 @@ public class Adequacy {
 					//2009-2-21: if the test case does not increase the coverage
 					double CI =  ((TestCase)(Adequacy.testCases.get(testcase))).CI;
 
-					Vector testcases = testSet.testcases;
+					ArrayList testcases = testSet.testcases;
 					ArrayList replaced = new ArrayList(); //keep all test cases in the test set that has lower CI values in ascending orders
 
 					for(int i = 0; i < testcases.size(); i ++){ //check whether some test cases have lower CI than current ones.						
@@ -423,7 +423,7 @@ public class Adequacy {
 					//2009-2-21: if the test case does not increase the coverage
 					double CI =  ((TestCase)(Adequacy.testCases.get(testcase))).CI;
 
-					Vector testcases = testSet.testcases;
+					ArrayList testcases = testSet.testcases;
 					ArrayList replaced = new ArrayList(); //keep all test cases in the test set that has lower CI values in ascending orders
 
 					for(int i = 0; i < testcases.size(); i ++){ //check whether some test cases have lower CI than current ones.						
