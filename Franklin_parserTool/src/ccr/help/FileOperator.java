@@ -404,7 +404,7 @@ public class FileOperator {
 						id_input.put(id, input);
 					}
 				}				
-				System.out.println("missed test cases after processing:" + missedID.size());
+				System.out.println("missed test cases after 1st processing:" + missedID.size());
 				
 				//4. for these missed test cases
 				for(int i = 0; i < missedID.size(); i ++){
@@ -441,7 +441,7 @@ public class FileOperator {
 						}
 					}
 				}
-				System.out.println("missed ids after processing:" + missedID.size());
+				System.out.println("missed ids after 2nd processing:" + missedID.size());
 				
 				StringBuilder sb = new StringBuilder();
 				sb.append("ID\tInput\n");
