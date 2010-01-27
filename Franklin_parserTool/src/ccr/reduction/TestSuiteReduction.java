@@ -8,6 +8,7 @@ import java.util.Vector;
 import ccr.app.ApplicationResult;
 import ccr.app.TestCFG2_CI;
 import ccr.help.MutantStatistics;
+import ccr.help.TestCaseStatistics;
 import ccr.help.TestSetStatistics;
 import ccr.stat.CFG;
 import ccr.stat.Criterion;
@@ -112,15 +113,17 @@ public class TestSuiteReduction {
 		//3.load all test cases in the test pool
 		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/" +
 				"TestHarness/" + date +"/TestPool.txt";
-		TestSet testpool = Adequacy.getTestPool(testPoolFile, true);
+		boolean containHeader = true;
+		ArrayList<TestCase> testpool = TestCaseStatistics.getTestPool(testPoolFile, containHeader);
+		
 		
 		long start = System.currentTimeMillis();
 		//4.get the statistics of all test cases in the test pool		
 		ArrayList<TestCase> statistics_TestCase = new ArrayList<TestCase>(); 
 		for(int i = 0; i < testpool.size(); i++){
-			String index = testpool.get(i);
-			System.out.println("Process test case:" + index);
-			TestCase t = getStaticsOfTestCase(appClassName, index, c, programEles);
+			TestCase tc = testpool.get(i);
+			System.out.println("Process test case:" + tc.index);
+			TestCase t = getStaticsOfTestCase(appClassName, tc, c, programEles);
 			statistics_TestCase.add(t);
 		}
 		long duration = (System.currentTimeMillis() - start)/(1000*60);
@@ -136,47 +139,23 @@ public class TestSuiteReduction {
 		return statistics_TestCase;
 	}
 
-	
-	/**2009-12-14: get the statistics info of test cases:
-	 * index, context stream length, context diversity, 
-	 * activation, and the execution time/traces/coverage
-	 * with respect to a specific testing criterion
-	 * 
+	/**2010-01-27: get the coverage statistics info of test cases:
+	 * the execution traces/coverage/hitSum/hitCounter with respect
+	 * to a specific testing criterion 
 	 * @param appClassName
-	 * @param index
+	 * @param t
+	 * @param c
+	 * @param programEles
 	 * @return
 	 */
-	public static TestCase getStaticsOfTestCase(String appClassName, String index, Criterion c, ArrayList programEles){
-		TestCase t = new TestCase();
-		t.index = index;
+	public static TestCase getStaticsOfTestCase(String appClassName, TestCase t, Criterion c, ArrayList programEles){		
 		TestCFG2_CI ins = new TestCFG2_CI();
-		
-		long startTime = System.currentTimeMillis();
-		Object output = ins.application(t.index);
-		t.execTime = System.currentTimeMillis() - startTime;
-		t.output = output;
-		
-		t.length = "" + ins.PositionQueue.size();		
-		t.CI = ins.PositionQueue.size() - ins.getChanges(ins.PositionQueue);
-		t.activation = ins.activation;
 		
 		t.execTrace = TestDriver.getTrace(appClassName, t.index);
 		
 		//elems -> cover times
 		t.coverFreq = TestSetManager.countDUCoverage(t.execTrace, c);		 
 		ArrayList hitSet = new ArrayList(programEles.size());
-		
-//		//2009-12-30: it may miss the PolicyNode takes the form of c33:P0
-//		int hitCounter = 0; //count how many elements has been hit
-//		for(int i = 0; i < programEles.size(); i++){
-//			//check the coverage of each program elements one by one
-//			if(t.coverFreq.containsKey(programEles.get(i))){
-//				hitSet.add((Integer)t.coverFreq.get(programEles.get(i)));
-//				hitCounter ++;
-//			}else{
-//				hitSet.add(0);
-//			}
-//		}	
 		
 		//2009-12-30: need to organize coverage statistics based on programElems 
 		int hitCounter = 0;
@@ -235,13 +214,12 @@ public class TestSuiteReduction {
 	public static void saveTestCases(ArrayList testCases, ArrayList programEles, String filename, boolean writeHeader){
 		StringBuilder sb = new StringBuilder();
 		
-		//Header
+		//Header		
 		if(writeHeader){
-			sb.append("TestCase").append("\t");
-			sb.append("CI").append("\t").append("Activation").append("\t").
-			append("Length").append("\t").append("Time").append("\t").
+			sb.append("TestCaseID").append("\t").append("Length").
+			append("\t").append("CD").append("\t").
 			append("HitCounter").append("\t").append("HitSum").append("\t").
-			append("Coverage").append("\t").append("Oracle").append("\t");
+			append("Coverage").append("\t");
 			for(int i = 0; i < programEles.size(); i++){ //index for hitSet
 				sb.append(programEles.get(i)).append("\t");
 			}
@@ -251,12 +229,10 @@ public class TestSuiteReduction {
 		//TestCases
 		for(int i = 0; i < testCases.size(); i++){
 			TestCase t = (TestCase)testCases.get(i);
-			sb.append(t.index).append("\t");
-			sb.append(t.CI).append("\t").append(t.activation).append("\t").
-				append(t.length).append("\t").append(t.execTime).append("\t").
+			sb.append(t.index).append("\t").append(t.length).append("\t").
+				append(t.CI).append("\t").		
 				append(t.hitCounter).append("\t").append(t.hitSum).append("\t").
-				append(t.coverage).append("\t");
-			sb.append(((ApplicationResult)t.output).toString()).append("\t");
+				append(t.coverage).append("\t");			
 			for(int j = 0; j < t.hitSet.size(); j++){
 				sb.append(t.hitSet.get(j)).append("\t");
 			}
