@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -34,6 +35,31 @@ import ccr.test.TestSetManager;
  *
  */
 public class TestCaseStatistics {
+
+	public static ArrayList<TestCase> getTestPool(String testPoolFile, boolean containHeader){
+		ArrayList<TestCase> testpool = new ArrayList<TestCase>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(testPoolFile));
+			String str = null;
+			
+			if(containHeader){ //if the first row is the header 
+				br.readLine();
+			}
+			
+			while((str = br.readLine())!= null){
+				TestCase tc = new TestCase(str);
+				testpool.add(tc);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return testpool;
+	}
 	
 	/**2010-01-22: load the test pool from the existing file in the 
 	 * offline way
@@ -86,8 +112,8 @@ public class TestCaseStatistics {
 	 * @param filename:file name to save the labeling results.
 	 * @return
 	 */
-	public Vector saveProgramEles(Criterion criterion, String filename){
-		Vector programEles = new Vector();
+	public ArrayList saveProgramEles(Criterion criterion, String filename){
+		ArrayList programEles = new ArrayList();
 		
 		NodeMap dus = criterion.DUMap;
 		NodeSet nodes = criterion.nodes;
@@ -137,7 +163,7 @@ public class TestCaseStatistics {
 		return programEles;
 	}
 	
-	public Vector getStatisticsOfTestPool(String appClassName, String date, String criterion){
+	public ArrayList getStatisticsOfTestPool(String appClassName, String date, String criterion){
 		//1.get the testing criterion
 		CFG g = new CFG(System.getProperty("user.dir")
 				+ "/src/ccr/app/TestCFG2.java");
@@ -154,7 +180,7 @@ public class TestCaseStatistics {
 		//2.construct the program elements specified by a criterion
 		String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date + "/" + "ElemLabels_" + criterion +".txt";	
-		Vector programEles = this.saveProgramEles(c, filename);
+		ArrayList programEles = this.saveProgramEles(c, filename);
 		
 		//3.load all test cases in the test pool
 		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/" +
@@ -162,7 +188,7 @@ public class TestCaseStatistics {
 		TestSet testpool = Adequacy.getTestPool(testPoolFile, true);
 		
 		//4.get the statistics of all test cases in the test pool		
-		Vector<TestCase> statistics_TestCase = new Vector<TestCase>(); 
+		ArrayList<TestCase> statistics_TestCase = new ArrayList<TestCase>(); 
 		for(int i = 0; i < testpool.size(); i++){
 			String index = testpool.get(i);
 			System.out.println("Process test case:" + index);
@@ -217,7 +243,7 @@ public class TestCaseStatistics {
 	 * @param index
 	 * @return
 	 */
-	public TestCase getStaticsOfTestCase(String appClassName, String index, Criterion c, Vector programEles){
+	public TestCase getStaticsOfTestCase(String appClassName, String index, Criterion c, ArrayList programEles){
 		TestCase t = new TestCase();
 		t.index = index;
 		
@@ -235,7 +261,7 @@ public class TestCaseStatistics {
 		t.execTrace = TestDriver.getTrace(appClassName, t.index);
 		
 		t.coverFreq = TestSetManager.countDUCoverage(t.execTrace, c);		 
-		Vector hitSet = new Vector(programEles.size());
+		ArrayList hitSet = new ArrayList(programEles.size());
 		
 //		//2009-12-30: it may miss the PolicyNode takes the form of c33:P0
 //		int hitCounter = 0; //count how many elements has been hit
@@ -304,7 +330,7 @@ public class TestCaseStatistics {
 		return t;
 	}
 	
-	public void saveTestCases(Vector testCases, Vector programEles, String filename, boolean writeHeader){
+	public void saveTestCases(ArrayList testCases, ArrayList programEles, String filename, boolean writeHeader){
 		StringBuilder sb = new StringBuilder();
 		
 		//Header
