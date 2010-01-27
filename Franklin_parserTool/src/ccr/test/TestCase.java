@@ -1,7 +1,7 @@
 package ccr.test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Vector;
 
 public class TestCase {
 	
@@ -19,7 +19,7 @@ public class TestCase {
 	public Object output;
 	public String[] execTrace;
 	public HashMap coverFreq; //programElem(String)->coverTimes
-	public Vector<Integer> hitSet; //hit values for each elements(integer rather than binary values)
+	public ArrayList<Integer> hitSet; //hit values for each elements(integer rather than binary values)
 	 
 	
 	
@@ -34,7 +34,7 @@ public class TestCase {
 		this.index = ts[0];
 		this.length = ts[1];
 		this.CI = Double.parseDouble(ts[2]);
-		this.activation = Integer.parseInt(ts[3]);
+//		this.activation = Integer.parseInt(ts[3]);
 	}
 	
 	/**2009-12-18: for test suite reduction research, 
@@ -46,15 +46,17 @@ public class TestCase {
 	public TestCase(String testcase, boolean reduction){
 		if(reduction){
 			String[] tc = testcase.split("\t");
-			this.index = tc[0];
-			this.CI = Double.parseDouble(tc[1]);
-			this.activation = Integer.parseInt(tc[2]);
-			this.length = tc[3];
-			this.execTime = Long.parseLong(tc[4]);
-			this.hitCounter = Integer.parseInt(tc[5]);
-			this.hitSet = new Vector<Integer>();
-			for(int i = 6; i < tc.length; i ++){
-				this.hitSet.add(Integer.parseInt(tc[i]));
+			if(tc.length > 6){
+				this.index = tc[0];
+				this.length = tc[1];
+				this.CI = Double.parseDouble(tc[2]);
+				this.hitCounter = Integer.parseInt(tc[3]);
+				this.hitSum = Integer.parseInt(tc[4]);
+				this.coverage = Double.parseDouble(tc[5]);			
+				this.hitSet = new ArrayList<Integer>();			
+				for(int i = 6; i < tc.length; i ++){
+					this.hitSet.add(Integer.parseInt(tc[i]));
+				}	
 			}
 		}
 	}
