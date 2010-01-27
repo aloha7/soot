@@ -1,17 +1,35 @@
 package ccr.report;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import ccr.help.MutantStatistics;
 import ccr.help.TestSetStatistics;
+import ccr.reduction.ILPSolver;
+import ccr.test.Logger;
 import ccr.test.TestDriver;
 import ccr.test.TestSet;
 
 public class Reporter_Reduction {
+	//2010-01-27: here is the cache
+	public static HashMap<String, ArrayList<String>> mutant_validTestCases_cache = new HashMap<String, ArrayList<String>>();
+	public static HashMap<String, HashMap<String, ArrayList<String>>> mutant_testSet_validTestCases_cache = 
+		new HashMap<String, HashMap<String,ArrayList<String>>>();
 	
-	public static HashMap<String, ArrayList<String>> getValidTestCases_mutant(String mutantFile_date, boolean containHeader_mutant, 
+	/**2010-01-27: decouple this from getValidTestCases_testSet_mutant()
+	 * to derive the failure rates of mutants
+	 * 
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @return
+	 */
+	public static HashMap<String, ArrayList<String>> getMutant_ValidTestCases_offline(
+			String mutantFile_date, boolean containHeader_mutant, 
 			String mutantDetailDir, boolean containHeader_testing){
 		HashMap<String, ArrayList<String>> validTestCases_mutant = new HashMap<String, ArrayList<String>>();
 		
@@ -20,26 +38,89 @@ public class Reporter_Reduction {
 		int tc_min = -10000;
 		int tc_max = 10000;
 		
-		long start = System.currentTimeMillis();
+		
 		//1.get all valid test cases to kill a given mutant
 		for(int i = 0; i < mutantArray.size(); i ++){
 			String mutantID = mutantArray.get(i);
+			
 			System.out.println("Processing faulty version:" + mutantID);
-			mutantDetailFile = mutantDetailDir + "/detailed_" + mutantID 
-			+ "_" + (Integer.parseInt(mutantID) + 1) + ".txt";
-			ArrayList<String> validTestCases = MutantStatistics.loadValidTestCases(mutantDetailFile, 
-					containHeader_testing, tc_min, tc_max);
+			ArrayList<String> validTestCases = null;
+			
+			//2010-01-27: use the cache mechanism to save execution time
+			if(!mutant_validTestCases_cache.containsKey(mutantID)){
+				
+				mutantDetailFile = mutantDetailDir + "/detailed_" + mutantID 
+				+ "_" + (Integer.parseInt(mutantID) + 1) + ".txt";
+				
+				validTestCases = MutantStatistics.loadValidTestCases(mutantDetailFile, 
+						containHeader_testing, tc_min, tc_max);
+				//save it to cache
+				mutant_validTestCases_cache.put(mutantID, validTestCases);
+				
+			}else{
+				validTestCases = mutant_validTestCases_cache.get(mutantID);
+			}
 			
 			validTestCases_mutant.put(mutantID, validTestCases);
 		}		
-		long duration = (System.currentTimeMillis() - start)/(1000*60);
-		System.out.println("It takes " + duration + " mins to process " + mutantArray.size() + " faults");
+		
 		
 		return validTestCases_mutant;
 	}
 	
+	/**2010-01-27: decouple this method from from getValidTestCases_testSet_mutant()
+	 * to reused by test suite reduction experiments
+	 * 
+	 * @param testSetArray
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @return
+	 */
+	public static HashMap<String, HashMap<String, ArrayList<String>>> getMutant_testSet_ValidTestCases_online(
+			ArrayList<TestSet> testSetArray, 
+			String mutantFile_date, boolean containHeader_mutant, 
+			String mutantDetailDir, boolean containHeader_testing){
+		
+		HashMap<String, HashMap<String, ArrayList<String>>> mutant_testSet_validTestCases = new 
+		HashMap<String, HashMap<String,ArrayList<String>>>();
+
+		HashMap<String, ArrayList<String>> mutant_validTestCases = getMutant_ValidTestCases_offline(mutantFile_date, 
+		containHeader_mutant, mutantDetailDir, containHeader_testing);
+		
+
+		Iterator<String> ite_mutant = mutant_validTestCases.keySet().iterator();
+		while(ite_mutant.hasNext()){
+			String mutantID = ite_mutant.next();
+			
+			//2010-01-27: use the cached mechanism to save execution time;
+			HashMap<String, ArrayList<String>> testSet_validTC = new HashMap<String, ArrayList<String>>();
+			if(mutant_testSet_validTestCases_cache.containsKey(mutantID)){
+				testSet_validTC = mutant_testSet_validTestCases_cache.get(mutantID);
+			}else{
+				//1. get the valid test cases in each test set to kill a given mutant
+				ArrayList<String> validTestCases = mutant_validTestCases.get(mutantID);
+				for(int j = 0; j < testSetArray.size(); j++){
+					TestSet ts = testSetArray.get(j);
+					ArrayList<String> testCases = ts.testcases;
+					ArrayList<String> validTCArray = TestDriver.getSharedTestCases(validTestCases,
+							testCases);
+					testSet_validTC.put(ts.index, validTCArray);
+		
+					//save it to the cache
+					mutant_testSet_validTestCases_cache.put(mutantID, testSet_validTC);
+				}				
+			}
+			mutant_testSet_validTestCases.put(mutantID, testSet_validTC);
+		}
+		
+		return mutant_testSet_validTestCases;
+	}
+	
 	/**2010-01-26: given a mutant and adequate test sets, it returns
-	 * mutant -> test sets -> valid test cases
+	 * mutant -> test sets -> valid test cases (offline way is useful for 
+	 * unit testing)
 	 * 
 	 * @param testSetFile
 	 * @param containHeader_testSet
@@ -49,42 +130,36 @@ public class Reporter_Reduction {
 	 * @param containHeader_testing
 	 * @return
 	 */
-	public static HashMap<String, HashMap<String, ArrayList<String>>> getValidTestCases_testSet_mutant(String testSetFile, boolean containHeader_testSet,
+	public static HashMap<String, HashMap<String, ArrayList<String>>> getMutant_testSet_ValidTestCases_offline(
+			String testSetFile, boolean containHeader_testSet,
 			String mutantFile_date, boolean containHeader_mutant, 
 			String mutantDetailDir, boolean containHeader_testing){
-	
-		HashMap<String, HashMap<String, ArrayList<String>>> mutant_testSet_validTestCases = new 
-				HashMap<String, HashMap<String,ArrayList<String>>>();
-		
-		HashMap<String, ArrayList<String>> mutant_validTestCases = getValidTestCases_mutant(mutantFile_date, 
-				containHeader_mutant, mutantDetailDir, containHeader_testing);
-		ArrayList<TestSet> testSetArray = TestSetStatistics.loadTestSet_offline(testSetFile, containHeader_testSet);
-
-		Iterator<String> ite_mutant = mutant_validTestCases.keySet().iterator();
-		while(ite_mutant.hasNext()){
-			String mutantID = ite_mutant.next();
-			ArrayList<String> validTestCases = mutant_validTestCases.get(mutantID);
 			
-			//1. get the valid test cases in each test set to kill a given mutant
-			HashMap<String, ArrayList<String>> testSet_validTC = new HashMap<String, ArrayList<String>>();
-			for(int j = 0; j < testSetArray.size(); j++){
-				TestSet ts = testSetArray.get(j);
-				ArrayList<String> testCases = ts.testcases;
-				ArrayList<String> validTCArray = TestDriver.getSharedTestCases(validTestCases, testCases);				
-				testSet_validTC.put(ts.index, validTCArray);
-				mutant_testSet_validTestCases.put(mutantID, testSet_validTC);
-			}
-		}
+		ArrayList<TestSet> testSetArray = TestSetStatistics.loadTestSet_offline(
+				testSetFile, containHeader_testSet);
 		
-		return mutant_testSet_validTestCases;
+		return getMutant_testSet_ValidTestCases_online(testSetArray, mutantFile_date, 
+				containHeader_mutant, mutantDetailDir, containHeader_testing);
+		
 	}
 	
-	public static HashMap<String, Double> getFaultDetectionRate_detailed(String testSetFile, boolean containHeader_testSet,
+	/**2010-01-27: given some test sets and some mutants, return the fault detection rate
+	 * of each test set with respect to each mutant (online way is useful for test suite reduction)
+	 * 
+	 * @param testSets
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @return
+	 */
+	public static HashMap<String, Double> getFaultDetectionRate_detailed_online(ArrayList<TestSet> testSets,
 			String mutantFile_date, boolean containHeader_mutant, 
 			String mutantDetailDir, boolean containHeader_testing){
+		
 		HashMap<String, Double> mutant_FDR = new HashMap<String, Double>();
 		HashMap<String, HashMap<String, ArrayList<String>>> mutant_testSet_validTestCases = 
-			getValidTestCases_testSet_mutant(testSetFile, containHeader_testSet, 
+			getMutant_testSet_ValidTestCases_online(testSets,
 					mutantFile_date, containHeader_mutant, mutantDetailDir,
 					containHeader_testing);
 		
@@ -94,6 +169,7 @@ public class Reporter_Reduction {
 			String mutant = ite_mutant.next();
 			HashMap<String, ArrayList<String>> testSet_validTestCases = 
 				mutant_testSet_validTestCases.get(mutant);
+			
 			
 			Iterator<String> ite_testSet = testSet_validTestCases.keySet().iterator();
 			//2. if there is one valid test case with a test set, then this set is valid to kill this mutant
@@ -105,6 +181,7 @@ public class Reporter_Reduction {
 					validTestSet_counter ++;
 				}
 			}
+			
 			//3. FDR = the percentage of valid test sets
 			double FDR = (double)validTestSet_counter/(double)testSet_validTestCases.size();
 			mutant_FDR.put(mutant, FDR);
@@ -112,12 +189,67 @@ public class Reporter_Reduction {
 		return mutant_FDR;
 	}
 	
-	public static double getFaultDetectionRate_average(String testSetFile, boolean containHeader_testSet,
+
+	/**2010-01-27: given some test sets and some mutants, return the fault detection rate
+	 * of each test set with respect to each mutant (load adequate test sets from the file, 
+	 * which is useful for unit testing)
+	 * 
+	 * @param testSetFile
+	 * @param containHeader_testSet
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @return
+	 */
+	public static HashMap<String, Double> getFaultDetectionRate_detailed_offline(String testSetFile, boolean containHeader_testSet,
 			String mutantFile_date, boolean containHeader_mutant, 
 			String mutantDetailDir, boolean containHeader_testing){
+		
+		ArrayList<TestSet> testSets = TestSetStatistics.loadTestSet_offline(testSetFile, containHeader_testSet);
+		return getFaultDetectionRate_detailed_online(testSets, mutantFile_date, containHeader_mutant, 
+				mutantDetailDir, containHeader_testing);
+	}
+	
+	/**2010-01-27: given some criterion-adequate test sets and some mutants, 
+	 * return the averaged fault detection rate of the criterion with respect 
+	 * to these mutants (load test sets from the file, which is useful for unit testing) 
+	 * 
+	 * @param testSetFile
+	 * @param containHeader_testSet
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @return
+	 */
+	public static double getFaultDetectionRate_average_offline(String testSetFile, boolean containHeader_testSet,
+			String mutantFile_date, boolean containHeader_mutant, 
+			String mutantDetailDir, boolean containHeader_testing){
+		
+		ArrayList<TestSet> testSets = TestSetStatistics.loadTestSet_offline(testSetFile, containHeader_testSet);
+		return getFaultDetectionRate_average_online(testSets, mutantFile_date,
+				containHeader_mutant, mutantDetailDir, containHeader_testing);
+	}
+	
+	/**2010-01-27: given some criterion-adequate test sets and some mutants, 
+	 * return the averaged fault detection rate of the criterion with respect 
+	 * to these mutants (online way is useful for test suite reduction)
+	 * 
+	 * @param testSets
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @return
+	 */
+	public static double getFaultDetectionRate_average_online(ArrayList<TestSet> testSets, 
+			String mutantFile_date, boolean containHeader_mutant, 
+			String mutantDetailDir, boolean containHeader_testing){
+		
 		double FDR_average = 0.0;
-		HashMap<String, Double> mutant_FDR = getFaultDetectionRate_detailed(testSetFile,
-				containHeader_testSet, mutantFile_date, containHeader_mutant,
+		HashMap<String, Double> mutant_FDR = getFaultDetectionRate_detailed_online(testSets,
+				mutantFile_date, containHeader_mutant,
 				mutantDetailDir, containHeader_testing);
 		
 		Iterator<String> ite_mutant = mutant_FDR.keySet().iterator();
@@ -132,9 +264,67 @@ public class Reporter_Reduction {
 		return FDR_average; 
 	}
 	
+	/**2010-01-27: get fault detection rates of reduced test sets with respect to a set of mutants 
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param maxSize
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @return
+	 */
+	public static HashMap<Double, Double> getFaultDetectionRate_averaged_testSuiteReduction(String date, String criterion, int maxSize,
+			String mutantFile_date, boolean containHeader_mutant, 
+			String mutantDetailDir, boolean containHeader_testing){
+		
+		HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
+		HashMap<Double, TestSet> alpha_testSets = ILPSolver.buildAndSolveILPs(
+				date, criterion, maxSize);
+		
+		Double[] alphas = alpha_testSets.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);
+		ArrayList<TestSet> testSets = null; 
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];
+			
+			testSets = new ArrayList<TestSet>();
+			testSets.add(alpha_testSets.get(alpha));
+			
+			double fdr = getFaultDetectionRate_average_online(testSets,
+					mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing);
+			
+			alpha_fdr.put(alpha, fdr);
+		}
+		
+		return alpha_fdr;
+	}
+	
+	public static void saveToFile_alpha_fdr(HashMap<Double, Double> alpha_fdr, String saveFile){
+		
+		Double[] alphas = alpha_fdr.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("Alpha\tFaultDetectionRate\n");
+		
+		DecimalFormat format = new DecimalFormat("0.00000");
+		
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];			
+			double fdr = alpha_fdr.get(alpha);
+			sb.append(format.format(alpha)).append("\t").append(format.format(fdr)).append("\n");
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	public static void main(String[] args) {
 		String instruction = args[0];
-		if(instruction.equals("getFDR")){
+		if(instruction.equals("getFDR_offline")){
 			String date_testSets = "20091026";
 			String criterion = "AllPolicies";
 			int testSuiteSize = -1;
@@ -173,9 +363,34 @@ public class Reporter_Reduction {
 			boolean containHeader_testing = true;
 			boolean containHeader_mutant = false;
 			
-			double FDR = getFaultDetectionRate_average(testSetFile, 
+			long start = System.currentTimeMillis();
+			double FDR = getFaultDetectionRate_average_offline(testSetFile, 
 					containHeader_testSet, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing);
+			long duration = (System.currentTimeMillis() - start)/(1000*60);
+			System.out.println("It takes " + duration + " mins to process all faults");
 			System.out.println("the averaged fault detection rate:" + FDR);
+		}else if(instruction.equals("getFDR_reduction")){
+			String date = args[1];
+			String criterion = args[2];
+			int maxSize = Integer.parseInt(args[3]);
+			
+			String mutantFile_date = "20100121";
+			String mutantDetail_date = "20100121";
+			boolean containHeader_mutant = false;
+			boolean containHeader_testing = true;
+			
+			String mutantDetailDir = System.getProperty("user.dir") + "/src/ccr"
+			+ "/experiment/Context-Intensity_backup/TestHarness/" + mutantDetail_date
+			+ "/Mutant/";
+			
+			if(args.length > 5){
+				mutantFile_date = args[4];
+				mutantDetail_date = args[5];
+			}
+			
+			HashMap<Double, Double> alpha_fdr = getFaultDetectionRate_averaged_testSuiteReduction(date, criterion, maxSize, mutantFile_date,
+					containHeader_mutant, mutantDetailDir, containHeader_testing);
+			
 		}
 	}
 
