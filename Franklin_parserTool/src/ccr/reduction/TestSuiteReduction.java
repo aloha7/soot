@@ -39,8 +39,8 @@ public class TestSuiteReduction {
 	 * @param filename:file name to save the labeling results.
 	 * @return
 	 */
-	public static Vector saveProgramEles(Criterion criterion, String filename){
-		Vector programEles = new Vector();
+	public static ArrayList saveProgramEles(Criterion criterion, String filename){
+		ArrayList programEles = new ArrayList();
 		
 		NodeMap dus = criterion.DUMap;
 		NodeSet nodes = criterion.nodes;
@@ -90,7 +90,7 @@ public class TestSuiteReduction {
 		return programEles;
 	}
 	
-	public static Vector getStatisticsOfTestPool(String appClassName, String date, String criterion){
+	public static ArrayList getStatisticsOfTestPool(String appClassName, String date, String criterion){
 		//1.get the testing criterion
 		CFG g = new CFG(System.getProperty("user.dir")
 				+ "/src/ccr/app/TestCFG2.java");
@@ -106,27 +106,29 @@ public class TestSuiteReduction {
 		
 		//2.construct the program elements specified by a criterion
 		String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/" + "ElemLabels_" + criterion +".txt";	
-		Vector programEles = saveProgramEles(c, filename);
+			+ date + "/ILPModel/" + criterion + "/ElemLabels_" + criterion +".txt";	
+		ArrayList programEles = saveProgramEles(c, filename);
 		
 		//3.load all test cases in the test pool
 		String testPoolFile = "src/ccr/experiment/Context-Intensity_backup/" +
-				"TestHarness/TestPool.txt";
+				"TestHarness/" + date +"/TestPool.txt";
 		TestSet testpool = Adequacy.getTestPool(testPoolFile, true);
 		
+		long start = System.currentTimeMillis();
 		//4.get the statistics of all test cases in the test pool		
-		Vector<TestCase> statistics_TestCase = new Vector<TestCase>(); 
+		ArrayList<TestCase> statistics_TestCase = new ArrayList<TestCase>(); 
 		for(int i = 0; i < testpool.size(); i++){
 			String index = testpool.get(i);
 			System.out.println("Process test case:" + index);
 			TestCase t = getStaticsOfTestCase(appClassName, index, c, programEles);
 			statistics_TestCase.add(t);
 		}
-		
+		long duration = (System.currentTimeMillis() - start)/(1000*60);
+		System.out.println("It takes " + duration + " mins to process "+ testpool.size() + " test cases"); 
 		
 		//5.save and return the statistics of all test cases
 		filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date + "/" + "TestCaseStatistics_" + criterion + ".txt";
+			+ date + "/ILPModel/" + criterion + "/TestCaseStatistics_" + criterion + ".txt";
 		boolean writeHeader = true;
 		saveTestCases(statistics_TestCase, programEles, filename, writeHeader);
 		statistics_TestCase.clear();
@@ -144,10 +146,9 @@ public class TestSuiteReduction {
 	 * @param index
 	 * @return
 	 */
-	public static TestCase getStaticsOfTestCase(String appClassName, String index, Criterion c, Vector programEles){
+	public static TestCase getStaticsOfTestCase(String appClassName, String index, Criterion c, ArrayList programEles){
 		TestCase t = new TestCase();
 		t.index = index;
-		
 		TestCFG2_CI ins = new TestCFG2_CI();
 		
 		long startTime = System.currentTimeMillis();
@@ -161,8 +162,9 @@ public class TestSuiteReduction {
 		
 		t.execTrace = TestDriver.getTrace(appClassName, t.index);
 		
+		//elems -> cover times
 		t.coverFreq = TestSetManager.countDUCoverage(t.execTrace, c);		 
-		Vector hitSet = new Vector(programEles.size());
+		ArrayList hitSet = new ArrayList(programEles.size());
 		
 //		//2009-12-30: it may miss the PolicyNode takes the form of c33:P0
 //		int hitCounter = 0; //count how many elements has been hit
@@ -176,34 +178,33 @@ public class TestSuiteReduction {
 //			}
 //		}	
 		
-		//2009-12-30: for debugging purpose
+		//2009-12-30: need to organize coverage statistics based on programElems 
 		int hitCounter = 0;
 		int hitSum = 0;
-		HashMap hitSet_ele_coverTimes = new HashMap(); 
+		HashMap elem_coverTimes_hitSet = new HashMap(); 
 		String[] elems = (String[])t.coverFreq.keySet().toArray(new String[0]);
 		for(int i = 0; i < programEles.size(); i ++){
 			String elem = (String)programEles.get(i);
 			
 			boolean contain = false;
-			
 			for(int j = 0; j < elems.length; j ++){
 				if(elems[j].equals(elem) || (elem.contains("P") && elems[j].contains(elem))){ //elems[j] is a Node like "c72"
 					int cover_now = (Integer)t.coverFreq.get(elems[j]);
 					
-					if(hitSet_ele_coverTimes.containsKey(elem)){// this element has been counted before
-						int cover_before = (Integer)hitSet_ele_coverTimes.get(elem);						
-						hitSet_ele_coverTimes.put(elem, cover_before + cover_now);
+					if(elem_coverTimes_hitSet.containsKey(elem)){// this element has been counted before
+						int cover_before = (Integer)elem_coverTimes_hitSet.get(elem);						
+						elem_coverTimes_hitSet.put(elem, cover_before + cover_now);
 					}else{//this element is the first time to count
-						hitSet_ele_coverTimes.put(elem, cover_now);
+						elem_coverTimes_hitSet.put(elem, cover_now);
 						hitCounter ++;
 					}					
 					contain = true;					
 				}
 			}
-			if(!contain){
-				hitSet_ele_coverTimes.put(elem, 0);
+			if(!contain){ //if this elem has never been covered
+				elem_coverTimes_hitSet.put(elem, 0);
 			}
-			int coverTime = (Integer)hitSet_ele_coverTimes.get(elem);
+			int coverTime = (Integer)elem_coverTimes_hitSet.get(elem);
 			hitSet.add(coverTime);
 			hitSum += coverTime;
 		}
@@ -231,7 +232,7 @@ public class TestSuiteReduction {
 		return t;
 	}
 	
-	public static void saveTestCases(Vector testCases, Vector programEles, String filename, boolean writeHeader){
+	public static void saveTestCases(ArrayList testCases, ArrayList programEles, String filename, boolean writeHeader){
 		StringBuilder sb = new StringBuilder();
 		
 		//Header
@@ -270,10 +271,9 @@ public class TestSuiteReduction {
 	
 	public static void main(String[] args) {
 		String instruction = args[0];
-		if(instruction.equals("constructILPModel")){
-			String date = args[1];
-			String criterion = args[2];
-			
+		if(instruction.equals("getStatisticsOfTestCase")){
+			String date = args[1]; //20101220
+			String criterion = args[2];			
 			String appClassName = "TestCFG2_ins";			
 			getStatisticsOfTestPool(appClassName, date, criterion);
 		}
