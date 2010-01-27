@@ -20,8 +20,8 @@ public class Reporter_Reduction {
 		int tc_min = -10000;
 		int tc_max = 10000;
 		
-		long start = System.currentTimeMillis();
-		//get the valid test cases in each test set to kill a given mutant
+		
+		//1.get all valid test cases to kill a given mutant
 		for(int i = 0; i < mutantArray.size(); i ++){
 			String mutantID = mutantArray.get(i);
 			System.out.println("Processing faulty version:" + mutantID);
@@ -32,8 +32,7 @@ public class Reporter_Reduction {
 			
 			validTestCases_mutant.put(mutantID, validTestCases);
 		}		
-		long duration = (System.currentTimeMillis() - start)/(1000*60);
-		System.out.println("It takes " + duration + " mins to process " + mutantArray.size() + " faults");
+		
 		
 		return validTestCases_mutant;
 	}
@@ -56,22 +55,17 @@ public class Reporter_Reduction {
 		HashMap<String, HashMap<String, ArrayList<String>>> mutant_testSet_validTestCases = new 
 				HashMap<String, HashMap<String,ArrayList<String>>>();
 		
-		ArrayList<String> mutantArray = MutantStatistics.loadMutants_offline(mutantFile_date, containHeader_mutant);
-		ArrayList<TestSet> testSetArray = TestSetStatistics.loadTestSet_offline(testSetFile, containHeader_testSet);
-		String mutantDetailFile = null; 
-		int tc_min = -10000;
-		int tc_max = 10000;
-		
 		long start = System.currentTimeMillis();
-		for(int i = 0; i < mutantArray.size(); i ++){
-			String mutantID = mutantArray.get(i);
-			System.out.println("Processing faulty version:" + mutantID);
-			mutantDetailFile = mutantDetailDir + "/detailed_" + mutantID 
-			+ "_" + (Integer.parseInt(mutantID) + 1) + ".txt";
-			ArrayList<String> validTestCases = MutantStatistics.loadValidTestCases(mutantDetailFile, 
-					containHeader_testing, tc_min, tc_max);
+		HashMap<String, ArrayList<String>> mutant_validTestCases = getValidTestCases_mutant(mutantFile_date, 
+				containHeader_mutant, mutantDetailDir, containHeader_testing);
+		ArrayList<TestSet> testSetArray = TestSetStatistics.loadTestSet_offline(testSetFile, containHeader_testSet);
+
+		Iterator<String> ite_mutant = mutant_validTestCases.keySet().iterator();
+		while(ite_mutant.hasNext()){
+			String mutantID = ite_mutant.next();
+			ArrayList<String> validTestCases = mutant_validTestCases.get(mutantID);
 			
-			//get the valid test cases in each test set to kill a given mutant
+			//1. get the valid test cases in each test set to kill a given mutant
 			HashMap<String, ArrayList<String>> testSet_validTC = new HashMap<String, ArrayList<String>>();
 			for(int j = 0; j < testSetArray.size(); j++){
 				TestSet ts = testSetArray.get(j);
@@ -80,9 +74,11 @@ public class Reporter_Reduction {
 				testSet_validTC.put(ts.index, validTCArray);
 				mutant_testSet_validTestCases.put(mutantID, testSet_validTC);
 			}
-		}		
+		}
+		
 		long duration = (System.currentTimeMillis() - start)/(1000*60);
-		System.out.println("It takes " + duration + " mins to process " + mutantArray.size() + " faults");
+		System.out.println("It takes " + duration + " mins to process " + mutant_testSet_validTestCases.size() + " faults");
+		
 		return mutant_testSet_validTestCases;
 	}
 	
