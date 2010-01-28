@@ -16,8 +16,7 @@ import ccr.test.TestSet;
 public class Reporter_Reduction {
 	//2010-01-27: here is the cache
 	public static HashMap<String, ArrayList<String>> mutant_validTestCases_cache = new HashMap<String, ArrayList<String>>();
-	public static HashMap<String, HashMap<String, ArrayList<String>>> mutant_testSet_validTestCases_cache = 
-		new HashMap<String, HashMap<String,ArrayList<String>>>();
+	
 	
 	/**2010-01-27: decouple this from getValidTestCases_testSet_mutant()
 	 * to derive the failure rates of mutants
@@ -62,8 +61,7 @@ public class Reporter_Reduction {
 			}
 			
 			validTestCases_mutant.put(mutantID, validTestCases);
-		}		
-		
+		}
 		
 		return validTestCases_mutant;
 	}
@@ -96,9 +94,8 @@ public class Reporter_Reduction {
 			
 			//2010-01-27: use the cached mechanism to save execution time;
 			HashMap<String, ArrayList<String>> testSet_validTC = new HashMap<String, ArrayList<String>>();
-			if(mutant_testSet_validTestCases_cache.containsKey(mutantID)){
-				testSet_validTC = mutant_testSet_validTestCases_cache.get(mutantID);
-			}else{
+			
+			//2010-01-28: cannot use cache here since TestSet can change frequently
 				//1. get the valid test cases in each test set to kill a given mutant
 				ArrayList<String> validTestCases = mutant_validTestCases.get(mutantID);
 				for(int j = 0; j < testSetArray.size(); j++){
@@ -107,11 +104,8 @@ public class Reporter_Reduction {
 					ArrayList<String> validTCArray = TestDriver.getSharedTestCases(validTestCases,
 							testCases);
 					testSet_validTC.put(ts.index, validTCArray);
-		
-					//save it to the cache
-					mutant_testSet_validTestCases_cache.put(mutantID, testSet_validTC);
 				}				
-			}
+			
 			mutant_testSet_validTestCases.put(mutantID, testSet_validTC);
 		}
 		
@@ -264,24 +258,31 @@ public class Reporter_Reduction {
 		return FDR_average; 
 	}
 	
-	/**2010-01-27: get fault detection rates of reduced test sets with respect to a set of mutants 
+	/**2010-01-27: get fault detection rates of reduced test sets with respect to a set of mutants
 	 * 
 	 * @param date
 	 * @param criterion
-	 * @param maxSize
 	 * @param mutantFile_date
 	 * @param containHeader_mutant
 	 * @param mutantDetailDir
 	 * @param containHeader_testing
 	 * @return
 	 */
-	public static HashMap<Double, Double> getFaultDetectionRate_averaged_testSuiteReduction(String date, String criterion, int maxSize,
+	public static HashMap<Double, Double> getFaultDetectionRate_averaged_BILP(String date, String criterion,
 			String mutantFile_date, boolean containHeader_mutant, 
 			String mutantDetailDir, boolean containHeader_testing){
 		
 		HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
-		HashMap<Double, TestSet> alpha_testSets = ILPSolver.buildAndSolveILPs(
-				date, criterion, maxSize);
+		
+		//1. reduced test sets of single-objective ILP
+		TestSet testSet = ILPSolver.buildAndSolveILP_SingleObj_Manager(date, criterion);
+		
+		//2. reduced test sets of bi-criteria ILP		
+		int maxSize = testSet.size();
+		HashMap<Double, TestSet> alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, criterion, maxSize);
+		
+		//3. combine all test sets
+		alpha_testSets.put(Double.MIN_VALUE, testSet);
 		
 		Double[] alphas = alpha_testSets.keySet().toArray(new Double[0]);
 		Arrays.sort(alphas);
@@ -314,7 +315,11 @@ public class Reporter_Reduction {
 		for(int i = 0; i < alphas.length; i ++){
 			double alpha = alphas[i];			
 			double fdr = alpha_fdr.get(alpha);
-			sb.append(format.format(alpha)).append("\t").append(format.format(fdr)).append("\n");
+			if(alpha == Double.MIN_VALUE){
+				sb.append("SingleObj").append("\t").append(format.format(fdr)).append("\n");
+			}else{
+				sb.append(format.format(alpha)).append("\t").append(format.format(fdr)).append("\n");	
+			}
 		}
 		
 		Logger.getInstance().setPath(saveFile, false);
@@ -372,7 +377,6 @@ public class Reporter_Reduction {
 		}else if(instruction.equals("getFDR_reduction")){
 			String date = args[1];
 			String criterion = args[2];
-			int maxSize = Integer.parseInt(args[3]);
 			
 			String mutantFile_date = "20100121";
 			String mutantDetail_date = "20100121";
@@ -388,9 +392,13 @@ public class Reporter_Reduction {
 				mutantDetail_date = args[5];
 			}
 			
-			HashMap<Double, Double> alpha_fdr = getFaultDetectionRate_averaged_testSuiteReduction(date, criterion, maxSize, mutantFile_date,
+			HashMap<Double, Double> alpha_fdr = getFaultDetectionRate_averaged_BILP(date, criterion,
+					mutantFile_date,
 					containHeader_mutant, mutantDetailDir, containHeader_testing);
-			
+			String saveFile = System.getProperty("user.dir") + "/src/ccr"
+			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+			+ "/ILPModel/"+ criterion+"/FaultDetectionRate.txt";
+			saveToFile_alpha_fdr(alpha_fdr, saveFile);
 		}
 	}
 
