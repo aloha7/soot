@@ -240,14 +240,14 @@ public class ILPSolver {
 				TestCase tc = tcArray.get(i);		
 				double CR = tc.CI/Double.parseDouble(tc.length);
 				double weight = alpha - (1-alpha)*CR;
-				sb.append(" + " + new DecimalFormat("0.0000").format(weight) + " x"+ (i + 1));
+				sb.append(" + " + new DecimalFormat("0.0000").format(weight) + " x"+ i);
 			}
 			sb.append(";\n");
 
 			//2009-12-21: 2.2. size constraint: it specifies that the upper bound 
 			//of reduced test suite size
 			for(int i = 0; i < tcArray.size(); i ++){				
-				sb.append(" + x" + (i+1));
+				sb.append(" + 1 x" + i);
 			}
 			sb.append(" <= " + maxSize + ";\n");
 
@@ -331,6 +331,25 @@ public class ILPSolver {
 		return testSet;
 	}
 	
+	
+	
+	
+	
+	public static TestSet solveILPModel_SingleObj_Manager(String date, String criterion,
+			ArrayList<TestCase> tcArray){
+		
+		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj.lp";
+		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj.txt";
+		
+		System.out.println("\nStart to solve the model with the single objective");
+		TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
+		System.out.println("Finish to construct the model with the single objective\n");
+		
+		return testSet;
+	}
+	
 	public static ArrayList<TestCase> buildILPModel_SingleObj_Manager(String date, String criterion){
 		ArrayList<TestCase> testSet = null;
 		boolean containHeader = true;
@@ -345,9 +364,9 @@ public class ILPSolver {
 		}
 
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_single.lp";
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj.lp";
 		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_single.txt";			
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj.txt";			
 		testSet = buildILPModel_SingleObj(testcaseFile, containHeader, modelFile, infoFile);
 		
 		return testSet;
@@ -388,22 +407,6 @@ public class ILPSolver {
 		return testSet;
 	}
 	
-	public static TestSet solveILPModel_SingleObj_Manager(String date, String criterion,
-			ArrayList<TestCase> tcArray){
-		
-		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_single.lp";
-		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_single.txt";
-		
-		System.out.println("\nStart to solve the model with the single objective");
-		TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
-		System.out.println("Finish to construct the model with the single objective\n");
-		
-		return testSet;
-	}
-	
-	
 	/**2009-12-21: solve the ILP models with respect to different weighting factors
 	 * 
 	 * @param date:the directory to get the test case statistics
@@ -426,9 +429,9 @@ public class ILPSolver {
 			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + ".txt";
 			
-			System.out.println("\nStart to solve the model with weighting factor " + alpha);
+			System.out.println("\nStart to solve the model with weighting factor " + alpha_str);
 			TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
-			System.out.println("Finish to construct the model with weighting factor " + alpha + "\n");
+			System.out.println("Finish to construct the model with weighting factor " + alpha_str + "\n");
 			
 			alpha_testSet.put(alpha, testSet);
 		}
@@ -437,7 +440,7 @@ public class ILPSolver {
 		Arrays.sort(keys);
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append("Weigth").append("\t").append("ReducedTestSuiteSize").append("\n");
+		sb.append("Alpha").append("\t").append("ReducedTestSuiteSize").append("\n");
 		
 		for(int i = 0; i < keys.length; i ++){
 			sb.append(format.format(keys[i])).append("\t").append(alpha_testSet.get(keys[i]).size()).append("\n");
@@ -495,13 +498,13 @@ public class ILPSolver {
 	
 	public static void main(String[] args) {
 		String instruction = args[0];
-		if(instruction.equals("buildILPModel")){
+		if(instruction.equals("buildILP")){
 			String date = args[1];
 			String criterion = args[2];
 			int maxSize = Integer.parseInt(args[3]);
 			
 			buildILPModels_BiCriteria_Manager(date, criterion, maxSize);
-		}else if(instruction.equals("solveILPModel")){
+		}else if(instruction.equals("solveILP")){
 			String date = args[1];
 			String criterion = args[2];
 			int maxSize = Integer.parseInt(args[3]);
@@ -512,13 +515,13 @@ public class ILPSolver {
 			ArrayList<TestCase> tcArray = getStatisticsOfTestCase(testcaseFile, containHeader);
 			
 			solveILPModels_BiCriteria_Manager(date, criterion, tcArray, maxSize);
-		}else if(instruction.equals("buildAndSolveILPModel")){
+		}else if(instruction.equals("buildAndSolveILP")){
 			String date = args[1];
 			String criterion = args[2];
 			int maxSize = Integer.parseInt(args[3]);
 			
 			buildAndSolveILPs_BiCriteria_Manager(date, criterion, maxSize);
-		}else if(instruction.equals("buildILPModel_single")){
+		}else if(instruction.equals("buildAndSolveILP_SingleObj")){
 			String date = args[1];
 			String criterion = args[2];
 			
