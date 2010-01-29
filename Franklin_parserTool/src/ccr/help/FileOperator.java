@@ -684,6 +684,90 @@ public class FileOperator {
 		return input;
 	}
 	
+	
+	public static HashMap<Integer, Integer> countConstraintDiff(String srcFile, String destFile, boolean containHeader){
+		HashMap<Integer, Integer> constraint_diff = new HashMap<Integer, Integer>();
+		
+		File src = new File(srcFile);
+		File dest = new File(destFile);
+		
+		if(src.exists() && dest.exists()){
+			try {
+				BufferedReader br_src =	new BufferedReader(new FileReader(srcFile));
+				BufferedReader br_dest = new BufferedReader(new FileReader(destFile));
+				
+				ArrayList<int[]> src_constraints = new ArrayList<int[]>();
+				ArrayList<int[]> dest_constraints = new ArrayList<int[]>();
+				
+				if(containHeader){
+					br_src.readLine();
+					br_dest.readLine();
+				}
+				
+				String str_src = null;
+				while((str_src = br_src.readLine())!= null){
+					String[] strs = str_src.split("\t");
+//					Integer[] constraint = new Integer[strs.length - 6];
+//					for(int i = 6; i < strs.length; i ++){
+//						constraint[i - 6] = Integer.parseInt(strs[i]);
+//					}
+					
+					//for All2ResolvedDU
+					int[] constraint = new int[1];
+					constraint[0] = Integer.parseInt(strs[3]);
+					src_constraints.add(constraint);
+				}
+				
+				String str_dest = null;
+				while((str_dest = br_dest.readLine())!= null){
+					String[] strs = str_dest.split("\t");
+					
+					
+//					Integer[] constraint = new Integer[strs.length -6];
+//					for(int i = 6; i < strs.length; i ++){
+//						constraint[i - 6] = Integer.parseInt(strs[i]);
+//					}
+					
+					//for All2ResolvedDU
+					int[] constraint = new int[1];
+					constraint[0] = Integer.parseInt(strs[5]);
+					
+					dest_constraints.add(constraint);
+				}
+				
+				
+				
+				if(src_constraints.size() == dest_constraints.size()){
+					for(int i = 0; i < src_constraints.size(); i ++){
+						int[] constraint_src = src_constraints.get(i);
+						int[] constraint_dest = dest_constraints.get(i);
+						int counter = 0;
+						for(int j = 0; j < constraint_src.length; j++){
+							if(constraint_src[j] != constraint_dest[j]){
+								counter ++;
+							}
+						}
+						if(counter!=0){
+							constraint_diff.put(i, counter);	
+						}
+					}
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+		}else{
+			System.out.println("[FileOperator.countConstraintDiff]File:" + srcFile + " does not exist!");
+		}
+		 
+		return constraint_diff;
+	}
+	
 	public static void main(String[] args){
 		String instruction = args[0];
 		if(instruction.equals("getMissingFault")){
@@ -714,6 +798,18 @@ public class FileOperator {
 			String alpha = args[2];	
 //			FileOperator.mapIDInputs(date, containHeader, alpha);
 			FileOperator.mapIDInputs_left(date, containHeader, alpha);
+		}else if(instruction.equals("compareConstraints")){
+			String date_src = args[1];
+			String date_dest = args[2];
+			String criterion = args[3];
+			boolean containHeader = true;
+			
+			String srcFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date_src + "/ILPModel/" + criterion + "/TestCaseStatistics_" + criterion + ".txt";
+			String destFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date_dest + "/ILPModel/" + criterion + "/TestCaseStatistics_" + criterion + ".txt";
+			HashMap<Integer, Integer> constraint_diff = FileOperator.countConstraintDiff(srcFile, destFile, containHeader);
+			System.out.println(constraint_diff);
 		}
 		
 		
