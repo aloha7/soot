@@ -122,12 +122,12 @@ public class TestSuiteReduction {
 		ArrayList<TestCase> statistics_TestCase = new ArrayList<TestCase>(); 
 		for(int i = 0; i < testpool.size(); i++){
 			TestCase tc = testpool.get(i);
-			System.out.println("Process test case:" + tc.index);
+			System.out.println("[TestSuiteReduction.getStatisticsOfTestPool]Process test case:" + tc.index);
 			TestCase t = getStaticsOfTestCase(appClassName, tc, c, programEles);
 			statistics_TestCase.add(t);
 		}
 		long duration = (System.currentTimeMillis() - start)/(1000*60);
-		System.out.println("It takes " + duration + " mins to process "+ testpool.size() + " test cases"); 
+		System.out.println("[TestSuiteReduction.getStatisticsOfTestPool]It takes " + duration + " mins to process "+ testpool.size() + " test cases"); 
 		
 		//5.save and return the statistics of all test cases
 		filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
