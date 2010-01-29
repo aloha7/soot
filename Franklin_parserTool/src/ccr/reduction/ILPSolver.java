@@ -343,9 +343,9 @@ public class ILPSolver {
 		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj.txt";
 		
-		System.out.println("\nStart to solve the model with the single objective");
+		System.out.println("\n[ILPSolver.solveILPModel_SingleObje_Manager]Start to solve the model with the single objective");
 		TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
-		System.out.println("Finish to construct the model with the single objective\n");
+		System.out.println("[ILPSolver.solveILPModel_SingleObje_Manager]Finish to solve the model with the single objective\n");
 		
 		return testSet;
 	}
@@ -422,16 +422,16 @@ public class ILPSolver {
 				
 		DecimalFormat format = new DecimalFormat("0.0");
 		
-		for(double alpha = 0.0; alpha <=1.0; alpha = alpha + 0.1){
+		for(double alpha = 0.0; alpha <=0.8; alpha = alpha + 0.1){
 			String alpha_str = format.format(alpha);
 			String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize +".lp";
 			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + ".txt";
 			
-			System.out.println("\nStart to solve the model with weighting factor " + alpha_str);
+			System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model with weighting factor " + alpha_str);
 			TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
-			System.out.println("Finish to construct the model with weighting factor " + alpha_str + "\n");
+			System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]Finish to solve the model with weighting factor " + alpha_str + "\n");
 			
 			alpha_testSet.put(alpha, testSet);
 		}
