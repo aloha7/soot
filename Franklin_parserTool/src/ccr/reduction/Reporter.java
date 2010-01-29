@@ -42,7 +42,7 @@ public class Reporter_Reduction {
 		for(int i = 0; i < mutantArray.size(); i ++){
 			String mutantID = mutantArray.get(i);
 			
-			System.out.println("Processing faulty version:" + mutantID);
+			System.out.println("[Reporter_Reduction.getMutant_ValidTestCases_offline]Processing faulty version:" + mutantID);
 			ArrayList<String> validTestCases = null;
 			
 			//2010-01-27: use the cache mechanism to save execution time
@@ -275,14 +275,15 @@ public class Reporter_Reduction {
 		HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
 		
 		//1. reduced test sets of single-objective ILP
-		TestSet testSet = ILPSolver.buildAndSolveILP_SingleObj_Manager(date, criterion);
+//		TestSet testSet = ILPSolver.buildAndSolveILP_SingleObj_Manager(date, criterion);
 		
 		//2. reduced test sets of bi-criteria ILP		
-		int maxSize = testSet.size();
+//		int maxSize = testSet.size();
+		int maxSize = 60;
 		HashMap<Double, TestSet> alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, criterion, maxSize);
 		
 		//3. combine all test sets
-		alpha_testSets.put(Double.MIN_VALUE, testSet);
+//		alpha_testSets.put(Double.MIN_VALUE, testSet);
 		
 		Double[] alphas = alpha_testSets.keySet().toArray(new Double[0]);
 		Arrays.sort(alphas);
@@ -375,7 +376,10 @@ public class Reporter_Reduction {
 			System.out.println("It takes " + duration + " mins to process all faults");
 			System.out.println("the averaged fault detection rate:" + FDR);
 		}else if(instruction.equals("getFDR_reduction")){
+			long start = System.currentTimeMillis();
 			String date = args[1];
+			
+			//AllPolicies,All1ResolvedDU,All2ResolvedDU,AllStatement
 			String criterion = args[2];
 			
 			String mutantFile_date = "20100121";
@@ -387,9 +391,9 @@ public class Reporter_Reduction {
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + mutantDetail_date
 			+ "/Mutant/";
 			
-			if(args.length > 5){
-				mutantFile_date = args[4];
-				mutantDetail_date = args[5];
+			if(args.length > 4){
+				mutantFile_date = args[3];
+				mutantDetail_date = args[4];
 			}
 			
 			HashMap<Double, Double> alpha_fdr = getFaultDetectionRate_averaged_BILP(date, criterion,
@@ -399,6 +403,9 @@ public class Reporter_Reduction {
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
 			+ "/ILPModel/"+ criterion+"/FaultDetectionRate.txt";
 			saveToFile_alpha_fdr(alpha_fdr, saveFile);
+			
+			long duration = System.currentTimeMillis() - start;
+			System.out.println("It takes " + duration/(1000*60) + " mins for " + criterion);
 		}
 	}
 
