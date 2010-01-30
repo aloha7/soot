@@ -285,47 +285,51 @@ public class ILPSolver {
 		ArrayList<String> selectedTestCases = new ArrayList<String>();
 		
 		StringBuilder infoRecorder = new StringBuilder();
-		try {						
-			LpSolve solver = LpSolve.readLp(modelFile, LpSolve.CRITICAL, null);
+		File tmp = new File(modelFile);
+		if(tmp.exists()){
+			try {						
+				LpSolve solver = LpSolve.readLp(modelFile, LpSolve.CRITICAL, null);
 
-			long startTime = System.currentTimeMillis();
-			int ret = solver.solve();
-			long exeTime = System.currentTimeMillis() - startTime;
-			infoRecorder.append("Execute Time:").append(exeTime/(double)1000).append(" s\n");
-			
-			if(ret == LpSolve.OPTIMAL)
-				ret = 0;
-			else
-				ret = 5;
-			
-			if(ret == 0){ //solve the problem successfully				
-				double[] var = solver.getPtrVariables();
-				for(int i = 0; i < var.length; i ++){
-					if(var[i]==1){
-						String index = tcArray.get(i).index;
-						selectedTestCases.add(index);
-						
+				long startTime = System.currentTimeMillis();
+				int ret = solver.solve();
+				long exeTime = System.currentTimeMillis() - startTime;
+				infoRecorder.append("Execute Time:").append(exeTime/(double)1000).append(" s\n");
+				
+				if(ret == LpSolve.OPTIMAL)
+					ret = 0;
+				else
+					ret = 5;
+				
+				if(ret == 0){ //solve the problem successfully				
+					double[] var = solver.getPtrVariables();
+					for(int i = 0; i < var.length; i ++){
+						if(var[i]==1){
+							String index = tcArray.get(i).index;
+							selectedTestCases.add(index);
+							
+						}
 					}
+					
+					infoRecorder.append("Reduced Test Suite Size:").append(selectedTestCases.size()).append("\n");
+					infoRecorder.append("Selected Test Cases:").append("\n");
+					for(int i = 0; i < selectedTestCases.size(); i ++){
+						infoRecorder.append(selectedTestCases.get(i) + ",");
+					}
+					
+				}else{
+					infoRecorder.append("cannot get the solution");
 				}
 				
-				infoRecorder.append("Reduced Test Suite Size:").append(selectedTestCases.size()).append("\n");
-				infoRecorder.append("Selected Test Cases:").append("\n");
-				for(int i = 0; i < selectedTestCases.size(); i ++){
-					infoRecorder.append(selectedTestCases.get(i) + ",");
-				}
-				
-			}else{
-				infoRecorder.append("cannot get the solution");
-			}
-			
-			Logger.getInstance().setPath(infoFile, true);//append execution info into the file
-			Logger.getInstance().write(infoRecorder.toString());
-			Logger.getInstance().close();
+				Logger.getInstance().setPath(infoFile, true);//append execution info into the file
+				Logger.getInstance().write(infoRecorder.toString());
+				Logger.getInstance().close();
 
-		} catch (LpSolveException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}		
+			} catch (LpSolveException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		
+		}
+		
 		
 		testSet.testcases = selectedTestCases;
 		return testSet;
@@ -372,14 +376,20 @@ public class ILPSolver {
 		return testSet;
 	}
 	
+	
+
 	/**2009-12-21: build multiple ILP models with respect to different weighting factors
 	 * 
 	 * @param date: the directory to get the test case statistics
 	 * @param criterion: the testing criterion
+	 * @param alpha_min: inclusive
+	 * @param alpha_max: exclusive
+	 * @param alpha_interval
 	 * @param maxSize: the upper bound of the reduced test suite
-	 * @return
-	 */
-	public static ArrayList<TestCase> buildILPModels_BiCriteria_Manager(String date, String criterion, int maxSize){
+	 * @return: the ordered test cases to be referred by model solver  
+	 */	
+	public static ArrayList<TestCase> buildILPModels_BiCriteria_Manager(String date, String criterion,
+			double alpha_min, double alpha_max, double alpha_interval, int maxSize){
 		
 		ArrayList<TestCase> testSet = null;
 		boolean containHeader = true;
@@ -395,7 +405,8 @@ public class ILPSolver {
 		
 		DecimalFormat format = new DecimalFormat("0.0");
 	
-		for(double alpha = 0.0; alpha <=1.0; alpha = alpha + 0.1){
+		//2010-01-30: specify the alpha range
+		for(double alpha = alpha_min; alpha < alpha_max; alpha = alpha + alpha_interval){
 			String alpha_str = format.format(alpha);
 			String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize +".lp";
@@ -404,36 +415,44 @@ public class ILPSolver {
 			testSet = buildILPModel_BiCriteria(testcaseFile, containHeader, alpha, modelFile, infoFile, maxSize);
 		}
 		
+		
 		return testSet;
 	}
+	
 	
 	/**2009-12-21: solve the ILP models with respect to different weighting factors
 	 * 
 	 * @param date:the directory to get the test case statistics
 	 * @param criterion: the testing criterion
 	 * @param tcArray: the list of test cases
+	 * @param alpha_min: inclusive
+	 * @param alpha_max: exclusive
+	 * @param alpha_interval 
 	 * @param maxSize: the size constraint
-	 * @return
+	 * @return: alpha -> reduced test sets
 	 */
 	public static HashMap<Double, TestSet> solveILPModels_BiCriteria_Manager(String date, String criterion,
-			ArrayList<TestCase> tcArray, int maxSize){
+			ArrayList<TestCase> tcArray,double alpha_min, double alpha_max, double alpha_interval, int maxSize){
 		
 		HashMap<Double, TestSet> alpha_testSet = new HashMap<Double, TestSet>();
 				
 		DecimalFormat format = new DecimalFormat("0.0");
 		
-		for(double alpha = 0.0; alpha <=0.8; alpha = alpha + 0.1){
+		for(double alpha = alpha_min; alpha <alpha_max; alpha = alpha + alpha_interval){
 			String alpha_str = format.format(alpha);
 			String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize +".lp";
 			String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + ".txt";
 			
-			System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model with weighting factor " + alpha_str);
+			System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model with weighting factor:" + alpha_str);
 			TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
-			System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]Finish to solve the model with weighting factor " + alpha_str + "\n");
-			
-			alpha_testSet.put(alpha, testSet);
+			System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]Finish to solve the model with weighting factor:" + alpha_str + "\n");
+			if(testSet.size() > 0){
+				alpha_testSet.put(alpha, testSet);	
+			}else{
+				System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]cannot solve the model with weighting factor:" + alpha_str + "\n");
+			}
 		}
 		
 		Double[] keys = alpha_testSet.keySet().toArray(new Double[1]); 
@@ -460,9 +479,14 @@ public class ILPSolver {
 	 * @param maxSize
 	 * @return
 	 */
-	public static HashMap<Double, TestSet> buildAndSolveILPs_BiCriteria_Manager(String date, String criterion, int maxSize){
-		ArrayList<TestCase> tcArray = buildILPModels_BiCriteria_Manager(date, criterion, maxSize);
-		return solveILPModels_BiCriteria_Manager(date, criterion, tcArray, maxSize);
+	public static HashMap<Double, TestSet> buildAndSolveILPs_BiCriteria_Manager(String date, String criterion, 
+			double alpha_min, double alpha_max, double alpha_interval, int maxSize){
+		
+		ArrayList<TestCase> tcArray = buildILPModels_BiCriteria_Manager(date, criterion,
+				alpha_min, alpha_max, alpha_interval, maxSize);
+		
+		return solveILPModels_BiCriteria_Manager(date, criterion, tcArray,
+				alpha_min, alpha_max, alpha_interval, maxSize);
 	}
 		
 	public static TestSet buildAndSolveILP_SingleObj_Manager(String date, String criterion){
@@ -502,25 +526,54 @@ public class ILPSolver {
 			String date = args[1];
 			String criterion = args[2];
 			int maxSize = Integer.parseInt(args[3]);
+			double alpha_min = 0.0;
+			double alpha_max = 1.1;
+			double alpha_interval = 0.1;
+			if(args.length == 7){
+				alpha_min = Double.parseDouble(args[4]);
+				alpha_max = Double.parseDouble(args[5]);
+				alpha_interval = Double.parseDouble(args[6]);
+			}
 			
-			buildILPModels_BiCriteria_Manager(date, criterion, maxSize);
+			buildAndSolveILPs_BiCriteria_Manager(date, criterion,
+					alpha_min, alpha_max, alpha_interval, maxSize);
 		}else if(instruction.equals("solveILP")){
 			String date = args[1];
 			String criterion = args[2];
 			int maxSize = Integer.parseInt(args[3]);
+			
+			double alpha_min = 0.0;
+			double alpha_max = 1.1;
+			double alpha_interval = 0.1;
+			if(args.length == 7){
+				alpha_min = Double.parseDouble(args[4]);
+				alpha_max = Double.parseDouble(args[5]);
+				alpha_interval = Double.parseDouble(args[6]);
+			}
 			
 			String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/"+ criterion + "/TestCaseStatistics_" + criterion + ".txt";
 			boolean containHeader = true;
 			ArrayList<TestCase> tcArray = getStatisticsOfTestCase(testcaseFile, containHeader);
 			
-			solveILPModels_BiCriteria_Manager(date, criterion, tcArray, maxSize);
+			solveILPModels_BiCriteria_Manager(date, criterion,
+					tcArray, alpha_min, alpha_max, alpha_interval, maxSize);
 		}else if(instruction.equals("buildAndSolveILP")){
 			String date = args[1];
 			String criterion = args[2];
 			int maxSize = Integer.parseInt(args[3]);
 			
-			buildAndSolveILPs_BiCriteria_Manager(date, criterion, maxSize);
+			double alpha_min = 0.0;
+			double alpha_max = 1.1;
+			double alpha_interval = 0.1;
+			if(args.length == 7){
+				alpha_min = Double.parseDouble(args[4]);
+				alpha_max = Double.parseDouble(args[5]);
+				alpha_interval = Double.parseDouble(args[6]);
+			}
+			
+			buildAndSolveILPs_BiCriteria_Manager(date, criterion, 
+					alpha_min, alpha_max, alpha_interval, maxSize);
 		}else if(instruction.equals("buildAndSolveILP_SingleObj")){
 			String date = args[1];
 			String criterion = args[2];

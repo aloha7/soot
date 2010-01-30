@@ -266,11 +266,14 @@ public class Reporter_Reduction {
 	 * @param containHeader_mutant
 	 * @param mutantDetailDir
 	 * @param containHeader_testing
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
 	 * @return
 	 */
 	public static HashMap<Double, Double> getFaultDetectionRate_averaged_BILP(String date, String criterion,
 			String mutantFile_date, boolean containHeader_mutant, 
-			String mutantDetailDir, boolean containHeader_testing){
+			String mutantDetailDir, boolean containHeader_testing, double alpha_min, double alpha_max, double alpha_interval){
 		
 		HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
 		
@@ -280,7 +283,8 @@ public class Reporter_Reduction {
 		//2. reduced test sets of bi-criteria ILP		
 //		int maxSize = testSet.size();
 		int maxSize = 60;
-		HashMap<Double, TestSet> alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, criterion, maxSize);
+		HashMap<Double, TestSet> alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, 
+				criterion, alpha_min, alpha_max, alpha_interval, maxSize); 
 		
 		//3. combine all test sets
 //		alpha_testSets.put(Double.MIN_VALUE, testSet);
@@ -391,14 +395,24 @@ public class Reporter_Reduction {
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + mutantDetail_date
 			+ "/Mutant/";
 			
-			if(args.length > 4){
+			if(args.length == 5){
 				mutantFile_date = args[3];
 				mutantDetail_date = args[4];
 			}
 			
-			HashMap<Double, Double> alpha_fdr = getFaultDetectionRate_averaged_BILP(date, criterion,
-					mutantFile_date,
-					containHeader_mutant, mutantDetailDir, containHeader_testing);
+			double alpha_min = 0.0;
+			double alpha_max = 1.1;
+			double alpha_interval = 0.1;
+			if(args.length == 6){
+				alpha_min = Double.parseDouble(args[3]);
+				alpha_max = Double.parseDouble(args[4]);
+				alpha_interval = Double.parseDouble(args[5]);
+			}
+			
+			HashMap<Double, Double> alpha_fdr = getFaultDetectionRate_averaged_BILP(date,
+					criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
+					alpha_min, alpha_max, alpha_interval); 
+				
 			String saveFile = System.getProperty("user.dir") + "/src/ccr"
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
 			+ "/ILPModel/"+ criterion+"/FaultDetectionRate.txt";
