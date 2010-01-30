@@ -271,41 +271,40 @@ public class Reporter_Reduction {
 	 * @param alpha_interval
 	 * @param maxSize: less than 1 means to enable the single-objective ILP model 
 	 * and use its reduced test set size as the beta value. 
+	 * @param testSetNum
 	 * @return
 	 */
 	public static HashMap<Double, Double> getFaultDetectionRate_averaged_BILP(String date, String criterion,
 			String mutantFile_date, boolean containHeader_mutant, 
 			String mutantDetailDir, boolean containHeader_testing, double alpha_min, double alpha_max, 
-			double alpha_interval, int maxSize){
+			double alpha_interval, int maxSize, int testSetNum){
 
 		HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
 		
-		HashMap<Double, TestSet> alpha_testSets  = new HashMap<Double, TestSet>();
+		HashMap<Double, ArrayList<TestSet>> alpha_testSets  = new HashMap<Double, ArrayList<TestSet>>();
 		
-		TestSet testSet = null;
+		ArrayList<TestSet> testSets = null;
 		if(maxSize < 1){ 
 			//1. reduced test sets of single-objective ILP
-			testSet = ILPSolver.buildAndSolveILP_SingleObj_Manager(date, criterion);		
-			maxSize = testSet.size();
+			testSets = ILPSolver.buildAndSolveILP_SingleObj_Manager(date, criterion, testSetNum);				
+			maxSize = testSets.get(0).size();
 		}
 		
-		//2. reduced test sets of bi-criteria ILP		
-		alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, 
-				criterion, alpha_min, alpha_max, alpha_interval, maxSize); 
+		//2. reduced test sets of bi-criteria ILP
+		alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max, 
+				alpha_interval, maxSize, testSetNum);
+		
 		
 		//3. combine all test sets
-		if(testSet != null){ //single-objective ILP is enabled
-			alpha_testSets.put(Double.MIN_VALUE, testSet);
+		if(testSets != null){ //single-objective ILP is enabled
+			alpha_testSets.put(Double.MIN_VALUE, testSets);
 		}
 		
 		Double[] alphas = alpha_testSets.keySet().toArray(new Double[0]);
-		Arrays.sort(alphas);
-		ArrayList<TestSet> testSets = null; 
+		Arrays.sort(alphas);		
 		for(int i = 0; i < alphas.length; i ++){
 			double alpha = alphas[i];
-			
-			testSets = new ArrayList<TestSet>();
-			testSets.add(alpha_testSets.get(alpha));
+			ArrayList<TestSet> reducedTestSets = alpha_testSets.get(alpha);
 			
 			double fdr = getFaultDetectionRate_average_online(testSets,
 					mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing);
@@ -394,6 +393,7 @@ public class Reporter_Reduction {
 			//AllPolicies,All1ResolvedDU,All2ResolvedDU,AllStatement
 			String criterion = args[2];
 			int sizeConstraint = Integer.parseInt(args[3]);
+			int testSetNum = Integer.parseInt(args[4]);
 			
 			String mutantFile_date = "20100121";
 			String mutantDetail_date = "20100121";
@@ -404,23 +404,23 @@ public class Reporter_Reduction {
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + mutantDetail_date
 			+ "/Mutant/";
 			
-			if(args.length == 6){
-				mutantFile_date = args[4];
-				mutantDetail_date = args[5];
+			if(args.length == 7){
+				mutantFile_date = args[5];
+				mutantDetail_date = args[6];
 			}
 			
 			double alpha_min = 0.0;
 			double alpha_max = 1.1;
 			double alpha_interval = 0.1;
-			if(args.length == 7){
-				alpha_min = Double.parseDouble(args[4]);
-				alpha_max = Double.parseDouble(args[5]);
-				alpha_interval = Double.parseDouble(args[6]);
+			if(args.length == 8){
+				alpha_min = Double.parseDouble(args[5]);
+				alpha_max = Double.parseDouble(args[6]);
+				alpha_interval = Double.parseDouble(args[7]);
 			}
 			
 			HashMap<Double, Double> alpha_fdr = getFaultDetectionRate_averaged_BILP(date,
 					criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
-					alpha_min, alpha_max, alpha_interval, sizeConstraint); 
+					alpha_min, alpha_max, alpha_interval, sizeConstraint, testSetNum); 
 				
 			String saveFile = System.getProperty("user.dir") + "/src/ccr"
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
