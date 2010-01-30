@@ -79,6 +79,89 @@ public class ILPSolver {
 		return sb.toString();
 	}
 	
+	public static String buildCoverageConstraints(double alpha, ArrayList<TestCase> tcArray, 
+			String infoFile){
+		
+		int rowNo = tcArray.get(0).hitSet.size();
+		StringBuilder infoRecorder = new StringBuilder();
+		
+		
+		infoRecorder.append("--------------------------------------------------------------------------").append("\n");
+		//there is no alpha for single-objective ILP models
+		if(alpha != Double.MIN_VALUE){
+			infoRecorder.append("Weight factor: " + alpha).append("\n");	
+		}		
+		infoRecorder.append("Before dimension reduction:").append("\n");
+		infoRecorder.append("ProgramElement:").append(rowNo).append("\n");
+		infoRecorder.append("TestCase:").append(tcArray.size()).append("\n");
+		
+		ArrayList<Integer[]> constraints = new ArrayList<Integer[]>();		
+		int infeasible_constraint_counter = 0;
+		int equivalent_constraint_counter = 0;
+		StringBuffer sb_constraints = new StringBuffer();
+		
+		for(int i = 0; i < rowNo; i ++){ //for each constraint of a program element				
+			Integer[] constraint = new Integer[tcArray.size()];
+			for(int j = 0; j < constraint.length; j ++){
+				ArrayList<Integer> hitSet= tcArray.get(j).hitSet; 
+				constraint[j] = hitSet.get(i); // we list all coverage of test cases with respect to each program element(constraint)  
+			}
+			
+			//eliminate all infeasible and equivalent program elements				
+			int sumHit = 0;
+			for(int j = 0; j < constraint.length; j++){
+				sumHit += constraint[j];
+			}
+			if(sumHit != 0){ //a program element is infeasible if no test case can cover it
+				//2009-12-20: note that we should remove any equivalent constraints here
+				if(!isMemberOf(constraints, constraint)){
+					constraints.add(constraint);	
+				}else{
+					equivalent_constraint_counter ++;
+				}
+			}else{
+				infeasible_constraint_counter ++;
+			}
+		}
+		
+		infoRecorder.append("After dimension reduction:").append("\n");			
+		//2010-01-27:the number of constraints is (constraints.size + 1)
+		//rather than (constraints.size()) 
+		infoRecorder.append("ProgramElement:").append(constraints.size() + 1).
+			append("(").append(rowNo + 1).append(" exclude infeasible:").append(infeasible_constraint_counter).append(",").
+			append("equivalent:").append(equivalent_constraint_counter).append(")").append("\n");
+		infoRecorder.append("TestCase:").append(tcArray.size()).append("\n");
+		infoRecorder.append("--------------------------------------------------------------------------").append("\n");
+		
+		//save all into (coverage matrix of all test cases with respect to program elements)
+		for(int i = 0; i < constraints.size(); i ++){
+			Integer[] constraint = constraints.get(i);
+			for(int j = 0; j < constraint.length; j ++){
+				//2010-01-27: ignore the constraint when the coefficient is 0
+				if(constraint[j]!=0){
+					sb_constraints.append(" + " + constraint[j] + " x" + j);	
+				}
+			}
+			sb_constraints.append(" >= 1;\n");
+		}	
+		
+		//2010-01-30: decouple this due to the disabled constraints
+//		sb_constraints.append("bin "); //specify the binary variables			
+//		for(int i = 0; i < tcArray.size()-1; i ++){
+//			sb_constraints.append("x"+ i + ", ");
+//		}
+//		sb_constraints.append("x" + (tcArray.size()-1) +";");
+		
+		String constraintString = sb_constraints.toString();
+	
+	
+		//save the information file
+		Logger.getInstance().setPath(infoFile, false);
+		Logger.getInstance().write(infoRecorder.toString());
+		Logger.getInstance().close();
+		
+		return constraintString;
+	}
 	
 	public static String buildCoverageConstraints(double alpha, ArrayList<TestCase> tcArray, 
 			String infoFile, String constraintFile){
@@ -144,8 +227,7 @@ public class ILPSolver {
 				}
 			}
 			sb_constraints.append(" >= 1;\n");
-		}
-		sb_constraints.append("\n");
+		}	
 		
 		//2010-01-30: decouple this due to the disabled constraints
 //		sb_constraints.append("bin "); //specify the binary variables			
@@ -170,15 +252,45 @@ public class ILPSolver {
 	
 	public static ArrayList<TestCase> buildILPModel_SingleObj(String testcaseFile, boolean containHeader,
 			String modelFile, String infoFile, ArrayList<TestSet> testSets){
-		
+	
 		ArrayList<TestCase> tcArray = null; 
 		//1. read info of all test cases
 		tcArray = getStatisticsOfTestCase(testcaseFile, containHeader);
 		int rowNo = tcArray.get(0).hitSet.size();
 		
-		//2.create ILP model
-		StringBuilder sb = new StringBuilder();
+		//2010-01-30: 
+		//2. exclude disabled test cases which have been used before;			
+		if(testSets.size() > 0){ //exclude all used test cases
+			
+			ArrayList<String> testCases_disabled = new ArrayList<String>();
+			//a. get all indexes of disabled test cases which are used before 
+			for(int i = 0; i < testSets.size(); i ++){
+				ArrayList<String> testcases = testSets.get(i).testcases;									
+				for(int j = 0; j < testcases.size(); j ++){
+					String testCase = testcases.get(j);
+					if(!testCases_disabled.contains(testCase)){
+						testCases_disabled.add(testCase);	
+					}
+				}
+			}
+			
+			ArrayList<TestCase> tcArray_enabled = new ArrayList<TestCase>();
+			//b. exclude disable test cases from current test pool				
+			for(int i = 0; i < tcArray.size(); i ++){
+				TestCase tc = tcArray.get(i);
+				if(!testCases_disabled.contains(tc.index)){
+					tcArray_enabled.add(tc);
+				}
+			}
+			
+			//c.update the tcArray
+			tcArray = tcArray_enabled;
+		}
 		
+		//2.create LP file: convert program element(row) * testcases(column) 
+		//into the matrix of testcases(row)* program elements(column)
+		StringBuilder sb = new StringBuilder();
+
 		//2.1. build the objective function
 		sb.append("min:");			
 		for(int i = 0; i < tcArray.size(); i ++){			
@@ -187,50 +299,29 @@ public class ILPSolver {
 		sb.append(";\n");
 
 		//2.2. no size constraints
+		
 
-		//2.3. build coverage constraints
-		String coverageConstraints = null;
-		File constraintsFile = new File(new File(modelFile).getParent() + "/Constraints.txt");
-		if(constraintsFile.exists()){	
-			//2.3: load the coverage constraints
-			coverageConstraints = loadCoverageConstraints(constraintsFile.getPath(), false);
-		}else{
-			//2.create constraints if the constraints file does not exist, 								 								
-			coverageConstraints = buildCoverageConstraints(Double.MIN_VALUE, tcArray, infoFile, constraintsFile.getPath());
-		}
+		//2010-01-27: 
+		//2.3. coverage constraint: check whether the constraint file exists or not
+		String coverageConstraints = buildCoverageConstraints(Double.MIN_VALUE, tcArray, infoFile);						
 		sb.append(coverageConstraints);
 		
-		//2010-01-30: build disabled constraints to create multiple reduced test suites
-		//2.4. build disabled constraints;
-		for(int i = 0; i < testSets.size(); i ++){
-			TestSet testSet = testSets.get(i);
-			ArrayList<String> testCases = testSet.testcases;
-			for(int j = 0; j < testCases.size(); j ++){
-				String testCase = testCases.get(j);
-				int index = testCases.indexOf(testCase);
-				if(index != -1){
-					sb.append("x" + index + " = 0;");
-					sb.append("\n");	
-				}else{
-					System.out.println("[ILPSolver.buildILPModel_SingleObj]Test case:" + testCase +" does not exist!");
-				}
-			}
-		}
-		sb.append("\n");
 		
-		//2.5. build binary variable constraints;
+		//2.4: build binary variable constraints
 		sb.append("bin "); //specify the binary variables			
 		for(int i = 0; i < tcArray.size()-1; i ++){
 			sb.append("x"+ i + ", ");
 		}
 		sb.append("x" + (tcArray.size()-1) +";");
-		sb.append("\n");
+		sb.append("\n");	
+		
 		
 		Logger.getInstance().setPath(modelFile, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();	
 	
 		return tcArray;
+		
 	}
 	
 
@@ -251,10 +342,40 @@ public class ILPSolver {
 	public static ArrayList<TestCase> buildILPModel_BiCriteria(String testcaseFile, boolean containHeader, 
 			double alpha, String modelFile, String infoFile, int maxSize, ArrayList<TestSet> testSets){
 		
+			
 			ArrayList<TestCase> tcArray = null; 
 			//1. read info of all test cases
 			tcArray = getStatisticsOfTestCase(testcaseFile, containHeader);
 			int rowNo = tcArray.get(0).hitSet.size();
+			
+			//2010-01-30: 
+			//2. exclude disabled test cases which have been used before;			
+			if(testSets.size() > 0){ //exclude all used test cases
+				
+				ArrayList<String> testCases_disabled = new ArrayList<String>();
+				//a. get all indexes of disabled test cases which are used before 
+				for(int i = 0; i < testSets.size(); i ++){
+					ArrayList<String> testcases = testSets.get(i).testcases;									
+					for(int j = 0; j < testcases.size(); j ++){
+						String testCase = testcases.get(j);
+						if(!testCases_disabled.contains(testCase)){
+							testCases_disabled.add(testCase);	
+						}
+					}
+				}
+				
+				ArrayList<TestCase> tcArray_enabled = new ArrayList<TestCase>();
+				//b. exclude disable test cases from current test pool				
+				for(int i = 0; i < tcArray.size(); i ++){
+					TestCase tc = tcArray.get(i);
+					if(!testCases_disabled.contains(tc.index)){
+						tcArray_enabled.add(tc);
+					}
+				}
+				
+				//c.update the tcArray
+				tcArray = tcArray_enabled;
+			}
 			
 			//2.create LP file: convert program element(row) * testcases(column) 
 			//into the matrix of testcases(row)* program elements(column)
@@ -281,42 +402,18 @@ public class ILPSolver {
 
 			//2010-01-27: 
 			//2.3. coverage constraint: check whether the constraint file exists or not
-			String coverageConstraints = null;
-			File constraintsFile = new File(new File(modelFile).getParent() + "/Constraints.txt");
-			if(constraintsFile.exists()){	
-				//a: load the coverage constraints
-				coverageConstraints = loadCoverageConstraints(constraintsFile.getPath(), false);
-			}else{
-				//b.create constraints if the constraints file does not exist, 								 								
-				coverageConstraints = buildCoverageConstraints(alpha, tcArray, infoFile, constraintsFile.getPath());
-			}
+			String coverageConstraints = buildCoverageConstraints(alpha, tcArray, infoFile);						
 			sb.append(coverageConstraints);
 			
-			//2010-01-30: build disabled constraints to create multiple reduced test suites
-			//2.4. build disabled constraints;
-			for(int i = 0; i < testSets.size(); i ++){
-				TestSet testSet = testSets.get(i);
-				ArrayList<String> testCases = testSet.testcases;
-				for(int j = 0; j < testCases.size(); j ++){
-					String testCase = testCases.get(j);
-					int index = testCases.indexOf(testCase);
-					if(index != -1){
-						sb.append("x" + index + " = 0;");
-						sb.append("\n");	
-					}else{
-						System.out.println("[ILPSolver.buildILPModel_SingleObj]Test case:" + testCase +" does not exist!");
-					}
-				}
-			}
-			sb.append("\n");
 			
-			//2.5. build binary variable constraints;
+			//2.4: build binary variable constraints
 			sb.append("bin "); //specify the binary variables			
 			for(int i = 0; i < tcArray.size()-1; i ++){
 				sb.append("x"+ i + ", ");
 			}
 			sb.append("x" + (tcArray.size()-1) +";");
-			sb.append("\n");
+			sb.append("\n");	
+			
 			
 			Logger.getInstance().setPath(modelFile, false);
 			Logger.getInstance().write(sb.toString());
@@ -365,6 +462,7 @@ public class ILPSolver {
 						}
 					}
 					
+					infoRecorder.append("Objective value:").append(new DecimalFormat("0.0000").format(solver.getObjective())).append("\n");
 					infoRecorder.append("Reduced Test Suite Size:").append(selectedTestCases.size()).append("\n");
 					infoRecorder.append("Selected Test Cases:").append("\n");
 					for(int i = 0; i < selectedTestCases.size(); i ++){
@@ -395,16 +493,16 @@ public class ILPSolver {
 	
 	
 	public static TestSet solveILPModel_SingleObj_Manager(String date, String criterion,
-			ArrayList<TestCase> tcArray){
+			ArrayList<TestCase> tcArray, int testSetId){
 		
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj.lp";
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj_" + testSetId + ".lp";
 		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj.txt";
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj_" + testSetId + ".txt";
 		
-		System.out.println("\n[ILPSolver.solveILPModel_SingleObje_Manager]Start to solve the model with the single objective");
+		System.out.println("\n[ILPSolver.solveILPModel_SingleObje_Manager]Start to solve the model with the single objective:" + testSetId);
 		TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
-		System.out.println("[ILPSolver.solveILPModel_SingleObje_Manager]Finish to solve the model with the single objective\n");
+		System.out.println("[ILPSolver.solveILPModel_SingleObje_Manager]Finish to solve the model with the single objective:" + testSetId+ "\n" );
 		
 		return testSet;
 	}
@@ -431,9 +529,9 @@ public class ILPSolver {
 		}
 
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj.lp";
-		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj.txt";			
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj_" + testSets.size()+ ".lp";
+		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj_" + testSets.size() + ".txt";			
 		testSet = buildILPModel_SingleObj(testcaseFile, containHeader, modelFile, infoFile, testSets);
 		
 		return testSet;
@@ -467,9 +565,9 @@ public class ILPSolver {
 
 		String alpha_str = format.format(alpha);
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize +".lp";
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize + "_"+ testSets.size() +".lp";
 		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + ".txt";			
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSets.size() +".txt";			
 		testSet = buildILPModel_BiCriteria(testcaseFile, containHeader, alpha, modelFile,
 				infoFile, maxSize, testSets);
 			
@@ -480,18 +578,19 @@ public class ILPSolver {
 	
 
 	public static TestSet solveILPModels_BiCriteria_Manager(String date, String criterion,
-			ArrayList<TestCase> tcArray, double alpha, int maxSize){
+			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId){
 		
 		DecimalFormat format = new DecimalFormat("0.0");
 		String alpha_str = format.format(alpha);
-		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize +".lp";
-		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + ".txt";
 		
-		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model with weighting factor:" + alpha_str);
+		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize + "_"+ testSetId +".lp";
+		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSetId +".txt";
+		
+		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model with weighting factor:" + alpha_str + "("+ testSetId + ")");
 		TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
-		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]Finish to solve the model with weighting factor:" + alpha_str + "\n");
+		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]Finish to solve the model with weighting factor:" + alpha_str + "("+ testSetId + ")"+ "\n");
 		
 		return testSet;
 	}
@@ -517,7 +616,7 @@ public class ILPSolver {
 			for(int i = 0; i < testSetNum; i ++){
 				tcArray = buildILPModels_BiCriteria_Manager(date, criterion, alpha, maxSize, testSets);
 				TestSet testSet = solveILPModels_BiCriteria_Manager(date, criterion, tcArray,
-						alpha, maxSize);
+						alpha, maxSize, i);
 				testSets.add(testSet);
 			}
 		}
@@ -527,10 +626,11 @@ public class ILPSolver {
 		
 	public static ArrayList<TestSet> buildAndSolveILP_SingleObj_Manager(String date, 
 			String criterion, int testSetNum){
+		
 		ArrayList<TestSet> testSets = new ArrayList<TestSet>();
 		for(int i = 0; i < testSetNum; i ++){
 			ArrayList<TestCase> tcArray = buildILPModel_SingleObj_Manager(date, criterion, testSets);
-			TestSet testSet = solveILPModel_SingleObj_Manager(date, criterion, tcArray);
+			TestSet testSet = solveILPModel_SingleObj_Manager(date, criterion, tcArray, i);
 			testSets.add(testSet);
 		}
 		return testSets;
@@ -600,7 +700,7 @@ public class ILPSolver {
 			boolean containHeader = true;
 			ArrayList<TestCase> tcArray = getStatisticsOfTestCase(testcaseFile, containHeader);
 			
-			solveILPModels_BiCriteria_Manager(date, criterion, tcArray, alpha, maxSize);
+			solveILPModels_BiCriteria_Manager(date, criterion, tcArray, alpha, maxSize, 0);
 			
 //			solveILPModels_BiCriteria_Manager(date, criterion,
 //					tcArray, alpha_min, alpha_max, alpha_interval, maxSize);
