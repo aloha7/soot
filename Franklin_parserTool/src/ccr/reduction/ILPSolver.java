@@ -7,12 +7,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Vector;
 
 import lpsolve.LpSolve;
 import lpsolve.LpSolveException;
+import ccr.help.ILPOutput;
 import ccr.test.Logger;
 import ccr.test.TestCase;
 import ccr.test.TestSet;
@@ -431,9 +430,9 @@ public class ILPSolver {
 	 * @param infoFile: the file to save info collected during solving the model
 	 * @return: the test case indexes within the reduced test set
 	 */
-	public static TestSet solveILPModel(String modelFile, ArrayList<TestCase> tcArray, String infoFile){
+	public static ILPOutput solveILPModel(String modelFile, ArrayList<TestCase> tcArray, String infoFile){
+		ILPOutput output = new ILPOutput();
 		
-		TestSet testSet = new TestSet();
 		ArrayList<String> selectedTestCases = new ArrayList<String>();
 		
 		StringBuilder infoRecorder = new StringBuilder();
@@ -446,6 +445,7 @@ public class ILPSolver {
 				int ret = solver.solve();
 				long exeTime = System.currentTimeMillis() - startTime;
 				infoRecorder.append("Execute Time:").append(exeTime/(double)1000).append(" s\n");
+				output.time = exeTime;
 				
 				if(ret == LpSolve.OPTIMAL)
 					ret = 0;
@@ -462,7 +462,12 @@ public class ILPSolver {
 						}
 					}
 					
+					output.reducedTestSet.testcases = selectedTestCases;
+					
 					infoRecorder.append("Objective value:").append(new DecimalFormat("0.0000").format(solver.getObjective())).append("\n");
+					
+					output.objectiveValue = solver.getObjective();
+					
 					infoRecorder.append("Reduced Test Suite Size:").append(selectedTestCases.size()).append("\n");
 					infoRecorder.append("Selected Test Cases:").append("\n");
 					for(int i = 0; i < selectedTestCases.size(); i ++){
@@ -477,15 +482,17 @@ public class ILPSolver {
 				Logger.getInstance().write(infoRecorder.toString());
 				Logger.getInstance().close();
 
+				String outputFile = tmp.getParent() + "/" + tmp.getName()+"_output.txt";
+				Logger.getInstance().setPath(outputFile, false);
+				Logger.getInstance().write(output.toString());
+				Logger.getInstance().close();
 			} catch (LpSolveException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}		
 		}
 		
-		
-		testSet.testcases = selectedTestCases;
-		return testSet;
+		return output;
 	}
 	
 	
@@ -501,7 +508,8 @@ public class ILPSolver {
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj_" + testSetId + ".txt";
 		
 		System.out.println("\n[ILPSolver.solveILPModel_SingleObje_Manager]Start to solve the model with the single objective:" + testSetId);
-		TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
+		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile);
+		TestSet testSet = output.reducedTestSet;
 		System.out.println("[ILPSolver.solveILPModel_SingleObje_Manager]Finish to solve the model with the single objective:" + testSetId+ "\n" );
 		
 		return testSet;
@@ -589,7 +597,9 @@ public class ILPSolver {
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSetId +".txt";
 		
 		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model with weighting factor:" + alpha_str + "("+ testSetId + ")");
-		TestSet testSet = solveILPModel(modelFile, tcArray, infoFile);
+		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile);
+		TestSet testSet = output.reducedTestSet;
+		
 		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]Finish to solve the model with weighting factor:" + alpha_str + "("+ testSetId + ")"+ "\n");
 		
 		return testSet;
