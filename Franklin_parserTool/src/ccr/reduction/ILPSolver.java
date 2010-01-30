@@ -438,14 +438,29 @@ public class ILPSolver {
 		StringBuilder infoRecorder = new StringBuilder();
 		File tmp = new File(modelFile);
 		if(tmp.exists()){
-			try {						
+			try {										
+				String[] strs = tmp.getName().substring(0, tmp.getName().lastIndexOf(".")).split("_");
+				output.criterion = strs[1];
+				if(strs[2].equals("SingleObj")){//single-objective ILP model
+					output.alpha = Double.MIN_VALUE;
+					output.testSetSize = 0;
+					output.testSetId = Integer.parseInt(strs[3]);
+				}else{
+					output.alpha = Double.parseDouble(strs[2]);
+					output.testSetSize = Integer.parseInt(strs[3]);
+					output.testSetId = Integer.parseInt(strs[4]);
+				}
+				
+				
+				
 				LpSolve solver = LpSolve.readLp(modelFile, LpSolve.CRITICAL, null);
 
 				long startTime = System.currentTimeMillis();
 				int ret = solver.solve();
 				long exeTime = System.currentTimeMillis() - startTime;
 				infoRecorder.append("Execute Time:").append(exeTime/(double)1000).append(" s\n");
-				output.time = exeTime;
+				
+				output.time = (double)exeTime/(double)1000;
 				
 				if(ret == LpSolve.OPTIMAL)
 					ret = 0;
@@ -482,7 +497,9 @@ public class ILPSolver {
 				Logger.getInstance().write(infoRecorder.toString());
 				Logger.getInstance().close();
 
-				String outputFile = tmp.getParent() + "/" + tmp.getName()+"_output.txt";
+				String outputFile = tmp.getParent() + "/" + tmp.getName().
+					substring(0, tmp.getName().lastIndexOf("."))+"_output.txt";
+				
 				Logger.getInstance().setPath(outputFile, false);
 				Logger.getInstance().write(output.toString());
 				Logger.getInstance().close();
@@ -537,7 +554,7 @@ public class ILPSolver {
 		}
 
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj_" + testSets.size()+ ".lp";
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj_" + +testSets.size()+ ".lp";
 		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/" 
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj_" + testSets.size() + ".txt";			
 		testSet = buildILPModel_SingleObj(testcaseFile, containHeader, modelFile, infoFile, testSets);
