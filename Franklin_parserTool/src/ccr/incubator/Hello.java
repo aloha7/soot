@@ -16,6 +16,12 @@ public class Hello {
 		sdf.applyPattern("yyyy-MM-dd HH-mm-ss");
 		
 		System.out.println(System.currentTimeMillis()-start);
+		for(int i =0 ; i < 10; i ++){
+			if(i==2){
+				break;
+			}
+			System.out.println(i);
+		}
 	}
 
 }
