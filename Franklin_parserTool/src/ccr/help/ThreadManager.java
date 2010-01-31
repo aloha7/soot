@@ -22,13 +22,16 @@ public class ThreadManager {
 			Thread t = new Thread(programRunnable);
 			t.start();
 			long start = System.currentTimeMillis();
-			while(t.isAlive() && System.currentTimeMillis() - start < limit_time){
+			long duration = System.currentTimeMillis() - start;
+			while(t.isAlive() && duration < limit_time){
 				Thread.sleep(sleep_time);
+				duration = System.currentTimeMillis() - start;
 			}
 			
-			if(t.isAlive()){	// time over		
+			if(duration > limit_time){	// time over		
 				t.stop();
 				finished = false;
+				System.out.println("Time Limit:" + limit_time + " is over!");
 			}else{
 				finished = true;
 			}
@@ -36,8 +39,6 @@ public class ThreadManager {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		System.out.println("Time Limit:" + limit_time + " is over!");
 	}
 	
 	public static void main(String[] args){
