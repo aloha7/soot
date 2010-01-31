@@ -12,6 +12,7 @@ import java.util.HashMap;
 import lpsolve.LpSolve;
 import lpsolve.LpSolveException;
 import ccr.help.ILPOutput;
+import ccr.help.ThreadManager;
 import ccr.test.Logger;
 import ccr.test.TestCase;
 import ccr.test.TestSet;
@@ -421,6 +422,31 @@ public class ILPSolver {
 		return tcArray;
 	}
 
+	/**2010-01-31: we use thread to solve the ILP model so that we
+	 * can control the execution time
+	 * 
+	 * @param modelFile
+	 * @param tcArray
+	 * @param infoFile
+	 * @param timeLimit
+	 * @param sleepTime
+	 * @return
+	 */
+	public static ILPOutput solveILPModel_TimeLimited(String modelFile, ArrayList<TestCase> tcArray,
+			String infoFile, long timeLimit, long sleepTime){
+		
+		ILPOutput output = new ILPOutput();
+		
+		ThreadManager manager = new ThreadManager(timeLimit, sleepTime);
+		ILPSolver_Thread programRunnable = new ILPSolver_Thread(modelFile, tcArray, infoFile);
+		manager.startThread(programRunnable);
+		
+		if(manager.finished){
+			output = programRunnable.output;
+		}
+		
+		return output;
+	}
 	
 	/**2009-12-21:solve the ILP model with LPSolve and
 	 * save the results into a file. This method returns
@@ -512,7 +538,35 @@ public class ILPSolver {
 		return output;
 	}
 	
-	
+	/**2010-01-31: solve an ILP model within a time limit
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param tcArray
+	 * @param testSetId
+	 * @param timeLimit: time limit (10 min by default)
+	 * @param sleepTime: query time of a thread controller (half of timeLimit by default)
+	 * @return
+	 */
+	public static TestSet solveILPModel_SingleObj_Manager_TimeLimited(String date, String criterion,
+			ArrayList<TestCase> tcArray, int testSetId, long timeLimit, long sleepTime){
+		
+		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj_" + testSetId + ".lp";
+		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj_" + testSetId + ".txt";
+		
+		System.out.println("\n[ILPSolver.solveILPModel_SingleObje_Manager]Start to solve the model with the single objective:" + testSetId);
+		
+		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
+				infoFile, timeLimit, sleepTime);
+		
+		TestSet testSet = output.reducedTestSet;
+		System.out.println("[ILPSolver.solveILPModel_SingleObje_Manager]Finish to solve the model with the single objective:" + testSetId+ "\n" );
+		
+		return testSet;
+	}
+
 	
 	
 	
@@ -600,7 +654,30 @@ public class ILPSolver {
 		return testSet;
 	}
 	
-	
+
+	public static TestSet solveILPModels_BiCriteria_Manager_TimeLimited(String date, String criterion,
+			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId, 
+			long timeLimit, long sleepTime){
+		
+		DecimalFormat format = new DecimalFormat("0.0");
+		String alpha_str = format.format(alpha);
+		
+		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize + "_"+ testSetId +".lp";
+		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSetId +".txt";
+		
+		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model with weighting factor:" + alpha_str + "("+ testSetId + ")");
+
+		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
+				infoFile, timeLimit, sleepTime);
+		
+		TestSet testSet = output.reducedTestSet;
+		
+		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]Finish to solve the model with weighting factor:" + alpha_str + "("+ testSetId + ")"+ "\n");
+		
+		return testSet;
+	}
 
 	public static TestSet solveILPModels_BiCriteria_Manager(String date, String criterion,
 			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId){
@@ -629,11 +706,17 @@ public class ILPSolver {
 	 * 
 	 * @param date
 	 * @param criterion
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
 	 * @param maxSize
+	 * @param testSetNum
+	 * @param timeLimit
+	 * @param sleepTime
 	 * @return
 	 */
 	public static HashMap<Double, ArrayList<TestSet>> buildAndSolveILPs_BiCriteria_Manager(String date, String criterion, 
-			double alpha_min, double alpha_max, double alpha_interval, int maxSize, int testSetNum){
+			double alpha_min, double alpha_max, double alpha_interval, int maxSize, int testSetNum, long timeLimit,	long sleepTime){
 		
 		HashMap<Double, ArrayList<TestSet>> alpha_testSets = new HashMap<Double, ArrayList<TestSet>>();
 		
@@ -642,8 +725,19 @@ public class ILPSolver {
 			ArrayList<TestSet> testSets = new ArrayList<TestSet>();
 			for(int i = 0; i < testSetNum; i ++){
 				tcArray = buildILPModels_BiCriteria_Manager(date, criterion, alpha, maxSize, testSets);
-				TestSet testSet = solveILPModels_BiCriteria_Manager(date, criterion, tcArray,
-						alpha, maxSize, i);
+				
+				//2010-01-30: a sequential version
+//				TestSet testSet = solveILPModels_BiCriteria_Manager(date, criterion, tcArray,
+//						alpha, maxSize, i);
+				
+				//2010-01-31: a concurrent version
+				TestSet testSet = solveILPModels_BiCriteria_Manager_TimeLimited(date, 
+						criterion, tcArray, alpha, maxSize, i, timeLimit, sleepTime);
+				
+				if(testSet.size() == 0){ //fail to solve the ILP model
+					break;
+				}
+				
 				testSets.add(testSet);
 			}
 		}
@@ -651,13 +745,33 @@ public class ILPSolver {
 		return alpha_testSets;
 	}
 		
+	/**2010-01-31: build and solve an ILP model within a time limit
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param testSetNum
+	 * @return
+	 */
 	public static ArrayList<TestSet> buildAndSolveILP_SingleObj_Manager(String date, 
-			String criterion, int testSetNum){
+			String criterion, int testSetNum, long timeLimit, long sleepTime){
 		
-		ArrayList<TestSet> testSets = new ArrayList<TestSet>();
+		ArrayList<TestSet> testSets = new ArrayList<TestSet>();		
 		for(int i = 0; i < testSetNum; i ++){
 			ArrayList<TestCase> tcArray = buildILPModel_SingleObj_Manager(date, criterion, testSets);
-			TestSet testSet = solveILPModel_SingleObj_Manager(date, criterion, tcArray, i);
+			
+			//2010-01-30:sequential version
+//			TestSet testSet = solveILPModel_SingleObj_Manager(date, criterion, 
+//					tcArray, i);
+			
+			//2010-01-31:Concurrent version
+		
+			TestSet testSet = solveILPModel_SingleObj_Manager_TimeLimited(date, 
+					criterion, tcArray, i, timeLimit, sleepTime);
+			
+			if(testSet.size() == 0){ //fail to solve the ILP model
+				break;
+			}
+			
 			testSets.add(testSet);
 		}
 		return testSets;
@@ -696,17 +810,23 @@ public class ILPSolver {
 			String criterion = args[2];
 			int maxSize = Integer.parseInt(args[3]);
 			int testSetNum = Integer.parseInt(args[4]);
+			long timeLimit = Long.parseLong(args[5]); //60*60*1000
+			long sleepTime = timeLimit/10;
+			
 			double alpha_min = 0.0;
 			double alpha_max = 1.1;
 			double alpha_interval = 0.1;
-			if(args.length == 8){
-				alpha_min = Double.parseDouble(args[5]);
-				alpha_max = Double.parseDouble(args[6]);
-				alpha_interval = Double.parseDouble(args[7]);
+			if(args.length == 9){
+				alpha_min = Double.parseDouble(args[6]);
+				alpha_max = Double.parseDouble(args[7]);
+				alpha_interval = Double.parseDouble(args[8]);
 			}
 			
 			buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max, 
-					alpha_interval, maxSize, testSetNum);
+					alpha_interval, maxSize, testSetNum, timeLimit, sleepTime);
+			
+//			buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max, 
+//					alpha_interval, maxSize, testSetNum);
 		}else if(instruction.equals("solveILP")){
 			String date = args[1];
 			String criterion = args[2];
@@ -737,24 +857,32 @@ public class ILPSolver {
 			String criterion = args[2];
 			int maxSize = Integer.parseInt(args[3]);
 			int testSetNum = Integer.parseInt(args[4]);
+			long timeLimit = Long.parseLong(args[5]); //60*60*1000
+			long sleepTime = timeLimit/10;
 			
 			double alpha_min = 0.0;
 			double alpha_max = 1.1;
 			double alpha_interval = 0.1;
-			if(args.length == 8){
-				alpha_min = Double.parseDouble(args[5]);
-				alpha_max = Double.parseDouble(args[6]);
-				alpha_interval = Double.parseDouble(args[7]);
+			if(args.length == 9){
+				alpha_min = Double.parseDouble(args[6]);
+				alpha_max = Double.parseDouble(args[7]);
+				alpha_interval = Double.parseDouble(args[8]);
 			}
 			
-			buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max,
-					alpha_interval, maxSize, testSetNum);			
+			buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max, 
+					alpha_interval, maxSize, testSetNum, timeLimit, sleepTime);
+			
+//			buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max,
+//					alpha_interval, maxSize, testSetNum);			
 		}else if(instruction.equals("buildAndSolveILP_SingleObj")){
 			String date = args[1];
 			String criterion = args[2];
 			int testSetNum = Integer.parseInt(args[3]);
+			long timeLimit = Long.parseLong(args[4]); //60*60*1000
+			long sleepTime = timeLimit/10;
 			
-			buildAndSolveILP_SingleObj_Manager(date, criterion, testSetNum);			
+			buildAndSolveILP_SingleObj_Manager(date, criterion, testSetNum, timeLimit, sleepTime);
+//			buildAndSolveILP_SingleObj_Manager(date, criterion, testSetNum);			
 		}
 	}
 
