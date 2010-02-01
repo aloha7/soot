@@ -259,6 +259,73 @@ public class Reporter_Reduction {
 	}
 	
 	
+	
+	public static HashMap<Double, Double> getFaultDetectionRate_averaged_BILP_offline(String date, String criterion,
+			String mutantFile_date, boolean containHeader_mutant, 
+			String mutantDetailDir, boolean containHeader_testing, double alpha_min, double alpha_max, 
+			double alpha_interval, boolean single_enabled){
+
+		HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
+		
+		HashMap<Double, ArrayList<TestSet>> alpha_testSets  = new HashMap<Double, ArrayList<TestSet>>();
+		
+		ArrayList<TestSet> testSets = new ArrayList<TestSet>();
+		
+		String testSetDir = "";
+		boolean containHeader = false;
+		String pattern = "";
+		if(single_enabled){
+//			testSets = ILPSolver.buildAndSolveILP_SingleObj_Manager(date, criterion, testSetNum, timeLimit, sleepTime);
+
+			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			containHeader = false;
+			pattern = "Model\\_" + criterion +"\\_SingleObj\\_[0-9]+\\_output\\.txt";
+			testSets = TestSetStatistics.loadReducedTestSet_offline(testSetDir, containHeader, pattern);
+	}
+		
+		
+		//2. reduced test sets of bi-criteria ILP
+		//2010-02-01: for two double we  use "|alpha_max - alpha| > 0.0001" rather than "alpha_max - alpha"
+		// to determine whether alpha_max is larger than alpha or not
+		for(double alpha = alpha_min; Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){
+			DecimalFormat format = new DecimalFormat("0.0");
+			String alpha_str = format.format(alpha);
+			
+			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			containHeader = false;
+			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+			"\\_[0-9]+\\_output\\.txt";
+			
+			ArrayList<TestSet> testSet_biCriteria = TestSetStatistics.loadReducedTestSet_offline(
+					testSetDir, containHeader, pattern);
+			
+			alpha_testSets.put(alpha, testSet_biCriteria);
+		}
+		
+		
+		//3. combine all test sets
+		if(testSets != null){ //single-objective ILP is enabled
+			alpha_testSets.put(Double.MIN_VALUE, testSets);
+		}
+		
+		Double[] alphas = alpha_testSets.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);		
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];
+			ArrayList<TestSet> reducedTestSets = alpha_testSets.get(alpha);
+			
+			//2010-02-01: fix another important bug here
+			double fdr = getFaultDetectionRate_average_online(reducedTestSets,
+					mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing);
+			
+			alpha_fdr.put(alpha, fdr);
+		}
+		
+		return alpha_fdr;
+	}
+	
 	/**2010-01-27: get fault detection rates of reduced test sets 
 	 * with respect to a set of mutants
 	 * 
@@ -320,7 +387,7 @@ public class Reporter_Reduction {
 			double alpha = alphas[i];
 			ArrayList<TestSet> reducedTestSets = alpha_testSets.get(alpha);
 			
-			double fdr = getFaultDetectionRate_average_online(testSets,
+			double fdr = getFaultDetectionRate_average_online(reducedTestSets,
 					mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing);
 			
 			alpha_fdr.put(alpha, fdr);
@@ -401,7 +468,7 @@ public class Reporter_Reduction {
 			long duration = (System.currentTimeMillis() - start)/(1000*60);
 			System.out.println("It takes " + duration + " mins to process all faults");
 			System.out.println("the averaged fault detection rate:" + FDR);
-		}else if(instruction.equals("getFDR_reduction")){
+		}else if(instruction.equals("getFDR_reduction")|| instruction.equals("getFDR_reduction_offline")){
 			
 			long start = System.currentTimeMillis();
 			String date = args[1];			 
@@ -437,11 +504,17 @@ public class Reporter_Reduction {
 			}
 
 			//2010-01-31: solve the ILP model within a time limit
-			HashMap<Double, Double> alpha_fdr = getFaultDetectionRate_averaged_BILP(date, 
-					criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
-					alpha_min, alpha_max, alpha_interval, sizeConstraint, testSetNum, single_enabled, timeLimit, sleepTime);
-			 
-				
+			HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
+			if(instruction.equals("getFDR_reduction")){
+				alpha_fdr = getFaultDetectionRate_averaged_BILP(date, 
+						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
+						alpha_min, alpha_max, alpha_interval, sizeConstraint, testSetNum, single_enabled, timeLimit, sleepTime);			
+			}else{
+				alpha_fdr = getFaultDetectionRate_averaged_BILP_offline(date, 
+						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
+						alpha_min, alpha_max, alpha_interval, single_enabled);
+			}
+			
 			String saveFile = System.getProperty("user.dir") + "/src/ccr"
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
 			+ "/ILPModel/"+ criterion+"/FaultDetectionRate.txt";
