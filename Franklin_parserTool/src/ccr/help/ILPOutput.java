@@ -7,7 +7,7 @@ import ccr.test.TestSet;
 public class ILPOutput {
 	public String criterion;
 	public double alpha;
-	public int testSetSize;
+	public int testSetLimit;
 	public int testSetId;
 	public double time; //in seconds
 	public TestSet reducedTestSet = new TestSet();
@@ -18,12 +18,12 @@ public class ILPOutput {
 	}
 	
 	public ILPOutput(String criterion, double alpha, 
-			int testSetSize, int testSetId, double time, 
+			int testSetLimit, int testSetId, double time, 
 			TestSet reducedTestSet, double objectiveValue){
 		this.criterion = criterion;
 		this.alpha = alpha;
 		this.testSetId = testSetId;
-		this.testSetSize = testSetSize;
+		this.testSetLimit = testSetLimit;
 		this.time = time;
 		this.reducedTestSet = reducedTestSet;
 		this.objectiveValue = objectiveValue;
@@ -33,9 +33,9 @@ public class ILPOutput {
 		String[] strs = str.split("\t");
 		this.criterion = strs[0];
 		this.alpha = Double.parseDouble(strs[1]);
-		this.testSetSize = Integer.parseInt(strs[2]);
+		this.testSetLimit = Integer.parseInt(strs[2]);
 		this.testSetId = Integer.parseInt(strs[3]);
-		this.time = Long.parseLong(strs[4]);
+		this.time = Double.parseDouble(strs[4]);
 		this.objectiveValue = Double.parseDouble(strs[5]);
 		String[] tcs = strs[6].split(",");
 		for(int i = 0; i < tcs.length; i ++){
@@ -48,7 +48,7 @@ public class ILPOutput {
 		
 		StringBuilder sb = new StringBuilder();		
 		sb.append(criterion).append("\t").append(format.format(this.alpha)).append("\t");
-		sb.append(testSetSize).append("\t").append(testSetId).append("\t");
+		sb.append(testSetLimit).append("\t").append(testSetId).append("\t");
 		sb.append(format.format(this.time)).append("\t").append(format.format(this.objectiveValue)).append("\t");
 		
 		for(int i = 0; i < reducedTestSet.testcases.size(); i ++){
