@@ -470,11 +470,11 @@ public class ILPSolver {
 				output.criterion = strs[1];
 				if(strs[2].equals("SingleObj")){//single-objective ILP model
 					output.alpha = Double.MIN_VALUE;
-					output.testSetSize = 0;
+					output.testSetLimit = 0;
 					output.testSetId = Integer.parseInt(strs[3]);
 				}else{
 					output.alpha = Double.parseDouble(strs[2]);
-					output.testSetSize = Integer.parseInt(strs[3]);
+					output.testSetLimit = Integer.parseInt(strs[3]);
 					output.testSetId = Integer.parseInt(strs[4]);
 				}
 				
@@ -505,6 +505,9 @@ public class ILPSolver {
 					}
 					
 					output.reducedTestSet.testcases = selectedTestCases;
+					
+					//2010-02-01: fix an important bug here
+					output.reducedTestSet.index = "" +output.testSetId;
 					
 					infoRecorder.append("Objective value:").append(new DecimalFormat("0.0000").format(solver.getObjective())).append("\n");
 					
@@ -563,6 +566,9 @@ public class ILPSolver {
 				infoFile, timeLimit, sleepTime);
 		
 		TestSet testSet = output.reducedTestSet;
+		//2010-02-01: fix an important bug here
+		testSet.index = ""+output.testSetId;
+		
 		System.out.println("[ILPSolver.solveILPModel_SingleObje_Manager_TimeLimited]Finish to solve the model with the single objective:(Criterion:" +criterion +", TestSetID:"+ testSetId+")"+ "\n" );
 		
 		return testSet;
@@ -582,6 +588,9 @@ public class ILPSolver {
 		System.out.println("\n[ILPSolver.solveILPModel_SingleObje_Manager]Start to solve the model with the single objective:(Criterion:" +criterion +", TestSetID:"+ testSetId+")");
 		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile);
 		TestSet testSet = output.reducedTestSet;
+		//2010-02-01: fix an important bug here
+		testSet.index = ""+output.testSetId;
+		
 		System.out.println("[ILPSolver.solveILPModel_SingleObje_Manager]Finish to solve the model with the single objective:(Criterion:" +criterion +", TestSetID:"+ testSetId+")"+ "\n" );
 		
 		return testSet;
@@ -675,6 +684,8 @@ public class ILPSolver {
 				infoFile, timeLimit, sleepTime);
 		
 		TestSet testSet = output.reducedTestSet;
+		//2010-02-01: fix an important bug here
+		testSet.index = ""+output.testSetId;
 		
 		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited]Finish to solve the model(Criterion:" + criterion 
 				+ " ,Alpha:" + alpha_str + " , testSetID:"+ testSetId + ")"+ "\n");
@@ -694,8 +705,10 @@ public class ILPSolver {
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSetId +".txt";
 		
 		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model with weighting factor:" + alpha_str + "("+ testSetId + ")");
-		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile);
+		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile);		
 		TestSet testSet = output.reducedTestSet;
+		//2010-02-01: fix an important bug here
+		testSet.index = ""+output.testSetId;
 		
 		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager]Finish to solve the model with weighting factor:" + alpha_str + "("+ testSetId + ")"+ "\n");
 		
@@ -723,7 +736,7 @@ public class ILPSolver {
 		
 		HashMap<Double, ArrayList<TestSet>> alpha_testSets = new HashMap<Double, ArrayList<TestSet>>();
 		
-		for(double alpha = alpha_min; alpha < alpha_max; alpha = alpha + alpha_interval){
+		for(double alpha = alpha_min;  Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){
 			ArrayList<TestCase> tcArray = new ArrayList<TestCase>();
 			ArrayList<TestSet> testSets = new ArrayList<TestSet>();
 			for(int i = 0; i < testSetNum; i ++){
