@@ -411,7 +411,7 @@ public class Reporter_Reduction {
 			int testSetNum = Integer.parseInt(args[4]);
 			boolean single_enabled = Boolean.parseBoolean(args[5]);
 			long timeLimit = Long.parseLong(args[6]);
-			long sleepTime = timeLimit/10;
+			long sleepTime = 1000; //1 second
 			
 			String mutantFile_date = "20100121";
 			String mutantDetail_date = "20100121";
@@ -448,7 +448,8 @@ public class Reporter_Reduction {
 			saveToFile_alpha_fdr(alpha_fdr, saveFile);
 			
 			long duration = System.currentTimeMillis() - start;
-			System.out.println("It takes " + duration/(1000*60) + " mins for " + criterion);
+			System.out.println("[Reporter_Reduction.Main]It takes " + duration/(1000*60) + " mins for " + criterion);
+			System.exit(0);
 		}
 	}
 
