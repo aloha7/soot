@@ -282,6 +282,8 @@ public class TestSetStatistics {
 						while ((str = br.readLine()) != null) {
 							ILPOutput output = new ILPOutput(str);
 							TestSet testSet = output.reducedTestSet;
+							//2010-02-01:fix an important bug here
+							testSet.index = ""+output.testSetId;
 							testSets.add(testSet);
 						}
 					} catch (FileNotFoundException e) {
