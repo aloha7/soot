@@ -678,7 +678,7 @@ public class ILPSolver {
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSetId +".txt";
 		
 		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited]Start to solve the model:(Criterion:" + criterion 
-				+ " ,Alpha:" + alpha_str + " , testSetID:"+ testSetId + ")");
+				+ " ,Alpha:" + alpha_str + ",testSetSize:" + maxSize+ ",testSetID:"+ testSetId + ")");
 
 		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
 				infoFile, timeLimit, sleepTime);
@@ -688,7 +688,7 @@ public class ILPSolver {
 		testSet.index = ""+output.testSetId;
 		
 		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited]Finish to solve the model(Criterion:" + criterion 
-				+ " ,Alpha:" + alpha_str + " , testSetID:"+ testSetId + ")"+ "\n");
+				+ ",Alpha:" + alpha_str + ", testSetSize:"+ maxSize+", testSetID:"+ testSetId + ")"+ "\n");
 		
 		return testSet;
 	}
