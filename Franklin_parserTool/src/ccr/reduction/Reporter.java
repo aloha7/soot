@@ -259,6 +259,18 @@ public class Reporter_Reduction {
 		return FDR_average; 
 	}
 	
+	public static double getReductionSize_average_online(ArrayList<ILPOutput> outputs){
+
+		double size_sum = 0.0;
+		for(int i = 0; i < outputs.size(); i ++){
+			ILPOutput output = outputs.get(i);
+			size_sum += output.reducedTestSet.size();
+		}
+		double size_average = size_sum/outputs.size();
+		
+		return size_average;
+	}
+	
 	public static double getTimeCost_average_online(ArrayList<ILPOutput> outputs){
 
 		double time_sum = 0.0;
@@ -271,6 +283,84 @@ public class Reporter_Reduction {
 		return time_average;
 	}
 	
+	public static HashMap<Double, Double> getReductionSize_averaged_BILP_offline(String date, 
+			String criterion, double alpha_min, double alpha_max, 
+			double alpha_interval, boolean single_enabled){
+
+		HashMap<Double, Double> alpha_size = new HashMap<Double, Double>();
+		
+		HashMap<Double, ArrayList<ILPOutput>> alpha_outputs  = new HashMap<Double, ArrayList<ILPOutput>>();
+		
+		ArrayList<ILPOutput> outputs = new ArrayList<ILPOutput>();
+		
+		String testSetDir = "";
+		boolean containHeader = false;
+		String pattern = "";
+		if(single_enabled){
+
+			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			containHeader = false;
+
+//			pattern = "Model\\_" + criterion +"\\_SingleObj\\_[0-9]+\\_output\\.txt";
+			//2010-02-01:only interest in the first reduced test set
+			pattern = "Model\\_" + criterion +"\\_SingleObj\\_0\\_output\\.txt";
+			outputs = TestSetStatistics.loadILPOutput_offline(testSetDir, containHeader, pattern);			
+		}
+		
+		
+		//2. reduced test sets of bi-criteria ILP
+		//2010-02-01: for two double we  use "|alpha_max - alpha| > 0.0001" rather than "alpha_max - alpha"
+		// to determine whether alpha_max is larger than alpha or not
+		for(double alpha = alpha_min; Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){
+			DecimalFormat format = new DecimalFormat("0.0");
+			String alpha_str = format.format(alpha);
+			
+			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			containHeader = false;
+			
+//			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+//			"\\_[0-9]+\\_output\\.txt";
+			
+			//2010-02-01:only interest in the first reduced test set
+			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+			"\\_0\\_output\\.txt";
+			
+			ArrayList<ILPOutput> output_biCriteria = TestSetStatistics.loadILPOutput_offline(testSetDir, containHeader, pattern);
+			
+			alpha_outputs.put(alpha, output_biCriteria);			
+		}
+		
+		
+		//3. combine all test sets
+		if(outputs != null){ //single-objective ILP is enabled
+			alpha_outputs.put(Double.MIN_VALUE, outputs);			
+		}
+		
+		Double[] alphas = alpha_outputs.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);		
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];
+			ArrayList<ILPOutput> ILPoutputs = alpha_outputs.get(alpha);
+			
+			double size = getReductionSize_average_online(ILPoutputs);
+			alpha_size.put(alpha, size);
+		}
+		
+		return alpha_size;
+	}
+	
+	/**2010-02-01: get the time cost to solve ILP model with respect to various 
+	 * testing criteria and weighting factors
+	 * @param date
+	 * @param criterion
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
+	 * @param single_enabled
+	 * @return
+	 */
 	public static HashMap<Double, Double> getTimeCost_averaged_BILP_offline(String date, 
 			String criterion, double alpha_min, double alpha_max, 
 			double alpha_interval, boolean single_enabled){
@@ -471,8 +561,14 @@ public class Reporter_Reduction {
 		}
 		
 		//2. reduced test sets of bi-criteria ILP
-		alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max, 
-				alpha_interval, maxSize, testSetNum, timeLimit, sleepTime);
+		for(int i = 1; i < maxSize; i ++){
+			int maxSize_ins = i;
+			alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max, 
+					alpha_interval, maxSize_ins, testSetNum, timeLimit, sleepTime);		
+		}
+			
+
+		
 		
 //		alpha_testSets = ILPSolver.buildAndSolveILPs_BiCriteria_Manager(date, criterion, alpha_min, alpha_max, 
 //				alpha_interval, maxSize, testSetNum);
@@ -648,6 +744,30 @@ public class Reporter_Reduction {
 			String saveFile = System.getProperty("user.dir") + "/src/ccr"
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
 			+ "/ILPModel/"+ criterion+"/TimeCost_First.txt";
+			saveToFile_alpha_fdr(alpha_time, saveFile);
+		}else if(instruction.equals("getReductionSize")){
+			
+			String date = args[1];			 
+			//AllPolicies,All1ResolvedDU,All2ResolvedDU,AllStatement
+			String criterion = args[2];
+			boolean single_enabled = Boolean.parseBoolean(args[5]);
+			
+			double alpha_min = 0.0;
+			double alpha_max = 1.1;
+			double alpha_interval = 0.1;
+			if(args.length == 10){
+				alpha_min = Double.parseDouble(args[7]);
+				alpha_max = Double.parseDouble(args[8]);
+				alpha_interval = Double.parseDouble(args[9]);
+			}
+			
+			HashMap<Double, Double> alpha_time = new HashMap<Double, Double>();
+			alpha_time = getTimeCost_averaged_BILP_offline(date, criterion, 
+					alpha_min, alpha_max, alpha_interval, single_enabled);
+			
+			String saveFile = System.getProperty("user.dir") + "/src/ccr"
+			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+			+ "/ILPModel/"+ criterion+"/ReductionSize_First.txt";
 			saveToFile_alpha_fdr(alpha_time, saveFile);
 		}
 	}
