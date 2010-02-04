@@ -1,13 +1,9 @@
 package ccr.help;
 
 public class DataAnalyzeManager {	
-	class CurveFittingResult{
-		public double coefficient;
-		public double intercept;
-		public double inaccuracy;
-	}
 	
-	public CurveFittingResult getLinearCurveFitting(double[] x, double[] y){
+	
+	public static CurveFittingResult getLinearCurveFitting(double[] x, double[] y){
 		double sum_x = 0.0;
 		double sum_y = 0.0;
 		double sum_xByy = 0.0;
@@ -38,7 +34,7 @@ public class DataAnalyzeManager {
 		return result;
 	}
 	
-	public double getPearsonCorrelationTest(double[] x, double[] y){
+	public static double getPearsonCorrelationTest(double[] x, double[] y){
 		double PearsonCorrelationCoefficient = 0.0;
 		
 		double sum_x = 0.0;
@@ -66,8 +62,7 @@ public class DataAnalyzeManager {
 		double[] x = new double[]{3, 5, 9};
 		double[] y = new double[]{8, 11, 14};
 		
-		DataAnalyzeManager ins = new DataAnalyzeManager();
-		System.out.println(ins.getPearsonCorrelationTest(x, y));
+		System.out.println(DataAnalyzeManager.getPearsonCorrelationTest(x, y));
 		
 	}
 }
