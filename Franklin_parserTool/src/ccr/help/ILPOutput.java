@@ -12,6 +12,7 @@ public class ILPOutput {
 	public double time; //in seconds
 	public TestSet reducedTestSet = new TestSet();
 	public double objectiveValue;
+	public double fdr; //2010-02-04: add a field to keep its testing effectiveness: fault detection rate
 	
 	public ILPOutput(){
 		
@@ -37,10 +38,14 @@ public class ILPOutput {
 		this.testSetId = Integer.parseInt(strs[3]);
 		this.time = Double.parseDouble(strs[4]);
 		this.objectiveValue = Double.parseDouble(strs[5]);
-		String[] tcs = strs[6].split(",");
-		for(int i = 0; i < tcs.length; i ++){
-			this.reducedTestSet.testcases.add(tcs[i]);
+		//2010-02-04: it is possible to have no test cases due to fail to find any solutions
+		if(strs.length == 7){
+			String[] tcs = strs[6].split(",");
+			for(int i = 0; i < tcs.length; i ++){
+				this.reducedTestSet.testcases.add(tcs[i]);
+			}	
 		}
+		
 	}
 	
 	public String toString(){
