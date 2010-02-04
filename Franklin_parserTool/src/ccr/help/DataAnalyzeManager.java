@@ -23,10 +23,18 @@ public class DataAnalyzeManager {
 		
 		double coefficient =  (n *sum_xByy - sum_x * sum_y )/(n*sum_x_Squre - sum_x*sum_x);
 		double intercept = sum_y/n - coefficient* sum_x/n;
-//		double inaccuracy = ;
+
 		CurveFittingResult result = new CurveFittingResult();
 		result.coefficient = coefficient;
 		result.intercept = intercept;
+		
+		double sum_inaccuracy = 0.0;
+		for(int i = 0; i < n; i ++){
+			sum_inaccuracy += (result.coefficient*x[i]+result.intercept - y[i])
+							*(result.coefficient*x[i]+ result.intercept - y[i]);			
+		}
+		
+		result.inaccuracy = Math.sqrt(sum_inaccuracy/(n));
 		return result;
 	}
 	
