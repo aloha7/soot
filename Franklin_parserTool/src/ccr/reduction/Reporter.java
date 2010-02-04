@@ -1,11 +1,18 @@
 package ccr.report;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import ccr.help.CurveFittingResult;
+import ccr.help.DataAnalyzeManager;
 import ccr.help.ILPOutput;
 import ccr.help.MutantStatistics;
 import ccr.help.TestSetStatistics;
@@ -453,7 +460,333 @@ public class Reporter_Reduction {
 		
 		return alpha_time;
 	}
+
+	public static HashMap<Double, HashMap<Integer, ArrayList<ILPOutput>>> loadCostAndPerformance(String date, 
+			String criterion, boolean containHeader){
+
+		HashMap<Double, HashMap<Integer, ArrayList<ILPOutput>>> alpha_size_outputs = new 
+		HashMap<Double, HashMap<Integer,ArrayList<ILPOutput>>>();
+				
+		
+		String saveFile = System.getProperty("user.dir") + "/src/ccr"
+		+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+		+ "/ILPModel/"+ criterion+"/VaryBeta_fixedAlpha_First.txt";
+		File tmp = new File(saveFile);
+		if(tmp.exists()){
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(saveFile));
+				if(containHeader){
+					br.readLine();
+				}
+				
+				String str = null;
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					double alpha = Double.parseDouble(strs[0]);
+					int size = Integer.parseInt(strs[1]);
+					ILPOutput output = new ILPOutput();
+					output.time = Double.parseDouble(strs[2]);
+					output.fdr = Double.parseDouble(strs[3]);
+					
+					if(output.fdr > 0.0001){//we are not interested in ILPOutput with fdr = 0
+						HashMap<Integer, ArrayList<ILPOutput>> size_outputs = alpha_size_outputs.get(alpha);
+						if(size_outputs == null){
+							size_outputs = new HashMap<Integer, ArrayList<ILPOutput>>();
+						}
+						ArrayList<ILPOutput> outputs = size_outputs.get(size);
+						if(outputs == null){
+							outputs = new ArrayList<ILPOutput>();
+						}
+						outputs.add(output);
+						size_outputs.put(size, outputs);
+						alpha_size_outputs.put(alpha, size_outputs);	
+					}
+					
+				}				
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}else{
+			System.out.println("[Reporter_Reduction.loadCostAndPerformance]The file:" + saveFile 
+					+ " does not exist!");
+		}
+		
+		return alpha_size_outputs;
+	}
 	
+	public static void saveCostAndPerformance_AllInOne_offline(String date, 
+			double alpha_min, double alpha_max, 
+			double alpha_interval){
+		
+		HashMap<String, HashMap<Double, HashMap<Integer, ArrayList<ILPOutput>>>> criterion_alpha_size_outputs
+		 = new HashMap<String, HashMap<Double,HashMap<Integer,ArrayList<ILPOutput>>>>();
+		
+		//1.load all the data for each testing criterion
+		String[] criteria = new String[]{"AllPolicies", "All1ResolvedDU", "All2ResolvedDU"};
+		
+		for(int i = 0; i < criteria.length; i ++){
+			String criterion = criteria[i];
+			boolean containHeader = true;
+			HashMap<Double, HashMap<Integer, ArrayList<ILPOutput>>> alpha_size_outputs =
+				loadCostAndPerformance(date, criterion, containHeader);
+			criterion_alpha_size_outputs.put(criterion, alpha_size_outputs);
+		}
+		
+		DecimalFormat format = new DecimalFormat("0.0");	
+		
+		StringBuilder sb_beta_fdr = new StringBuilder();
+		StringBuilder sb_beta_time = new StringBuilder();
+		
+		StringBuilder sb_curveFitting_beta_fdr = new StringBuilder();
+		sb_curveFitting_beta_fdr.append("Criterion\tAlpha\tCoefficient\tIntercept\tError\n");
+		
+		StringBuilder sb_PearsonCoefficient_beta_fdr = new StringBuilder();
+		sb_PearsonCoefficient_beta_fdr.append("Criterion\tAlpha\tPearsonCorrelationCoefficient\n");
+		
+		//2. save the data to generate figures with Excel (fixing the alpha and vary the beta) 
+		for(double alpha = alpha_min; Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){			
+			String alpha_str = format.format(alpha);
+
+			//1. get the beta value range
+			int size_min = Integer.MAX_VALUE;
+			int size_max = Integer.MIN_VALUE;
+			
+			for(int i =0 ; i < criteria.length; i++){
+				String criterion = criteria[i];
+				
+				System.out.println("Criterion:" + criterion + ",Alpha:" + alpha_str);
+				
+				HashMap<Integer, ArrayList<ILPOutput>> size_outputs = 
+					criterion_alpha_size_outputs.get(criterion).get(Double.parseDouble(alpha_str));
+				
+				if(size_outputs!= null){
+					Integer[] sizes = size_outputs.keySet().toArray(new Integer[0]);
+					Arrays.sort(sizes);		
+					if(sizes[0] < size_min){
+						size_min = sizes[0];
+					}
+					if(sizes[sizes.length -1] > size_max){
+						size_max = sizes[sizes.length - 1];
+					}
+					
+					//curve fitting & Pearson correlation test between beta and FDR 
+					//for each testing criterion and alpha
+					double[] size_x = new double[sizes.length];
+					double[] fdr_y = new double[sizes.length];
+					for(int k = 0; k < sizes.length; k ++){
+						size_x[k] = sizes[k];
+						ArrayList<ILPOutput> outputs = size_outputs.get(sizes[k]);
+						fdr_y[k] = outputs.get(0).fdr;
+					}
+					
+					CurveFittingResult result = DataAnalyzeManager.getLinearCurveFitting(size_x, fdr_y);
+					sb_curveFitting_beta_fdr.append(criterion).append("\t").append(alpha_str).append("\t").
+					append(result.coefficient).append("\t").append(result.intercept).append("\t").
+					append(result.inaccuracy).append("\n");
+					
+					double PearsonCorrelationCoefficient = 
+						DataAnalyzeManager.getPearsonCorrelationTest(size_x, fdr_y);
+					sb_PearsonCoefficient_beta_fdr.append(criterion).append("\t").append(alpha_str).append("\t").
+					append(PearsonCorrelationCoefficient).append("\n");
+				}
+			}
+			
+			//2. save the correlation between beta and FDR/time
+			sb_beta_fdr.append("Alpha\t\t");
+			sb_beta_time.append("Alpha\t\t");
+			for(int i = 0; i < criteria.length; i ++){
+				sb_beta_fdr.append(criteria[i]).append("\t");
+				sb_beta_time.append(criteria[i]).append("\t");
+			}
+			sb_beta_fdr.append("\n");
+			sb_beta_time.append("\n");
+			
+			
+			DecimalFormat format_fdr = new DecimalFormat("0.00000");
+			for(int i = size_min; i <= size_max; i++ ){
+				sb_beta_fdr.append(alpha_str).append("\t").append(i).append("\t");
+				sb_beta_time.append(alpha_str).append("\t").append(i).append("\t");
+				
+				for(int j =0; j < criteria.length; j ++){
+					String criterion = criteria[j];
+					boolean exists = true;
+					
+					HashMap<Double, HashMap<Integer, ArrayList<ILPOutput>>> alpha_size_outputs = 
+						criterion_alpha_size_outputs.get(criterion);
+					
+					if(!alpha_size_outputs.containsKey(Double.parseDouble(alpha_str))){
+						exists = false;
+					}else{
+						HashMap<Integer, ArrayList<ILPOutput>> size_outputs = 
+							alpha_size_outputs.get(Double.parseDouble(alpha_str));
+						if(!size_outputs.containsKey(i)){
+							exists = false;
+						}
+					}
+					
+					if(!exists){
+						sb_beta_fdr.append("0\t");
+						sb_beta_time.append("0\t");
+					}else{
+						ArrayList<ILPOutput> outputs = criterion_alpha_size_outputs.get(criterion).
+						get(Double.parseDouble(alpha_str)).get(i);
+						sb_beta_fdr.append(format_fdr.format(outputs.get(0).fdr)).append("\t");
+						sb_beta_time.append(format_fdr.format(outputs.get(0).time)).append("\t");
+					}
+				}
+				sb_beta_fdr.append("\n");
+				sb_beta_time.append("\n");
+			}
+			sb_beta_fdr.append("\n");
+			sb_beta_time.append("\n");
+		}
+		
+		String saveFile = System.getProperty("user.dir") + "/src/ccr"
+		+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+		+ "/ILPModel/Beta_FDR_First.txt";
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb_beta_fdr.toString());
+		Logger.getInstance().close();
+		
+		saveFile = System.getProperty("user.dir") + "/src/ccr"
+		+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+		+ "/ILPModel/Beta_Time_First.txt";
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb_beta_time.toString());
+		Logger.getInstance().close();
+		
+		saveFile = System.getProperty("user.dir") + "/src/ccr"
+		+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+		+ "/ILPModel/CurveFitting_Size_FDR_First.txt";
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb_curveFitting_beta_fdr.toString());
+		Logger.getInstance().close();
+		
+		saveFile = System.getProperty("user.dir") + "/src/ccr"
+		+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+		+ "/ILPModel/PearsonCorrelationCoefficient_Size_FDR_First.txt";
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb_PearsonCoefficient_beta_fdr.toString());
+		Logger.getInstance().close();
+	}
+	
+	/**2010-02-04: get the correlation between testing effectiveness/time
+	 * and test suite sizes by fixing the alpha, the file will save the info
+	 * such as "Alpha Beta Time FDR". 
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
+	 * @param single_enabled
+	 * @return: alpha -> size -> ILPOuputs
+	 */
+	public static HashMap<Double, HashMap<Integer, ArrayList<ILPOutput>>> saveCostAndPerformance_sizeConstraint(String date, String criterion,
+			String mutantFile_date, boolean containHeader_mutant, 
+			String mutantDetailDir, boolean containHeader_testing, double alpha_min, double alpha_max, 
+			double alpha_interval, boolean single_enabled){
+		
+		HashMap<Double, HashMap<Integer, ArrayList<ILPOutput>>> alpha_size_outputs  = 
+			new HashMap<Double, HashMap<Integer, ArrayList<ILPOutput>>>();
+		
+		ArrayList<TestSet> testSets = new ArrayList<TestSet>();
+		
+		String testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/ILPModel/"+ criterion + "/";;
+		boolean containHeader = false;
+		String pattern = "";
+		
+		if(single_enabled){
+			//2010-02-01:only interest in the first reduced test set
+			pattern = "Model\\_" + criterion +"\\_SingleObj\\_0\\_output\\.txt";
+			testSets = TestSetStatistics.loadReducedTestSet_offline(testSetDir, containHeader, pattern);
+		}
+		
+		DecimalFormat format = new DecimalFormat("0.0");		
+		//2. reduced test sets of bi-criteria ILP
+		for(double alpha = alpha_min; Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){			
+			String alpha_str = format.format(alpha);
+			
+			//2010-02-01:only interest in the first reduced test set
+			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+			"\\_0\\_output\\.txt";
+			
+			ArrayList<ILPOutput> output_biCriteria = TestSetStatistics.loadILPOutput_offline(
+					testSetDir, containHeader, pattern);
+			
+			for(int i = 0; i < output_biCriteria.size(); i ++){
+				ILPOutput output = output_biCriteria.get(i);
+				
+				ArrayList<TestSet> reducedTestSets = new ArrayList<TestSet>();
+				reducedTestSets.add(output.reducedTestSet);
+				
+				output.fdr = getFaultDetectionRate_average_online(reducedTestSets, 
+						mutantFile_date, containHeader_mutant, mutantDetailDir, 
+						containHeader_testing);
+				
+				HashMap<Integer,ArrayList<ILPOutput>> size_outputs = alpha_size_outputs.get(alpha);
+				if(size_outputs == null){
+					size_outputs = new HashMap<Integer, ArrayList<ILPOutput>>();
+				}
+				ArrayList<ILPOutput> outputs = size_outputs.get(output.testSetLimit);
+				if(outputs == null){
+					outputs = new ArrayList<ILPOutput>();
+				}
+				outputs.add(output);
+				size_outputs.put(output.testSetLimit, outputs);
+				alpha_size_outputs.put(alpha, size_outputs);
+			}
+		}
+		
+
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("Alpha").append("\t").append("Beta").append("\t").
+		append("Time").append("\t").append("FDR").append("\n");
+		
+		Double[] alphas = alpha_size_outputs.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);		
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];			
+			HashMap<Integer,ArrayList<ILPOutput>> size_outputs = alpha_size_outputs.get(alpha);
+			
+			Integer[] sizes = size_outputs.keySet().toArray(new Integer[0]);
+			Arrays.sort(sizes);			
+			for(int j = 0; j < sizes.length; j++){
+				int size = sizes[j];
+				ArrayList<ILPOutput> outputs = size_outputs.get(size);
+				for(int k = 0; k < outputs.size(); k ++){
+					ILPOutput output = outputs.get(k);
+					sb.append(format.format(alpha)).append("\t").append(output.testSetLimit).
+					append("\t").append(output.time).append("\t").append(output.fdr).append("\n");	
+				}
+			}
+		}
+
+		String saveFile = System.getProperty("user.dir") + "/src/ccr"
+		+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+		+ "/ILPModel/"+ criterion+"/VaryBeta_fixedAlpha_First.txt";
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+		
+		return alpha_size_outputs;
+	}
 	
 	/**2010-02-01: get averaged fault detection rates of reduced test sets
 	 * with respect to a set of mutants in an offline way
@@ -691,7 +1024,9 @@ public class Reporter_Reduction {
 			long duration = (System.currentTimeMillis() - start)/(1000*60);
 			System.out.println("It takes " + duration + " mins to process all faults");
 			System.out.println("the averaged fault detection rate:" + FDR);
-		}else if(instruction.equals("getFDR_reduction")|| instruction.equals("getFDR_reduction_offline")){
+		}else if(instruction.equals("getFDR_reduction")|| instruction.equals("getFDR_reduction_offline")
+				||instruction.equals("saveCostAndPerformance")||
+				instruction.equals("saveCostAndPerformance_AllInOne")){
 			
 			long start = System.currentTimeMillis();
 			String date = args[1];			 
@@ -727,27 +1062,47 @@ public class Reporter_Reduction {
 				alpha_interval = Double.parseDouble(args[10]);
 			}
 
-			//2010-01-31: solve the ILP model within a time limit
-			HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
+			
+			
 			if(instruction.equals("getFDR_reduction")){
+				//2010-01-31: solve the ILP model within a time limit
+				HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
 				alpha_fdr = getFaultDetectionRate_averaged_BILP(date, 
 						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
 						alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, 
-						testSetNum, single_enabled, timeLimit, sleepTime);			
-			}else{
+						testSetNum, single_enabled, timeLimit, sleepTime);
+				
+				String saveFile = System.getProperty("user.dir") + "/src/ccr"
+				+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+				+ "/ILPModel/"+ criterion+"/FaultDetectionRate_First.txt";
+				saveToFile_alpha_fdr(alpha_fdr, saveFile);
+				
+				long duration = System.currentTimeMillis() - start;
+				System.out.println("[Reporter_Reduction.Main]It takes " + duration/(1000*60) + " mins for " + criterion);
+				System.exit(0);
+			}else if(instruction.equals("getFDR_reduction_offline")){
+				HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
 				alpha_fdr = getFaultDetectionRate_averaged_BILP_offline(date, 
 						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
 						alpha_min, alpha_max, alpha_interval, single_enabled);
+				
+				String saveFile = System.getProperty("user.dir") + "/src/ccr"
+				+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+				+ "/ILPModel/"+ criterion+"/FaultDetectionRate_First.txt";
+				saveToFile_alpha_fdr(alpha_fdr, saveFile);
+				
+				long duration = System.currentTimeMillis() - start;
+				System.out.println("[Reporter_Reduction.Main]It takes " + duration/(1000*60) + " mins for " + criterion);
+				System.exit(0);
+			}else if(instruction.equals("saveCostAndPerformance")){
+				saveCostAndPerformance_sizeConstraint(date, criterion, mutantFile_date, containHeader_mutant, 
+						mutantDetailDir, containHeader_testing, alpha_min, alpha_max, 
+						alpha_interval, single_enabled);				
+			}else if(instruction.equals("saveCostAndPerformance_AllInOne")){				
+				saveCostAndPerformance_AllInOne_offline(date, alpha_min, alpha_max, alpha_interval);
 			}
 			
-			String saveFile = System.getProperty("user.dir") + "/src/ccr"
-			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
-			+ "/ILPModel/"+ criterion+"/FaultDetectionRate_First.txt";
-			saveToFile_alpha_fdr(alpha_fdr, saveFile);
 			
-			long duration = System.currentTimeMillis() - start;
-			System.out.println("[Reporter_Reduction.Main]It takes " + duration/(1000*60) + " mins for " + criterion);
-			System.exit(0);
 		}else if(instruction.equals("getTimeCost_reduction")){
 			
 			String date = args[1];			 
