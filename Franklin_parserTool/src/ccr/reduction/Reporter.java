@@ -1038,6 +1038,11 @@ public class Reporter_Reduction {
 			boolean single_enabled = Boolean.parseBoolean(args[6]);
 			long timeLimit = Long.parseLong(args[7]);
 			long sleepTime = 1000; //1 second
+			if(timeLimit == 0){ //"0" means no time limit
+				timeLimit = Long.MAX_VALUE;
+				sleepTime = 60 * 60 * 1000; //1 hour
+			}
+			
 			
 			String mutantFile_date = "20100121";
 			String mutantDetail_date = "20100121";
