@@ -11,6 +11,9 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import ccr.app.Application;
+import ccr.reduction.ILPSolver;
+import ccr.test.Logger;
+import ccr.test.TestCase;
 import ccr.test.TestSet;
 
 public class TestSetStatistics {
@@ -321,6 +324,36 @@ public class TestSetStatistics {
 		return outputs;
 	}
 	
+	/**2010-02-05: intercept the test case statistics by removing the HitSet part
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param containHeader
+	 */
+	public static void saveTestCases_NoHitSet(String date, String criterion, boolean containHeader){
+		
+		String testcaseFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/ILPModel/"+ criterion + "/TestCaseStatistics_" + criterion + ".txt";
+		File tmp = new File(testcaseFile);
+		
+		ArrayList<TestCase> testcases = ILPSolver.getStatisticsOfTestCase(testcaseFile, containHeader);
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("Index\tCI\tLength\tHitCounter\n");
+		for(int i = 0; i < testcases.size(); i ++){
+			TestCase tc = testcases.get(i);
+			sb.append(tc.index).append("\t").append(tc.CI).append("\t").
+			append(tc.length).append("\t").append(tc.hitCounter).append("\n");
+		}
+		
+		String saveFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date + "/ILPModel/"+ criterion + "/TestCaseStatistics_" + criterion + "_noHitSet.txt";
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
+	
 	/**
 	 * @param args
 	 */
@@ -346,6 +379,12 @@ public class TestSetStatistics {
 			boolean containHeader = false;
 			String dbName = "icdcs_10";
 			saveToDB_TestSet(append, testSetFile, containHeader, dbName);
+		}else if(instruction.equals("saveTestCasesWithoutHitSet")){
+			String date = args[1];
+			String criterion = args[2];
+			boolean containHeader = true;
+			
+			saveTestCases_NoHitSet(date, criterion, containHeader);
 		}
 
 	}
