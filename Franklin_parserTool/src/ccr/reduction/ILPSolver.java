@@ -25,7 +25,7 @@ import ccr.test.TestSet;
  */
 public class ILPSolver {
 	
-	private static ArrayList<TestCase> getStatisticsOfTestCase(String testcaseFile, boolean containHeader){
+	public static ArrayList<TestCase> getStatisticsOfTestCase(String testcaseFile, boolean containHeader){
 		
 		ArrayList<TestCase> tcArray = new ArrayList<TestCase>();
 		
