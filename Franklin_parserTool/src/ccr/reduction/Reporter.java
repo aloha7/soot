@@ -1053,7 +1053,7 @@ public class Reporter_Reduction {
 			int testSetNum = Integer.parseInt(args[5]);
 			boolean single_enabled = Boolean.parseBoolean(args[6]);
 			long timeLimit = Long.parseLong(args[7]);
-			long sleepTime = 1000; //1 second
+			long sleepTime = Long.parseLong(args[8]); //1000 = 1 second
 			if(timeLimit == 0){ //"0" means no time limit
 				timeLimit = Long.MAX_VALUE;
 				sleepTime = 60 * 60 * 1000; //1 hour
@@ -1069,18 +1069,18 @@ public class Reporter_Reduction {
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + mutantDetail_date
 			+ "/Mutant/";
 			
-			if(args.length == 10){
-				mutantFile_date = args[8];
-				mutantDetail_date = args[9];
+			if(args.length == 11){
+				mutantFile_date = args[9];
+				mutantDetail_date = args[10];
 			}
 			
 			double alpha_min = 0.0;
 			double alpha_max = 1.1;
 			double alpha_interval = 0.1;
-			if(args.length == 11){
-				alpha_min = Double.parseDouble(args[8]);
-				alpha_max = Double.parseDouble(args[9]);
-				alpha_interval = Double.parseDouble(args[10]);
+			if(args.length == 12){
+				alpha_min = Double.parseDouble(args[9]);
+				alpha_max = Double.parseDouble(args[10]);
+				alpha_interval = Double.parseDouble(args[11]);
 			}
 			
 			if(instruction.equals("getFDR_reduction")){
@@ -1128,15 +1128,15 @@ public class Reporter_Reduction {
 			String criterion = args[2];
 			int sizeConstraint = Integer.parseInt(args[3]);
 			
-			boolean single_enabled = Boolean.parseBoolean(args[5]);
+			boolean single_enabled = Boolean.parseBoolean(args[6]);
 			
 			double alpha_min = 0.0;
 			double alpha_max = 1.1;
 			double alpha_interval = 0.1;
-			if(args.length == 10){
-				alpha_min = Double.parseDouble(args[7]);
-				alpha_max = Double.parseDouble(args[8]);
-				alpha_interval = Double.parseDouble(args[9]);
+			if(args.length == 12){
+				alpha_min = Double.parseDouble(args[9]);
+				alpha_max = Double.parseDouble(args[10]);
+				alpha_interval = Double.parseDouble(args[11]);
 			}
 			
 			HashMap<Double, Double> alpha_time = new HashMap<Double, Double>();
@@ -1154,15 +1154,15 @@ public class Reporter_Reduction {
 			String criterion = args[2];
 			int sizeConstraint = Integer.parseInt(args[3]);
 			
-			boolean single_enabled = Boolean.parseBoolean(args[5]);
+			boolean single_enabled = Boolean.parseBoolean(args[6]);
 			
 			double alpha_min = 0.0;
 			double alpha_max = 1.1;
 			double alpha_interval = 0.1;
-			if(args.length == 10){
-				alpha_min = Double.parseDouble(args[7]);
-				alpha_max = Double.parseDouble(args[8]);
-				alpha_interval = Double.parseDouble(args[9]);
+			if(args.length == 11){
+				alpha_min = Double.parseDouble(args[9]);
+				alpha_max = Double.parseDouble(args[10]);
+				alpha_interval = Double.parseDouble(args[11]);
 			}
 			
 			HashMap<Double, Double> alpha_size = new HashMap<Double, Double>();
