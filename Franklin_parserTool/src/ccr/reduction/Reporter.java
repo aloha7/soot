@@ -18,6 +18,7 @@ import ccr.help.MutantStatistics;
 import ccr.help.TestSetStatistics;
 import ccr.reduction.ILPSolver;
 import ccr.test.Logger;
+import ccr.test.TestCase;
 import ccr.test.TestDriver;
 import ccr.test.TestSet;
 
@@ -347,8 +348,8 @@ public class Reporter_Reduction {
 //			"\\_0\\_output\\.txt";
 			
 			//2010-02-03: test set size- sensitive 
-			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
-			"\\_0\\_output\\.txt";
+//			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+//			"\\_0\\_output\\.txt";
 			
 			//2010-02-01:only interest in the first reduced test set
 			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + maxSize +
@@ -788,24 +789,28 @@ public class Reporter_Reduction {
 		return alpha_size_outputs;
 	}
 	
+	
 	/**2010-02-01: get averaged fault detection rates of reduced test sets
 	 * with respect to a set of mutants in an offline way
+	 * 
 	 * @param date
 	 * @param criterion
 	 * @param mutantFile_date
 	 * @param containHeader_mutant
 	 * @param mutantDetailDir
 	 * @param containHeader_testing
-	 * @param alpha_min
-	 * @param alpha_max
+	 * @param alpha_min: inclusive
+	 * @param alpha_max: exclusive
 	 * @param alpha_interval
+	 * @param sizeConstraint_min: inclusive
+	 * @param sizeConstraint_max: exclusive
 	 * @param single_enabled
 	 * @return
 	 */
 	public static HashMap<Double, Double> getFaultDetectionRate_averaged_BILP_offline(String date, String criterion,
 			String mutantFile_date, boolean containHeader_mutant, 
 			String mutantDetailDir, boolean containHeader_testing, double alpha_min, double alpha_max, 
-			double alpha_interval, boolean single_enabled){
+			double alpha_interval, int sizeConstraint_min, int sizeConstraint_max, boolean single_enabled){
 
 		HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
 		
@@ -843,12 +848,21 @@ public class Reporter_Reduction {
 //			"\\_[0-9]+\\_output\\.txt";
 			
 			//2010-02-01:only interest in the first reduced test set
-			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
-			"\\_0\\_output\\.txt";
+//			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+//			"\\_0\\_output\\.txt";
 			
-			ArrayList<TestSet> testSet_biCriteria = TestSetStatistics.loadReducedTestSet_offline(
-					testSetDir, containHeader, pattern);
-			
+			//2010-02-07: only interest in the first reduced test set with some size constraint;
+			ArrayList<TestSet> testSet_biCriteria = new ArrayList<TestSet>();
+			for(int i = sizeConstraint_min; i < sizeConstraint_max; i ++){
+				int sizeConstraint = i;
+				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+				"\\_0\\_output\\.txt";	
+				 ArrayList<TestSet> testsets = TestSetStatistics.loadReducedTestSet_offline(
+						testSetDir, containHeader, pattern);
+				 for(int j = 0; j < testsets.size(); j ++){
+					 testSet_biCriteria.add(testsets.get(j));
+				 }
+			}
 			alpha_testSets.put(alpha, testSet_biCriteria);
 		}
 		
@@ -977,6 +991,8 @@ public class Reporter_Reduction {
 		Logger.getInstance().close();
 	}
 	
+	
+	
 	public static void main(String[] args) {
 		String instruction = args[0];
 		if(instruction.equals("getFDR_offline")){
@@ -1066,8 +1082,6 @@ public class Reporter_Reduction {
 				alpha_max = Double.parseDouble(args[9]);
 				alpha_interval = Double.parseDouble(args[10]);
 			}
-
-			
 			
 			if(instruction.equals("getFDR_reduction")){
 				//2010-01-31: solve the ILP model within a time limit
@@ -1089,7 +1103,8 @@ public class Reporter_Reduction {
 				HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
 				alpha_fdr = getFaultDetectionRate_averaged_BILP_offline(date, 
 						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
-						alpha_min, alpha_max, alpha_interval, single_enabled);
+						alpha_min, alpha_max, alpha_interval, sizeConstraint_min,
+						sizeConstraint_max, single_enabled);
 				
 				String saveFile = System.getProperty("user.dir") + "/src/ccr"
 				+ "/experiment/Context-Intensity_backup/TestHarness/" + date
@@ -1106,8 +1121,6 @@ public class Reporter_Reduction {
 			}else if(instruction.equals("saveCostAndPerformance_AllInOne")){				
 				saveCostAndPerformance_AllInOne_offline(date, alpha_min, alpha_max, alpha_interval);
 			}
-			
-			
 		}else if(instruction.equals("getTimeCost_reduction")){
 			
 			String date = args[1];			 
