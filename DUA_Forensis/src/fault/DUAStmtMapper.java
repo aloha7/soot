@@ -202,21 +202,24 @@ public class DUAStmtMapper {
 				
 				// Rule 1: def stmt
 				Stmt s = dua.getDef().getN().getStmt();
-				relStmts.add(s);
-				bsAssignedStmts.set(stmtIds.get(s));
-				
-				if (!defsOnly) {
-					// Rule 2: use (src) stmt
-					s = dua.getUse().getSrcNode().getStmt();
+				//2010-02-26: ignore the null statement(for example, the specialNode EN or EX)
+				if(s != null){
 					relStmts.add(s);
 					bsAssignedStmts.set(stmtIds.get(s));
 					
-					// Rule 3: use tgt stmt, if p-use
-					Branch brPUse = dua.getUse().getBranch();
-					if (brPUse != null) {
-						s = brPUse.getTgt().getStmt();
+					if (!defsOnly) {
+						// Rule 2: use (src) stmt
+						s = dua.getUse().getSrcNode().getStmt();
 						relStmts.add(s);
 						bsAssignedStmts.set(stmtIds.get(s));
+						
+						// Rule 3: use tgt stmt, if p-use
+						Branch brPUse = dua.getUse().getBranch();
+						if (brPUse != null) {
+							s = brPUse.getTgt().getStmt();
+							relStmts.add(s);
+							bsAssignedStmts.set(stmtIds.get(s));
+						}
 					}
 				}
 			}
