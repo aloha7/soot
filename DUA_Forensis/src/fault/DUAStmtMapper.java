@@ -250,18 +250,23 @@ public class DUAStmtMapper {
 			// associate def to def stmt
 			Def def = dua.getDef();
 			Stmt sDef = def.getN().getStmt();
-			relStmts.add(sDef);
-			bsAssignedStmts.set(stmtIds.get(sDef));
 			
-			// add mini-back-slice stmts, if any
-			List<Def> miniBackDefSlice = miniBackDefSlices.get(def);
-			if (miniBackDefSlice != null) {
-				for (Def backDef : miniBackDefSlice) {
-					Stmt sBackDef = backDef.getN().getStmt();
-					relStmts.add(sBackDef);
-					bsAssignedStmts.set(stmtIds.get(sBackDef));
+			//2010-02-26: ignore the null statement(for example, the specialNode EN or EX)
+			if(sDef != null){
+				relStmts.add(sDef);
+				bsAssignedStmts.set(stmtIds.get(sDef));
+				
+				// add mini-back-slice stmts, if any
+				List<Def> miniBackDefSlice = miniBackDefSlices.get(def);
+				if (miniBackDefSlice != null) {
+					for (Def backDef : miniBackDefSlice) {
+						Stmt sBackDef = backDef.getN().getStmt();
+						relStmts.add(sBackDef);
+						bsAssignedStmts.set(stmtIds.get(sBackDef));
+					}
 				}
 			}
+			
 		}
 		
 		// RULE 2: For completeness, each use is mapped to all unmapped stmts in use's BB (plus branch target's BB, if p-use)
