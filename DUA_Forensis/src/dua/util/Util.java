@@ -431,18 +431,28 @@ public class Util {
 	
 	/** Returns basic block that contains the statement, or null. If id stmt, it looks in tag of first non-id stmt. */
 	public static Block getBB(Stmt s) {
-		// move to first non-id stmt
-		Stmt sNonId = s;
-		if (sNonId instanceof IdentityStmt) {
-			PatchingChain pchain = ProgramFlowGraph.inst().getContainingMethod(sNonId).retrieveActiveBody().getUnits();
-			do {
-				sNonId = (Stmt) pchain.getSuccOf(sNonId);
-			} while (sNonId instanceof IdentityStmt);
+		Block bb;
+		//2010-02-26: return null when s == null
+		if(s!= null){			
+			// move to first non-id stmt
+			Stmt sNonId = s;
+			if (sNonId instanceof IdentityStmt) {
+				PatchingChain pchain = ProgramFlowGraph.inst().getContainingMethod(sNonId).retrieveActiveBody().getUnits();
+				do {
+					sNonId = (Stmt) pchain.getSuccOf(sNonId);
+				} while (sNonId instanceof IdentityStmt);
+			}
+			
+			// retrieve basic block for non-id stmt	
+			StmtTag sTag = (StmtTag) sNonId.getTag(StmtTag.TAG_NAME);
+			bb = sTag.getBasicBlock();
+		}else{
+			bb = null;
 		}
 		
-		// retrieve basic block for non-id stmt
-		StmtTag sTag = (StmtTag) sNonId.getTag(StmtTag.TAG_NAME);
-		Block bb = sTag.getBasicBlock();
+		
+		
+		
 		
 		return bb;
 	}
