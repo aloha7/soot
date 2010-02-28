@@ -162,7 +162,7 @@ public class Options {
 				if (arg.equals("--help")) {
 					System.out.println("DUA Forensic options:");
 					System.out.println("  -allowthisflow\tTakes 'this' as formal parameter along which data flows interprocedurally (default: false)");
-					System.out.println("  -brinstr:<on|opt|count|someprobes|off>\tWhether to instrument for branches (default: on); 'count' increments register instead of setting it");
+					System.out.println("  -brinstr:<on|opt|count|someprobes|all|off>\tWhether to instrument for branches (default: on); 'count' increments register instead of setting it");
 					System.out.println("  -dominance\tEnables interprocedural dom/pdom analysis (default: false)");
 					System.out.println("  -duainstr:<none|branch|direct|noprobes|all>\tType of instrumentation for duas (default: all); brInstr=off disables branch dua instr");
 					System.out.println("  -edgeweight:<on|off>\tWhether to perform edge weighting for min-weight edge instrumentation (default: on)");
