@@ -416,29 +416,33 @@ public class DUAInstrumenter {
 			// find insertion point for def probe
 			Stmt insertStmt = def.getN().getStmt();
 			SootMethod m = ProgramFlowGraph.inst().getContainingMethod(insertStmt);
-			PatchingChain pchain = m.retrieveActiveBody().getUnits();
-			while (insertStmt instanceof IdentityStmt)  // move first non-identify stmt
-				insertStmt = (Stmt) pchain.getSuccOf(insertStmt);
-			
-			// for each related var, add code to update last-def register with this def's id
-			// ... only if var has at least one use with more than one def
-			// ... and var is "definite" (statically guaranteed to be the same everywhere)
-			for (Variable var : varToDefId.keySet()) {
-				if (!varsWithMultiDefUses.contains(var))
-					continue;  // var has no use with more than one def
+			//2010-02-28: ignore the Null SootMethod
+			if(m != null){
+				PatchingChain pchain = m.retrieveActiveBody().getUnits();
+				while (insertStmt instanceof IdentityStmt)  // move first non-identify stmt
+					insertStmt = (Stmt) pchain.getSuccOf(insertStmt);
 				
-				if (Options.hybridInstr() && !varsForDefRequiringProbe.contains(var))
-					continue;  // this particular var def does not require probe in hybrid case
-				
-				final int varId = varIds.get(var);
-				final int defIdx = varToDefId.get(var);
-				if (var.isDefinite())
-					insertLastDefCode(lastDefFields, varId, defIdx, insertStmt, pchain, var);
-				else
-					insertDefMonitorCall(insertStmt, pchain, var, varId, defIdx);
-				
-				++defProbeCount;
+				// for each related var, add code to update last-def register with this def's id
+				// ... only if var has at least one use with more than one def
+				// ... and var is "definite" (statically guaranteed to be the same everywhere)
+				for (Variable var : varToDefId.keySet()) {
+					if (!varsWithMultiDefUses.contains(var))
+						continue;  // var has no use with more than one def
+					
+					if (Options.hybridInstr() && !varsForDefRequiringProbe.contains(var))
+						continue;  // this particular var def does not require probe in hybrid case
+					
+					final int varId = varIds.get(var);
+					final int defIdx = varToDefId.get(var);
+					if (var.isDefinite())
+						insertLastDefCode(lastDefFields, varId, defIdx, insertStmt, pchain, var);
+					else
+						insertDefMonitorCall(insertStmt, pchain, var, varId, defIdx);
+					
+					++defProbeCount;
+				}
 			}
+			
 		}
 		
 		// 4. For each use, add code to check last def and mark DUA bit
