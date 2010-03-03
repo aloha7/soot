@@ -34,7 +34,7 @@ public class Token {
 	protected boolean isMainName;
 	protected String stem;
 	protected String postag;
-	protected List<WeightedRelation> relations;
+	protected List relations;
 
 	protected String text;
 	
@@ -48,7 +48,7 @@ public class Token {
 	    	this.stem = null;
 	    	this.postag = null;
 		this.text = text;
-		relations = new ArrayList<WeightedRelation>();
+		relations = new ArrayList();
 	}
 	
 	/**
@@ -70,7 +70,7 @@ public class Token {
 	/**
 	 * Returns the relations
 	 */
-	public List<WeightedRelation> getRelations()
+	public List getRelations()
 	{
 	    return relations;
 	}

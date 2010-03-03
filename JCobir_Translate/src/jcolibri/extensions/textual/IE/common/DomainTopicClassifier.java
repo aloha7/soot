@@ -49,20 +49,22 @@ import jcolibri.util.ProgressController;
  */
 public class DomainTopicClassifier
 {
-    static ArrayList<TopicRule> topicsRules;
+    static ArrayList topicsRules;
 
     /**
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IEText objects.
      */
-    public static void classifyWithTopic(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void classifyWithTopic(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(DomainTopicClassifier.class).info("Classifying with topic.");
 	ProgressController.init(DomainTopicClassifier.class, "Classifying with topic  ...", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    for(Attribute a: attributes)
+		CBRCase c =  (CBRCase)on;
+	    for(Object om: attributes)
 	    {
+	    	Attribute a =  (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		classifyWithTopic((IEText)o);
 	    }
@@ -75,11 +77,11 @@ public class DomainTopicClassifier
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IEText objects.
      */
-    public static void classifyWithTopic(CBRQuery query, Collection<Attribute> attributes)
+    public static void classifyWithTopic(CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(DomainTopicClassifier.class).info("Classifying with topic.");
-	for(Attribute a: attributes)
-	{
+	for(Object o1: attributes)
+	{Attribute a = (Attribute)o1;
 	    Object o = AttributeUtils.findValue(a, query);
 	    classifyWithTopic((IEText)o);
 	}
@@ -89,15 +91,19 @@ public class DomainTopicClassifier
      * Performs the algorithm in all the attributes of a collection of cases
      * These attributes must be IEText objects.
      */
-    public static void classifyWithTopic(Collection<CBRCase> cases)
+    public static void classifyWithTopic(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(DomainTopicClassifier.class).info("Classifying with topic.");
 	ProgressController.init(DomainTopicClassifier.class, "Classifying with topic  ...", cases.size());
-	for(CBRCase c: cases)
+	for(Object o1: cases)
 	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		classifyWithTopic(t);
+		CBRCase c = (CBRCase)o1;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object om : texts){
+	    	IEText t = (IEText)om;
+	    	classifyWithTopic(t);
+	    }
+		
 	    ProgressController.step(DomainTopicClassifier.class);
 	}
 	ProgressController.finish(DomainTopicClassifier.class);
@@ -110,9 +116,12 @@ public class DomainTopicClassifier
     public static void classifyWithTopic(CBRQuery query)
     {
 	org.apache.commons.logging.LogFactory.getLog(DomainTopicClassifier.class).info("Classifying with topic.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            classifyWithTopic(t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object o1 : texts){
+        	IEText t = (IEText)o1;
+        	classifyWithTopic(t);
+        }
+            
     }  
     
     /**
@@ -120,14 +129,15 @@ public class DomainTopicClassifier
      */
     public static void classifyWithTopic(IEText text)
     {
-	Collection<PhraseInfo> _phrases = text.getPhrases();
-	Collection<FeatureInfo> _features = text.getFeatures();
-	for (TopicRule rule : topicsRules)
+	Collection _phrases = text.getPhrases();
+	Collection _features = text.getFeatures();
+	for (Object on : topicsRules)
 	{
+		TopicRule rule = (TopicRule)on;
 	    // Chech rule conditions
 	    boolean valid = true;
-	    HashMap<String, String> conditions = rule._data;
-	    Iterator<String> fOpIter = conditions.keySet().iterator();
+	    HashMap conditions = rule._data;
+	    Iterator fOpIter = conditions.keySet().iterator();
 	    // For each condition
 	    while (fOpIter.hasNext() && valid)
 	    {
@@ -137,9 +147,9 @@ public class DomainTopicClassifier
 		if (value == null)
 		{
 		    boolean found = false;
-		    for (Iterator<PhraseInfo> it = _phrases.iterator(); it.hasNext() && !found;)
+		    for (Iterator it = _phrases.iterator(); it.hasNext() && !found;)
 		    {
-			PhraseInfo pi = it.next();
+			PhraseInfo pi = (PhraseInfo)it.next();
 			if (pi.getPhrase().equals(featureOrPhrase))
 			    found = true;
 		    }
@@ -149,9 +159,9 @@ public class DomainTopicClassifier
 		else
 		{
 		    boolean found = false;
-		    for (Iterator<FeatureInfo> it = _features.iterator(); it.hasNext() && !found;)
+		    for (Iterator it = _features.iterator(); it.hasNext() && !found;)
 		    {
-			FeatureInfo fi = it.next();
+			FeatureInfo fi = (FeatureInfo)it.next();
 			if (!value.equals("?"))
 			    found = (fi.getFeature().equals(featureOrPhrase) && fi.getValue().equals(value));
 			else
@@ -174,7 +184,7 @@ public class DomainTopicClassifier
     {
 	try
 	{
-	    topicsRules = new ArrayList<TopicRule>();
+	    topicsRules = new ArrayList();
 	    URL file = jcolibri.util.FileIO.findFile(filename);
 	    BufferedReader br = new BufferedReader( new InputStreamReader(file.openStream()));
 	    String line = "";
@@ -188,7 +198,7 @@ public class DomainTopicClassifier
 		String _feature = line.substring(1, pos);
 		String _rest = line.substring(pos + 1);
 
-		HashMap<String, String> data = new HashMap<String, String>();
+		HashMap data = new HashMap();
 		int indexOpen;
 		int indexClose;
 		while (((indexOpen = _rest.indexOf("<")) != -1) && ((indexClose = _rest.indexOf(">")) != -1))
@@ -220,9 +230,9 @@ public class DomainTopicClassifier
     {
 	String _name;
 
-	HashMap<String, String> _data;
+	HashMap _data;
 
-	TopicRule(String n, HashMap<String, String> d)
+	TopicRule(String n, HashMap d)
 	{
 	    _name = n;
 	    _data = d;

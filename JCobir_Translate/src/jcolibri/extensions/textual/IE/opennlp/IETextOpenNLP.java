@@ -74,20 +74,20 @@ public class IETextOpenNLP extends IEText
     }
 
     //Internal mapping between paragraphs and the paragraphs nodes in the DOM tree
-    private Hashtable<Paragraph, Element> parMapping = new Hashtable<Paragraph, Element>();
+    private Hashtable parMapping = new Hashtable();
 
     //Internal mapping between sentences and the sentences nodes in the DOM tree
-    private Hashtable<Sentence, Element> sentMapping = new Hashtable<Sentence, Element>();
+    private Hashtable sentMapping = new Hashtable();
 
     //Internal mapping between tokens and the tokens nodes in the DOM tree
-    private Hashtable<Token, Element> tokMapping = new Hashtable<Token, Element>();
+    private Hashtable tokMapping = new Hashtable();
 
     /**
      * Returns a mapping between a paragraph and the paragraph node in the DOM tree
      */
     protected Element getParagraphMapping(Paragraph par)
     {
-	return parMapping.get(par);
+	return (Element)parMapping.get(par);
     }
     
     /**
@@ -103,7 +103,7 @@ public class IETextOpenNLP extends IEText
      */
     protected Element getSentenceMapping(Sentence sent)
     {
-	return sentMapping.get(sent);
+	return (Element)sentMapping.get(sent);
     }
 
     /**
@@ -119,7 +119,7 @@ public class IETextOpenNLP extends IEText
      */
     protected Element getTokenMapping(Token tok)
     {
-	return tokMapping.get(tok);
+	return (Element)tokMapping.get(tok);
     }
     
     /**

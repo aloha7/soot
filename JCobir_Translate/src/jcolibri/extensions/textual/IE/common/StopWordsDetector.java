@@ -40,14 +40,14 @@ public class StopWordsDetector
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IEText objects.
      */
-    public static void detectStopWords(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void detectStopWords(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(StopWordsDetector.class).info("Detecting stop words.");
 	ProgressController.init(StopWordsDetector.class, "Detecting stop words ...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    for(Attribute a: attributes)
-	    {
+	for(Object on: cases)
+	{CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		detectStopWords((IEText)o);
 	    }
@@ -60,11 +60,11 @@ public class StopWordsDetector
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IEText objects.
      */
-    public static void detectStopWords(CBRQuery query, Collection<Attribute> attributes)
+    public static void detectStopWords(CBRQuery query, Collection attributes)
     {
 	    org.apache.commons.logging.LogFactory.getLog(StopWordsDetector.class).info("Detecting stop words.");
-	    for(Attribute a: attributes)
-	    {
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, query);
 		detectStopWords((IEText)o);
 	    }
@@ -74,15 +74,18 @@ public class StopWordsDetector
      * Performs the algorithm in all the attributes of a collection of cases
      * These attributes must be IEText objects.
      */
-    public static void detectStopWords(Collection<CBRCase> cases)
+    public static void detectStopWords(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(StopWordsDetector.class).info("Detecting stop words.");
 	ProgressController.init(StopWordsDetector.class, "Detecting stop words ...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		detectStopWords(t);
+	for(Object on: cases)
+	{	CBRCase c = (CBRCase)on;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object om : texts){
+	    	IEText t =  (IEText)om;
+	    	detectStopWords(t);
+	    }
+		
 	    ProgressController.step(GatePhrasesExtractor.class);
 	}
 	ProgressController.finish(GatePhrasesExtractor.class);
@@ -95,9 +98,12 @@ public class StopWordsDetector
     public static void detectStopWords(CBRQuery query)
     {	 
 	org.apache.commons.logging.LogFactory.getLog(StopWordsDetector.class).info("Detecting stop words.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            detectStopWords(t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object om : texts){
+        	IEText t = (IEText)om;
+        	detectStopWords(t);
+        }
+            
     }
     
     /**
@@ -105,8 +111,8 @@ public class StopWordsDetector
      */
     public static void detectStopWords(IEText text)
     {
-	for(Token t: text.getAllTokens())
-	{
+	for(Object on: text.getAllTokens())
+	{Token t = (Token)on;
 	    String word = t.getRawContent().toLowerCase();
 	    if(stopWordSet.contains(word))
 		t.setStopWord(true);
@@ -230,6 +236,6 @@ public class StopWordsDetector
 		",", ";", ".", ":", "_", "{", "}", "[", "]", "+", "*", "¡", "¿", "?", "=", ")", "(", "/", "&", "%", "$", "·"
     		};
 
-    static Set<String> stopWordSet = new HashSet<String>(java.util.Arrays.asList(stopWords));
+    static Set stopWordSet = new HashSet(java.util.Arrays.asList(stopWords));
 
 }

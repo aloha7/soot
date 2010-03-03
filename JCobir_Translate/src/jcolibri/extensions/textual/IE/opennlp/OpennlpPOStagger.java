@@ -96,14 +96,15 @@ public class OpennlpPOStagger
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IETextOpenNLP objects.
      */
-    public static void tag(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void tag(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(OpennlpPOStagger.class).info("OpenNLP POS tagging.");
 	ProgressController.init(OpennlpPOStagger.class, "OpenNLP POS tagging", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    for(Attribute a: attributes)
-	    {
+		CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		if(o instanceof IETextOpenNLP)
 		    tag((IETextOpenNLP)o);
@@ -117,11 +118,12 @@ public class OpennlpPOStagger
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IETextOpenNLP objects.
      */
-    public static void tag(CBRQuery query, Collection<Attribute> attributes)
+    public static void tag(CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(OpennlpPOStagger.class).info("OpenNLP POS tagging.");
-	    for(Attribute a: attributes)
+	    for(Object om: attributes)
 	    {
+	    	Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, query);
 		if(o instanceof IETextOpenNLP)
 		    tag((IETextOpenNLP)o);
@@ -131,16 +133,20 @@ public class OpennlpPOStagger
     /**
      * Performs the algorithm in all the IETextOpenNLP typed attributes of a collection of cases.
      */
-    public static void tag(Collection<CBRCase> cases)
+    public static void tag(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(OpennlpPOStagger.class).info("OpenNLP POS tagging.");
 	ProgressController.init(OpennlpPOStagger.class, "OpenNLP POS tagging", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		if(t instanceof IETextOpenNLP)
-		    tag((IETextOpenNLP)t);
+		CBRCase c = (CBRCase)on;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object om : texts){
+	    	IEText t = (IEText)om;
+	    	if(t instanceof IETextOpenNLP)
+			    tag((IETextOpenNLP)t);
+	    }
+		
 	    ProgressController.step(OpennlpPOStagger.class);
 	}
 	ProgressController.finish(OpennlpPOStagger.class);
@@ -152,10 +158,13 @@ public class OpennlpPOStagger
     public static void tag(CBRQuery query)
     {	    
 	org.apache.commons.logging.LogFactory.getLog(OpennlpPOStagger.class).info("OpenNLP POS tagging.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            if(t instanceof IETextOpenNLP)
-        	tag((IETextOpenNLP)t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object om : texts){
+        	IEText t = (IEText)om;
+        	if(t instanceof IETextOpenNLP)
+            	tag((IETextOpenNLP)t);
+        }
+            
     }
     
     /**
@@ -167,8 +176,9 @@ public class OpennlpPOStagger
 	
 	tagger.process(text.getDocument());
 	
-	for(Token t: text.getAllTokens())
+	for(Object on: text.getAllTokens())
 	{
+		Token t = (Token)on;
 	    Element elem = text.getTokenMapping(t);
 	    Element word = elem.getChild("w");
 	    String posTag = word.getAttributeValue("pos");

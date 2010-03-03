@@ -45,14 +45,16 @@ public class GatePhrasesExtractor
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IETextGate objects.
      */    
-    public static void extractPhrases(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void extractPhrases(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(GatePhrasesExtractor.class).info("Extracting phrases.");
 	ProgressController.init(GatePhrasesExtractor.class, "Extracting phrases", cases.size());
-	for(CBRCase c: cases)
+	for(Object om: cases)
 	{
-	    for(Attribute a: attributes)
+		CBRCase c = (CBRCase)om;
+	    for(Object on: attributes)
 	    {
+	    	Attribute a = (Attribute)on;
 		Object o = AttributeUtils.findValue(a, c);
 		if(o instanceof IETextGate)
 		    extractPhrases((IETextGate)o);
@@ -66,11 +68,11 @@ public class GatePhrasesExtractor
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IETextGate objects.
      */
-    public static void extractPhrases(CBRQuery query, Collection<Attribute> attributes)
+    public static void extractPhrases(CBRQuery query, Collection attributes)
     {
 	    org.apache.commons.logging.LogFactory.getLog(GatePhrasesExtractor.class).info("Extracting phrases.");
-	    for(Attribute a: attributes)
-	    {
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, query);
 		if(o instanceof IETextGate)
 		    extractPhrases((IETextGate)o);
@@ -80,16 +82,19 @@ public class GatePhrasesExtractor
     /**
      * Performs the algorithm in all the IETextGate typed attributes of a collection of cases.
      */ 
-    public static void extractPhrases(Collection<CBRCase> cases)
+    public static void extractPhrases(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(GatePhrasesExtractor.class).info("Extracting phrases.");
 	ProgressController.init(GatePhrasesExtractor.class, "Extracting phrases", cases.size());
-	for(CBRCase c: cases)
-	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		if(t instanceof IETextGate)
-		    extractPhrases((IETextGate)t);
+	for(Object on: cases)
+	{	CBRCase c = (CBRCase)on;
+	    Collection texts = IEutils.getTexts(c);
+	    for( Object om: texts){
+	    	IEText t = (IEText)om;
+	    	if(t instanceof IETextGate)
+			    extractPhrases((IETextGate)t);
+	    }
+		
 	    ProgressController.step(GatePhrasesExtractor.class);
 	}
 	ProgressController.finish(GatePhrasesExtractor.class);
@@ -101,10 +106,13 @@ public class GatePhrasesExtractor
     public static void extractPhrases(CBRQuery query)
     {	    
 	org.apache.commons.logging.LogFactory.getLog(GatePhrasesExtractor.class).info("Extracting phrases.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            if(t instanceof IETextGate)
-        	extractPhrases((IETextGate)t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object om: texts){
+        	IEText t = (IEText)om;
+        	if(t instanceof IETextGate)
+            	extractPhrases((IETextGate)t);
+        }
+            
     }
     
     /**
@@ -119,8 +127,9 @@ public class GatePhrasesExtractor
 	    
 	    AnnotationSet lookupAnnotations = text.getDocument().getAnnotations().get("Lookup");
 	    
-	    for(Token t: text.getAllTokens())
+	    for(Object om: text.getAllTokens())
 	    {
+	    	Token t = (Token)om;
 		Annotation anotToken = text.getTokenMapping(t);
 		AnnotationSet lookupAnnots = lookupAnnotations.get(anotToken.getStartNode().getOffset(), anotToken.getEndNode().getOffset());
 		for(Iterator iter = lookupAnnots.iterator(); iter.hasNext(); )

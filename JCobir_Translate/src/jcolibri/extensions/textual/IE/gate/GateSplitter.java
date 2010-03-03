@@ -43,14 +43,16 @@ public class GateSplitter
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IETextGate objects.
      */
-    public static void split(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void split(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(GateSplitter.class).info("Splitting Gate text.");
 	ProgressController.init(GateSplitter.class, "Splitting Gate text", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    for(Attribute a: attributes)
+		CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
 	    {
+	    	Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		if(o instanceof IETextGate)
 		    split((IETextGate)o);
@@ -64,27 +66,32 @@ public class GateSplitter
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IETextGate objects.
      */
-    public static void split(CBRQuery query, Collection<Attribute> attributes)
+    public static void split(CBRQuery query, Collection attributes)
     {
 	    org.apache.commons.logging.LogFactory.getLog(GateSplitter.class).info("Splitting Gate text.");
-	    for(Attribute a: attributes)
+	    for(Object om: attributes)
 	    {
+	    	Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, query);
 		if(o instanceof IETextGate)
 		    split((IETextGate)o);
 	    }
     }
     
-    public static void split(Collection<CBRCase> cases)
+    public static void split(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(GateSplitter.class).info("Splitting Gate text.");
 	ProgressController.init(GateSplitter.class, "Splitting Gate text", cases.size());
-	for(CBRCase c: cases)
+	for(Object om: cases)
 	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		if(t instanceof IETextGate)
-		    split((IETextGate)t);
+		CBRCase c = (CBRCase)om;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object on : texts){
+	    	IEText t = (IEText)on;
+	    	if(t instanceof IETextGate)
+			    split((IETextGate)t);
+	    }
+		
 	    ProgressController.step(GateSplitter.class);
 	}
 	ProgressController.finish(GateSplitter.class);
@@ -96,10 +103,13 @@ public class GateSplitter
     public static void split(CBRQuery query)
     {	    
 	org.apache.commons.logging.LogFactory.getLog(GateSplitter.class).info("Splitting Gate text.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            if(t instanceof IETextGate)
-        	split((IETextGate)t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object om : texts){
+        	IEText t = (IEText)om;
+        	if(t instanceof IETextGate)
+            	split((IETextGate)t);
+        }
+            
     }
     
     /**
@@ -129,7 +139,6 @@ public class GateSplitter
     /**
      * Performs the algorithm in a given IETextGate object
      */
-    @SuppressWarnings("unchecked")
     protected static void organizeText(IETextGate text)
     {
 	Document doc = text.getDocument();
@@ -140,17 +149,17 @@ public class GateSplitter
 	AnnotationSet paragraphs = parAnnot.get("paragraph");
 	AnnotationSet annot = doc.getAnnotations();
 
-	List<Annotation> sents = new ArrayList<Annotation>(annot.get("Sentence"));
+	List sents = new ArrayList(annot.get("Sentence"));
 	java.util.Collections.sort(sents);
 	
-	List<Annotation> tokens = new ArrayList<Annotation>(annot.get("Token"));
+	List tokens = new ArrayList(annot.get("Token"));
 	java.util.Collections.sort(tokens);
 	
-	ArrayList<Annotation> sentsToRemove = new ArrayList<Annotation>();
-	ArrayList<Annotation> tokensToRemove = new ArrayList<Annotation>();
+	ArrayList sentsToRemove = new ArrayList();
+	ArrayList tokensToRemove = new ArrayList();
 	for(int p=0; p<paragraphs.size(); p++)
 	{
-	    Annotation par = paragraphs.get(p);
+	    Annotation par = (Annotation)paragraphs.get(p);
 	    int beginP = par.getStartNode().getOffset().intValue();
 	    int endP   = par.getEndNode().getOffset().intValue();
 	    Paragraph myPar = new Paragraph(content.substring(beginP,endP));
@@ -161,7 +170,7 @@ public class GateSplitter
 	    sentsToRemove.clear();
 	    for(int s=0; s<sents.size(); s++)
 	    {
-		Annotation sent = sents.get(s);
+		Annotation sent = (Annotation)sents.get(s);
 		int beginS = sent.getStartNode().getOffset().intValue();
 		int endS   = sent.getEndNode().getOffset().intValue();
 		if((beginS<beginP)||(endS>endP))
@@ -176,7 +185,7 @@ public class GateSplitter
 		tokensToRemove.clear();
 		for(int t=0; t<tokens.size(); t++)
 		{
-		    Annotation token = tokens.get(t);
+		    Annotation token = (Annotation)tokens.get(t);
 		    int beginT = token.getStartNode().getOffset().intValue();
 		    int endT   = token.getEndNode().getOffset().intValue();
 		    if((beginT<beginS)||(endT>endS))

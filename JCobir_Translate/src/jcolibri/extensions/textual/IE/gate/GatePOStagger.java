@@ -118,14 +118,14 @@ public class GatePOStagger
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IETextGate objects.
      */
-    public static void tag(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void tag(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(GatePOStagger.class).info("Gate POS tagging...");
 	ProgressController.init(GatePOStagger.class, "Gate POS tagging...", cases.size());
-	for (CBRCase c : cases)
-	{
-	    for (Attribute a : attributes)
-	    {
+	for (Object om : cases)
+	{	CBRCase c = (CBRCase)om;
+	    for (Object on : attributes)
+	    {Attribute a = (Attribute)on;
 		Object o = AttributeUtils.findValue(a, c);
 		if (o instanceof IETextGate)
 		    tag((IETextGate) o);
@@ -139,11 +139,11 @@ public class GatePOStagger
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IETextGate objects.
      */
-    public static void tag(CBRQuery query, Collection<Attribute> attributes)
+    public static void tag(CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(GatePOStagger.class).info("Gate POS tagging...");
-	for (Attribute a : attributes)
-	{
+	for ( Object on: attributes)
+	{	Attribute a = (Attribute)on;
 	    Object o = AttributeUtils.findValue(a, query);
 	    if (o instanceof IETextGate)
 		tag((IETextGate) o);
@@ -153,16 +153,19 @@ public class GatePOStagger
     /**
      * Performs the algorithm in all the IETextGate typed attributes of a collection of cases.
      */ 
-    public static void tag(Collection<CBRCase> cases)
+    public static void tag(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(GatePOStagger.class).info("Gate POS tagging...");
 	ProgressController.init(GatePOStagger.class, "Gate POS tagging...", cases.size());
-	for (CBRCase c : cases)
-	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for (IEText t : texts)
-		if (t instanceof IETextGate)
-		    tag((IETextGate) t);
+	for (Object on : cases)
+	{	CBRCase c = (CBRCase)on;
+	    Collection texts = IEutils.getTexts(c);
+	    for (Object om : texts){
+	    	IEText t = (IEText)om;
+	    	if (t instanceof IETextGate)
+			    tag((IETextGate) t);
+	    }
+		
 	    ProgressController.step(GatePOStagger.class);
 	}
 	ProgressController.finish(GatePOStagger.class);
@@ -174,10 +177,13 @@ public class GatePOStagger
     public static void tag(CBRQuery query)
     {
 	org.apache.commons.logging.LogFactory.getLog(GatePOStagger.class).info("Gate POS tagging...");
-	Collection<IEText> texts = IEutils.getTexts(query);
-	for (IEText t : texts)
-	    if (t instanceof IETextGate)
-		tag((IETextGate) t);
+	Collection texts = IEutils.getTexts(query);
+	for (Object om : texts){
+		IEText t = (IEText)om;
+		if (t instanceof IETextGate)
+			tag((IETextGate) t);
+	}
+	    
     }
 
     /**
@@ -194,8 +200,9 @@ public class GatePOStagger
 	    AnnotationSet posAnnotations = text.getDocument().getAnnotations()
 		    .get("POS");
 
-	    for (Token t : text.getAllTokens())
+	    for (Object on : text.getAllTokens())
 	    {
+	    	Token t = (Token)on;
 		Annotation anotToken = text.getTokenMapping(t);
 		AnnotationSet posAnnots = posAnnotations.get(anotToken
 			.getStartNode().getOffset(), anotToken.getEndNode()

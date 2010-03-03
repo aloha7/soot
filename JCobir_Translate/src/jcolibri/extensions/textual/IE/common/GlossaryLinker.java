@@ -67,23 +67,23 @@ public class GlossaryLinker
      * Performs the algorithm in all the ttributes of a collection of cases and a query.
      * These attributes must be IEText objects.
      */
-    public static void LinkWithGlossary(Collection<CBRCase> cases, CBRQuery query)
+    public static void LinkWithGlossary(Collection cases, CBRQuery query)
     {	
 	org.apache.commons.logging.LogFactory.getLog(GlossaryLinker.class).info("Linking tokens with user glossary.");
 	ProgressController.init(GlossaryLinker.class, "Linking tokens with user glossary ...", cases.size());
 
-	List<IEText> queryTexts = new ArrayList<IEText>();
+	List queryTexts = new ArrayList();
 	IEutils.addTexts(query.getDescription(), queryTexts);
 
-	for(CBRCase c: cases)
-	{
-	    List<IEText> caseTexts = new ArrayList<IEText>();
+	for(Object on: cases)
+	{	CBRCase c =  (CBRCase)on;
+	    List caseTexts = new ArrayList();
 	    IEutils.addTexts(c.getDescription(), caseTexts);
 	    
 	    for(int i=0; i<queryTexts.size(); i++)
 	    {
-		IEText queryText = queryTexts.get(i);
-	    	IEText caseText  = caseTexts.get(i);
+		IEText queryText = (IEText)queryTexts.get(i);
+	    	IEText caseText  = (IEText)caseTexts.get(i);
 		linkWithGlossary(caseText, queryText);
 	    }
 	    ProgressController.step(GlossaryLinker.class);
@@ -95,15 +95,15 @@ public class GlossaryLinker
      * Performs the algorithm in the given attributes of a collection of cases and a query.
      * These attributes must be IEText objects.
      */
-    public static void linkWithGlossary(Collection<CBRCase> cases, CBRQuery query, Collection<Attribute> attributes)
+    public static void linkWithGlossary(Collection cases, CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(GlossaryLinker.class).info("Linking tokens with user glossary.");
 	ProgressController.init(GlossaryLinker.class, "Linking tokens with user glossary ...", cases.size());
 	
-	for(CBRCase c: cases)
-	{
-	    for(Attribute at: attributes)
-	    {
+	for(Object on: cases)
+	{ CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute at = (Attribute)om;
 		CaseComponent caseCC  = AttributeUtils.findBelongingComponent(at, c);
 		CaseComponent queryCC = AttributeUtils.findBelongingComponent(at, query);
 		
@@ -123,24 +123,25 @@ public class GlossaryLinker
     }
     
     
-    protected static ArrayList<GlossaryTriple> glossary;
+    protected static ArrayList glossary;
 
     /**
      * Links two text objects using the glossary.
      */
     public static void linkWithGlossary(IEText caseText, IEText queryText)
     {
-        List<Token> queryTokens = queryText.getAllTokens();
-        List<Token> caseTokens  = caseText.getAllTokens();
+        List queryTokens = queryText.getAllTokens();
+        List caseTokens  = caseText.getAllTokens();
         
-	for(GlossaryTriple gt : glossary)
+	for(Object ot : glossary)
         {
+		GlossaryTriple gt = (GlossaryTriple)ot;
             String posTag     = gt._posTag;
-            Set<String> words = gt._words;
+            Set words = gt._words;
             int weight        = gt._weight;
             
-       	    for(Token queryTok : queryTokens)
-            {
+       	    for(Object on : queryTokens)
+            {Token queryTok = (Token)on;
        		String queryStem = queryTok.getStem();
        		if(!words.contains(queryStem))
        		    continue;
@@ -148,8 +149,9 @@ public class GlossaryLinker
   		if(!queryPOS.equals(posTag))
   		    continue;
 
-       		for(Token caseTok: caseTokens)
+       		for(Object om: caseTokens)
        		{
+       			Token caseTok = (Token)om;
        		    String caseStem = caseTok.getStem();
        		    if(!words.contains(caseStem))
        			continue;
@@ -174,7 +176,7 @@ public class GlossaryLinker
      */
     public static void loadGlossary(String filename)
     {
-	glossary = new ArrayList<GlossaryTriple>();
+	glossary = new ArrayList();
 
 	try
 	{
@@ -201,7 +203,7 @@ public class GlossaryLinker
 		int weight = Integer.parseInt(_weight);
 		String _words = _rest.substring(pos + 1);
 		StringTokenizer st = new StringTokenizer(_words, " ");
-		Set<String> words = new HashSet<String>();
+		Set words = new HashSet();
 		while (st.hasMoreTokens())
 		{
 		    String sw = st.nextToken();
@@ -263,11 +265,11 @@ public class GlossaryLinker
     {
 	String _posTag;
 
-	Set<String> _words;
+	Set _words;
 
 	int _weight;
 
-	GlossaryTriple(String p, Set<String> wor, int w)
+	GlossaryTriple(String p, Set wor, int w)
 	{
 	    _posTag = p;
 	    _words = wor;

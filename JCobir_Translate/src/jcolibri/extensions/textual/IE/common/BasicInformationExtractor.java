@@ -46,12 +46,12 @@ public class BasicInformationExtractor
     /**
      * Performs the algorithm in a collection of cases.
      */
-    public static void extractInformation(Collection<CBRCase> cases)
+    public static void extractInformation(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(BasicInformationExtractor.class).info("Extracting cases information.");
 	ProgressController.init(BasicInformationExtractor.class, "Extracting cases information ...", cases.size());
-	for (CBRCase c : cases)
-	{
+	for (Object o : cases)
+	{	CBRCase c = (CBRCase)o;
 	    extractInformation(c.getDescription());
 	    extractInformation(c.getSolution());
 	    extractInformation(c.getDescription());
@@ -83,8 +83,8 @@ public class BasicInformationExtractor
 	    Attribute[] attrs = jcolibri.util.AttributeUtils.getAttributes(cc.getClass());
 
 	    // Find the texts and other attributes
-	    ArrayList<IEText> texts = new ArrayList<IEText>();
-	    ArrayList<Attribute> other = new ArrayList<Attribute>();
+	    ArrayList texts = new ArrayList();
+	    ArrayList other = new ArrayList();
 	    for (int i = 0; i < attrs.length; i++)
 	    {
 		Object o = attrs[i].getValue(cc);
@@ -98,10 +98,11 @@ public class BasicInformationExtractor
 	    }
 
 	    // Obtain all features and phrases
-	    ArrayList<PhraseInfo> phrases = new ArrayList<PhraseInfo>();
-	    ArrayList<FeatureInfo> features = new ArrayList<FeatureInfo>();
-	    for (IEText text : texts)
+	    ArrayList phrases = new ArrayList();
+	    ArrayList features = new ArrayList();
+	    for (Object o : texts)
 	    {
+	    	IEText text = (IEText)o;
 		phrases.addAll(text.getPhrases());
 		features.addAll(text.getFeatures());
 	    }
@@ -109,15 +110,19 @@ public class BasicInformationExtractor
 	    // find a proper value for each attribute. If its type is:
 	    // String: find a feature
 	    // Phrase: find a phrase
-	    for (Attribute at : other)
+	    for (Object o1 : other)
 	    {
+	    	Attribute at = (Attribute)o1;
 		String name = at.getName();
 		if (at.getType().equals(String.class))
 		{
 		    String value = "";
-		    for (FeatureInfo feature : features)
-			if (feature.getFeature().equalsIgnoreCase(name))
-			    value += feature.getValue()+" ";
+		    for (Object o2 : features){
+		    	FeatureInfo feature =  (FeatureInfo)o2;
+		    	if (feature.getFeature().equalsIgnoreCase(name))
+				    value += feature.getValue()+" ";
+		    }
+			
 		    if (value.length() > 0)
 		    {
 			at.setValue(cc, value);
@@ -127,9 +132,9 @@ public class BasicInformationExtractor
 		} else if (at.getType().equals(Boolean.class))
 		{
 		    Boolean phrase = new Boolean(false);
-		    for (Iterator<PhraseInfo> iter = phrases.iterator(); iter.hasNext() && !phrase.booleanValue();)
+		    for (Iterator iter = phrases.iterator(); iter.hasNext() && !phrase.booleanValue();)
 		    {
-			PhraseInfo p = iter.next();
+			PhraseInfo p = (PhraseInfo)iter.next();
 			if (p.getPhrase().equalsIgnoreCase(name))
 			{
 			    phrase = Boolean.TRUE;

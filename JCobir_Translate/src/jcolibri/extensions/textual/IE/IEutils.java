@@ -25,9 +25,9 @@ import jcolibri.extensions.textual.IE.representation.IEText;
  */
 public class IEutils
 {
-    public static Collection<IEText> getTexts(CBRCase _case)
+    public static Collection getTexts(CBRCase _case)
     {
-	ArrayList<IEText> res = new ArrayList<IEText>();
+	ArrayList res = new ArrayList();
 	addTexts(_case.getDescription(), res);
 	addTexts(_case.getSolution(), res);
 	addTexts(_case.getJustificationOfSolution(), res);
@@ -35,14 +35,14 @@ public class IEutils
 	return res;
     }
     
-    public static Collection<IEText> getTexts(CBRQuery query)
+    public static Collection getTexts(CBRQuery query)
     {
-	ArrayList<IEText> res = new ArrayList<IEText>();
+	ArrayList res = new ArrayList();
 	addTexts(query.getDescription(), res);
 	return res;
     }
     
-    public static void addTexts(CaseComponent cc, Collection<IEText> list)
+    public static void addTexts(CaseComponent cc, Collection list)
     {
 	if(cc==null)
 	    return;

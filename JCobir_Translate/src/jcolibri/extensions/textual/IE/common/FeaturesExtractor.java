@@ -64,20 +64,21 @@ import jcolibri.util.ProgressController;
  */
 public class FeaturesExtractor
 {
-    static ArrayList<FeatureRule> featuresRules;
+    static ArrayList featuresRules;
 
     /**
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IEText objects.
      */
-    public static void extractFeatures(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void extractFeatures(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(FeaturesExtractor.class).info("Extracting features.");
 	ProgressController.init(PhrasesExtractor.class, "Extracting features ...", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    for(Attribute a: attributes)
-	    {
+		CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		extractFeatures((IEText)o);
 	    }
@@ -90,11 +91,11 @@ public class FeaturesExtractor
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IEText objects.
      */
-    public static void extractFeatures(CBRQuery query, Collection<Attribute> attributes)
+    public static void extractFeatures(CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(FeaturesExtractor.class).info("Extracting features.");
-	for(Attribute a: attributes)
-	{
+	for(Object on: attributes)
+	{Attribute a = (Attribute)on;
 	    Object o = AttributeUtils.findValue(a, query);
 	    extractFeatures((IEText)o);
 	}
@@ -104,15 +105,18 @@ public class FeaturesExtractor
      * Performs the algorithm in all the attributes of a collection of cases
      * These attributes must be IEText objects.
      */
-    public static void extractFeatures(Collection<CBRCase> cases)
+    public static void extractFeatures(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(FeaturesExtractor.class).info("Extracting features.");
 	ProgressController.init(PhrasesExtractor.class, "Extracting features ...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		extractFeatures(t);
+	for(Object om: cases)
+	{   CBRCase c = (CBRCase)om;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object on : texts){
+	    	IEText t = (IEText)on;
+	    	extractFeatures(t);
+	    }
+		
 	    ProgressController.step(GatePhrasesExtractor.class);
 	}
 	ProgressController.finish(GatePhrasesExtractor.class);
@@ -125,9 +129,12 @@ public class FeaturesExtractor
     public static void extractFeatures(CBRQuery query)
     {	 
 	org.apache.commons.logging.LogFactory.getLog(FeaturesExtractor.class).info("Extracting features.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            extractFeatures(t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object on : texts){
+        	IEText t = (IEText)on;
+        	extractFeatures(t);
+        }
+            
     }    
     
     /**
@@ -136,8 +143,8 @@ public class FeaturesExtractor
     public static void extractFeatures(IEText text)
     {
 	String rawText = text.getRAWContent();
-	for (FeatureRule rule : featuresRules)
-	{
+	for (Object on : featuresRules)
+	{	FeatureRule rule = (FeatureRule)on;
 	    Matcher m = rule._pattern.matcher(rawText);
 	    while (m.find())
 	    {
@@ -168,7 +175,7 @@ public class FeaturesExtractor
     {
 	try
 	{
-	    featuresRules = new ArrayList<FeatureRule>();
+	    featuresRules = new ArrayList();
 	    URL file = jcolibri.util.FileIO.findFile(filename);
 	    BufferedReader br = new BufferedReader( new InputStreamReader(file.openStream()));
 

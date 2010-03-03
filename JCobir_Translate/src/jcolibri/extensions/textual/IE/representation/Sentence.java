@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class Sentence {
 
-	protected  List<Token> tokens;
+	protected  List tokens;
 	
 	protected String text;
 	
@@ -29,7 +29,7 @@ public class Sentence {
 	public Sentence(String text)
 	{
 		this.text = text;
-		tokens = new ArrayList<Token>();
+		tokens = new ArrayList();
 	}
 	
 	/**
@@ -44,14 +44,14 @@ public class Sentence {
 	/**
 	 * Returns the tokens
 	 */
-	public List<Token> getTokens() {
+	public List getTokens() {
 		return tokens;
 	}
 	
 	/**
 	 * Adds tokens
 	 */
-	public void addTokens(List<Token> tokens){
+	public void addTokens(List tokens){
 		this.tokens.addAll(tokens);
 	}
 	
@@ -69,8 +69,11 @@ public class Sentence {
 	{
 	    StringBuffer sb = new StringBuffer();
 	    sb.append("  SENTENCE begin\n");
-	    for(Token tok : tokens)
-		sb.append(tok.toString());
+	    for(Object on: tokens){
+	    	Token tok = (Token)on;
+	    	sb.append(tok.toString());
+	    }
+		
 	    sb.append("  SENTENCE end\n");
 	    return sb.toString();
 	}

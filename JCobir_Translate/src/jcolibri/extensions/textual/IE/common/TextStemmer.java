@@ -45,14 +45,14 @@ public class TextStemmer
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IEText objects.
      */
-    public static void stem(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void stem(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(TextStemmer.class).info("Stemming text.");
 	ProgressController.init(TextStemmer.class, "Stemming text...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    for(Attribute a: attributes)
-	    {
+	for(Object on: cases)
+	{	CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		stem((IEText)o);
 	    }
@@ -65,11 +65,11 @@ public class TextStemmer
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IEText objects.
      */
-    public static void stem(CBRQuery query, Collection<Attribute> attributes)
+    public static void stem(CBRQuery query, Collection attributes)
     {
 	    org.apache.commons.logging.LogFactory.getLog(TextStemmer.class).info("Stemming text.");
-	    for(Attribute a: attributes)
-	    {
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, query);
 		stem((IEText)o);
 	    }
@@ -79,15 +79,18 @@ public class TextStemmer
      * Performs the algorithm in all the attributes of a collection of cases
      * These attributes must be IEText objects.
      */
-    public static void stem(Collection<CBRCase> cases)
+    public static void stem(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(TextStemmer.class).info("Stemming text.");
 	ProgressController.init(TextStemmer.class, "Stemming text...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		stem(t);
+	for(Object om: cases)
+	{CBRCase c = (CBRCase)om;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object on : texts){
+	    	IEText t = (IEText)on;
+	    	stem(t);
+	    }
+		
 	    ProgressController.step(GatePhrasesExtractor.class);
 	}
 	ProgressController.finish(GatePhrasesExtractor.class);
@@ -100,9 +103,12 @@ public class TextStemmer
     public static void stem(CBRQuery query)
     {	   
 	org.apache.commons.logging.LogFactory.getLog(TextStemmer.class).info("Stemming text.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            stem(t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object on : texts){
+        	IEText t = (IEText)on;
+        	stem(t);
+        }
+            
     }
     
     
@@ -112,13 +118,16 @@ public class TextStemmer
      */
     public static void stem(IEText text)
     {
-	for(Token t: text.getAllTokens())
-	    if(!t.isStopWord())
+	for(Object on: text.getAllTokens()){
+		Token t = (Token)on;
+		if(!t.isStopWord())
 	    {
 		String stem = stemmer.stem(t.getRawContent());
 		if(stem == null)
 		    stem = t.getRawContent();
 		t.setStem(stem);
 	    }
+	}
+	    
     }
 }

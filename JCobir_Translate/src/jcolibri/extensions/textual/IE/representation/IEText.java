@@ -39,23 +39,23 @@ import jcolibri.extensions.textual.IE.representation.info.PhraseInfo;
 public class IEText extends Text
 {
 
-    protected List<Paragraph> paragraphs;
+    protected List paragraphs;
 
-    protected List<PhraseInfo> phrases;
+    protected List phrases;
 
-    protected List<FeatureInfo> features;
+    protected List features;
 
-    protected List<String> topics;
+    protected List topics;
 
     /**
      * Creates an empty IEText
      */
     public IEText()
     {
-	paragraphs = new ArrayList<Paragraph>();
-	phrases = new ArrayList<PhraseInfo>();
-	features = new ArrayList<FeatureInfo>();
-	topics = new ArrayList<String>();
+	paragraphs = new ArrayList();
+	phrases = new ArrayList();
+	features = new ArrayList();
+	topics = new ArrayList();
     }
 
     /**
@@ -65,10 +65,10 @@ public class IEText extends Text
     public IEText(String content)
     {
 	super(content);
-	paragraphs = new ArrayList<Paragraph>();
-	phrases = new ArrayList<PhraseInfo>();
-	features = new ArrayList<FeatureInfo>();
-	topics = new ArrayList<String>();
+	paragraphs = new ArrayList();
+	phrases = new ArrayList();
+	features = new ArrayList();
+	topics = new ArrayList();
     }
 
     /**
@@ -85,15 +85,18 @@ public class IEText extends Text
     public String printAnnotations()
     {
 	StringBuffer sb = new StringBuffer();
-	for (Paragraph par : paragraphs)
-	    sb.append(par.toString());
+	for (Object on : paragraphs){
+		Paragraph par = (Paragraph)on;
+		sb.append(par.toString());
+	}
+	    
 	return sb.toString() + "\nPHRASES: " + phrases.toString() + "\nFEATURES: " + features.toString();
     }
 
     /**
      * Returns the features
      */
-    public List<FeatureInfo> getFeatures()
+    public List getFeatures()
     {
 	return features;
     }
@@ -101,7 +104,7 @@ public class IEText extends Text
     /**
      * Adds features
      */
-    public void addFeatures(List<FeatureInfo> features)
+    public void addFeatures(List features)
     {
 	features.addAll(features);
     }
@@ -117,7 +120,7 @@ public class IEText extends Text
     /**
      * Returns the paragraphs
      */
-    public List<Paragraph> getParagraphs()
+    public List getParagraphs()
     {
 	return paragraphs;
     }
@@ -125,7 +128,7 @@ public class IEText extends Text
     /**
      * Adds paragraphs
      */
-    public void addParagraphs(List<Paragraph> paragraphs)
+    public void addParagraphs(List paragraphs)
     {
 	this.paragraphs.addAll(paragraphs);
     }
@@ -141,7 +144,7 @@ public class IEText extends Text
     /**
      * Returns the phrases
      */
-    public List<PhraseInfo> getPhrases()
+    public List getPhrases()
     {
 	return phrases;
     }
@@ -149,7 +152,7 @@ public class IEText extends Text
     /**
      * Adds phrases
      */
-    public void addPhrases(List<PhraseInfo> phrases)
+    public void addPhrases(List phrases)
     {
 	this.phrases.addAll(phrases);
     }
@@ -165,7 +168,7 @@ public class IEText extends Text
     /**
      * Returns the topcis
      */
-    public List<String> getTopics()
+    public List getTopics()
     {
 	return topics;
     }
@@ -173,7 +176,7 @@ public class IEText extends Text
     /***
      * Adds topics
      */
-    public void addTopics(List<String> topics)
+    public void addTopics(List topics)
     {
 	this.topics.addAll(topics);
     }
@@ -189,23 +192,32 @@ public class IEText extends Text
     /**
      * Returns all the sentences of this texts iterating over all paragraphs
      */
-    public List<Sentence> getAllSentences()
+    public List getAllSentences()
     {
-	List<Sentence> sentences = new ArrayList<Sentence>();
-	for (Paragraph p : paragraphs)
-	    sentences.addAll(p.getSentences());
+	List sentences = new ArrayList();
+	for (Object on : paragraphs){
+		Paragraph p = (Paragraph)on;
+		sentences.addAll(p.getSentences());
+	}
+	    
 	return sentences;
     }
 
     /**
      * Returs all the tokens of this texts iterating over all paragraphs and their contained sentences.
      */
-    public List<Token> getAllTokens()
+    public List getAllTokens()
     {
-	List<Token> tokens = new ArrayList<Token>();
-	for (Paragraph p : paragraphs)
-	    for (Sentence s : p.getSentences())
-		tokens.addAll(s.getTokens());
+	List tokens = new ArrayList();
+	for (Object on : paragraphs){
+		Paragraph p = (Paragraph)on;
+		for (Object om : p.getSentences()){
+			Sentence s = (Sentence)om;
+			tokens.addAll((List)s.getTokens());
+		}
+			
+	}
+	    
 	return tokens;
     }
 

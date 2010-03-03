@@ -43,14 +43,16 @@ public class OpennlpSplitter
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IETextOpenNLP objects.
      */
-    public static void split(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void split(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(OpennlpSplitter.class).info("Splitting OpenNLP text.");
 	ProgressController.init(OpennlpSplitter.class, "Splitting OpenNLP text", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    for(Attribute a: attributes)
+		CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
 	    {
+	    Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		if(o instanceof IETextOpenNLP)
 		    split((IETextOpenNLP)o);
@@ -64,11 +66,12 @@ public class OpennlpSplitter
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IETextOpenNLP objects.
      */
-    public static void split(CBRQuery query, Collection<Attribute> attributes)
+    public static void split(CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(OpennlpSplitter.class).info("Splitting OpenNLP text.");
-	    for(Attribute a: attributes)
+	    for(Object on: attributes)
 	    {
+	    	Attribute a = (Attribute)on;
 		Object o = AttributeUtils.findValue(a, query);
 		if(o instanceof IETextOpenNLP)
 		    split((IETextOpenNLP)o);
@@ -78,16 +81,20 @@ public class OpennlpSplitter
     /**
      * Performs the algorithm in all the IETextOpenNLP typed attributes of a collection of cases.
      */
-    public static void split(Collection<CBRCase> cases)
+    public static void split(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(OpennlpSplitter.class).info("Splitting OpenNLP text.");
 	ProgressController.init(OpennlpSplitter.class, "Splitting OpenNLP text", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		if(t instanceof IETextOpenNLP)
-		    split((IETextOpenNLP)t);
+		CBRCase c = (CBRCase)on;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object om : texts){
+	    	IEText t = (IEText)om;
+	    	if(t instanceof IETextOpenNLP)
+			    split((IETextOpenNLP)t);
+	    }
+		
 	    ProgressController.step(OpennlpSplitter.class);
 	}
 	ProgressController.finish(OpennlpSplitter.class);
@@ -99,10 +106,13 @@ public class OpennlpSplitter
     public static void split(CBRQuery query)
     {	 
 	org.apache.commons.logging.LogFactory.getLog(OpennlpSplitter.class).info("Splitting OpenNLP text.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            if(t instanceof IETextOpenNLP)
-        	split((IETextOpenNLP)t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object on : texts){
+        	IEText t = (IEText)on;
+        	if(t instanceof IETextOpenNLP)
+            	split((IETextOpenNLP)t);
+        }
+            
     }
     
     
@@ -128,18 +138,17 @@ public class OpennlpSplitter
     /**
      * Performs the algorithm in a given IETextOpenNLP object
      */
-    @SuppressWarnings("unchecked")
     protected static void organizeText(IETextOpenNLP text)
     {
 	NLPDocument doc = text.getDocument();
 	
 	Element root = doc.getRootElement();
 	Element texte = (Element)root.getChild("text");
-	List<Element> pars = texte.getChildren();
+	List pars = texte.getChildren();
 	String[] parsText  = doc.getParagraphs();
 	for(int p = 0; p<parsText.length; p++)
 	{
-	    Element par = pars.get(p);
+	    Element par = (Element)pars.get(p);
 	    String parText = parsText[p];
 	   
 	    Paragraph myPar= new Paragraph(parText);
@@ -147,22 +156,22 @@ public class OpennlpSplitter
 	    text.addParagraph(myPar);
 	    
 	    
-	    List<Element> sents = par.getChildren();
+	    List sents = par.getChildren();
 	    String[] sentsText = doc.getSentences(par);
 	    for(int s=0; s<sentsText.length; s++)
 	    {
-		Element sent = sents.get(s);
+		Element sent = (Element)sents.get(s);
 		String sentText = sentsText[s];
 		
 		Sentence mySent = new Sentence(sentText);
 		myPar.addSentence(mySent);
 		text.setSentenceMapping(mySent, sent);
 		
-		List<Element> toks = sent.getChildren();
+		List toks = sent.getChildren();
 		String[] toksText =  doc.getWords(sent);
 		for(int t=0; t<toksText.length; t++)
 		{
-		    Element tok = toks.get(t);
+		    Element tok = (Element)toks.get(t);
 		    String tokText = toksText[t];
 		    
 		    Token myTok = new Token(tokText);

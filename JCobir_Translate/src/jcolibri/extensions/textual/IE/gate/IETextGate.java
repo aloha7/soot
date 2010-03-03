@@ -83,18 +83,18 @@ public class IETextGate extends IEText
     }
     
     //Internal mapping between paragraphs and the paragraphs annotations in the gate's document
-    private Hashtable<Paragraph,Annotation> parMapping = new Hashtable<Paragraph,Annotation>();
+    private Hashtable parMapping = new Hashtable();
     //Internal mapping between sentences and the sentences annotations in the gate's document
-    private Hashtable<Sentence,Annotation> sentMapping = new Hashtable<Sentence,Annotation>();
+    private Hashtable sentMapping = new Hashtable();
     //Internal mapping between tokens and the tokens annotations in the gate's document
-    private Hashtable<Token,Annotation>     tokMapping = new Hashtable<Token,Annotation>();
+    private Hashtable tokMapping = new Hashtable();
     
     /**
      * Returns the annotation object for a given paragraph
      */
     protected Annotation getParagraphMapping(Paragraph par)
     {
-	return parMapping.get(par);
+	return (Annotation)parMapping.get(par);
     }
     
     /**
@@ -110,7 +110,7 @@ public class IETextGate extends IEText
      */
     protected Annotation getSentenceMapping(Sentence sent)
     {
-	return sentMapping.get(sent);
+	return (Annotation)sentMapping.get(sent);
     }
     
     /**
@@ -126,7 +126,7 @@ public class IETextGate extends IEText
      */
     protected Annotation getTokenMapping(Token tok)
     {
-	return tokMapping.get(tok);
+	return (Annotation)tokMapping.get(tok);
     }
     
     /**

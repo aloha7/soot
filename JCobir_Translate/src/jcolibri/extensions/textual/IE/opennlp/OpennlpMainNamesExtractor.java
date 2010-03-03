@@ -36,14 +36,15 @@ public class OpennlpMainNamesExtractor
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IETextOpenNLP objects.
      */
-    public static void extractMainNames(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void extractMainNames(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(OpennlpMainNamesExtractor.class).info("Extracting main names.");
 	ProgressController.init(OpennlpMainNamesExtractor.class, "Extracting main names...", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    for(Attribute a: attributes)
-	    {
+		CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		if(o instanceof IETextOpenNLP)
 		    extractMainNames((IETextOpenNLP)o);
@@ -57,11 +58,12 @@ public class OpennlpMainNamesExtractor
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IETextOpenNLP objects.
      */
-    public static void extractMainNames(CBRQuery query, Collection<Attribute> attributes)
+    public static void extractMainNames(CBRQuery query, Collection attributes)
     {
 	    org.apache.commons.logging.LogFactory.getLog(OpennlpMainNamesExtractor.class).info("Extracting main names.");
-	    for(Attribute a: attributes)
+	    for(Object on: attributes)
 	    {
+	    	Attribute a = (Attribute)on;
 		Object o = AttributeUtils.findValue(a, query);
 		if(o instanceof IETextOpenNLP)
 		    extractMainNames((IETextOpenNLP)o);
@@ -71,16 +73,20 @@ public class OpennlpMainNamesExtractor
     /**
      * Performs the algorithm in all the IETextOpenNLP typed attributes of a collection of cases.
      */
-    public static void extractMainNames(Collection<CBRCase> cases)
+    public static void extractMainNames(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(OpennlpMainNamesExtractor.class).info("Extracting main names.");
 	ProgressController.init(OpennlpMainNamesExtractor.class, "Extracting main names", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		if(t instanceof IETextOpenNLP)
-		extractMainNames((IETextOpenNLP)t);
+		CBRCase c = (CBRCase)on;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object om : texts){
+	    	IEText t = (IEText)om; 
+	    	if(t instanceof IETextOpenNLP)
+	    		extractMainNames((IETextOpenNLP)t);
+	    }
+		
 	    ProgressController.step(OpennlpMainNamesExtractor.class);
 	}
 	ProgressController.finish(OpennlpMainNamesExtractor.class);
@@ -92,10 +98,13 @@ public class OpennlpMainNamesExtractor
     public static void extractMainNames(CBRQuery query)
     {	   
 	org.apache.commons.logging.LogFactory.getLog(OpennlpMainNamesExtractor.class).info("Extracting main names.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            if(t instanceof IETextOpenNLP)
-        	 extractMainNames((IETextOpenNLP)t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object om : texts){
+        	IEText t = (IEText)om;
+        	if(t instanceof IETextOpenNLP)
+           	 extractMainNames((IETextOpenNLP)t);
+        }
+            
     }
     
     /**
@@ -112,8 +121,9 @@ public class OpennlpMainNamesExtractor
 	    //org.apache.commons.logging.LogFactory.getLog(OpennlpMainNamesExtractor.class).warn("There was an error extracting main names. Continuing..."); 
 	}
 	
-	for(Token t: text.getAllTokens())
+	for(Object on: text.getAllTokens())
 	{
+		Token t = (Token)on;
 	    Element tok = text.getTokenMapping(t);
 	    String val  = tok.getAttributeValue("type");
 	    t.setMainName((val!=null)&&val.equals("name"));

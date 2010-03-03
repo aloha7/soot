@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class Paragraph {
 
-	protected List<Sentence> sentences;
+	protected List sentences;
 
 	String text;
 	
@@ -29,7 +29,7 @@ public class Paragraph {
 	public Paragraph(String text)
 	{
 		this.text = text;
-		this.sentences = new ArrayList<Sentence>();
+		this.sentences = new ArrayList();
 	}
 	
 	/**
@@ -44,14 +44,14 @@ public class Paragraph {
 	/**
 	 * Returns the sentences
 	 */
-	public List<Sentence> getSentences() {
+	public List getSentences() {
 		return sentences;
 	}
 	
 	/**
 	 * Adds sentences
 	 */
-	public void addSentences(List<Sentence> sentences) {
+	public void addSentences(List sentences) {
 		this.sentences.addAll(sentences);
 	}
 	
@@ -69,8 +69,11 @@ public class Paragraph {
 	{
 	    StringBuffer sb = new StringBuffer();
 	    sb.append("PARAGRAPH begin\n");
-	    for(Sentence sent: sentences)
-		sb.append(sent.toString());
+	    for(Object on: sentences){
+	    	Sentence sent = (Sentence)on;
+	    	sb.append(sent.toString());	
+	    }
+		
 	    sb.append("PARAGRAPH end\n");
 	    return sb.toString();
 	}

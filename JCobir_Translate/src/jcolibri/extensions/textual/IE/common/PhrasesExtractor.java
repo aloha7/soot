@@ -58,14 +58,15 @@ public class PhrasesExtractor
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IEText objects.
      */
-    public static void extractPhrases(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void extractPhrases(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(PhrasesExtractor.class).info("Extracting phrases.");
 	ProgressController.init(PhrasesExtractor.class, "Extracting phrases ...", cases.size());
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    for(Attribute a: attributes)
-	    {
+		CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		extractPhrases((IEText)o);
 	    }
@@ -78,11 +79,11 @@ public class PhrasesExtractor
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IEText objects.
      */
-    public static void extractPhrases(CBRQuery query, Collection<Attribute> attributes)
+    public static void extractPhrases(CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(PhrasesExtractor.class).info("Extracting phrases.");
-	for(Attribute a: attributes)
-	{
+	for(Object on: attributes)
+	{Attribute a = (Attribute)on;
 	    Object o = AttributeUtils.findValue(a, query);
 	    extractPhrases((IEText)o);
 	}
@@ -92,15 +93,18 @@ public class PhrasesExtractor
      * Performs the algorithm in all the attributes of a collection of cases
      * These attributes must be IEText objects.
      */
-    public static void extractPhrases(Collection<CBRCase> cases)
+    public static void extractPhrases(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(PhrasesExtractor.class).info("Extracting phrases.");
 	ProgressController.init(PhrasesExtractor.class, "Extracting phrases ...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-		extractPhrases(t);
+	for(Object om: cases)
+	{CBRCase c = (CBRCase)om;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object on : texts){
+	    	IEText t = (IEText)on;
+	    	extractPhrases(t);
+	    }
+		
 	    ProgressController.step(GatePhrasesExtractor.class);
 	}
 	ProgressController.finish(GatePhrasesExtractor.class);
@@ -113,14 +117,17 @@ public class PhrasesExtractor
     public static void extractPhrases(CBRQuery query)
     {	  
 	org.apache.commons.logging.LogFactory.getLog(PhrasesExtractor.class).info("Extracting phrases.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            extractPhrases(t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object on : texts){
+        	IEText t = (IEText)on;
+        	extractPhrases(t);
+        }
+            
     }
 
     
     
-    static HashMap<String, Pattern> rulesList;
+    static HashMap rulesList;
     
     /**
      * Performs the algorithm in a given IEText object
@@ -129,9 +136,9 @@ public class PhrasesExtractor
     {
 	String rawText = text.getRAWContent();
 	
-	for(String rule : rulesList.keySet())
-	{
-	    Pattern pattern = rulesList.get(rule);
+	for(Object om : rulesList.keySet())
+	{String rule = (String)om;
+	    Pattern pattern = (Pattern)rulesList.get(rule);
 	    Matcher m = pattern.matcher(rawText);
 	    while (m.find()) {
 		text.addPhrase(new PhraseInfo(rule, m.start(), m.end()));
@@ -151,7 +158,7 @@ public class PhrasesExtractor
 	{
 	    URL file = jcolibri.util.FileIO.findFile(filename);
 	    BufferedReader br = new BufferedReader( new InputStreamReader(file.openStream()));
-	    rulesList = new HashMap<String,Pattern>();
+	    rulesList = new HashMap();
 	  
 	    String line = "";
 	    while ((line = br.readLine()) != null)

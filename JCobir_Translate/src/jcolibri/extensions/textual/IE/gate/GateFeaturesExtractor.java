@@ -45,14 +45,14 @@ public class GateFeaturesExtractor
      * Performs the algorithm in the given attributes of a collection of cases.
      * These attributes must be IETextGate objects.
      */
-    public static void extractFeatures(Collection<CBRCase> cases, Collection<Attribute> attributes)
+    public static void extractFeatures(Collection cases, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(GateFeaturesExtractor.class).info("Extracting features.");
 	ProgressController.init(GateFeaturesExtractor.class, "Extracting features ...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    for(Attribute a: attributes)
-	    {
+	for(Object on: cases)
+	{CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute a = (Attribute)om;
 		Object o = AttributeUtils.findValue(a, c);
 		extractFeatures((IETextGate)o);
 	    }
@@ -65,11 +65,11 @@ public class GateFeaturesExtractor
      * Performs the algorithm in the given attributes of a query.
      * These attributes must be IETextGate objects.
      */
-    public static void extractFeatures(CBRQuery query, Collection<Attribute> attributes)
+    public static void extractFeatures(CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(GateFeaturesExtractor.class).info("Extracting features.");
-	for(Attribute a: attributes)
-	{
+	for(Object on: attributes)
+	{	Attribute a = (Attribute)on;
 	    Object o = AttributeUtils.findValue(a, query);
 	    extractFeatures((IETextGate)o);
 	}
@@ -78,16 +78,19 @@ public class GateFeaturesExtractor
     /**
      * Performs the algorithm in all the IETextGate typed attributes of a collection of cases.
      */  
-    public static void extractFeatures(Collection<CBRCase> cases)
+    public static void extractFeatures(Collection cases)
     {
 	org.apache.commons.logging.LogFactory.getLog(GateFeaturesExtractor.class).info("Extracting features.");
 	ProgressController.init(GateFeaturesExtractor.class, "Extracting features ...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    Collection<IEText> texts = IEutils.getTexts(c);
-	    for(IEText t : texts)
-	        if(t instanceof IETextGate)
+	for(Object on: cases)
+	{	CBRCase c = (CBRCase)on;
+	    Collection texts = IEutils.getTexts(c);
+	    for(Object om : texts){
+	    	IEText t = (IEText)om;
+	    	if(t instanceof IETextGate)
 	            extractFeatures((IETextGate)t);
+	    }
+	        
 	    ProgressController.step(GateFeaturesExtractor.class);
 	}
 	ProgressController.finish(GateFeaturesExtractor.class);
@@ -99,10 +102,13 @@ public class GateFeaturesExtractor
     public static void extractFeatures(CBRQuery query)
     {	    
 	org.apache.commons.logging.LogFactory.getLog(GateFeaturesExtractor.class).info("Extracting features.");
-	Collection<IEText> texts = IEutils.getTexts(query);
-        for(IEText t : texts)
-            if(t instanceof IETextGate)
-        	extractFeatures((IETextGate)t);
+	Collection texts = IEutils.getTexts(query);
+        for(Object om : texts){
+        	IEText t = (IEText)om;
+        	if(t instanceof IETextGate)
+            	extractFeatures((IETextGate)t);
+        }
+            
     }   
     
     /**

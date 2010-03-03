@@ -45,23 +45,24 @@ public class ThesaurusLinker
      * Performs the algorithm in all the attributes of a collection of cases and a query.
      * These attributes must be IEText objects.
      */  
-    public static void linkWithWordNet(Collection<CBRCase> cases, CBRQuery query)
+    public static void linkWithWordNet(Collection cases, CBRQuery query)
     {
 	org.apache.commons.logging.LogFactory.getLog(ThesaurusLinker.class).info("Linking tokens with WordNet.");
 	ProgressController.init(ThesaurusLinker.class, "Linking tokens with WordNet ...", cases.size());
 	
-	List<IEText> queryTexts = new ArrayList<IEText>();
+	List queryTexts = new ArrayList();
 	IEutils.addTexts(query.getDescription(), queryTexts);
 	
-	for(CBRCase c: cases)
+	for(Object on: cases)
 	{
-	    List<IEText> caseTexts = new ArrayList<IEText>();
+		CBRCase c = (CBRCase)on;
+	    List caseTexts = new ArrayList();
 	    IEutils.addTexts(c.getDescription(), caseTexts);
 	    
 	    for(int i=0; i<queryTexts.size(); i++)
 	    {
-		IEText queryText = queryTexts.get(i);
-	    	IEText caseText  = caseTexts.get(i);
+		IEText queryText = (IEText)queryTexts.get(i);
+	    	IEText caseText  = (IEText)caseTexts.get(i);
 	    	linkWithWordNet(caseText, queryText);
 	    }
 	    ProgressController.step(ThesaurusLinker.class);
@@ -74,14 +75,14 @@ public class ThesaurusLinker
      * Performs the algorithm in the given attributes of a collection of cases and a query.
      * These attributes must be IEText objects.
      */
-    public static void linkWithWordNet(Collection<CBRCase> cases, CBRQuery query, Collection<Attribute> attributes)
+    public static void linkWithWordNet(Collection cases, CBRQuery query, Collection attributes)
     {
 	org.apache.commons.logging.LogFactory.getLog(ThesaurusLinker.class).info("Linking tokens with WordNet.");
 	ProgressController.init(ThesaurusLinker.class, "Linking tokens with WordNet ...", cases.size());
-	for(CBRCase c: cases)
-	{
-	    for(Attribute at: attributes)
-	    {
+	for(Object on: cases)
+	{	CBRCase c = (CBRCase)on;
+	    for(Object om: attributes)
+	    {Attribute at = (Attribute)om;
 		CaseComponent caseCC  = AttributeUtils.findBelongingComponent(at, c);
 		CaseComponent queryCC = AttributeUtils.findBelongingComponent(at, query);
 		
@@ -106,13 +107,14 @@ public class ThesaurusLinker
      */
     public static void linkWithWordNet(IEText caseText, IEText queryText)
     {
-        List<Token> queryTokens = queryText.getAllTokens();
-        List<Token> caseTokens  = caseText.getAllTokens();
+        List queryTokens = queryText.getAllTokens();
+        List caseTokens  = caseText.getAllTokens();
         
-   	for(Token queryTok : queryTokens)
+   	for(Object on : queryTokens)
         {
-   		for(Token caseTok: caseTokens)
-   		{
+   		Token queryTok = (Token)on;
+   		for(Object om: caseTokens)
+   		{Token caseTok = (Token)om;
    		    WordNetBridge.POS queryPOS = lookupWordNetPos(queryTok.getPostag());
    		    WordNetBridge.POS casePOS  = lookupWordNetPos(caseTok.getPostag());
    	   	    if(queryPOS != casePOS)
