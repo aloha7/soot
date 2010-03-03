@@ -54,20 +54,20 @@ public class ExpertClerkMedianScoring
      * @param thresholds to obtain the characteristics
      * @return a collection of cases
      */
-    @SuppressWarnings("unchecked")
-    public static Collection<RetrievalResult> getDiverseByMedian(Collection<CBRCase> cases, NNConfig simConfig, HashMap<Attribute,Double> thresholds)
+    public static Collection getDiverseByMedian(Collection cases, NNConfig simConfig, HashMap thresholds)
     {
 	CaseComponent median = calculateMedian(cases);
 	
 	CBRQuery query = new CBRQuery();
 	query.setDescription(median);
-	Collection<RetrievalResult> distancesToMedian = NNScoringMethod.evaluateSimilarity(cases,query,simConfig);
-	CBRCase first = distancesToMedian.iterator().next().get_case();
+	Collection distancesToMedian = NNScoringMethod.evaluateSimilarity(cases,query,simConfig);
+	CBRCase first = ((RetrievalResult)distancesToMedian.iterator().next()).get_case();
 	
-	ArrayList<RetrievalResult> characteristics = new ArrayList<RetrievalResult>();
-	double maxCharacteristics = AttributeUtils.getAttributes(cases.iterator().next().getDescription()).size();
-	for(CBRCase _case:cases)
+	ArrayList characteristics = new ArrayList();
+	double maxCharacteristics = AttributeUtils.getAttributes(((CBRCase)cases.iterator().next()).getDescription()).size();
+	for(Object on:cases)
 	{
+		CBRCase _case = (CBRCase)on;
 	    if(_case.equals(first))
 		continue;
 	    int chars = computeCharacteristics(_case, median, simConfig, thresholds);
@@ -85,8 +85,9 @@ public class ExpertClerkMedianScoring
     private static int computeCharacteristics(CBRCase _case, CaseComponent median, NNConfig simConfig, HashMap<Attribute,Double> thresholds)
     {
 	int characteristics = 0;
-	for(Attribute at: AttributeUtils.getAttributes(_case.getDescription()))
+	for(Object on: AttributeUtils.getAttributes(_case.getDescription()))
 	{
+		Attribute at = (Attribute)on;
 	    if(at.equals(_case.getDescription().getIdAttribute()))
 		continue;
 	    
@@ -131,15 +132,17 @@ public class ExpertClerkMedianScoring
     /**
      * Calculates the median
      */
-    private static CaseComponent calculateMedian(Collection<CBRCase> cases)
+    private static CaseComponent calculateMedian(Collection cases)
     {
-	HashMap<Attribute,HashMap<Object,Integer>> enumCount = new HashMap<Attribute, HashMap<Object,Integer>>();
-	HashMap<Attribute,Double> numValues = new HashMap<Attribute,Double>();
+	HashMap enumCount = new HashMap();
+	HashMap numValues = new HashMap();
 	
-	for(CBRCase _case :cases)
+	for(Object on :cases)
 	{
-	    for(Attribute at : AttributeUtils.getAttributes(_case.getDescription()))
+		CBRCase _case = (CBRCase)on;
+	    for(Object ot : AttributeUtils.getAttributes(_case.getDescription()))
 	    {
+	    	Attribute at = (Attribute)ot;
 		if(at.equals(_case.getDescription().getIdAttribute()))
 		    continue;
 		Object value = AttributeUtils.findValue(at, _case.getDescription());
@@ -148,7 +151,7 @@ public class ExpertClerkMedianScoring
 		
 		if(value instanceof Number)
 		{
-		    Double sum = numValues.get(at);
+		    Double sum = (Double)numValues.get(at);
 		    if(sum == null)
 			numValues.put(at, ((Number)value).doubleValue());
 		    else
@@ -156,13 +159,13 @@ public class ExpertClerkMedianScoring
 		}
 		else
 		{
-		    HashMap<Object,Integer> enumValues = enumCount.get(at);
+		    HashMap enumValues = (HashMap)enumCount.get(at);
 		    if(enumValues == null)
 		    {
-			enumValues = new HashMap<Object,Integer>();
+			enumValues = new HashMap();
 			enumCount.put(at, enumValues);
 		    }
-		    Integer count = enumValues.get(value);
+		    Integer count = (Integer)enumValues.get(value);
 		    if(count == null)
 			enumValues.put(value, new Integer(0));
 		    else
@@ -170,17 +173,18 @@ public class ExpertClerkMedianScoring
 		}
 	    }
 	}
-	CaseComponent res = CopyUtils.copyCaseComponent(cases.iterator().next().getDescription());
-	for(Attribute at: AttributeUtils.getAttributes(res))
+	CaseComponent res = CopyUtils.copyCaseComponent(((CBRCase)cases.iterator().next()).getDescription());
+	for(Object om: AttributeUtils.getAttributes(res))
 	{
-	    HashMap<Object,Integer> enumValues = enumCount.get(at);
+		Attribute at = (Attribute)om;
+	    HashMap enumValues = (HashMap)enumCount.get(at);
 	    if(enumValues != null)
 	    {
 		Object maxObject = null;
 		int max = 0; 
 		for(Object value : enumValues.keySet())
 		{
-		    Integer appears = enumValues.get(value);
+		    Integer appears = (Integer)enumValues.get(value);
 		    if(appears > max)
 		    {
 			max = appears;
@@ -190,7 +194,7 @@ public class ExpertClerkMedianScoring
 		AttributeUtils.setValue(at, res, maxObject);
 		continue;
 	    }
-	    Double sum = numValues.get(at);
+	    Double sum = (Double)numValues.get(at);
 	    if(sum != null)
 	    {
 		if(at.getType().equals(Integer.class))
