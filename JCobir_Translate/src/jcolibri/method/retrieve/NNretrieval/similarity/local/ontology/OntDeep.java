@@ -95,7 +95,7 @@ public class OntDeep implements LocalSimilarityFunction
 	    OntologyDocument mainOnto = new OntologyDocument("http://gaia.fdi.ucm.es/ontologies/vacation.owl", FileIO
 		    .findFile("jcolibri/test/test5/vacation.owl").toExternalForm());
 	    // There are not subontologies
-	    ArrayList<OntologyDocument> subOntologies = new ArrayList<OntologyDocument>();
+	    ArrayList subOntologies = new ArrayList();
 	    // Load the ontology
 	    ob.loadOntology(mainOnto, subOntologies, false);
 
