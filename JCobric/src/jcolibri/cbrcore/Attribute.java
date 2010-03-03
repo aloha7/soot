@@ -56,7 +56,7 @@ public class Attribute {
 	/**
 	 * Returns the class that this attribute belongs to.
 	 */
-	public Class<?> getDeclaringClass()
+	public Class getDeclaringClass()
 	{
 		return field.getDeclaringClass();
 	}
@@ -64,7 +64,7 @@ public class Attribute {
 	/**
 	 * Returns the type of the attribute.
 	 */
-	public Class<?> getType()
+	public Class getType()
 	{
 		return field.getType();
 	}
