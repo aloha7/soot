@@ -77,10 +77,10 @@ public class PlainTextConnector implements Connector {
 	private Class justOfSolutionClass;
 	private Class resultClass;
 	
-	List<Attribute> descriptionMaps;
-	List<Attribute> solutionMaps;
-	List<Attribute> justOfSolutionMaps;
-	List<Attribute> resultMaps;
+	List descriptionMaps;
+	List solutionMaps;
+	List justOfSolutionMaps;
+	List resultMaps;
 	
 
 	public void initFromXMLfile(URL file) throws InitializingException {
@@ -134,9 +134,9 @@ public class PlainTextConnector implements Connector {
 
 	}
 
-	private List<Attribute> findMaps(Node n, Class _class)
+	private List findMaps(Node n, Class _class)
 	{
-		List<Attribute> res = new ArrayList<Attribute>();
+		List res = new ArrayList();
 		NodeList childs = n.getChildNodes();
 		for(int i=0; i<childs.getLength(); i++)
 		{
@@ -163,7 +163,7 @@ public class PlainTextConnector implements Connector {
 	 *            Cases to store.
 	 * @throws UnImplementedException 
 	 */
-	public void storeCases(Collection<CBRCase> cases)
+	public void storeCases(Collection cases)
 	{
 		try {
 			BufferedWriter br = null;
@@ -173,7 +173,8 @@ public class PlainTextConnector implements Connector {
 
 			char separator = this.PROP_DELIM.charAt(0);
 			
-			for (CBRCase _case : cases) {
+			for (Object o : cases) {
+				CBRCase _case = (CBRCase)o;
 				br.newLine();
 				StringBuffer line = new StringBuffer();
 				
@@ -209,13 +210,14 @@ public class PlainTextConnector implements Connector {
 		}
 	}
 	
-	private void writeComponent(CaseComponent comp, List<Attribute> maps, StringBuffer line, char separator, boolean includeId)
+	private void writeComponent(CaseComponent comp, List maps, StringBuffer line, char separator, boolean includeId)
 	{
 		try {
 			if(includeId)
 				line.append(comp.getIdAttribute().getValue(comp));
-			for(Attribute a: maps)
+			for(Object o: maps)
 			{
+				Attribute a = (Attribute)o;
 				line.append(separator);
 				line.append(a.getValue(comp));
 			}
@@ -233,7 +235,7 @@ public class PlainTextConnector implements Connector {
 	 * @param cases
 	 *            Cases to delete
 	 */
-	public void deleteCases(Collection<CBRCase> cases){
+	public void deleteCases(Collection cases){
 		try {
 			BufferedReader br = null;
 			br = new BufferedReader( new InputStreamReader(FileIO.findFile(this.PROP_FILEPATH).openStream()));
@@ -241,7 +243,7 @@ public class PlainTextConnector implements Connector {
 				throw new Exception("Error opening file for reading: "
 						+ this.PROP_FILEPATH);
 
-			ArrayList<String> lines = new ArrayList<String>();
+			ArrayList lines = new ArrayList();
 			String line = "";
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("#") || (line.length() == 0)) {
@@ -283,8 +285,8 @@ public class PlainTextConnector implements Connector {
 	 * 
 	 * @return Retrieved cases.
 	 */
-	public Collection<CBRCase> retrieveAllCases() {
-		LinkedList<CBRCase> cases = new LinkedList<CBRCase>();
+	public Collection retrieveAllCases() {
+		LinkedList cases = new LinkedList();
 		try {
 			BufferedReader br = null;
 			br = new BufferedReader( new InputStreamReader(FileIO.openFile(this.PROP_FILEPATH)));
@@ -334,7 +336,7 @@ public class PlainTextConnector implements Connector {
 	}
 
 
-	private void fillComponent(CaseComponent component, StringTokenizer st, List<Attribute> maps, boolean includeId)
+	private void fillComponent(CaseComponent component, StringTokenizer st, List maps, boolean includeId)
 	{
 		try {
 			Class type;
@@ -348,8 +350,9 @@ public class PlainTextConnector implements Connector {
 				idAttribute.setValue(component, value);
 			}
 			
-			for(Attribute at : maps)
+			for(Object o : maps)
 			{
+				Attribute at = (Attribute)o;
 				type = at.getType();
 				value = PlainTextTypeConverter.convert(st.nextToken(), type);
 				at.setValue(component, value);
@@ -362,7 +365,7 @@ public class PlainTextConnector implements Connector {
 	}
 	
 	
-	public Collection<CBRCase> retrieveSomeCases(CaseBaseFilter filter) {
+	public Collection retrieveSomeCases(CaseBaseFilter filter) {
 		// TODO Auto-generated method stub
 		return null;
 	}

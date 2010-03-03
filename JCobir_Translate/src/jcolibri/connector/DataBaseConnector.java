@@ -59,7 +59,7 @@ public class DataBaseConnector implements Connector {
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.Connector#deleteCases(java.util.Collection)
 	 */
-	public void deleteCases(Collection<CBRCase> cases) {
+	public void deleteCases(Collection cases) {
 		// TODO Auto-generated method stub
 
 	}
@@ -123,9 +123,9 @@ public class DataBaseConnector implements Connector {
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.Connector#retrieveAllCases()
 	 */
-	public Collection<CBRCase> retrieveAllCases(){
+	public Collection retrieveAllCases(){
 		
-		java.util.ArrayList<CBRCase> res = new java.util.ArrayList<CBRCase>();
+		java.util.ArrayList res = new java.util.ArrayList();
 	
 		try 
 		{
@@ -133,9 +133,9 @@ public class DataBaseConnector implements Connector {
 			Transaction transaction; //= session.beginTransaction();
 					
 			List descList = null;
-			HashMap<Object, CaseComponent> solList = null;
-			HashMap<Object, CaseComponent> justSolList = null;
-			HashMap<Object, CaseComponent> resList = null;
+			HashMap solList = null;
+			HashMap justSolList = null;
+			HashMap resList = null;
 			
 			
 			if(solutionClassName != null)
@@ -143,7 +143,7 @@ public class DataBaseConnector implements Connector {
 				session = sessionFactory.openSession();	
 				transaction = session.beginTransaction();
 
-				solList = new HashMap<Object, CaseComponent>();
+				solList = new HashMap();
 				List l = session.createQuery("from " + solutionClassName).list();
 				
 				transaction.commit();
@@ -160,7 +160,7 @@ public class DataBaseConnector implements Connector {
 				session = sessionFactory.openSession();	
 				transaction = session.beginTransaction();
 
-				justSolList = new HashMap<Object, CaseComponent>();
+				justSolList = new HashMap();
 				List l = session.createQuery("from " + justOfSolutionClassName).list();
 				transaction.commit();
 				session.close();
@@ -176,7 +176,7 @@ public class DataBaseConnector implements Connector {
 				session = sessionFactory.openSession();	
 				transaction = session.beginTransaction();
 
-				resList = new HashMap<Object, CaseComponent>();
+				resList = new HashMap();
 				List l = session.createQuery("from " + resultClassName).list();
 				transaction.commit();
 				session.close();
@@ -202,19 +202,19 @@ public class DataBaseConnector implements Connector {
 				
 				if(solutionClassName != null)
 				{
-					CaseComponent cc = solList.get(desc.getIdAttribute().getValue(desc));
+					CaseComponent cc = (CaseComponent)solList.get(desc.getIdAttribute().getValue(desc));
 					if(cc != null)
 						_case.setSolution(cc);
 				}
 				if(justOfSolutionClassName != null)
 				{
-					CaseComponent cc = justSolList.get(desc.getIdAttribute().getValue(desc));
+					CaseComponent cc = (CaseComponent)justSolList.get(desc.getIdAttribute().getValue(desc));
 					if(cc != null)
 						_case.setJustificationOfSolution(cc);
 				}						
 				if(resultClassName != null)
 				{
-					CaseComponent cc = resList.get(desc.getIdAttribute().getValue(desc));
+					CaseComponent cc = (CaseComponent)resList.get(desc.getIdAttribute().getValue(desc));
 					if(cc != null)
 						_case.setResult(cc);
 				}
@@ -236,7 +236,7 @@ public class DataBaseConnector implements Connector {
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.Connector#retrieveSomeCases(jcolibri.cbrcore.CaseBaseFilter)
 	 */
-	public Collection<CBRCase> retrieveSomeCases(CaseBaseFilter filter) {
+	public Collection retrieveSomeCases(CaseBaseFilter filter) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -244,11 +244,12 @@ public class DataBaseConnector implements Connector {
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.Connector#storeCases(java.util.Collection)
 	 */
-	public void storeCases(Collection<CBRCase> cases) {
+	public void storeCases(Collection cases) {
 		
 		
-		for(CBRCase c: cases)
+		for(Object o: cases)
 		{
+			CBRCase c =(CBRCase)o; 
 			Session session = sessionFactory.openSession();	
 			Transaction transaction = session.beginTransaction();
 				session.save(c.getDescription());

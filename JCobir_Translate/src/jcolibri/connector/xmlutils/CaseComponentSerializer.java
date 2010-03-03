@@ -111,8 +111,9 @@ public class CaseComponentSerializer
 	    root.setAttribute("Class", casecomponent.getClass().getCanonicalName());
 	    root.setAttribute("IdAttribute", casecomponent.getIdAttribute().getName());
 
-	    for(Attribute at: AttributeUtils.getAttributes(casecomponent))
+	    for(Object o: AttributeUtils.getAttributes(casecomponent))
 	    {
+	    	Attribute at = (Attribute)o;
 		if(CaseComponent.class.isAssignableFrom(at.getType()))
 		    root.appendChild(serializeCaseComponent((CaseComponent)at.getValue(casecomponent),at.getName(),doc));
 		else

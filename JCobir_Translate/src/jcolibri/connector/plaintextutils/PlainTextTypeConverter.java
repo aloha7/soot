@@ -43,7 +43,6 @@ public class PlainTextTypeConverter {
 	 *            type of the data.
 	 * @return the object trepresented by data and type.
 	 */
-	@SuppressWarnings("unchecked")
 	public static Object convert(String data, Class type) {
 		try {
 		    	if(data == null)

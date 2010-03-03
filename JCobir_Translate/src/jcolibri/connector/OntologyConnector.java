@@ -60,14 +60,14 @@ public class OntologyConnector implements Connector {
 	private Class resultClass;
 	
 	private OntologyInfo mainOntologyInfo;
-	private ArrayList<OntologyInfo> subOntologiesInfo;
+	private ArrayList subOntologiesInfo;
 	
 	private String CaseMainConcept;
 	
-	private ArrayList<OntologyMapping> descriptionMappings;
-	private ArrayList<OntologyMapping> solutionMappings;
-	private ArrayList<OntologyMapping> justOfSolutionMappings;
-	private ArrayList<OntologyMapping> resultMappings;
+	private ArrayList descriptionMappings;
+	private ArrayList solutionMappings;
+	private ArrayList justOfSolutionMappings;
+	private ArrayList resultMappings;
 	
 	private boolean modified;
 	
@@ -86,7 +86,7 @@ public class OntologyConnector implements Connector {
 		return oi;
 	}
 	
-	private void getOntologyMappings(Node mappings, ArrayList<OntologyMapping> descriptionMappings) {
+	private void getOntologyMappings(Node mappings, ArrayList descriptionMappings) {
 		NodeList mappingNodes = mappings.getChildNodes();
 		for(int i=0; i<mappingNodes.getLength(); i++)
 		{
@@ -128,7 +128,7 @@ public class OntologyConnector implements Connector {
 			mainOntologyInfo = getOntologyInfo(doc.getElementsByTagName("MainOntology").item(0));
 
 			/* SubOntologies Info */
-			subOntologiesInfo = new ArrayList<OntologyInfo>();
+			subOntologiesInfo = new ArrayList();
 			NodeList subOntologiesNodes = doc.getElementsByTagName("SubOntology");
 			for(int i=0; i<subOntologiesNodes.getLength(); i++)
 				subOntologiesInfo.add(getOntologyInfo(subOntologiesNodes.item(i)));
@@ -140,14 +140,14 @@ public class OntologyConnector implements Connector {
 			/* Description mapping */
 			this.descriptionClass = Class.forName(doc.getElementsByTagName("DescriptionClassName").item(0).getTextContent());
 			Node mappings = doc.getElementsByTagName("DescriptionMappings").item(0);
-			this.descriptionMappings = new ArrayList<OntologyMapping>();
+			this.descriptionMappings = new ArrayList();
 			getOntologyMappings(mappings, descriptionMappings);
 			
 			/* Solution mapping */
 			try{
 				this.solutionClass =  Class.forName(doc.getElementsByTagName("SolutionClassName").item(0).getTextContent());
 				mappings = doc.getElementsByTagName("SolutionMappings").item(0);
-				this.solutionMappings = new ArrayList<OntologyMapping>();
+				this.solutionMappings = new ArrayList();
 				getOntologyMappings(mappings, solutionMappings);
 			}catch(Exception e) {}
 			
@@ -155,7 +155,7 @@ public class OntologyConnector implements Connector {
 			try{
 				this.justOfSolutionClass =  Class.forName(doc.getElementsByTagName("JustificationOfSolutionClassName").item(0).getTextContent());
 				mappings = doc.getElementsByTagName("JustificationOfSolutionMappings").item(0);
-				this.justOfSolutionMappings = new ArrayList<OntologyMapping>();
+				this.justOfSolutionMappings = new ArrayList();
 				getOntologyMappings(mappings, justOfSolutionMappings);
 			}catch(Exception e) {}
 			
@@ -163,7 +163,7 @@ public class OntologyConnector implements Connector {
 			try{
 				this.resultClass =  Class.forName(doc.getElementsByTagName("ResultClassName").item(0).getTextContent());
 				mappings = doc.getElementsByTagName("ResultMappings").item(0);
-				this.resultMappings = new ArrayList<OntologyMapping>();
+				this.resultMappings = new ArrayList();
 				getOntologyMappings(mappings, resultMappings);
 			}catch(Exception e) {}
 			
@@ -178,9 +178,10 @@ public class OntologyConnector implements Connector {
 			OntologyDocument mainOnto = new OntologyDocument(this.mainOntologyInfo.getUrl(), 
 			FileIO.findFile(this.mainOntologyInfo.getLocalCopy()).toExternalForm());
 			// Setup subontologies
-			ArrayList<OntologyDocument> subOntologies = new ArrayList<OntologyDocument>();
-			for(OntologyInfo oi : this.subOntologiesInfo)
+			ArrayList subOntologies = new ArrayList();
+			for(Object o : this.subOntologiesInfo)
 			{
+				OntologyInfo oi = (OntologyInfo)o;
 				OntologyDocument subOnto = new OntologyDocument(oi.getUrl(), 
 				FileIO.findFile(oi.getLocalCopy()).toURI().toString());
 				subOntologies.add(subOnto);
@@ -203,10 +204,10 @@ public class OntologyConnector implements Connector {
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.Connector#retrieveAllCases()
 	 */
-	public Collection<CBRCase> retrieveAllCases() {
+	public Collection retrieveAllCases() {
 
 		//Result list
-		ArrayList<CBRCase> cases = new ArrayList<CBRCase>();
+		ArrayList cases = new ArrayList();
 		
 		//Obtain OntoBridge
 		OntoBridge ob = jcolibri.util.OntoBridgeSingleton.getOntoBridge();
@@ -214,10 +215,10 @@ public class OntologyConnector implements Connector {
 		ProgressController.init(this.getClass(), "Loading concepts", ProgressController.UNKNOWN_STEPS);
 		
 		//Obtain instances
-		Iterator<String> caseInstances =  ob.listInstances(this.CaseMainConcept);
+		Iterator caseInstances =  ob.listInstances(this.CaseMainConcept);
 		while(caseInstances.hasNext())
 		{
-			String caseInstance = caseInstances.next();
+			String caseInstance = (String)caseInstances.next();
 			CBRCase _case = new CBRCase();
 			
 			try {
@@ -263,25 +264,26 @@ public class OntologyConnector implements Connector {
 		return cases;
 	}
 	
-	private void retrieveCaseComponent(OntoBridge ob, CaseComponent cc, String mainInstanceName, ArrayList<OntologyMapping> mappings) throws Exception
+	private void retrieveCaseComponent(OntoBridge ob, CaseComponent cc, String mainInstanceName, ArrayList mappings) throws Exception
 	{
 		//Id
 		Instance id = new Instance(mainInstanceName);
 		cc.getIdAttribute().setValue(cc, id);
 		
 		//Other attributes
-		for(OntologyMapping om: mappings)
+		for(Object o: mappings)
 		{
+			OntologyMapping om= (OntologyMapping)o;
 			// Obtain CaseComponent attribute
 			Attribute at = new Attribute(om.getAttribute(), cc.getClass());
 			
 			// Find values of the property. It could have several values.
-			Iterator<String> values = ob.listPropertyValue(mainInstanceName, om.getProperty());
+			Iterator values = ob.listPropertyValue(mainInstanceName, om.getProperty());
 			// Find which value is instance of the concept
 			boolean found = false;
 			while(values.hasNext() && !found)
 			{
-				String valueInstance = values.next();
+				String valueInstance = (String)values.next();
 				if(ob.isInstanceOf(valueInstance, om.getConcept()))
 				{
 					found = true;
@@ -297,7 +299,7 @@ public class OntologyConnector implements Connector {
 	 * UnImplemented.
 	 * @see jcolibri.cbrcore.Connector#retrieveSomeCases(jcolibri.cbrcore.CaseBaseFilter)
 	 */
-	public Collection<CBRCase> retrieveSomeCases(CaseBaseFilter filter) {
+	public Collection retrieveSomeCases(CaseBaseFilter filter) {
 		org.apache.commons.logging.LogFactory.getLog(this.getClass()).error("retrieveSomeCases(CaseBaseFilter) method is not yet implemented");
 		return null;
 	}
@@ -306,7 +308,7 @@ public class OntologyConnector implements Connector {
 	 * Stores cases into the ontology.
 	 * @see jcolibri.cbrcore.Connector#storeCases(java.util.Collection)
 	 */
-	public void storeCases(Collection<CBRCase> cases) {
+	public void storeCases(Collection cases) {
 		
 		if(cases.isEmpty())
 			return;
@@ -318,8 +320,9 @@ public class OntologyConnector implements Connector {
 		OntoBridge ob = jcolibri.util.OntoBridgeSingleton.getOntoBridge();
 		
 		ProgressController.init(this.getClass(), "Storing concepts/cases", cases.size());
-		for(CBRCase _case: cases)
+		for(Object o: cases)
 		{
+			CBRCase _case = (CBRCase)o;
 			try {
 				if(!ob.existsInstance(_case.getID().toString(),this.CaseMainConcept))
 					ob.createInstance(this.CaseMainConcept, _case.getID().toString());
@@ -335,7 +338,7 @@ public class OntologyConnector implements Connector {
 		ProgressController.finish(this.getClass());
 	}
 	
-	private void createCaseComponent(CaseComponent cc, ArrayList<OntologyMapping> maps) throws Exception
+	private void createCaseComponent(CaseComponent cc, ArrayList maps) throws Exception
 	{
 		if((cc == null)||(maps==null))
 			return;
@@ -344,9 +347,9 @@ public class OntologyConnector implements Connector {
 		
 		String mainInstance = cc.getIdAttribute().getValue(cc).toString();
 
-		for(OntologyMapping om: maps)
+		for(Object o: maps)
 		{
-			
+			OntologyMapping om = (OntologyMapping)o;
 			Attribute at = new Attribute(om.getAttribute(), cc.getClass());
 			String instance = at.getValue(cc).toString();
 			if(!ob.existsInstance(instance,om.getConcept()))
@@ -380,7 +383,7 @@ public class OntologyConnector implements Connector {
 	 * Deletes cases in the ontology. Only the main instance (case id mapped instance) is removed, so the instances mapped to attributes are keep. 
 	 * @see jcolibri.cbrcore.Connector#deleteCases(java.util.Collection)
 	 */
-	public void deleteCases(Collection<CBRCase> cases) {
+	public void deleteCases(Collection cases) {
 
 		if(cases.isEmpty())
 			return;
@@ -390,8 +393,9 @@ public class OntologyConnector implements Connector {
 		OntoBridge ob = jcolibri.util.OntoBridgeSingleton.getOntoBridge();
 		
 		ProgressController.init(this.getClass(), "Deleting concepts/cases", cases.size());
-		for(CBRCase _case: cases)
+		for(Object o: cases)
 		{
+			CBRCase _case = (CBRCase)o;
 			ob.delete(_case.getID().toString());
 			ProgressController.step(this.getClass());
 		}
@@ -416,14 +420,14 @@ public class OntologyConnector implements Connector {
 	/**
 	 * @return Returns the descriptionMappings.
 	 */
-	public ArrayList<OntologyMapping> getDescriptionMappings() {
+	public ArrayList getDescriptionMappings() {
 		return descriptionMappings;
 	}
 
 	/**
 	 * @return Returns the justOfSolutionMappings.
 	 */
-	public ArrayList<OntologyMapping> getJustOfSolutionMappings() {
+	public ArrayList getJustOfSolutionMappings() {
 		return justOfSolutionMappings;
 	}
 
@@ -437,21 +441,21 @@ public class OntologyConnector implements Connector {
 	/**
 	 * @return Returns the resultMappings.
 	 */
-	public ArrayList<OntologyMapping> getResultMappings() {
+	public ArrayList getResultMappings() {
 		return resultMappings;
 	}
 
 	/**
 	 * @return Returns the solutionMappings.
 	 */
-	public ArrayList<OntologyMapping> getSolutionMappings() {
+	public ArrayList getSolutionMappings() {
 		return solutionMappings;
 	}
 
 	/**
 	 * @return Returns the subOntologiesInfo.
 	 */
-	public ArrayList<OntologyInfo> getSubOntologiesInfo() {
+	public ArrayList getSubOntologiesInfo() {
 		return subOntologiesInfo;
 	}
 	

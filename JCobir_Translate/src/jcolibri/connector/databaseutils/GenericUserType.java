@@ -46,9 +46,12 @@ public class GenericUserType implements UserType, ParameterizedType {
 	    	throw new MappingException("Class " + className + " not found", e);
 	    }
 	    
-	    for(Class c: clazz.getInterfaces())
+	    for(Object o: clazz.getInterfaces()){
+	    	Class c = (Class)o;
 	    	if (c.equals(TypeAdaptor.class))
 	    		return;
+	    }
+	    	
 	    throw new MappingException("Class "+ className + " does not implements jcolibri.connector.TypeAdaptor. It is a requirement for using the genericUserType");
     }
 	
