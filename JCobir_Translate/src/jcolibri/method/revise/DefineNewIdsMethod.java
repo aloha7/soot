@@ -30,7 +30,7 @@ public class DefineNewIdsMethod {
 	 * @param componentsKeys stores the new values of the IDs attributes
 	 * @throws jcolibri.exception.ExecutionException
 	 */
-	public static void defineNewIdsMethod(CBRCase _case, HashMap<Attribute, Object> componentsKeys) throws jcolibri.exception.ExecutionException
+	public static void defineNewIdsMethod(CBRCase _case, HashMap componentsKeys) throws jcolibri.exception.ExecutionException
 	{
 			defineNewIds(_case.getDescription(), componentsKeys);
 			defineNewIds(_case.getSolution(), componentsKeys);
@@ -38,7 +38,7 @@ public class DefineNewIdsMethod {
 			defineNewIds(_case.getResult(), componentsKeys);
 	}
 	
-	private static void defineNewIds(CaseComponent cc, HashMap<Attribute, Object> componentsKeys) throws jcolibri.exception.ExecutionException
+	private static void defineNewIds(CaseComponent cc, HashMap componentsKeys) throws jcolibri.exception.ExecutionException
 	{
 		if(cc == null)
 			return;
@@ -49,8 +49,9 @@ public class DefineNewIdsMethod {
 			if(newkeyvalue != null)
 				keyAtt.setValue(cc, newkeyvalue);
 
-			for(java.lang.reflect.Field f: cc.getClass().getDeclaredFields())
+			for(Object on: cc.getClass().getDeclaredFields())
 			{
+				java.lang.reflect.Field f = (java.lang.reflect.Field)on;
 				Attribute at = new Attribute(f);
 				Object o = at.getValue(cc);
 				if(o instanceof CaseComponent)
