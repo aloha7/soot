@@ -29,8 +29,9 @@ public class DirectAttributeCopyMethod {
 		Object queryValue = jcolibri.util.AttributeUtils.findValue(querySource, query);
 		try {
 			
-			for(CBRCase c: cases)
+			for(Object on: cases)
 			{
+				CBRCase c = (CBRCase)on;
 				CaseComponent cc = jcolibri.util.AttributeUtils.findBelongingComponent(caseDestination, c);
 				caseDestination.setValue(cc, queryValue);
 			}

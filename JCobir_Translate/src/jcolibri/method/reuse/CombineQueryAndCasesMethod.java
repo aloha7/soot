@@ -23,14 +23,15 @@ public class CombineQueryAndCasesMethod {
 	 * Combienes some cases with a query. 
 	 * This method creates a new copy for each case and overwrites their description with the description of the query.
 	 */
-	public static Collection<CBRCase> combine(CBRQuery query, Collection<CBRCase> cases)
+	public static Collection combine(CBRQuery query, Collection cases)
 	{
-		ArrayList<CBRCase> res = new ArrayList<CBRCase>();
+		ArrayList res = new ArrayList();
 		
-		for(CBRCase orig: cases)
+		for(Object on: cases)
 		{
+			CBRCase orig = (CBRCase)on;
 			try {
-				CBRCase copy = orig.getClass().newInstance();
+				CBRCase copy = (CBRCase)orig.getClass().newInstance();
 				
 				copy.setDescription(copyCaseComponent(query.getDescription()));
 				copy.setSolution(copyCaseComponent(orig.getSolution()));

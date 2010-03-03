@@ -34,8 +34,9 @@ public class NumericDirectProportionMethod {
 		
 		Number qsn = (Number)qs;
 		
-		for(CBRCase c: cases)
+		for(Object on: cases)
 		{
+			CBRCase c = (CBRCase)on;
 			try {
 				Object cs = AttributeUtils.findValue(source, c);
 				Object cdcomp = AttributeUtils.findBelongingComponent(destination, c);
