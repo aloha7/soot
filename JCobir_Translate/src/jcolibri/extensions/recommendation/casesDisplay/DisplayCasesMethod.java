@@ -66,7 +66,7 @@ public class DisplayCasesMethod
      * @param cases to display
      * @return UserChoice object
      */
-    public static UserChoice displayCases(Collection<CBRCase> cases)
+    public static UserChoice displayCases(Collection cases)
     {
 	return displayCases(cases, false);
     }
@@ -76,7 +76,7 @@ public class DisplayCasesMethod
      * @param cases to display
      * @return UserChoice object
      */
-    public static UserChoice displayCasesWithEditOption(Collection<CBRCase> cases)
+    public static UserChoice displayCasesWithEditOption(Collection cases)
     {
 	return displayCases(cases, true);
     }
@@ -87,7 +87,7 @@ public class DisplayCasesMethod
      * @param editQueryEnabled decides if show the "Edit Query" option.
      * @return UserChoice object.
      */
-    public static UserChoice displayCases(Collection<CBRCase> cases, boolean editQueryEnabled)
+    public static UserChoice displayCases(Collection cases, boolean editQueryEnabled)
     {
 	_cases = new CBRCase[cases.size()];
 	cases.toArray(_cases);
@@ -212,10 +212,11 @@ public class DisplayCasesMethod
 	{
 	    Attribute[] ats = jcolibri.util.AttributeUtils.getAttributes(cc.getClass());
 	    
-	    ArrayList<Attribute> compounds = new ArrayList<Attribute>();
+	    ArrayList compounds = new ArrayList();
 	    int sAtts = 0;
-	    for(Attribute a: ats)
+	    for(Object o: ats)
 	    {
+	    	Attribute a = (Attribute)o;
 	        if(a.getType().equals(CaseComponent.class))
 	        {
 	            compounds.add(a);
@@ -231,8 +232,11 @@ public class DisplayCasesMethod
 	    
 	    
 	    //Now process compounds
-	    for(Attribute comp: compounds)
-		displayCaseComponent((CaseComponent)comp.getValue(cc), comp.getName(),compoundPanel);
+	    for(Object o: compounds){
+	    	Attribute comp = (Attribute)o;
+	    	displayCaseComponent((CaseComponent)comp.getValue(cc), comp.getName(),compoundPanel);
+	    }
+		
             
 	    
 	    panel.add(simplePanel);

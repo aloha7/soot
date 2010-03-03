@@ -78,7 +78,7 @@ public class DisplayCasesTableMethod
      * @param cases to display
      * @return UserChoice object
      */
-    public static UserChoice displayCasesInTableBasic(Collection<CBRCase> cases)
+    public static UserChoice displayCasesInTableBasic(Collection cases)
     {
 	return displayCasesInTable(cases, DisplayOption.BASIC, null);
     }
@@ -88,7 +88,7 @@ public class DisplayCasesTableMethod
      * @param cases to display
      * @return UserChoice object
      */
-    public static UserChoice displayCasesInTableEditQuery(Collection<CBRCase> cases)
+    public static UserChoice displayCasesInTableEditQuery(Collection cases)
     {
 	return displayCasesInTable(cases, DisplayOption.EDIT_QUERY, "Refine Query");
     }
@@ -98,7 +98,7 @@ public class DisplayCasesTableMethod
      * @param cases to display
      * @return UserChoice object
      */
-    public static UserChoice displayCasesInTableSelectCase(Collection<CBRCase> cases)
+    public static UserChoice displayCasesInTableSelectCase(Collection cases)
     {
 	return displayCasesInTable(cases, DisplayOption.SELECT_CASE, "Something like this");
     }
@@ -111,7 +111,7 @@ public class DisplayCasesTableMethod
      * @param editQueryLabel is the label for the edit query button
      * @return UserChoice object.
      */
-    static UserChoice displayCasesInTable(Collection<CBRCase> cases, DisplayOption displayOption, String optionLabel)
+    static UserChoice displayCasesInTable(Collection cases, DisplayOption displayOption, String optionLabel)
     {
 	_cases = new CBRCase[cases.size()];
 	cases.toArray(_cases);
@@ -123,12 +123,15 @@ public class DisplayCasesTableMethod
 	if(cases.size()==0)
 	    return new UserChoice(UserChoice.REFINE_QUERY, selectedCase);
 
-	Vector<Object> columnNames = extractColumnNames(cases.iterator().next());
+	Vector columnNames = extractColumnNames((CBRCase)cases.iterator().next());
 	
 
-	Vector<Object> rows = new Vector<Object>();
-	for(CBRCase c: cases)
-	    rows.add(getAttributes(c));
+	Vector rows = new Vector();
+	for(Object o: cases){
+		CBRCase c=(CBRCase)o;
+		rows.add(getAttributes(c));
+	}
+	    
 	
 	table = new JTable(rows, columnNames){
 
@@ -236,7 +239,7 @@ public class DisplayCasesTableMethod
      */
     private static Vector getAttributes(CBRCase c)
     {
-	Vector<Object> res = new Vector<Object>();
+	Vector res = new Vector();
 	
 	JRadioButton rb = new JRadioButton(c.getID().toString());
 	res.add(rb);
@@ -254,15 +257,16 @@ public class DisplayCasesTableMethod
      * @param cc CaseComponent
      * @param res List to fill
      */
-    private static void getAttributes(CaseComponent cc, Vector<Object> res)
+    private static void getAttributes(CaseComponent cc, Vector res)
     {
-	Collection<Attribute> atts = AttributeUtils.getAttributes(cc);
+	Collection atts = AttributeUtils.getAttributes(cc);
 	if(atts == null)
 	    return;
 
 	Attribute id = cc.getIdAttribute();
-	for(Attribute a: atts)
+	for(Object o: atts)
 	{
+		Attribute a = (Attribute)o;
 	    if(!a.equals(id))
 		res.add(AttributeUtils.findValue(a, cc));
 	}
@@ -274,9 +278,9 @@ public class DisplayCasesTableMethod
      * @param c is any case.
      * @return a list of objects
      */
-    private static Vector<Object> extractColumnNames(CBRCase c)
+    private static Vector extractColumnNames(CBRCase c)
     {
-	Vector<Object> res = new Vector<Object>();
+	Vector res = new Vector();
 	res.add("Select");
 	extractColumnNames(c.getDescription(),res);
 	extractColumnNames(c.getSolution(),res);
@@ -291,14 +295,15 @@ public class DisplayCasesTableMethod
      * @param cc is the CaseComponent.
      * @param res List to fill.
      */
-    private static void extractColumnNames(CaseComponent cc, Vector<Object> res)
+    private static void extractColumnNames(CaseComponent cc, Vector res)
     {
-	Collection<Attribute> atts = AttributeUtils.getAttributes(cc);
+	Collection atts = AttributeUtils.getAttributes(cc);
 	if(atts == null)
 	    return;
 	Attribute id = cc.getIdAttribute();
-	for(Attribute a: atts)
+	for(Object o: atts)
 	{
+		Attribute a = (Attribute)o;
 	    if(!a.equals(id))
 		res.add(a.getName());
 	}
