@@ -69,14 +69,14 @@ public class DisplayCasesTableWithCritiquesMethod
     private static ButtonGroup group;
     private static int returnCode = UserChoice.QUIT;
 
-    private static Collection<CBRCase> displayedCases;
-    private static Collection<CritiqueOption> displayedCritiques;
-    private static Collection<CBRCase> _availableCases;
+    private static Collection displayedCases;
+    private static Collection displayedCritiques;
+    private static Collection _availableCases;
     
-    private static Collection<CritiqueOption> userCritiques;
+    private static Collection userCritiques;
     private static JTable table;
     
-    private static HashMap<CritiqueOption,JButton> critiquesMap;
+    private static HashMap critiquesMap;
     
     private static CBRCase critiquedQuery;
     
@@ -89,26 +89,30 @@ public class DisplayCasesTableWithCritiquesMethod
      * @param availableCases are the current working cases. Critiques are enabled depending on these cases.
      * @return a CriticalUserChoice object.
      */
-    public static CriticalUserChoice displayCasesInTableWithCritiques(Collection<CBRCase> cases, Collection<CritiqueOption> critiques, Collection<CBRCase> availableCases )
+    public static CriticalUserChoice displayCasesInTableWithCritiques(Collection cases, Collection critiques, Collection availableCases )
     {
 	displayedCases = cases;
 	displayedCritiques = critiques;
 	_availableCases = availableCases;
-	critiquesMap = new HashMap<CritiqueOption, JButton>();
+	critiquesMap = new HashMap();
 	
 	dialog = new JDialog();
 	dialog.setTitle(cases.size()+" Retrieved cases");
 	dialog.setModal(true);
 	
 
-	userCritiques = new ArrayList<CritiqueOption>();
+	userCritiques = new ArrayList();
 	
-	Vector<Object> columnNames = extractColumnNames(cases.iterator().next());
+	Vector columnNames = extractColumnNames((CBRCase)cases.iterator().next());
 	
 
-	Vector<Object> rows = new Vector<Object>();
-	for(CBRCase c: cases)
-	    rows.add(getAttributes(c));
+	Vector rows = new Vector();
+	for(Object o: cases){
+		CBRCase c = (CBRCase)o;
+		rows.add(getAttributes(c));
+	}
+		
+	    
 	
 	table = new JTable(rows, columnNames){
 
@@ -182,8 +186,9 @@ public class DisplayCasesTableWithCritiquesMethod
 	JPanel critiquesPanel = new JPanel();
 	critiquesPanel.setLayout(new BoxLayout(critiquesPanel,BoxLayout.X_AXIS));
 	critiquesPanel.add(Box.createHorizontalGlue());
-	for(CritiqueOption critique: critiques)
+	for(Object om: critiques)
 	{
+		CritiqueOption critique = (CritiqueOption)om;
 	    JButton b = new JButton(critique.getLabel());
 	    DisplayCasesTableWithCritiquesMethod any = new DisplayCasesTableWithCritiquesMethod();
 	    b.addActionListener(any.new CritiqueButtonAction(critique));
@@ -205,8 +210,11 @@ public class DisplayCasesTableWithCritiquesMethod
 	jcolibri.method.gui.utils.WindowUtils.centerWindow(dialog);
 	
 	System.out.println("Available cases:");
-	for(CBRCase c: _availableCases)
-	    System.out.println(c);
+	for(Object on: _availableCases){
+		CBRCase c = (CBRCase)on;
+		System.out.println(c);
+	}
+	    
 	
 	dialog.setVisible(true);
 
@@ -220,19 +228,21 @@ public class DisplayCasesTableWithCritiquesMethod
      */
     private static void disableCritiques(int row)
     {
-	Iterator<CBRCase> iter = displayedCases.iterator();
-	CBRCase _case = iter.next();
+	Iterator iter = displayedCases.iterator();
+	CBRCase _case = (CBRCase)iter.next();
 	for(int i=0; i<row; i++)
-	   _case = iter.next();
+	   _case = (CBRCase)iter.next();
 	
-	for(CritiqueOption co : displayedCritiques)
+	for(Object o : displayedCritiques)
 	{
+		CritiqueOption co = (CritiqueOption)o;
 	    FilterPredicate fp = co.getPredicate();
 	    Attribute a = co.getAttribute();
 	    Object valueSelected = AttributeUtils.findValue(a, _case.getDescription());
 	    boolean therearemore = false;
-	    for(CBRCase cbCase : _availableCases)
+	    for(Object o1 : _availableCases)
 	    {
+	    	CBRCase cbCase = (CBRCase)o1;
 		Object valueOther    = AttributeUtils.findValue(a, cbCase);
 		try
 		{
@@ -250,7 +260,7 @@ public class DisplayCasesTableWithCritiquesMethod
 		    
 		}
 	    }
-	    critiquesMap.get(co).setEnabled(therearemore);
+	    ((JButton)critiquesMap.get(co)).setEnabled(therearemore);
 	}
 	
     }
@@ -260,7 +270,7 @@ public class DisplayCasesTableWithCritiquesMethod
      */
     private static Vector getAttributes(CBRCase c)
     {
-	Vector<Object> res = new Vector<Object>();
+	Vector res = new Vector();
 	
 	JRadioButton rb = new JRadioButton(c.getID().toString());
 	res.add(rb);

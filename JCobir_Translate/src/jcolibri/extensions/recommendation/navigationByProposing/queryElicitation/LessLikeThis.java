@@ -51,12 +51,13 @@ public class LessLikeThis implements ComparisonQueryElicitation
      */
     public static void lessLikeThis(CBRQuery query, CBRCase selectedCase,Collection<CBRCase> proposedCases, FilterConfig filterConfig)
     {
-	for(Attribute at: AttributeUtils.getAttributes(selectedCase.getDescription()))
+	for(Object o: AttributeUtils.getAttributes(selectedCase.getDescription()))
 	{
+		Attribute at = (Attribute)o;
 	    Object selectedValue = AttributeUtils.findValue(at, selectedCase);
-	    HashSet<Object> alternatives = new HashSet<Object>();
-	    for(CBRCase c: proposedCases)
-	    {
+	    HashSet alternatives = new HashSet();
+	    for(Object o1: proposedCases)
+	    {CBRCase c = (CBRCase)o1;
 		Object value = AttributeUtils.findValue(at, c);
 		alternatives.add(value);
 	    }
@@ -95,7 +96,7 @@ public class LessLikeThis implements ComparisonQueryElicitation
      * negative condition is coded as a NotEqualTo(value) predicate in a 
      * FilterConfig object.
      */
-    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection<CBRCase> proposedCases)
+    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection proposedCases)
     {
 	lessLikeThis(query, selectedCase, proposedCases,_filterConfig);
     }

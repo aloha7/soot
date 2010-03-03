@@ -27,12 +27,12 @@ import jcolibri.method.retrieve.FilterBasedRetrieval.FilterConfig;
 public class CriticalUserChoice extends UserChoice
 {
     
-    private Collection<CritiqueOption> critiques = null;
+    private Collection critiques = null;
     
     public CriticalUserChoice()
     {
 	super(UserChoice.REFINE_QUERY, null);
-	critiques = new ArrayList<CritiqueOption>();
+	critiques = new ArrayList();
     }
     
     /**
@@ -44,7 +44,7 @@ public class CriticalUserChoice extends UserChoice
      * @param critiquedCase is the new query/case thas was critiqued. This parameter is only
      * used if the "choice" parameter contains REFINE_QUERY.
      */
-    public CriticalUserChoice(int choice, Collection<CritiqueOption> critiques, CBRCase critiquedCase)
+    public CriticalUserChoice(int choice, Collection critiques, CBRCase critiquedCase)
     {
 	super(choice, critiquedCase);
 	this.critiques = critiques;
@@ -53,7 +53,7 @@ public class CriticalUserChoice extends UserChoice
     /**
      * Returns the critiques
      */
-    public Collection<CritiqueOption> getCritiques()
+    public Collection getCritiques()
     {
 	return this.critiques;
     }
@@ -65,8 +65,11 @@ public class CriticalUserChoice extends UserChoice
     public FilterConfig getFilterConfig()
     {
 	FilterConfig fc = new FilterConfig();
-	for(CritiqueOption critique: critiques)
-	    fc.addPredicate(critique.getAttribute(), critique.getPredicate());
+	for(Object o: critiques){
+		CritiqueOption critique= (CritiqueOption)o;
+		fc.addPredicate(critique.getAttribute(), critique.getPredicate());
+	}
+	    
 	return fc;
     }
 

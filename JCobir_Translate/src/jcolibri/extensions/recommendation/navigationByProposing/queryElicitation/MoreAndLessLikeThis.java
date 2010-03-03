@@ -48,13 +48,15 @@ public class MoreAndLessLikeThis implements ComparisonQueryElicitation
      */
     public static void moreAndLessLikeThis(CBRQuery query, CBRCase selectedCase,Collection<CBRCase> proposedCases, FilterConfig filterConfig)
     {
-	for(Attribute at: AttributeUtils.getAttributes(selectedCase.getDescription()))
+	for(Object o: AttributeUtils.getAttributes(selectedCase.getDescription()))
 	{
+		Attribute at =  (Attribute)o;
 	    Object selectedValue = AttributeUtils.findValue(at, selectedCase);
 	    AttributeUtils.setValue(at, query, selectedValue);
-	    HashSet<Object> alternatives = new HashSet<Object>();
-	    for(CBRCase c: proposedCases)
+	    HashSet alternatives = new HashSet();
+	    for(Object o1: proposedCases)
 	    {
+	    	CBRCase c = (CBRCase)o1;
 		Object value = AttributeUtils.findValue(at, c);
 		alternatives.add(value);
 	    }
@@ -91,7 +93,7 @@ public class MoreAndLessLikeThis implements ComparisonQueryElicitation
      * the values of the selected case into the query and returns a FilterConfig
      * object with the negative conditions.
      */
-    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection<CBRCase> proposedCases)
+    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection proposedCases)
     {
 	moreAndLessLikeThis(query, selectedCase, proposedCases,_filterConfig);
     }

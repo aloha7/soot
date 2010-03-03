@@ -29,5 +29,5 @@ public interface ComparisonQueryElicitation
      * @param selectedCase by the user
      * @param proposedCases to the user
      */
-    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection<CBRCase> proposedCases);
+    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection proposedCases);
 }

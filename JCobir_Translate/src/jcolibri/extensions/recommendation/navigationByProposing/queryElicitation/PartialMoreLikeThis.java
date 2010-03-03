@@ -41,11 +41,13 @@ public class PartialMoreLikeThis implements ComparisonQueryElicitation
     public static void partialMoreLikeThis(CBRQuery query, CBRCase selectedCase,Collection<CBRCase> proposedCases)
     {
 	boolean copyAttribute = true;
-	for(Attribute at: AttributeUtils.getAttributes(selectedCase.getDescription()))
+	for(Object o: AttributeUtils.getAttributes(selectedCase.getDescription()))
 	{
+		Attribute at = (Attribute)o;
 	    Object selectedValue = AttributeUtils.findValue(at, selectedCase);
-	    for(CBRCase c: proposedCases)
+	    for(Object o1: proposedCases)
 	    {
+	    	CBRCase c = (CBRCase)o1;
 		Object value = AttributeUtils.findValue(at, c);
 		if(selectedValue == null)
 		{    
@@ -72,7 +74,7 @@ public class PartialMoreLikeThis implements ComparisonQueryElicitation
     /**
      * Partially replaces current query with the description of the selected case.
      */
-    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection<CBRCase> proposedCases)
+    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection proposedCases)
     {
 	partialMoreLikeThis(query, selectedCase, proposedCases);
     }

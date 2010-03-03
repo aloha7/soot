@@ -51,7 +51,7 @@ public class MoreLikeThis implements ComparisonQueryElicitation
     /**
      * Replaces current query with the description of the selected case.
      */
-    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection<CBRCase> proposedCases)
+    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection proposedCases)
     {
 	moreLikeThis(query, selectedCase);
     }

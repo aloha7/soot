@@ -45,12 +45,14 @@ public class WeightedMoreLikeThis implements ComparisonQueryElicitation
      */
     public static void weightedMoreLikeThis(CBRQuery query, CBRCase selectedCase,Collection<CBRCase> proposedCases, NNConfig simConfig)
     {
-	for(Attribute at: AttributeUtils.getAttributes(selectedCase.getDescription()))
+	for(Object o: AttributeUtils.getAttributes(selectedCase.getDescription()))
 	{
+		Attribute at = (Attribute)o;
 	    Object selectedValue = AttributeUtils.findValue(at, selectedCase);
-	    HashSet<Object> alternatives = new HashSet<Object>();
-	    for(CBRCase c: proposedCases)
+	    HashSet alternatives = new HashSet();
+	    for(Object o1: proposedCases)
 	    {
+	    	CBRCase c = (CBRCase)o1;
 		Object value = AttributeUtils.findValue(at, c);
 		if(selectedValue == null)
 		{    
@@ -83,7 +85,7 @@ public class WeightedMoreLikeThis implements ComparisonQueryElicitation
      * Replaces current query with the description of the selected case but weighting
      * the attributes given preference to diverse attributes among the proposed cases.
      */
-    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection<CBRCase> proposedCases)
+    public void reviseQuery(CBRQuery query, CBRCase selectedCase, Collection proposedCases)
     {
 	weightedMoreLikeThis(query, selectedCase, proposedCases,_simConfig);
     }
