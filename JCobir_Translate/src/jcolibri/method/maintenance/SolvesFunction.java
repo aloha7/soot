@@ -15,9 +15,9 @@ import jcolibri.method.reuse.classification.KNNClassificationConfig;
  */
 public abstract class SolvesFunction
 {
-	protected Collection<CBRCase> solveQ;
+	protected Collection solveQ;
 	
-	protected Collection<CBRCase> misclassifyQ;
+	protected Collection misclassifyQ;
 	
 	/**
 	 * Sets the classes that both solve q or contribute to its 
@@ -27,7 +27,7 @@ public abstract class SolvesFunction
 	 * and classify the query. These include the query itself. 
 	 * @param knnConfig the similarity configuration
 	 */
-	public abstract void setCasesThatSolveAndMisclassifyQ(CBRCase q, Collection<CBRCase> cases, KNNClassificationConfig knnConfig);
+	public abstract void setCasesThatSolveAndMisclassifyQ(CBRCase q, Collection cases, KNNClassificationConfig knnConfig);
 
 	/**
 	 * Returns the cases that solved the last query for which cases
@@ -35,7 +35,7 @@ public abstract class SolvesFunction
 	 * @return the cases that solved the last query for which cases
 	 * were divided.
      */
-	public Collection<CBRCase> getCasesThatSolvedQuery()
+	public Collection getCasesThatSolvedQuery()
 	{	return solveQ;
 	}
 	
@@ -47,7 +47,7 @@ public abstract class SolvesFunction
 	 * of the last query for which cases were divided.
 	 * were divided.
      */
-	public Collection<CBRCase> getCasesThatMisclassifiedQuery()
+	public Collection getCasesThatMisclassifiedQuery()
 	{	return misclassifyQ;
 	}
 }

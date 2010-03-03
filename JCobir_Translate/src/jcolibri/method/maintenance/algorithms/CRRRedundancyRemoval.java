@@ -34,8 +34,7 @@ public class CRRRedundancyRemoval extends AbstractCaseBaseEditMethod {
 	 * @return the list of cases that would be deleted by the 
 	 * CRR algorithm.
 	 */
-	@SuppressWarnings("unchecked")
-	public List<CBRCase> retrieveCasesToDelete(Collection<CBRCase> cases, KNNClassificationConfig simConfig)
+	public List retrieveCasesToDelete(Collection cases, KNNClassificationConfig simConfig)
 	{	/*
 		 * Conservative Redundancy Removal(CRR) Algorithm:
 		 * T, Training Set
@@ -59,21 +58,25 @@ public class CRRRedundancyRemoval extends AbstractCaseBaseEditMethod {
 		 * Return TSet
 		 */
 	    	jcolibri.util.ProgressController.init(this.getClass(), "Conservative Redundancy Removal(CRR)", jcolibri.util.ProgressController.UNKNOWN_STEPS);
-		List<CBRCase> localCases = new LinkedList<CBRCase>();
-		for(CBRCase c: cases)
-		{	localCases.add(c);
+		List localCases = new LinkedList();
+		for(Object on: cases)
+		{
+			CBRCase c = (CBRCase)on;
+			localCases.add(c);
 		}
 		
 		CompetenceModel sc = new CompetenceModel();
 		sc.computeCompetenceModel(new CBESolvesFunction(), simConfig, localCases);
 		//Map<CBRCase, Collection<CBRCase>> coverageSets = sc.getCoverageSets();
 
-		LinkedList<CBRCase> tSet = new LinkedList<CBRCase>();
+		LinkedList tSet = new LinkedList();
 		
-		List<CaseResult> caseCoverageSetSizes = new LinkedList<CaseResult>();
-		for(CBRCase c: localCases)
-		{	tSet.add(c);
-			Collection<CBRCase> currCoverageSet = null;
+		List caseCoverageSetSizes = new LinkedList();
+		for(Object on: localCases)
+		{	
+			CBRCase c = (CBRCase)on;
+			tSet.add(c);
+			Collection currCoverageSet = null;
 			try
 			{   currCoverageSet = sc.getCoverageSet(c);
 			    caseCoverageSetSizes.add(new CaseResult(c, currCoverageSet.size()));
@@ -84,25 +87,25 @@ public class CRRRedundancyRemoval extends AbstractCaseBaseEditMethod {
 		}
 		
 		caseCoverageSetSizes = CaseResult.sortResults(true, caseCoverageSetSizes);
-		List<CBRCase> newCases = new LinkedList<CBRCase>();
-		List<CBRCase> allCasesToBeRemoved = new LinkedList<CBRCase>();
+		List newCases = new LinkedList();
+		List allCasesToBeRemoved = new LinkedList();
 		
 		while(caseCoverageSetSizes.size() > 0)
-		{	List<CBRCase> removeThese = new LinkedList<CBRCase>();
-		    	CBRCase c = caseCoverageSetSizes.get(0).getCase();
+		{	List removeThese = new LinkedList();
+		    	CBRCase c = ((CaseResult)caseCoverageSetSizes.get(0)).getCase();
 			newCases.add(c);
 			try
-			{   Collection<CBRCase> cCoverageSet = sc.getCoverageSet(c);
-			    for(Iterator<CBRCase> cIter = cCoverageSet.iterator(); cIter.hasNext(); )
-			    {	CBRCase removed = cIter.next();
+			{   Collection cCoverageSet = sc.getCoverageSet(c);
+			    for(Iterator cIter = cCoverageSet.iterator(); cIter.hasNext(); )
+			    {	CBRCase removed = (CBRCase)cIter.next();
 			    	if(!removed.equals(c) && !allCasesToBeRemoved.contains(removed))
 			    	{	allCasesToBeRemoved.add(removed);
 			    	}
 			    	removeThese.add(removed);
 			    }
-			    ListIterator<CaseResult> iter = null;
+			    ListIterator iter = null;
 			    for(iter = caseCoverageSetSizes.listIterator(); iter.hasNext() && removeThese.size() > 0; )
-			    {	CaseResult cResult = iter.next();
+			    {	CaseResult cResult = (CaseResult)iter.next();
 			        	if(removeThese.contains(cResult.getCase()))
 			    	{	iter.remove();
 			    		removeThese.remove(cResult.getCase());

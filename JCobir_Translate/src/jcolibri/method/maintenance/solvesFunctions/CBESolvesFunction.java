@@ -41,9 +41,9 @@ public class CBESolvesFunction extends SolvesFunction
 	 * and classify the query. These include the query itself. 
 	 * @param knnConfig the similarity configuration
 	 */
-	public void setCasesThatSolveAndMisclassifyQ(CBRCase q, Collection<CBRCase> cases, KNNClassificationConfig knnConfig)
+	public void setCasesThatSolveAndMisclassifyQ(CBRCase q, Collection cases, KNNClassificationConfig knnConfig)
 	{
-	    	solveQ = new LinkedList<CBRCase>(); //It will always contain at least the query itself
+	    	solveQ = new LinkedList(); //It will always contain at least the query itself
 		misclassifyQ = null;
 		
 		/* q is regarded to solve itself regardless of whether it is
@@ -57,14 +57,14 @@ public class CBESolvesFunction extends SolvesFunction
 		 * remove the last case of those retrieved
 		 */
 		knnConfig.setK(knnConfig.getK()+1);
-		Collection<RetrievalResult> knnResults = NNScoringMethod.evaluateSimilarity(cases, q, knnConfig);
-		Collection<CBRCase> knn = SelectCases.selectTopK(knnResults, knnConfig.getK());
+		Collection knnResults = NNScoringMethod.evaluateSimilarity(cases, q, knnConfig);
+		Collection knn = SelectCases.selectTopK(knnResults, knnConfig.getK());
 		knnConfig.setK(knnConfig.getK()-1); 
 		RetrievalResult result = null;
 		boolean qFound = false;
 		
-		for(Iterator<RetrievalResult> cIter = knnResults.iterator(); cIter.hasNext() && !qFound; )
-		{	result = cIter.next();
+		for(Iterator cIter = knnResults.iterator(); cIter.hasNext() && !qFound; )
+		{	result = (RetrievalResult)cIter.next();
 			if(result.get_case().equals(q))
 			{	knnResults.remove(result);			    
 				qFound = true;
@@ -80,17 +80,21 @@ public class CBESolvesFunction extends SolvesFunction
         		ClassificationOracle oracle = new BasicClassificationOracle();
         		boolean correct = oracle.isCorrectPrediction(predictedSolution, q);
         		if(correct)
-        		{	for(RetrievalResult res: knnResults)
-        			{	CBRCase c = res.get_case();
+        		{	for(Object on: knnResults)
+        			{	
+        			RetrievalResult res = (RetrievalResult)on;
+        			CBRCase c = res.get_case();
         				if(oracle.isCorrectPrediction((ClassificationSolution)c.getSolution(), q))
         				{	solveQ.add(c);
         				}
         			}
         		}
         		else
-        		{	misclassifyQ = new LinkedList<CBRCase>();
-        			for(RetrievalResult res: knnResults)
-        			{	CBRCase c = res.get_case();
+        		{	misclassifyQ = new LinkedList();
+        			for(Object om: knnResults)
+        			{	
+        				RetrievalResult res = (RetrievalResult)om;
+        				CBRCase c = res.get_case();
                 			if(!oracle.isCorrectPrediction((ClassificationSolution)c.getSolution(), q))
         				{	misclassifyQ.add(c);
         				}

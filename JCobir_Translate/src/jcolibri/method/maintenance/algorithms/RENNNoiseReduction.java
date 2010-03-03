@@ -34,7 +34,7 @@ public class RENNNoiseReduction extends AbstractCaseBaseEditMethod {
 	 * @return the list of cases that would be deleted by the 
 	 * RENN algorithm.
 	 */
-	public Collection<CBRCase> retrieveCasesToDelete(Collection<CBRCase> cases, KNNClassificationConfig simConfig) 
+	public Collection retrieveCasesToDelete(Collection cases, KNNClassificationConfig simConfig) 
 	{	/* RENN Algorithm:
 		 *
 		 * T: Training Set
@@ -52,22 +52,24 @@ public class RENNNoiseReduction extends AbstractCaseBaseEditMethod {
 		 * Return T	
 	 	 */
 	    	jcolibri.util.ProgressController.init(this.getClass(),"RENN Noise Reduction",jcolibri.util.ProgressController.UNKNOWN_STEPS);
-		List<CBRCase> localCases = new LinkedList<CBRCase>();
+		List localCases = new LinkedList();
 		
-		for(CBRCase c: cases)
-		{	localCases.add(c);
+		for(Object on: cases)
+		{	
+			CBRCase c = (CBRCase)on;
+			localCases.add(c);
 		}
 		
-		List<CBRCase> allCasesToBeRemoved = new LinkedList<CBRCase>();
+		List allCasesToBeRemoved = new LinkedList();
 
 		boolean changes = true;
 		while(changes && localCases.size() > 1)
 		{	changes = false;
-			ListIterator<CBRCase> iter = localCases.listIterator();	
+			ListIterator iter = localCases.listIterator();	
 			while (iter.hasNext())
-			{	CBRCase q = iter.next();
+			{	CBRCase q = (CBRCase)iter.next();
 				iter.remove();
-				Collection<RetrievalResult> knn = NNScoringMethod.evaluateSimilarity(localCases, q, simConfig);
+				Collection knn = NNScoringMethod.evaluateSimilarity(localCases, q, simConfig);
 				knn = SelectCases.selectTopKRR(knn, simConfig.getK());
 				try
 				{	KNNClassificationMethod classifier = ((KNNClassificationConfig)simConfig).getClassificationMethod();

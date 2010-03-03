@@ -31,7 +31,7 @@ public class RCRedundancyRemoval extends AbstractCaseBaseEditMethod {
 	 * @return the list of cases that would be deleted by the 
 	 * RC algorithm.
 	 */
-	public Collection<CBRCase> retrieveCasesToDelete(Collection<CBRCase> cases, KNNClassificationConfig simConfig) 
+	public Collection retrieveCasesToDelete(Collection cases, KNNClassificationConfig simConfig) 
 	{	/* 
 		 * RC Algorithm:
 		 *	
@@ -54,14 +54,16 @@ public class RCRedundancyRemoval extends AbstractCaseBaseEditMethod {
 		 * Return (E-Set)
 		 */
 	    	jcolibri.util.ProgressController.init(this.getClass(),"RC Redundancy Removal",jcolibri.util.ProgressController.UNKNOWN_STEPS);
-		List<CBRCase> localCases = new LinkedList<CBRCase>();
-		for(CBRCase c: cases)
-		{	localCases.add(c);
+		List localCases = new LinkedList();
+		for(Object on: cases)
+		{
+			CBRCase c = (CBRCase)on;
+			localCases.add(c);
 		}
 			
 		CompetenceModel sc = new CompetenceModel();
 		
-		LinkedList<CBRCase> keepCases = new LinkedList<CBRCase>();
+		LinkedList keepCases = new LinkedList();
 		
 		while(localCases.size() > 0)
 		{	double topRCScore = 0.0;
@@ -70,11 +72,15 @@ public class RCRedundancyRemoval extends AbstractCaseBaseEditMethod {
 			sc.computeCompetenceModel(new CBESolvesFunction(), simConfig, localCases);
 			
 			try
-			{   for(CBRCase c: localCases)
-			    {	double rcScore = 0.0;
-			    	Collection<CBRCase> cCov = sc.getCoverageSet(c);
-			    	for(CBRCase c1: cCov)
-			    	{	rcScore += (1/(double)sc.getReachabilitySet(c1).size());
+			{   for(Object om: localCases)
+			    {	
+					CBRCase c = (CBRCase)om;
+					double rcScore = 0.0;
+			    	Collection cCov = sc.getCoverageSet(c);
+			    	for(Object ot: cCov)
+			    	{
+			    		CBRCase c1 = (CBRCase)ot;
+			    		rcScore += (1/(double)sc.getReachabilitySet(c1).size());
 			    	}
 			    	if(rcScore > topRCScore)
 			    	{	topRCScore = rcScore;
@@ -84,10 +90,12 @@ public class RCRedundancyRemoval extends AbstractCaseBaseEditMethod {
 			    
 			    keepCases.add(topRCCase);
 			    
-			    Collection<CBRCase> cSet = sc.getCoverageSet(topRCCase);
-			    List<CBRCase> toRemove = new LinkedList<CBRCase>();
-			    for(CBRCase c: cSet)
-			    {	toRemove.add(c);
+			    Collection cSet = sc.getCoverageSet(topRCCase);
+			    List toRemove = new LinkedList();
+			    for(Object o1: cSet)
+			    {
+			    	CBRCase c = (CBRCase)o1;
+			    	toRemove.add(c);
 			    }
 			    localCases.removeAll(toRemove);
 			} catch (InitializingException e)
@@ -97,9 +105,11 @@ public class RCRedundancyRemoval extends AbstractCaseBaseEditMethod {
 		}
 		
 		//Add all cases that are not being kept to the list of deleted cases
-		List<CBRCase> allCasesToBeRemoved = new LinkedList<CBRCase>();
-		for(CBRCase c: cases)
-		{	if(!keepCases.contains(c))
+		List allCasesToBeRemoved = new LinkedList();
+		for(Object o2: cases)
+		{	
+			CBRCase c = (CBRCase)o2;
+			if(!keepCases.contains(c))
 				allCasesToBeRemoved.add(c);
 		}
 		jcolibri.util.ProgressController.finish(this.getClass());

@@ -38,8 +38,7 @@ public class BBNRNoiseReduction extends AbstractCaseBaseEditMethod {
 	 * @return the list of cases that would be deleted by the 
 	 * BBNR algorithm.
 	 */
-	@SuppressWarnings("unchecked")
-	public LinkedList<CBRCase> retrieveCasesToDelete(Collection<CBRCase> cases, KNNClassificationConfig simConfig)
+	public LinkedList retrieveCasesToDelete(Collection cases, KNNClassificationConfig simConfig)
 	{	/*
 		 * Blame-based Noise Reduction (BBNR) Algorithm
 		 * T, Training Set
@@ -70,18 +69,22 @@ public class BBNRNoiseReduction extends AbstractCaseBaseEditMethod {
 		 */
 	    
 	    	jcolibri.util.ProgressController.init(this.getClass(), "Blame-based Noise Reduction (BBNR)", jcolibri.util.ProgressController.UNKNOWN_STEPS);
-		List<CBRCase> localCases = new LinkedList<CBRCase>();
-		for(CBRCase c: cases)
-		{	localCases.add(c);
+		List localCases = new LinkedList();
+		for(Object on: cases)
+		{
+			CBRCase c = (CBRCase)on;
+			localCases.add(c);
 		}
 	
 		CompetenceModel sc = new CompetenceModel();
 		sc.computeCompetenceModel(new CBESolvesFunction(), simConfig, localCases);
 		
-		List<CaseResult> caseLiabilitySetSizes = new LinkedList<CaseResult>();
+		List caseLiabilitySetSizes = new LinkedList();
 		
-		for(CBRCase c:localCases)
-		{	Collection<CBRCase> currLiabilitySet = null;
+		for(Object om:localCases)
+		{
+			CBRCase c = (CBRCase)om;
+			Collection currLiabilitySet = null;
 			try 
 			{	currLiabilitySet = sc.getLiabilitySet(c);
 			} catch (InitializingException e) 
@@ -99,10 +102,10 @@ public class BBNRNoiseReduction extends AbstractCaseBaseEditMethod {
 		
 		caseLiabilitySetSizes = CaseResult.sortResults(false, caseLiabilitySetSizes);
 
-		LinkedList<CBRCase> allCasesToBeRemoved = new LinkedList<CBRCase>();
+		LinkedList allCasesToBeRemoved = new LinkedList();
 		
-	    	for(ListIterator<CaseResult> liabIter = caseLiabilitySetSizes.listIterator(); liabIter.hasNext(); )
-        	{	CaseResult highestLiability = liabIter.next();
+	    	for(ListIterator liabIter = caseLiabilitySetSizes.listIterator(); liabIter.hasNext(); )
+        	{	CaseResult highestLiability = (CaseResult)liabIter.next();
         		if(highestLiability.getResult() <= 0)
         		{	break;    
         		}
@@ -110,7 +113,7 @@ public class BBNRNoiseReduction extends AbstractCaseBaseEditMethod {
 			CBRCase removed = highestLiability.getCase();
         		localCases.remove(removed);
         			
-        		Collection<CBRCase> covSet = null;
+        		Collection covSet = null;
         		try 
         		{	covSet = sc.getCoverageSet(removed);
         		} catch (InitializingException e) 
@@ -118,8 +121,10 @@ public class BBNRNoiseReduction extends AbstractCaseBaseEditMethod {
         		}
         		
         		boolean caseMisclassified = false;
-        		for(CBRCase query: covSet)
-        		{	Collection<RetrievalResult> knn = NNScoringMethod.evaluateSimilarity(localCases, query, simConfig);
+        		for(Object o1: covSet)
+        		{	
+        			CBRCase query = (CBRCase)o1;
+        			Collection knn = NNScoringMethod.evaluateSimilarity(localCases, query, simConfig);
         			knn = SelectCases.selectTopKRR(knn, simConfig.getK());
         			try
         			{	KNNClassificationMethod classifier = ((KNNClassificationConfig)simConfig).getClassificationMethod();

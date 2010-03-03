@@ -39,15 +39,16 @@ public class CaseResult extends QueryResult
 	 * @param toSort The list of CaseResults to sort.
 	 * @return the sorted list.
 	 */
-	@SuppressWarnings("unchecked")
-	public static List sortResults(boolean ascending, List<CaseResult> toSort)
+	public static List sortResults(boolean ascending, List toSort)
 	{   Collections.sort(toSort);
 	    if(ascending)
 	    {	return toSort;	    	    
 	    }
-	    List<CaseResult> sorted = new LinkedList<CaseResult>();
-	    for(CaseResult res: toSort)
-	    {	sorted.add(0, res);	    	    
+	    List sorted = new LinkedList();
+	    for(Object on: toSort)
+	    {	
+	    	CaseResult res = (CaseResult)on;
+	    	sorted.add(0, res);	    	    
 	    }
 	    return sorted;
 	}

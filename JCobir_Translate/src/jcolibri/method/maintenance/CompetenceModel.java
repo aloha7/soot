@@ -18,11 +18,11 @@ import jcolibri.method.reuse.classification.KNNClassificationConfig;
  */
 public class CompetenceModel {
 
-	private Map<CBRCase, Collection<CBRCase>> coverageSets;
+	private Map coverageSets;
 	
-	private Map<CBRCase, Collection<CBRCase>> reachabilitySets;
+	private Map reachabilitySets;
 
-	private Map<CBRCase, Collection<CBRCase>> liabilitySets;
+	private Map liabilitySets;
 	
 	/**
 	 * Computes the competence model for the given cases using
@@ -33,23 +33,27 @@ public class CompetenceModel {
 	 * @param cases the cases for which the competence model 
 	 * is being computed.
 	 */
-	public void computeCompetenceModel(SolvesFunction solves, KNNClassificationConfig knnConfig, Collection<CBRCase> cases)
+	public void computeCompetenceModel(SolvesFunction solves, KNNClassificationConfig knnConfig, Collection cases)
 	{	
-		coverageSets = new HashMap<CBRCase, Collection<CBRCase>>();
-		reachabilitySets = new HashMap<CBRCase, Collection<CBRCase>>();
-		liabilitySets = new HashMap<CBRCase, Collection<CBRCase>>();
+		coverageSets = new HashMap();
+		reachabilitySets = new HashMap();
+		liabilitySets = new HashMap();
 		
-		for(CBRCase q: cases)
-		{	solves.setCasesThatSolveAndMisclassifyQ(q, cases, knnConfig);
-			Collection<CBRCase> solveQ = solves.getCasesThatSolvedQuery();
-			Collection<CBRCase> misclassifyQ = solves.getCasesThatMisclassifiedQuery();
-			Collection<CBRCase> reachabilitySet = new LinkedList<CBRCase>();
+		for(Object on: cases)
+		{	
+			CBRCase q = (CBRCase)on;
+			solves.setCasesThatSolveAndMisclassifyQ(q, cases, knnConfig);
+			Collection solveQ = (Collection)solves.getCasesThatSolvedQuery();
+			Collection misclassifyQ = (Collection)solves.getCasesThatMisclassifiedQuery();
+			Collection reachabilitySet = new LinkedList();
 			if(solveQ != null)
-			{	for(CBRCase c: solveQ)
-				{	reachabilitySet.add(c);
-					Collection<CBRCase> coverageSet = coverageSets.get(c);
+			{	for(Object om : solveQ)
+				{	
+					CBRCase c = (CBRCase)om;
+					reachabilitySet.add(c);
+					Collection coverageSet = (Collection)coverageSets.get(c);
 					if(coverageSet == null)
-					{	coverageSet = new LinkedList<CBRCase>();
+					{	coverageSet = new LinkedList();
 					}
 					coverageSet.add(q);
 					coverageSets.put(c, coverageSet);
@@ -58,10 +62,12 @@ public class CompetenceModel {
 			}
 			
 			if(misclassifyQ != null)
-			{	for(CBRCase c: misclassifyQ)
-				{	Collection<CBRCase> liabilitySet = liabilitySets.get(c);
+			{	for(Object ot: misclassifyQ)
+				{
+					CBRCase c = (CBRCase)ot;
+					Collection liabilitySet = (Collection)liabilitySets.get(c);
 					if(liabilitySet == null)
-					{	liabilitySet = new LinkedList<CBRCase>();
+					{	liabilitySet = new LinkedList();
 					}
 					liabilitySet.add(q);
 					liabilitySets.put(c, liabilitySet);
@@ -77,10 +83,10 @@ public class CompetenceModel {
 	 * @throws InitializingException Indicates that the competence
 	 * model has not yet been computed.
 	 */
-	public Collection<CBRCase> getCoverageSet(CBRCase c) throws InitializingException 
+	public Collection getCoverageSet(CBRCase c) throws InitializingException 
 	{	if (coverageSets == null)
 			throw new InitializingException();
-		return coverageSets.get(c);
+		return (Collection)coverageSets.get(c);
 	}
 	
 	/**
@@ -90,10 +96,10 @@ public class CompetenceModel {
 	 * @throws InitializingException Indicates that the competence
 	 * model has not yet been computed.
 	 */
-	public Collection<CBRCase> getReachabilitySet(CBRCase c) throws InitializingException 
+	public Collection getReachabilitySet(CBRCase c) throws InitializingException 
 	{	if (reachabilitySets == null)
 			throw new InitializingException();
-		return reachabilitySets.get(c);
+		return (Collection)reachabilitySets.get(c);
 	}
 	
 	/**
@@ -103,17 +109,17 @@ public class CompetenceModel {
 	 * @throws InitializingException Indicates that the competence
 	 * model has not yet been computed.
 	 */
-	public Collection<CBRCase> getLiabilitySet(CBRCase c) throws InitializingException 
+	public Collection getLiabilitySet(CBRCase c) throws InitializingException 
 	{	if (liabilitySets == null)
 			throw new InitializingException();
-		return liabilitySets.get(c);
+		return (Collection)liabilitySets.get(c);
 	}
 	
 	/**
 	 * Returns the coverage sets of the case base.
 	 * @return the coverage sets of the case base.
 	 */
-	public Map<CBRCase, Collection<CBRCase>> getCoverageSets()
+	public Map getCoverageSets()
 	{	return coverageSets;
 	}
 	
@@ -121,7 +127,7 @@ public class CompetenceModel {
 	 * Returns the reachability sets of the case base.
 	 * @return the reachability sets of the case base.
 	 */
-	public Map<CBRCase, Collection<CBRCase>> getReachabilitySets()
+	public Map getReachabilitySets()
 	{	return reachabilitySets;
 	}
 	
@@ -129,7 +135,7 @@ public class CompetenceModel {
 	 * Returns the liability sets of the case base.
 	 * @return the liability sets of the case base.
 	 */
-	public Map<CBRCase, Collection<CBRCase>> getLiabilitySets()
+	public Map getLiabilitySets()
 	{	return liabilitySets;
 	}
 }

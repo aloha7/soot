@@ -38,13 +38,16 @@ public class TwoStepCaseBaseEditMethod extends AbstractCaseBaseEditMethod
 	 *            The KNNConfig for these cases
 	 * @return the list of cases deleted by the algorithm
 	 */
-	public Collection<CBRCase> retrieveCasesToDelete(Collection<CBRCase> cases,
+	public Collection retrieveCasesToDelete(Collection cases,
 			KNNClassificationConfig simConfig) 
-	{	Collection<CBRCase> deletedCases = method1.retrieveCasesToDelete(cases, simConfig);
+	{	Collection deletedCases = method1.retrieveCasesToDelete(cases, simConfig);
 		System.out.println(method1.getClass().getName()+" Done, Deleted: " + deletedCases.size());
 		System.out.println();
-		for(CBRCase c: deletedCases)
-		    System.out.println(c.getID());
+		for(Object on: deletedCases){
+			CBRCase c = (CBRCase)on;
+			System.out.println(c.getID());
+		}
+		    
 		cases.removeAll(deletedCases);
 
 		deletedCases.addAll(method2.retrieveCasesToDelete(cases, simConfig));

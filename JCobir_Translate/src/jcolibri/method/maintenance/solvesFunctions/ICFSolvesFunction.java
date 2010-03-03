@@ -37,20 +37,20 @@ public class ICFSolvesFunction extends SolvesFunction
 	 * and classify the query. These include the query itself. 
 	 * @param knnConfig the similarity configuration
 	 */
-	public void setCasesThatSolveAndMisclassifyQ(CBRCase q, Collection<CBRCase> cases, KNNClassificationConfig knnConfig)
+	public void setCasesThatSolveAndMisclassifyQ(CBRCase q, Collection cases, KNNClassificationConfig knnConfig)
 	{
-		solveQ = new LinkedList<CBRCase>();
+		solveQ = new LinkedList();
 		misclassifyQ = null;
 		
 		knnConfig.setK(RetrievalResult.RETRIEVE_ALL);
-		Collection<RetrievalResult> orderedRetrievedCases = NNScoringMethod.evaluateSimilarity(cases, q, knnConfig);
+		Collection orderedRetrievedCases = NNScoringMethod.evaluateSimilarity(cases, q, knnConfig);
 		orderedRetrievedCases = SelectCases.selectTopKRR(orderedRetrievedCases, knnConfig.getK());
 		
 		ClassificationOracle oracle = new BasicClassificationOracle();
 		boolean disagreeingCaseFound = false;
-		Iterator<RetrievalResult> iter = orderedRetrievedCases.iterator();
+		Iterator iter = orderedRetrievedCases.iterator();
 		while(!disagreeingCaseFound && iter.hasNext())
-		{	CBRCase c = iter.next().get_case();
+		{	CBRCase c = ((RetrievalResult)iter.next()).get_case();
 			ClassificationSolution cSol = (ClassificationSolution)c.getSolution();
 			if(oracle.isCorrectPrediction(cSol, q))
 			{	solveQ.add(c);

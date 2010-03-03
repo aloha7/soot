@@ -29,7 +29,7 @@ public class ICFRedundancyRemoval extends AbstractCaseBaseEditMethod {
 	 * @return the list of cases that would be deleted by the 
 	 * ICF algorithm.
 	 */
-	public Collection<CBRCase> retrieveCasesToDelete(Collection<CBRCase> cases, KNNClassificationConfig simConfig)
+	public Collection retrieveCasesToDelete(Collection cases, KNNClassificationConfig simConfig)
 	{	/* ICF Algorithm:
 		 * T: Training Set
 		 * 
@@ -58,27 +58,31 @@ public class ICFRedundancyRemoval extends AbstractCaseBaseEditMethod {
 		 * Return T
 		 */
 		jcolibri.util.ProgressController.init(this.getClass(),"ICF Redundancy Removal",jcolibri.util.ProgressController.UNKNOWN_STEPS);
-		List<CBRCase> localCases = new LinkedList<CBRCase>();
-		for(CBRCase c: cases)
-		{	localCases.add(c);
+		List localCases = new LinkedList();
+		for(Object on: cases)
+		{	
+			CBRCase c = (CBRCase)on;
+			localCases.add(c);
 		}
 
 		CompetenceModel sc = new CompetenceModel();
-		Map<CBRCase, Collection<CBRCase>> coverageSets = null, reachabilitySets = null;
-		List<CBRCase> allCasesToBeRemoved = new LinkedList<CBRCase>();
+		Map coverageSets = null, reachabilitySets = null;
+		List allCasesToBeRemoved = new LinkedList();
 	
 		boolean changes = true;
 		while(changes)
 		{	changes = false;
-			List<CBRCase> casesToBeRemoved = new LinkedList<CBRCase>();
+			List casesToBeRemoved = new LinkedList();
 			
 			sc.computeCompetenceModel(new ICFSolvesFunction(), simConfig, localCases);
 			coverageSets = sc.getCoverageSets();
 			reachabilitySets = sc.getReachabilitySets();
 	
-			for(CBRCase c: localCases)
-			{	Collection<CBRCase> coverageSet = coverageSets.get(c);
-				Collection<CBRCase> reachabilitySet = reachabilitySets.get(c);
+			for(Object om: localCases)
+			{	
+				CBRCase c = (CBRCase)om;
+				Collection coverageSet = (Collection)coverageSets.get(c);
+				Collection reachabilitySet = (Collection)reachabilitySets.get(c);
 				if(reachabilitySet.size() > coverageSet.size())
 				{	casesToBeRemoved.add(c);
 					changes = true;

@@ -23,7 +23,7 @@ public abstract class AbstractCaseBaseEditMethod {
 	 * @param simConfig The similarity configuration for these cases.
 	 * @return the list of cases that would be deleted by the algorithm.
 	 */
-	public abstract Collection<CBRCase> retrieveCasesToDelete(Collection<CBRCase> cases, KNNClassificationConfig simConfig);
+	public abstract Collection retrieveCasesToDelete(Collection cases, KNNClassificationConfig simConfig);
 	
 	/**
 	 * Runs a case base editing algorithm on the given case base.
@@ -32,7 +32,7 @@ public abstract class AbstractCaseBaseEditMethod {
 	 * base.
 	 */
 	public void edit(CBRCaseBase caseBase, KNNClassificationConfig simConfig)
-	{	Collection<CBRCase> casesToDelete = retrieveCasesToDelete(caseBase.getCases(), simConfig);
+	{	Collection casesToDelete = retrieveCasesToDelete(caseBase.getCases(), simConfig);
 		caseBase.forgetCases(casesToDelete);
 	}
 }

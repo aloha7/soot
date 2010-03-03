@@ -102,15 +102,16 @@ public class QueryResult implements Comparable
 	 * @param toSort The list of CaseResults to sort.
 	 * @return the sorted list.
 	 */
-	@SuppressWarnings("unchecked")
-	public static List sortResults(boolean ascending, List<QueryResult> toSort)
+	public static List sortResults(boolean ascending, List toSort)
 	{   Collections.sort(toSort);
 	    if(ascending)
 	    {	return toSort;	    	    
 	    }
-	    List<QueryResult> sorted = new LinkedList<QueryResult>();
-	    for(QueryResult res: toSort)
-	    {	sorted.add(0, res);	    	    
+	    List sorted = new LinkedList();
+	    for(Object on: toSort)
+	    {	
+	    	QueryResult res = (QueryResult)on;
+	    	sorted.add(0, res);	    	    
 	    }
 	    return sorted;
 	}
