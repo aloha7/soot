@@ -32,9 +32,9 @@ public class TestLucene {
 	private static String CONTENT_FIELD = "content";
 	
 	/** Transforms files to Lucene documents. */
-	private static Collection<LuceneDocument> indexDocs(File directory) throws IOException {
+	private static Collection indexDocs(File directory) throws IOException {
 	    
-		java.util.ArrayList<LuceneDocument> docs = new java.util.ArrayList<LuceneDocument>();
+		java.util.ArrayList docs = new java.util.ArrayList();
 		
 	    if (!directory.canRead())
 	    	return docs;
@@ -44,8 +44,9 @@ public class TestLucene {
 	    
 	    File[] files = directory.listFiles();
 	    
-	    for(File f: files)
+	    for(Object o: files)
 	    {
+	    	File f = (File)o;
 	    	if(f.isDirectory())
 	    		continue;
 	    	java.io.BufferedReader fr = new java.io.BufferedReader(new java.io.FileReader(f));
@@ -87,7 +88,7 @@ public class TestLucene {
 	    
 		//Transform the files to Lucene documents
 		
-		Collection<LuceneDocument> docs = null;;
+		Collection docs = null;;
 		try {
 			docs = indexDocs(docDir);
 		} catch (IOException e) {

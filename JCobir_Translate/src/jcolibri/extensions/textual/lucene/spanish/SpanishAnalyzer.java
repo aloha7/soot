@@ -85,7 +85,7 @@ public class SpanishAnalyzer extends Analyzer {
 		InputStreamReader isr = new InputStreamReader(FileIO.openFile("jcolibri/extensions/textual/lucene/spanish/stopwords-spanish.txt"));
 		BufferedReader br = new BufferedReader(isr);
 		String line = br.readLine();
-	 	ArrayList<String> list = new ArrayList<String>();
+	 	ArrayList list = new ArrayList();
 		while(line != null)
 		{
 			list.add(line.trim());

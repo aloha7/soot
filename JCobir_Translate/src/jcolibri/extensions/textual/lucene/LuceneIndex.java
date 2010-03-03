@@ -39,16 +39,16 @@ import org.apache.lucene.store.RAMDirectory;
 public class LuceneIndex{
 	
 	private Directory directory;
-	private java.util.HashMap<String, LuceneDocument> docsMapping;
+	private java.util.HashMap docsMapping;
 
 	/**
 	 * Creates a LuceneIndex stored in the File System.
 	 * @param directory to store the index once generated
 	 * @param documents to index
 	 */
-	public LuceneIndex(File directory,  Collection<LuceneDocument> documents)
+	public LuceneIndex(File directory,  Collection documents)
 	{
-		this.docsMapping = new java.util.HashMap<String, LuceneDocument>();
+		this.docsMapping = new java.util.HashMap();
 
 	    org.apache.commons.logging.LogFactory.getLog(LuceneIndex.class).info("Creating File System Index in: "+directory.getPath());
 		
@@ -66,16 +66,16 @@ public class LuceneIndex{
 	 * Creates an index stored into memory.
 	 * @param documents to index.
 	 */
-	public LuceneIndex(Collection<LuceneDocument> documents)
+	public LuceneIndex(Collection documents)
 	{
-		this.docsMapping = new java.util.HashMap<String, LuceneDocument>();
+		this.docsMapping = new java.util.HashMap();
 		org.apache.commons.logging.LogFactory.getLog(LuceneIndex.class).info("Creating In-Memory index");
 		
 	    this.directory = new RAMDirectory();
 		createIndex(documents);
 	}
 
-	private void createIndex(Collection<LuceneDocument> documents)
+	private void createIndex(Collection documents)
 	{
 		try {
 			
@@ -84,8 +84,9 @@ public class LuceneIndex{
 			org.apache.commons.logging.LogFactory.getLog(LuceneIndex.class).info("Indexing "+documents.size()+" documents.");
 			ProgressController.init(this.getClass(),"Lucene. Indexing documents", documents.size());
 			
-			for(LuceneDocument doc: documents)
+			for(Object on: documents)
 			{
+				LuceneDocument doc = (LuceneDocument)on;
 				writer.addDocument(doc.getInternalDocument());
 				docsMapping.put(doc.getDocID(), doc);
 				ProgressController.step(this.getClass());
@@ -120,6 +121,6 @@ public class LuceneIndex{
 	
 	public LuceneDocument getDocument(String docId)
 	{
-		return docsMapping.get(docId);
+		return (LuceneDocument)docsMapping.get(docId);
 	}
 }

@@ -27,7 +27,7 @@ public class LuceneSearchResult {
 	//Table that maps between the position in the result and the ID of the document.
 	private String[] _pos2id;
 	//Table that maps between the ID of a document and its position in the result
-	private HashMap<String, Integer> _id2pos;
+	private HashMap _id2pos;
 	//Table that maps between the position and the score
 	private float[]  _pos2score; 
 	//Number of returned documents
@@ -47,7 +47,7 @@ public class LuceneSearchResult {
 		resultLength = hits.length();
 		_pos2id = new String[resultLength];
 		_pos2score = new float[resultLength];
-		_id2pos = new HashMap<String,Integer>(resultLength);
+		_id2pos = new HashMap(resultLength);
 		
 		maxscore = 0;
 		int pos=0;
@@ -72,7 +72,7 @@ public class LuceneSearchResult {
 	 */
 	public int getDocPosition(String docID)
 	{
-	    	Integer pos = _id2pos.get(docID);
+	    	Integer pos = (Integer)_id2pos.get(docID);
 	    	if(pos == null)
 	    	    return -1;
 	    	return pos;
