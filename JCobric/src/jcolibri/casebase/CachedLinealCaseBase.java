@@ -80,7 +80,7 @@ public class CachedLinealCaseBase implements CBRCaseBase {
 	public void init(Connector connector) throws InitializingException {
 		this.connector = connector;
 		originalCases = this.connector.retrieveAllCases();	
-		workingCases = new java.util.ArrayList<CBRCase>(originalCases);
+		workingCases = new java.util.ArrayList(originalCases);
 	}
 
 	/**
