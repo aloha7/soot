@@ -34,12 +34,13 @@ public class UnanimousVotingMethod extends AbstractKNNClassificationMethod
      *            an ordered list of cases along with similarity scores.
      * @return Returns the predicted solution.
      */
-    public ClassificationSolution getPredictedSolution(Collection<RetrievalResult> cases)
+    public ClassificationSolution getPredictedSolution(Collection cases)
     {
 	 ClassificationSolution solution = null;
 	
-        for (RetrievalResult result: cases)
+        for (Object on: cases)
         {
+        	RetrievalResult result = (RetrievalResult)on;
             ClassificationSolution sol = (ClassificationSolution)result.get_case().getSolution();
             
             Object classif = sol.getClassification();

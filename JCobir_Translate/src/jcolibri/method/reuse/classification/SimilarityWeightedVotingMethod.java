@@ -30,20 +30,21 @@ public class SimilarityWeightedVotingMethod extends AbstractKNNClassificationMet
      *            an ordered list of cases along with similarity scores.
      * @return Returns the predicted solution.
      */
-    public ClassificationSolution getPredictedSolution(Collection<RetrievalResult> cases)
+    public ClassificationSolution getPredictedSolution(Collection cases)
     {
-        Map<Object, Double> votes = new HashMap<Object, Double>();
-        Map<Object, ClassificationSolution> values = new HashMap<Object, ClassificationSolution>();
+        Map votes = new HashMap();
+        Map values = new HashMap();
         
-        for(RetrievalResult result: cases)
+        for(Object on: cases)
         {   
+        	RetrievalResult result = (RetrievalResult)on; 
             ClassificationSolution solution = (ClassificationSolution)result.get_case().getSolution();
            
             Object solnAttVal = solution.getClassification();
              
             double eval = result.getEval();
             if (votes.containsKey(solnAttVal))
-            {   votes.put(solnAttVal, votes.get(solnAttVal) + eval);
+            {   votes.put(solnAttVal, (Integer)votes.get(solnAttVal) + eval);
             }
             else
             {   votes.put(solnAttVal, eval);
@@ -52,12 +53,14 @@ public class SimilarityWeightedVotingMethod extends AbstractKNNClassificationMet
         }
         double highestVoteSoFar = 0.0;
         Object predictedClassVal = null;
-        for (Map.Entry<Object, Double> e : votes.entrySet())
-        {   if (e.getValue() >= highestVoteSoFar)
-            {  	highestVoteSoFar = e.getValue();
-                predictedClassVal = e.getKey();
+        for (Object om : votes.entrySet())
+        {   
+        	Map.Entry e = (Map.Entry)om;
+        	if ((Double)e.getValue() >= highestVoteSoFar)
+            {  	highestVoteSoFar = (Double)e.getValue();
+                predictedClassVal = (Object)e.getKey();
             }
         }
-        return values.get(predictedClassVal);
+        return (ClassificationSolution)values.get(predictedClassVal);
     }
 }

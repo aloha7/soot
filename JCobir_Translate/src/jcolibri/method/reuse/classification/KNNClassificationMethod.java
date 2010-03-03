@@ -23,7 +23,7 @@ public interface KNNClassificationMethod
      * @param cases a list of cases along with similarity scores.
      * @return Returns the predicted solution.
      */
-    public ClassificationSolution getPredictedSolution(Collection<RetrievalResult> cases);
+    public ClassificationSolution getPredictedSolution(Collection cases);
     
     /**
      * Gets the predicted solution of the given cases according 
@@ -34,5 +34,5 @@ public interface KNNClassificationMethod
      * @return Returns a case with the query description as its 
      * description and the predicted solution as its solution. 
      */
-    public CBRCase getPredictedCase(CBRQuery query, Collection<RetrievalResult> cases);
+    public CBRCase getPredictedCase(CBRQuery query, Collection cases);
 }

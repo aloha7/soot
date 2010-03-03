@@ -29,20 +29,21 @@ public class MajorityVotingMethod extends AbstractKNNClassificationMethod
      *            an ordered list of cases along with similarity scores.
      * @return Returns the predicted solution.
      */
-    public ClassificationSolution getPredictedSolution(Collection<RetrievalResult> cases)
+    public ClassificationSolution getPredictedSolution(Collection cases)
     {
-        Map<Object, Integer> votes = new HashMap<Object, Integer>();
-        Map<Object, ClassificationSolution> values = new HashMap<Object, ClassificationSolution>();
+        Map votes = new HashMap();
+        Map values = new HashMap();
         
-        for (RetrievalResult result: cases)
+        for (Object on: cases)
         {
+        	RetrievalResult result = (RetrievalResult)on;
             ClassificationSolution solution = (ClassificationSolution)result.get_case().getSolution();
             
             Object classif = solution.getClassification();
             
             if (votes.containsKey(classif))
             {
-                votes.put(classif, votes.get(classif) + 1);
+                votes.put(classif, (Integer)votes.get(classif) + 1);
             }
             else
             {
@@ -53,16 +54,17 @@ public class MajorityVotingMethod extends AbstractKNNClassificationMethod
         
         int highestVoteSoFar = 0;
         Object predictedClass = null;
-        for (Map.Entry<Object, Integer> e : votes.entrySet())
+        for (Object om : votes.entrySet())
         {
-            if (e.getValue() >= highestVoteSoFar)
+        	Map.Entry e = (Map.Entry)om;
+            if ((Integer)e.getValue() >= highestVoteSoFar)
             {
-                highestVoteSoFar = e.getValue();
-                predictedClass = e.getKey();
+                highestVoteSoFar = (Integer)e.getValue();
+                predictedClass = (Object)e.getKey();
             }
         }
         
         
-        return values.get(predictedClass);
+        return (ClassificationSolution)values.get(predictedClass);
     }
 }

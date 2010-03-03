@@ -28,7 +28,7 @@ public abstract class AbstractKNNClassificationMethod implements KNNClassificati
      * @param cases a list of cases along with similarity scores.
      * @return Returns the predicted solution.
      */
-    public abstract ClassificationSolution getPredictedSolution(Collection<RetrievalResult> cases);
+    public abstract ClassificationSolution getPredictedSolution(Collection cases);
     
     /**
      * Gets the predicted solution of the given cases according 
@@ -39,17 +39,17 @@ public abstract class AbstractKNNClassificationMethod implements KNNClassificati
      * @return Returns a case with the query description as its 
      * description and the predicted solution as its solution. 
      */
-    public CBRCase getPredictedCase(CBRQuery query, Collection<RetrievalResult> cases)
+    public CBRCase getPredictedCase(CBRQuery query, Collection cases)
     {
     	CBRCase queryWithPredSoln = null;
     	
     	if(cases.size() > 0)
     	{	//Make a copy of any case. This will be used as 
     		//the query with its predicted solution.
-    		CBRCase c = cases.iterator().next().get_case();  
+    		CBRCase c = ((RetrievalResult)cases.iterator().next()).get_case();  
 
     		try {
-				queryWithPredSoln = c.getClass().newInstance();
+				queryWithPredSoln = (CBRCase)c.getClass().newInstance();
 			} catch (Exception e) {
 				LogFactory.getLog(this.getClass()).error(e);
 			}
