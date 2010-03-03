@@ -46,22 +46,23 @@ public class CompromiseDrivenSelection
      * @param preferences define the predicates that evaluate the user preferences
      * @return a CDRSet object that stores the list of selected cases, the "like" sets and the "covered" sets (see paper for details).
      */
-    public static CDRSet CDR(CBRQuery query, Collection<RetrievalResult> cases, FilterConfig preferences)
+    public static CDRSet CDR(CBRQuery query, Collection cases, FilterConfig preferences)
     {
 	CDRSet rs = new CDRSet();
 	
-	ArrayList<CBRCase> candidates = new ArrayList<CBRCase>(SelectCases.selectAll(cases));
+	ArrayList candidates = new ArrayList(SelectCases.selectAll(cases));
 	while(!candidates.isEmpty())
 	{
-	    CBRCase c1 = candidates.get(0);
+	    CBRCase c1 = (CBRCase)candidates.get(0);
 	    rs.add(c1);
 	    rs.addToLikeSet(c1, c1);
 	    rs.addToCoveredSet(c1, c1);
 	    candidates.remove(0);
-	    for(CBRCase c2 : candidates)
+	    for(Object on : candidates)
 	    {
-		Set<Attribute> compromises1 = getCompromises(c1,query,preferences);
-		Set<Attribute> compromises2 = getCompromises(c2,query,preferences);
+	    	CBRCase c2 = (CBRCase)on;
+		Set compromises1 = getCompromises(c1,query,preferences);
+		Set compromises2 = getCompromises(c2,query,preferences);
 		if( compromises1.equals(compromises2))
 		    rs.addToLikeSet(c1, c2);
 		if( compromises2.containsAll(compromises1) )
@@ -79,12 +80,13 @@ public class CompromiseDrivenSelection
      * @param preferences define the predicates that evaluate the user preferences
      * @return a set of attributes
      */
-    public static Set<Attribute> getCompromises(CBRCase _case, CBRQuery query, FilterConfig preferences)
+    public static Set getCompromises(CBRCase _case, CBRQuery query, FilterConfig preferences)
     {
-	Set<Attribute> compromises = new HashSet<Attribute>();
+	Set compromises = new HashSet();
 	
-	for(Attribute at : preferences.getDefinedAttributes())
+	for(Object on : preferences.getDefinedAttributes())
 	{
+		Attribute at = (Attribute)on;
 	    try
 	    {
 		FilterPredicate predicate = preferences.getPredicate(at);

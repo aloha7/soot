@@ -22,20 +22,20 @@ import jcolibri.cbrcore.CBRCase;
  * @version 1.0
  *
  */
-public class CDRSet extends ArrayList<CBRCase>
+public class CDRSet extends ArrayList
 {
     private static final long serialVersionUID = 1L;
 
-    private Hashtable<CBRCase,HashSet<CBRCase>> likeSets;
-    private Hashtable<CBRCase,HashSet<CBRCase>> coveredSets;
+    private Hashtable likeSets;
+    private Hashtable coveredSets;
     
     /**
      * Constructor
      */
     public CDRSet()
     {
-	likeSets = new Hashtable<CBRCase,HashSet<CBRCase>>();
-	coveredSets = new Hashtable<CBRCase,HashSet<CBRCase>>();
+	likeSets = new Hashtable();
+	coveredSets = new Hashtable();
     }
     
     /**
@@ -43,10 +43,10 @@ public class CDRSet extends ArrayList<CBRCase>
      */
     public void addToLikeSet(CBRCase _case, CBRCase likeCase)
     {
-	HashSet<CBRCase> like = likeSets.get(_case);
+	HashSet like = (HashSet)likeSets.get(_case);
 	if(like == null)
 	{
-	    like = new HashSet<CBRCase>();
+	    like = new HashSet();
 	    likeSets.put(_case, like);
 	}
 	like.add(likeCase);
@@ -55,9 +55,9 @@ public class CDRSet extends ArrayList<CBRCase>
     /**
      * Returns the like set of a case
      */
-    public Set<CBRCase> getLikeSet(CBRCase _case)
+    public Set getLikeSet(CBRCase _case)
     {
-	return likeSets.get(_case);
+	return (Set)likeSets.get(_case);
     }
 
     /**
@@ -65,10 +65,10 @@ public class CDRSet extends ArrayList<CBRCase>
      */
     public void addToCoveredSet(CBRCase _case, CBRCase coveredCase)
     {
-	HashSet<CBRCase> covered = coveredSets.get(_case);
+	HashSet covered = (HashSet)coveredSets.get(_case);
 	if(covered == null)
 	{
-	    covered = new HashSet<CBRCase>();
+	    covered = new HashSet();
 	    coveredSets.put(_case, covered);
 	}
 	covered.add(coveredCase);
@@ -77,8 +77,8 @@ public class CDRSet extends ArrayList<CBRCase>
     /**
      * Returns the covered set of a case
      */
-    public Set<CBRCase> getCoveredSet(CBRCase _case)
+    public Set getCoveredSet(CBRCase _case)
     {
-	return coveredSets.get(_case);
+	return (Set)coveredSets.get(_case);
     }
 }
