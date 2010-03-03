@@ -54,13 +54,13 @@ public class GreedySelection
      * @param simConfig is the knn similarity configuration. Its k determines the number of returned cases 
      * @return k cases (k is defined in simConfig). 
      */
-    public static Collection<CBRCase> greedySelection(Collection<RetrievalResult> cases, CBRQuery query, NNConfig simConfig, int k)
+    public static Collection greedySelection(Collection cases, CBRQuery query, NNConfig simConfig, int k)
     {
-	Collection<CBRCase> C = SelectCases.selectAll(cases);
-	Collection<CBRCase> R = new ArrayList<CBRCase>();
+	Collection C = SelectCases.selectAll(cases);
+	Collection R = new ArrayList();
 	for(int i=0; i<k; i++)
 	{
-	    CBRCase best = getMoreQuality(query, C, R, simConfig);
+	    CBRCase best = (CBRCase)getMoreQuality(query, C, R, simConfig);
 	    R.add(best);
 	    C.remove(best);
 	}
@@ -75,15 +75,16 @@ public class GreedySelection
      * @param simConfig is the knn similarity config
      * @return the case with more quality
      */
-    public static CBRCase getMoreQuality(CBRQuery query, Collection<CBRCase> cases, Collection<CBRCase> R, NNConfig simConfig)
+    public static CBRCase getMoreQuality(CBRQuery query, Collection cases, Collection R, NNConfig simConfig)
     {
 	
-	Collection<RetrievalResult> nn = NNScoringMethod.evaluateSimilarity(cases, query, simConfig);
+	Collection nn = NNScoringMethod.evaluateSimilarity(cases, query, simConfig);
 	
 	CBRCase best = null;
 	double maxQuality = -Double.MAX_VALUE;
-	for(RetrievalResult rr: nn)
+	for(Object on: nn)
 	{
+		RetrievalResult rr = (RetrievalResult)on;
 	    double quality = rr.getEval() * relDiversity(rr.get_case(), R, simConfig);
 	    if(quality > maxQuality)
 	    {
@@ -94,18 +95,19 @@ public class GreedySelection
 	return best;
     }
     
-    public static double relDiversity(CBRCase c, Collection<CBRCase> R, NNConfig simConfig)
+    public static double relDiversity(CBRCase c, Collection R, NNConfig simConfig)
     {
 	if(R.isEmpty())
 	    return 1;
 	double sum = 0;
-	for(CBRCase _case : R)
+	for(Object on : R)
 	{
-	    Collection<CBRCase> aux = new ArrayList<CBRCase>();
+		CBRCase _case = (CBRCase)on;
+	    Collection aux = new ArrayList();
 	    aux.add(_case);
 	    CBRQuery query = new CBRQuery();
 	    query.setDescription(c.getDescription());
-	    double sim = NNScoringMethod.evaluateSimilarity(aux, query, simConfig).iterator().next().getEval();
+	    double sim = ((RetrievalResult)NNScoringMethod.evaluateSimilarity(aux, query, simConfig).iterator().next()).getEval();
 	    sum += sim;
 	}
 	sum = sum/(double)R.size();

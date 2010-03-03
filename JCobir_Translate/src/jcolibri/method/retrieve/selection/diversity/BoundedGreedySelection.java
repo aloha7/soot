@@ -43,12 +43,12 @@ public class BoundedGreedySelection
      * @param k is the number of cases to select
      * @return k cases
      */
-    public static Collection<CBRCase> boundedGreddySelection(Collection<RetrievalResult> cases, CBRQuery query, NNConfig simConfig, int k, int bound)
+    public static Collection boundedGreddySelection(Collection cases, CBRQuery query, NNConfig simConfig, int k, int bound)
     {
 
-	Collection<CBRCase> C = SelectCases.selectTopK(cases, bound*k);
+	Collection C = SelectCases.selectTopK(cases, bound*k);
 	
-	Collection<CBRCase> R = new ArrayList<CBRCase>();
+	Collection R = new ArrayList();
 	for(int i=0; (i<k)&& (!C.isEmpty()); i++)
 	{
 	    CBRCase best = GreedySelection.getMoreQuality(query, C, R, simConfig);

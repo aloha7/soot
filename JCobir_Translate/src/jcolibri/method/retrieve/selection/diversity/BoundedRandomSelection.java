@@ -36,11 +36,11 @@ public class BoundedRandomSelection
     /**
      * Executes the algorithm.
      */
-    public static Collection<CBRCase> boundedRandomSelection(Collection<RetrievalResult> cases, CBRQuery query, int k, int bound)
+    public static Collection boundedRandomSelection(Collection cases, CBRQuery query, int k, int bound)
     {
-	Collection<CBRCase> nn = SelectCases.selectTopK(cases, k*bound);
+	Collection nn = SelectCases.selectTopK(cases, k*bound);
 	
-	Collection<CBRCase> res = new ArrayList<CBRCase>();
+	Collection res = new ArrayList();
 	
 	for(int i=0 ; (i<k)&&(i<nn.size()); i++)
 	{
