@@ -74,11 +74,11 @@ public class SameSplitEvaluator extends Evaluator {
 					.warn(
 							"Evaluation should be executed using a cached case base");
 
-		ArrayList<CBRCase> originalCases = new ArrayList<CBRCase>(
+		ArrayList originalCases = new ArrayList(
 				caseBase.getCases());
 				
-		ArrayList<CBRCase> querySet = new ArrayList<CBRCase>();
-		ArrayList<CBRCase> caseBaseSet = new ArrayList<CBRCase>();
+		ArrayList querySet = new ArrayList();
+		ArrayList caseBaseSet = new ArrayList();
 			
 		// Split the case base
 		splitCaseBase(originalCases, querySet, caseBaseSet, testPercent);
@@ -86,7 +86,7 @@ public class SameSplitEvaluator extends Evaluator {
 		save(querySet, filename);
 	}
 	
-	protected void save(Collection<CBRCase> queries, String filename)
+	protected void save(Collection queries, String filename)
 	{
 		try {
 			BufferedWriter br = null;
@@ -94,7 +94,8 @@ public class SameSplitEvaluator extends Evaluator {
 			if (br == null)
 				throw new Exception("Error opening file for writing: "+ filename);
 			
-			for (CBRCase _case : queries) {
+			for (Object o : queries) {
+				CBRCase _case = (CBRCase)o;
 				br.write(_case.getID().toString());
 				br.newLine();
 			}
@@ -122,9 +123,9 @@ public class SameSplitEvaluator extends Evaluator {
 						.warn(
 								"Evaluation should be executed using a cached case base");
 
-			ArrayList<CBRCase> originalCases = new ArrayList<CBRCase>(caseBase.getCases());
-			ArrayList<CBRCase> querySet = new ArrayList<CBRCase>();
-			ArrayList<CBRCase> caseBaseSet = new ArrayList<CBRCase>();
+			ArrayList originalCases = new ArrayList(caseBase.getCases());
+			ArrayList querySet = new ArrayList();
+			ArrayList caseBaseSet = new ArrayList();
 			
 			// Split the case base
 			splitCaseBaseFromFile(originalCases, querySet, caseBaseSet, file);
@@ -141,7 +142,8 @@ public class SameSplitEvaluator extends Evaluator {
 			caseBase.learnCases(caseBaseSet);
 
 			// Run cycle for each case in querySet
-			for (CBRCase c : querySet) {
+			for (Object o : querySet) {
+				CBRCase c = (CBRCase)o;
 				// Run the cycle
 				LogFactory.getLog(this.getClass()).info(
 						"Running cycle() " + numberOfCycles);
@@ -185,8 +187,8 @@ public class SameSplitEvaluator extends Evaluator {
 	 * @param testPercent
 	 *            Percentage of cases used as queries
 	 */
-	protected void splitCaseBase(Collection<CBRCase> wholeCaseBase,
-			List<CBRCase> querySet, List<CBRCase> casebaseSet, int testPercent) {
+	protected void splitCaseBase(Collection wholeCaseBase,
+			List querySet, List casebaseSet, int testPercent) {
 		querySet.clear();
 		casebaseSet.clear();
 
@@ -195,14 +197,14 @@ public class SameSplitEvaluator extends Evaluator {
 
 		for (int i = 0; i < querySetSize; i++) {
 			int random = (int) (Math.random() * casebaseSet.size());
-			CBRCase _case = casebaseSet.get(random);
+			CBRCase _case = (CBRCase)casebaseSet.get(random);
 			casebaseSet.remove(random);
 			querySet.add(_case);
 		}
 	}
 	
-	protected void splitCaseBaseFromFile(Collection<CBRCase> wholeCaseBase,
-			List<CBRCase> querySet, List<CBRCase> casebaseSet, String filename)
+	protected void splitCaseBaseFromFile(Collection wholeCaseBase,
+			List querySet, List casebaseSet, String filename)
 	{
 		querySet.clear();
 		casebaseSet.clear();
@@ -220,9 +222,9 @@ public class SameSplitEvaluator extends Evaluator {
 				CBRCase c = null;
 				int pos=0;
 				boolean found = false;
-				for(Iterator<CBRCase> iter = casebaseSet.iterator(); iter.hasNext() && (!found); )
+				for(Iterator iter = casebaseSet.iterator(); iter.hasNext() && (!found); )
 				{
-					c = iter.next();
+					c = (CBRCase)iter.next();
 					if(c.getID().toString().equals(line))
 						found = true;
 					else

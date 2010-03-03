@@ -65,7 +65,7 @@ public class HoldOutEvaluator extends Evaluator {
 						.warn(
 								"Evaluation should be executed using a cached case base");
 
-			ArrayList<CBRCase> originalCases = new ArrayList<CBRCase>(
+			ArrayList originalCases = new ArrayList(
 					caseBase.getCases());
 			
 			int totalSteps = ((originalCases.size() * testPercent) / 100);
@@ -74,8 +74,8 @@ public class HoldOutEvaluator extends Evaluator {
 			
 			// For each repetition
 			for (int rep = 0; rep < repetitions; rep++) {
-				ArrayList<CBRCase> querySet = new ArrayList<CBRCase>();
-				ArrayList<CBRCase> caseBaseSet = new ArrayList<CBRCase>();
+				ArrayList querySet = new ArrayList();
+				ArrayList caseBaseSet = new ArrayList();
 				// Split the case base
 				splitCaseBase(originalCases, querySet, caseBaseSet, testPercent);
 
@@ -86,7 +86,8 @@ public class HoldOutEvaluator extends Evaluator {
 				caseBase.learnCases(caseBaseSet);
 
 				// Run cycle for each case in querySet
-				for (CBRCase c : querySet) {
+				for (Object o: querySet) {
+					CBRCase c =(CBRCase)o;
 					// Run the cycle
 					LogFactory.getLog(this.getClass()).info(
 							"Running cycle() " + numberOfCycles);
@@ -131,8 +132,8 @@ public class HoldOutEvaluator extends Evaluator {
 	 * @param testPercent
 	 *            Percentage of cases used as queries
 	 */
-	protected void splitCaseBase(Collection<CBRCase> holeCaseBase,
-			List<CBRCase> querySet, List<CBRCase> casebaseSet, int testPercent) {
+	protected void splitCaseBase(Collection holeCaseBase,
+			List querySet, List casebaseSet, int testPercent) {
 		querySet.clear();
 		casebaseSet.clear();
 
@@ -141,7 +142,7 @@ public class HoldOutEvaluator extends Evaluator {
 
 		for (int i = 0; i < querySetSize; i++) {
 			int random = (int) (Math.random() * casebaseSet.size());
-			CBRCase _case = casebaseSet.get(random);
+			CBRCase _case = (CBRCase)casebaseSet.get(random);
 			casebaseSet.remove(random);
 			querySet.add(_case);
 		}

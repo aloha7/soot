@@ -212,9 +212,9 @@ public class EvaluationResultGUI
           
         for( int l=0; l<lines; l++)
         {
-            Vector<Double> line = er.getSeries(labels[l]);
+            Vector line = er.getSeries(labels[l]);
             for (int j = 0; j < dataset.getNumCats(); ++j) {
-                  dataset.set (l, j, 0, (float)line.get(j).floatValue());
+                  dataset.set (l, j, 0, (float)((Double)line.get(j)).floatValue());
                 }
         }
 
@@ -251,7 +251,7 @@ public class EvaluationResultGUI
          
          for(int l = 0; l<labels.length; l++)
          {
-             Vector<Double> res = er.getSeries(labels[l]);
+             Vector res = er.getSeries(labels[l]);
              pw.print(labels[l]);
              for(int i=0; i<res.size(); i++)
                  pw.print(";"+res.get(i));

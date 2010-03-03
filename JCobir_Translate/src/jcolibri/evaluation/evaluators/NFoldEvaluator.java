@@ -69,7 +69,7 @@ public class NFoldEvaluator extends Evaluator
 						.warn(
 								"Evaluation should be executed using a cached case base");
             
-            Collection<CBRCase> cases = new ArrayList<CBRCase>(caseBase.getCases());
+            Collection cases = new ArrayList(caseBase.getCases());
             
             //For each repetition
             for(int r=0; r<repetitions; r++)
@@ -80,8 +80,8 @@ public class NFoldEvaluator extends Evaluator
                 //For each fold
                 for(int f=0; f<folds; f++)
                 {
-                    ArrayList<CBRCase> querySet = new ArrayList<CBRCase>();
-                    ArrayList<CBRCase> caseBaseSet = new ArrayList<CBRCase>();
+                    ArrayList querySet = new ArrayList();
+                    ArrayList caseBaseSet = new ArrayList();
                     //Obtain the query and casebase sets
                     getFolds(f, querySet, caseBaseSet);
                     
@@ -92,8 +92,9 @@ public class NFoldEvaluator extends Evaluator
                     caseBase.learnCases(caseBaseSet);
                     
                     //Run cycle for each case in querySet (current fold)
-                    for(CBRCase c: querySet)
-                    {                	
+                    for(Object o: querySet)
+                    {   
+                    	CBRCase c = (CBRCase)o;
         					LogFactory.getLog(this.getClass()).info(
         							"Running cycle() " + numberOfCycles);
         					app.cycle(c);
@@ -125,20 +126,20 @@ public class NFoldEvaluator extends Evaluator
     }
 
     
-    protected ArrayList<ArrayList<CBRCase>> _folds;
-    protected void createFolds(Collection<CBRCase> cases, int folds)
+    protected ArrayList _folds;
+    protected void createFolds(Collection cases, int folds)
     {
-        _folds = new  ArrayList<ArrayList<CBRCase>>();
+        _folds = new  ArrayList();
         int foldsize = cases.size() / folds;
-        ArrayList<CBRCase> copy = new ArrayList<CBRCase>(cases);
+        ArrayList copy = new ArrayList(cases);
         
         for(int f=0; f<folds; f++)
         {
-            ArrayList<CBRCase> fold = new ArrayList<CBRCase>();
+            ArrayList fold = new ArrayList();
             for(int i=0; (i<foldsize)&&(copy.size()>0); i++)
             {
                 int random = (int) (Math.random() * copy.size());
-                CBRCase _case = copy.get( random );
+                CBRCase _case = (CBRCase)copy.get( random );
                 copy.remove(random);
                 fold.add(_case);
             }
@@ -146,16 +147,16 @@ public class NFoldEvaluator extends Evaluator
         }
     }
     
-    protected void getFolds(int f, List<CBRCase> querySet, List<CBRCase> caseBaseSet)
+    protected void getFolds(int f, List querySet, List caseBaseSet)
     {
         querySet.clear();
         caseBaseSet.clear();
         
-        querySet.addAll(_folds.get(f));
+        querySet.addAll((ArrayList)_folds.get(f));
         
         for(int i=0; i<_folds.size(); i++)
             if(i!=f)
-                caseBaseSet.addAll(_folds.get(i));
+                caseBaseSet.addAll((ArrayList)_folds.get(i));
     }
     
 }

@@ -34,25 +34,25 @@ public class EvaluationReport
     private int numberOfCycles;
     
     /** Stores the series info */
-    protected Hashtable<String, Vector<Double>> data;
+    protected Hashtable data;
     
     /** Stores other info */
-    protected Hashtable<String, String> other;
+    protected Hashtable other;
     
     /** Default constructor */
     public EvaluationReport()
     {
-        data = new Hashtable<String, Vector<Double>>();
-        other = new Hashtable<String, String>();
+        data = new Hashtable();
+        other = new Hashtable();
     }
 
     /**
      * Gets the evaluation info identified by the label
      * @param label Identifies the evaluation serie.
      */
-    public Vector<Double> getSeries(String label)
+    public Vector getSeries(String label)
     {
-        return data.get(label);
+        return (Vector)data.get(label);
     }
     
     /**
@@ -60,7 +60,7 @@ public class EvaluationReport
      * @param label Identifier of the info
      * @param evaluation Evaluation result
      */
-    public void setSeries(String label, Vector<Double> evaluation)
+    public void setSeries(String label, Vector evaluation)
     {
    
         data.put(label, evaluation);
@@ -68,10 +68,10 @@ public class EvaluationReport
     
     public void addDataToSeries(String label, Double value)
     {
-    	Vector<Double> v = data.get(label);
+    	Vector v = (Vector)data.get(label);
     	if(v == null)
     	{
-    		v = new Vector<Double>();
+    		v = new Vector();
     		data.put(label, v);
     	}
     	v.add(value);
@@ -82,11 +82,14 @@ public class EvaluationReport
      */
     public String[] getSeriesLabels()
     {
-        Set<String> set = data.keySet();
+        Set set = data.keySet();
         String[] res = new String[set.size()];
         int i=0;
-        for( String e : set)
-            res[i++] = e;
+        for(Object o : set){
+        	String e = (String)o;
+        	res[i++] = e;
+        }
+            
         return res;
     }
 
@@ -98,16 +101,18 @@ public class EvaluationReport
     
     public String getOtherData(String label)
     {
-    	return this.other.get(label);
+    	return (String)this.other.get(label);
     }
     
     public String[] getOtherLabels()
     {
-        Set<String> set = other.keySet();
+        Set set = other.keySet();
         String[] res = new String[set.size()];
         int i=0;
-        for( String e : set)
-            res[i++] = e;
+        for(Object o : set){
+        	String e = (String)o;
+        	res[i++] = e;
+        }
         return res; 	
     }
     
@@ -145,9 +150,9 @@ public class EvaluationReport
     {
         boolean ok = true;
         int l = -1;
-        for(Enumeration<Vector<Double>> iter = data.elements(); iter.hasMoreElements() && ok ;)
+        for(Enumeration iter = data.elements(); iter.hasMoreElements() && ok ;)
         {
-            Vector<Double> v = iter.nextElement();
+            Vector v = (Vector)iter.nextElement();
             if(l == -1)
                 l = v.size();
             else
@@ -165,9 +170,12 @@ public class EvaluationReport
     	for(int i=0; i<series.length; i++)
     	{
     		s.append("  "+series[i]+": \n    ");
-    		Vector<Double> v = this.getSeries(series[i]);
-    		for(Double d: v)
+    		Vector v = this.getSeries(series[i]);
+    		for(Object o: v){
+    			Double d = (Double)o;
     			s.append(d+",");
+    		}
+    			
     		s.append("\n");
     	}
     	
