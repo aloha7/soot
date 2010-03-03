@@ -31,16 +31,18 @@ public class TextualSimUtils
      * @param caseSet Output set containing the tokens of the case represented in WeightedString objects that contain a string (the token) and a weight
      * @param querySet Output set containing the tokens of the query represented in WeightedString objects that contain a string (the token) and a weight
      */
-    public static void expandTokensSet(Collection<Token> caseTokens, Collection<Token> queryToken, Set<WeightedString> caseSet, Set<WeightedString> querySet)
+    public static void expandTokensSet(Collection caseTokens, Collection queryToken, Set caseSet, Set querySet)
     {
 	caseSet.clear();
 	querySet.clear();
-	for(Token qTok : queryToken)
+	for(Object on : queryToken)
 	{
+		Token qTok = (Token)on;
 	    if(qTok.isStopWord())
 		continue;
-	    for(WeightedRelation rel: qTok.getRelations())
+	    for(Object om: qTok.getRelations())
 	    {
+	    	WeightedRelation rel = (WeightedRelation)om;
 		Token destToken = rel.getDestination();
 		if(caseTokens.contains(destToken))
 		{
@@ -52,19 +54,25 @@ public class TextualSimUtils
 	    }
 	    querySet.add(new WeightedString(qTok.getStem(), 1));
 	}
-	for(Token cTok : caseTokens)
-	    if(!cTok.isStopWord())
-		caseSet.add(new WeightedString(cTok.getStem(), 1));
+	for(Object ot : caseTokens){
+		Token cTok = (Token)ot;
+		if(!cTok.isStopWord())
+			caseSet.add(new WeightedString(cTok.getStem(), 1));
+	}
+	    
     }
     
     /**
      * Returns the "size" of a collection having into account that each WeightedString object has an associated weight.
      */
-    public static double getSize(Collection<WeightedString> col)
+    public static double getSize(Collection col)
     {
 	double res = 0;
-	for(WeightedString ws: col)
-	    res+=ws.getWeight();
+	for(Object on: col){
+		WeightedString ws = (WeightedString)on;
+		res+=ws.getWeight(); 
+	}
+	    
 	return res;
     }
     

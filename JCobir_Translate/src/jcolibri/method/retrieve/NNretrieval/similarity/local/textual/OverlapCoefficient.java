@@ -43,8 +43,8 @@ public class OverlapCoefficient implements LocalSimilarityFunction {
 		IEText caseText = (IEText) caseObject;
 		IEText queryText = (IEText) queryObject;
 		
-		Set<WeightedString> caseSet = new HashSet<WeightedString>();
-		Set<WeightedString> querySet = new HashSet<WeightedString>();
+		Set caseSet = new HashSet();
+		Set querySet = new HashSet();
 		
 		TextualSimUtils.expandTokensSet(caseText.getAllTokens(), queryText.getAllTokens(), caseSet, querySet);
 		
