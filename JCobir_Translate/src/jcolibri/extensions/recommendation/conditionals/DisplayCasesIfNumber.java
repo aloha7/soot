@@ -35,7 +35,7 @@ public class DisplayCasesIfNumber
      * @param cases received cases
      * @return true if the number of cases is in range.
      */
-    public static boolean displayCasesWithMessage(int max, int min, Collection<CBRCase> cases)
+    public static boolean displayCasesWithMessage(int max, int min, Collection cases)
     {
 	return displayCases(max,min,cases,true);
     }
@@ -48,7 +48,7 @@ public class DisplayCasesIfNumber
      * @param cases received cases
      * @return true if the number of cases is in range.
      */
-    public static boolean displayCasesWithoutMessage(int max, int min, Collection<CBRCase> cases)
+    public static boolean displayCasesWithoutMessage(int max, int min, Collection cases)
     {
 	return displayCases(max,min,cases,false);	
     }
@@ -61,7 +61,7 @@ public class DisplayCasesIfNumber
      * @param showMessage indicates if messages should be shown.
      * @return true if the number of cases is in range.
      */
-    public static boolean displayCases(int max, int min, Collection<CBRCase> cases, boolean showMessage)
+    public static boolean displayCases(int max, int min, Collection cases, boolean showMessage)
     {
 	int size = cases.size();
 

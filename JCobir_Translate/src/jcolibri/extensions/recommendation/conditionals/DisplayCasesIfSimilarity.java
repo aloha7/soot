@@ -29,11 +29,14 @@ public class DisplayCasesIfSimilarity
      * @param minSimil min similarity value
      * @return true if all them have a higher similarity than minSimil.
      */
-    public static boolean displayCasesIfAllHaveMinimumSimilarity(Collection<RetrievalResult> retrieval, double minSimil)
+    public static boolean displayCasesIfAllHaveMinimumSimilarity(Collection retrieval, double minSimil)
     {
-	for(RetrievalResult rr: retrieval)
-	    if(rr.getEval() < minSimil)
-		return false;
+	for(Object o: retrieval){
+		RetrievalResult rr = (RetrievalResult)o;
+		if(rr.getEval() < minSimil)
+			return false;
+	}
+	    
 	return true;
     }
     
@@ -44,11 +47,14 @@ public class DisplayCasesIfSimilarity
      * @param minSimil min similarity value
      * @return true if any of them has a higher similarity than minSimil.
      */
-    public static boolean displayCasesIfAnyHaveMinimumSimilarity(Collection<RetrievalResult> retrieval, double minSimil)
+    public static boolean displayCasesIfAnyHaveMinimumSimilarity(Collection retrieval, double minSimil)
     {
-	for(RetrievalResult rr: retrieval)
-	    if(rr.getEval() >= minSimil)
-		return true;
+	for(Object o: retrieval){
+		RetrievalResult rr = (RetrievalResult)o;
+		if(rr.getEval() >= minSimil)
+			return true;
+	}
+	    
 	return false;
     }
 }
