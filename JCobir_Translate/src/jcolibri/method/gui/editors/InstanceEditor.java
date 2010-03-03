@@ -137,7 +137,7 @@ public class InstanceEditor extends JButton implements ParameterEditor {
 	/**
 	 * Does nothing
 	 */
-	public void setAllowedValues(Collection<Object> allowedValues)
+	public void setAllowedValues(Collection allowedValues)
 	{  
 	}
 }

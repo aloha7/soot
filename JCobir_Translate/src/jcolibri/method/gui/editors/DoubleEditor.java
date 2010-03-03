@@ -67,7 +67,7 @@ public class DoubleEditor extends JFormattedTextField implements
 	/**
 	 * Does nothing
 	 */
-	public void setAllowedValues(Collection<Object> allowedValues)
+	public void setAllowedValues(Collection allowedValues)
 	{
 	    //any
 	}

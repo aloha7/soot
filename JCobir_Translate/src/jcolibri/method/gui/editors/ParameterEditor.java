@@ -40,5 +40,5 @@ public interface ParameterEditor {
     /**
      * Sets the allowed values for the editor
      */
-    public void setAllowedValues(Collection<Object> allowedValues);
+    public void setAllowedValues(Collection allowedValues);
 }

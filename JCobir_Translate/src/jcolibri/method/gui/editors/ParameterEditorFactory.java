@@ -25,7 +25,7 @@ import jcolibri.datatypes.Text;
  */
 public class ParameterEditorFactory {
 
-    private static HashMap<Class, Class> table = new HashMap<Class, Class>();
+    private static HashMap table = new HashMap();
 
     //Code to register editors.
     //TODO search in classpath.
@@ -44,17 +44,20 @@ public class ParameterEditorFactory {
     /**
      * Creates the editor and configures it with its data-type name
      */
-    public static ParameterEditor getEditor(Class<?> type) {
+    public static ParameterEditor getEditor(Class type) {
 	try
 	{
 	    
-	    Class editor = table.get(type);
+	    Class editor = (Class)table.get(type);
 	    if(editor != null)
-		return (ParameterEditor)table.get(type).newInstance();
+		return ((ParameterEditor)((Class)table.get(type)).newInstance());
 	    
-	    for(Class<?> c : table.keySet())
-		if(c.isAssignableFrom(type))
-		    editor = table.get(c);
+	    for(Object on : table.keySet()){
+	    	Class c = (Class)on;
+	    	if(c.isAssignableFrom(type))
+			    editor = (Class)table.get(c);
+	    }
+		
 	    
 	    if(editor.equals(EnumEditor.class))
 		return new EnumEditor(type);
@@ -73,7 +76,7 @@ public class ParameterEditorFactory {
     /**
      * Creates the editor and configures it with its data-type name
      */
-    public static ParameterEditor getEditor(Class<?> type, Collection<Object> allowedValues) 
+    public static ParameterEditor getEditor(Class type, Collection allowedValues) 
     {
 	ParameterEditor pe = getEditor(type);
 	if(pe==null)

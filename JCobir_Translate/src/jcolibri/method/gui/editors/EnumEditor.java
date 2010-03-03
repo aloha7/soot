@@ -75,16 +75,18 @@ public class EnumEditor extends JComboBox implements
 	/**
 	 * Receives a list of Enum values
 	 */
-	@SuppressWarnings("unchecked")
-	public void setAllowedValues(Collection<Object> allowedValues)
+	public void setAllowedValues(Collection allowedValues)
 	{
 	    this.removeAllItems();
-	    List<Enum> list = new ArrayList<Enum>();
+	    List list = new ArrayList();
 	    for(Object o: allowedValues)
 		list.add((Enum)o);
 	    java.util.Collections.sort(list);
-	    for(Enum e: list)
-		this.addItem(e);
+	    for(Object om: list){
+	    	Enum e = (Enum)om;
+	    	this.addItem(e);	
+	    }
+		
 	}
 
 }

@@ -90,7 +90,7 @@ public class TextEditor extends JScrollPane implements ParameterEditor
    /** 
     * Does nothing
     */
-    public void setAllowedValues(Collection<Object> allowedValues)
+    public void setAllowedValues(Collection allowedValues)
     {
 	// ANY
     }

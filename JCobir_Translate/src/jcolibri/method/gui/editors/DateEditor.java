@@ -70,7 +70,7 @@ public class DateEditor extends JFormattedTextField implements ParameterEditor {
 	/**
 	 * Does nothing
 	 */
-	public void setAllowedValues(Collection<Object> allowedValues)
+	public void setAllowedValues(Collection allowedValues)
 	{  
 	}
 

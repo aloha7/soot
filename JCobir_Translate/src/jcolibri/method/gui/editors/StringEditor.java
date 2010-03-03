@@ -63,7 +63,7 @@ public class StringEditor extends JTextField implements ParameterEditor {
 	/**
 	 * Does nothing
 	 */
-	public void setAllowedValues(Collection<Object> allowedValues)
+	public void setAllowedValues(Collection allowedValues)
 	{
 	    // ANY 
 	}

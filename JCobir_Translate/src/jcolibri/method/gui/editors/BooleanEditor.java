@@ -76,7 +76,7 @@ public class BooleanEditor extends JComboBox implements ParameterEditor {
 	/**
 	 * Receives a Collection of Boolean objects.
 	 */
-	public void setAllowedValues(Collection<Object> allowedValues)
+	public void setAllowedValues(Collection allowedValues)
 	{
 	    boolean containTrue = false;
 	    boolean containFalse = false;
