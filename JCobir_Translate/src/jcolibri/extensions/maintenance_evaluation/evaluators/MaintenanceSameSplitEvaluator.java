@@ -48,8 +48,8 @@ public class MaintenanceSameSplitEvaluator extends MaintenanceEvaluator {
 						.warn(
 								"Evaluation should be executed using a cached case base");
 
-			ArrayList<CBRCase> originalCases = new ArrayList<CBRCase>(caseBase.getCases());
-			ArrayList<CBRCase> querySet = new ArrayList<CBRCase>();
+			ArrayList originalCases = new ArrayList(caseBase.getCases());
+			ArrayList querySet = new ArrayList();
 
 			prepareCases(originalCases, querySet, file, caseBase);
 			
@@ -58,7 +58,8 @@ public class MaintenanceSameSplitEvaluator extends MaintenanceEvaluator {
 					"Same Split - Hold Out Evaluation", totalSteps);
 			
 			// Run cycle for each case in querySet
-			for (CBRCase c : querySet) {
+			for (Object o : querySet) {
+				CBRCase c = (CBRCase)o;
 				// Run the cycle
 				LogFactory.getLog(this.getClass()).info(
 						"Running cycle() " + numberOfCycles);
@@ -99,10 +100,10 @@ public class MaintenanceSameSplitEvaluator extends MaintenanceEvaluator {
 	 * @param querySet Where queries are to be stored
 	 * @param caseBase The case base
 	 */
-	protected void prepareCases(Collection<CBRCase> originalCases, List<CBRCase> querySet, 
+	protected void prepareCases(Collection originalCases, List querySet, 
 		String file, CBRCaseBase caseBase)
 	{	
-	   	ArrayList<CBRCase> caseBaseSet = new ArrayList<CBRCase>();
+	   	ArrayList caseBaseSet = new ArrayList();
 
 	    // Split the case base
 		splitCaseBaseFromFile(originalCases, querySet, caseBaseSet, file);
@@ -132,8 +133,8 @@ public class MaintenanceSameSplitEvaluator extends MaintenanceEvaluator {
 	 * @param filename
 	 *            File which contains the queries
 	 */
-	public static void splitCaseBaseFromFile(Collection<CBRCase> wholeCaseBase,
-		List<CBRCase> querySet, List<CBRCase> casebaseSet, String filename)
+	public static void splitCaseBaseFromFile(Collection wholeCaseBase,
+		List querySet, List casebaseSet, String filename)
 	{	querySet.clear();
         	casebaseSet.clear();
         	
@@ -150,8 +151,8 @@ public class MaintenanceSameSplitEvaluator extends MaintenanceEvaluator {
         		{	CBRCase c = null;
         			int pos=0;
         			boolean found = false;
-        			for(Iterator<CBRCase> iter = casebaseSet.iterator(); iter.hasNext() && (!found); )
-        			{	c = iter.next();
+        			for(Iterator iter = casebaseSet.iterator(); iter.hasNext() && (!found); )
+        			{	c = (CBRCase)iter.next();
         				if(c.getID().toString().equals(line))
         					found = true;
         				else

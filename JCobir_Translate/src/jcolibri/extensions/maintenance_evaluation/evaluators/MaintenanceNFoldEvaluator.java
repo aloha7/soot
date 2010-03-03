@@ -43,21 +43,22 @@ public class MaintenanceNFoldEvaluator extends MaintenanceEvaluator
         	LogFactory.getLog(this.getClass()).warn(
 			"Evaluation should be executed using a cached case base");
             
-            Collection<CBRCase> cases = new ArrayList<CBRCase>(caseBase.getCases());
+            Collection cases = new ArrayList(caseBase.getCases());
             
             //For each repetition
             for(int r=0; r<repetitions; r++)
             {	//Create the folds
-            	ArrayList<ArrayList<CBRCase>> folds = createFolds(cases, numFolds);
+            	ArrayList folds = createFolds(cases, numFolds);
                 
                 //For each fold
                 for(int f=0; f<numFolds; f++)
-                {   ArrayList<CBRCase> querySet = new ArrayList<CBRCase>();
+                {   ArrayList querySet = new ArrayList();
                     prepareCases(cases, querySet, f, caseBase, folds);
                 
                     //Run cycle for each case in querySet (current fold)
-                    for(CBRCase c: querySet)
-                    {	LogFactory.getLog(this.getClass()).info(
+                    for(Object o: querySet)
+                    {	CBRCase c = (CBRCase)o;
+                    	LogFactory.getLog(this.getClass()).info(
                 	    "Running cycle() " + numberOfCycles);
         		app.cycle(c);
                         numberOfCycles++;
@@ -90,9 +91,9 @@ public class MaintenanceNFoldEvaluator extends MaintenanceEvaluator
      * @param fold The fold number
      * @param caseBase The case base
      */
-    protected void prepareCases(Collection<CBRCase> originalCases, List<CBRCase> querySet, 
-	int fold, CBRCaseBase caseBase, ArrayList<ArrayList<CBRCase>> folds)
-    {	ArrayList<CBRCase> caseBaseSet = new ArrayList<CBRCase>();
+    protected void prepareCases(Collection originalCases, List querySet, 
+	int fold, CBRCaseBase caseBase, ArrayList folds)
+    {	ArrayList caseBaseSet = new ArrayList();
             	
     	//Obtain the query and casebase sets
     	getFolds(fold, querySet, caseBaseSet, folds);
@@ -114,16 +115,16 @@ public class MaintenanceNFoldEvaluator extends MaintenanceEvaluator
      * @param cases the original cases.
      * @param numFolds the number of folds.
      */
-    protected ArrayList<ArrayList<CBRCase>> createFolds(Collection<CBRCase> cases, int numFolds)
-    {   ArrayList<ArrayList<CBRCase>> folds = new ArrayList<ArrayList<CBRCase>>();
+    protected ArrayList createFolds(Collection cases, int numFolds)
+    {   ArrayList folds = new ArrayList();
         int foldsize = cases.size() / numFolds;
-        ArrayList<CBRCase> copy = new ArrayList<CBRCase>(cases);
+        ArrayList copy = new ArrayList(cases);
         
         for(int f=0; f<numFolds; f++)
-        {   ArrayList<CBRCase> fold = new ArrayList<CBRCase>();
+        {   ArrayList fold = new ArrayList();
             for(int i=0; (i<foldsize)&&(copy.size()>0); i++)
             {   int random = (int) (Math.random() * copy.size());
-                CBRCase _case = copy.get( random );
+                CBRCase _case = (CBRCase)copy.get( random );
                 copy.remove(random);
                 fold.add(_case);
             }
@@ -139,14 +140,14 @@ public class MaintenanceNFoldEvaluator extends MaintenanceEvaluator
      * @param querySet the set of queries.
      * @param caseBaseSet the set of cases.
      */
-    public static void getFolds(int f, List<CBRCase> querySet, List<CBRCase> caseBaseSet, ArrayList<ArrayList<CBRCase>> folds)
+    public static void getFolds(int f, List querySet, List caseBaseSet, ArrayList folds)
     {   querySet.clear();
         caseBaseSet.clear();
         
-        querySet.addAll(folds.get(f));
+        querySet.addAll((ArrayList)folds.get(f));
         
         for(int i=0; i<folds.size(); i++)
             if(i!=f)
-                caseBaseSet.addAll(folds.get(i));
+                caseBaseSet.addAll((ArrayList)folds.get(i));
     }
 }

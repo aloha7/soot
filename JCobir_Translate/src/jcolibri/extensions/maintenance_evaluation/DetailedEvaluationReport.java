@@ -25,14 +25,14 @@ import org.apache.commons.logging.LogFactory;
 public class DetailedEvaluationReport extends EvaluationReport 
 {
     /** Stores the query series info */
-    protected HashMap<String, List<QueryResult>> queryData;
+    protected HashMap queryData;
 
     /**
      * Creates a new report.
      */
     public DetailedEvaluationReport()
     {	super();
-    	queryData = new HashMap<String, List<QueryResult>>();
+    	queryData = new HashMap();
     }
 	
     /**
@@ -40,8 +40,8 @@ public class DetailedEvaluationReport extends EvaluationReport
      * @param label identifies the evaluation series.
      * @return the evaluation info identified by the given label.
      */
-    public List<QueryResult> getQuerySeries(String label)
-    {   return queryData.get(label);
+    public List getQuerySeries(String label)
+    {   return (List)queryData.get(label);
     }
     
     /**
@@ -50,7 +50,7 @@ public class DetailedEvaluationReport extends EvaluationReport
      * @param label identifier of the evaluation series.
      * @param queryEvaluations the evaluation series. 
      */
-    public void setSeries(String label, List<QueryResult> queryEvaluations)
+    public void setSeries(String label, List queryEvaluations)
     {	queryData.put(label, queryEvaluations);
     }
     
@@ -61,9 +61,9 @@ public class DetailedEvaluationReport extends EvaluationReport
      * @param value the query's value.
      */
     public void addDataToSeries(String label, CBRQuery query, Double value)
-    {	List<QueryResult> queries = queryData.get(label);
+    {	List queries = (List)queryData.get(label);
     	if(queries == null)
-    	{	queries = new LinkedList<QueryResult>();
+    	{	queries = new LinkedList();
     	}
     	queries.add(new QueryResult(query, value));
     	queryData.put(label, queries);
@@ -74,11 +74,14 @@ public class DetailedEvaluationReport extends EvaluationReport
      * @return the names of the contained evaluation series.
      */
     public String[] getQuerySeriesLabels()
-    {   Set<String> set = queryData.keySet();
+    {   Set set = queryData.keySet();
         String[] res = new String[set.size()];
         int i=0;
-        for( String e : set)
-            res[i++] = e;
+        for(Object o : set){
+        	String e = (String)o;
+        	res[i++] = e;
+        }
+            
         return res;
     }
 
@@ -98,10 +101,13 @@ public class DetailedEvaluationReport extends EvaluationReport
 		    	
 			for(int i=0; i<seriesLabels.length; i++)
 		    	{	pw.println(seriesLabels[i]+ ":");
-	    			Vector<Double> results = getSeries(seriesLabels[i]);
+	    			Vector results = getSeries(seriesLabels[i]);
 	    			String series = "";
-	    			for(Double result: results)
-	    			    series += result + ","; 
+	    			for(Object o: results){
+	    				Double result=(Double)o;
+	    				series += result + ",";
+	    			}
+	    			     
 	    			pw.println(series.substring(0, series.length()-2));
 	    			pw.println("Average: " + getAverageOfDataSeries(seriesLabels[i]));
 	    			pw.println();
@@ -110,9 +116,12 @@ public class DetailedEvaluationReport extends EvaluationReport
 	
 			for(int i=0; i<querySeriesLabels.length; i++)
 		    	{	pw.println(querySeriesLabels[i]+ ":");
-	    			List<QueryResult> results = getQuerySeries(querySeriesLabels[i]);
-	    			for(QueryResult qResult: results)
-	    			    pw.println(qResult.getCase().getID() + ": " + qResult.getResult()); 
+	    			List results = getQuerySeries(querySeriesLabels[i]);
+	    			for(Object o: results){
+	    				QueryResult qResult = (QueryResult)o;
+	    				pw.println(qResult.getCase().getID() + ": " + qResult.getResult());
+	    			}
+	    			     
 	    			pw.println("Average: " + getAverageOfQueryDataSeries(querySeriesLabels[i]));
 	    			pw.println();
 		    	}
@@ -154,7 +163,7 @@ public class DetailedEvaluationReport extends EvaluationReport
      * @return the average of the given data series.
      */
     public Double getAverageOfDataSeries(String label)
-    {	Vector<Double> v = data.get(label);
+    {	Vector v = (Vector)data.get(label);
     	if(v == null)
     	{	LogFactory.getLog(this.getClass()).error("Data series by this label does not exist");
     		return null;
@@ -163,8 +172,9 @@ public class DetailedEvaluationReport extends EvaluationReport
     	{	return 0.0;
     	}
     	double total = 0.0;
-    	for(Double value: v)
-    	{	total += value;    	    
+    	for(Object o: v){
+    		Double value = (Double)o;
+    		total += value;
     	}
 	return total / v.size();
     }
@@ -177,7 +187,7 @@ public class DetailedEvaluationReport extends EvaluationReport
      * @return the average of the given query data series.
      */
     public Double getAverageOfQueryDataSeries(String label)
-    {	List<QueryResult> results = queryData.get(label);
+    {	List results = (List)queryData.get(label);
     	if(results == null)
     	{	LogFactory.getLog(this.getClass()).error("Data series by this label does not exist");
     		return null;
@@ -186,8 +196,9 @@ public class DetailedEvaluationReport extends EvaluationReport
     	{	return 0.0;
     	}
     	double total = 0.0;
-    	for(QueryResult result: results)
-    	{	total += result.getResult();    	    
+    	for(Object o: results){
+    		QueryResult result = (QueryResult)o;
+    		total += result.getResult();    	
     	}
 	return total / results.size();
     }
@@ -203,9 +214,12 @@ public class DetailedEvaluationReport extends EvaluationReport
     	String[] series = this.getSeriesLabels();
     	for(int i=0; i<series.length; i++)
     	{	s.append("  "+series[i]+": \n    ");
-    		Vector<Double> v = this.getSeries(series[i]);
-    		for(Double d: v)
+    		Vector v = this.getSeries(series[i]);
+    		for(Object o: v){
+    			Double d = (Double)o;
     			s.append(d+",");
+    		}
+    			
     		s.append("\n");
     		s.append("  Average: " + getAverageOfDataSeries(series[i]) + "\n\n");
     	}

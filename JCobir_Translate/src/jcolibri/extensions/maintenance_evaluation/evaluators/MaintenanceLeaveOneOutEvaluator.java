@@ -27,7 +27,7 @@ public class MaintenanceLeaveOneOutEvaluator extends MaintenanceEvaluator
 	 */
 	public void LeaveOneOut() 
 	{	try 
-		{	java.util.ArrayList<CBRCase> aux = new java.util.ArrayList<CBRCase>();
+		{	java.util.ArrayList aux = new java.util.ArrayList();
 
 			long t = (new Date()).getTime();
 			int numberOfCycles = 0;
@@ -42,13 +42,15 @@ public class MaintenanceLeaveOneOutEvaluator extends MaintenanceEvaluator
 
 			prepareCases(caseBase);
 
-			ArrayList<CBRCase> cases = new ArrayList<CBRCase>(caseBase.getCases());	
+			ArrayList cases = new ArrayList(caseBase.getCases());	
 
 			jcolibri.util.ProgressController.init(getClass(),"LeaveOneOut Evaluation", cases.size());
 			
 			//For each case in the case base
-			for(CBRCase _case : cases) 
-			{	//Delete the case in the case base
+			for(Object o : cases) 
+			{	
+				CBRCase _case = (CBRCase)o;
+				//Delete the case in the case base
 				aux.clear();
 				aux.add(_case);
 				caseBase.forgetCases(aux);

@@ -53,7 +53,7 @@ public class MaintenanceHoldOutEvaluator extends MaintenanceEvaluator
 						.warn(
 								"Evaluation should be executed using a cached case base");
 
-			ArrayList<CBRCase> originalCases = new ArrayList<CBRCase>(
+			ArrayList originalCases = new ArrayList(
 					caseBase.getCases());
 			
 			int totalSteps = ((originalCases.size() * testPercent) / 100);
@@ -62,12 +62,13 @@ public class MaintenanceHoldOutEvaluator extends MaintenanceEvaluator
 
 			// For each repetition
 			for (int rep = 0; rep < repetitions; rep++) 
-			{   	ArrayList<CBRCase> querySet = new ArrayList<CBRCase>();
+			{   	ArrayList querySet = new ArrayList();
 				prepareCases(originalCases, querySet, testPercent, caseBase);
 				
 				// Run cycle for each case in querySet
-				for (CBRCase c : querySet) 
-				{	// Run the cycle
+				for (Object o : querySet) 
+				{	CBRCase c = (CBRCase)o;
+					// Run the cycle
 					LogFactory.getLog(this.getClass()).info(
 							"Running cycle() " + numberOfCycles);
 			
@@ -106,10 +107,10 @@ public class MaintenanceHoldOutEvaluator extends MaintenanceEvaluator
 	 * @param testPercent Percentage of cases used as queries
 	 * @param caseBase The case base
 	 */
-	protected void prepareCases(Collection<CBRCase> originalCases, List<CBRCase> querySet, 
+	protected void prepareCases(Collection originalCases, List querySet, 
 		int testPercent, CBRCaseBase caseBase)
 	{	
-	    	ArrayList<CBRCase> caseBaseSet = new ArrayList<CBRCase>();
+	    	ArrayList caseBaseSet = new ArrayList();
 
 	    	// Split the case base
 		splitCaseBase(originalCases, querySet, caseBaseSet, testPercent);
@@ -138,8 +139,8 @@ public class MaintenanceHoldOutEvaluator extends MaintenanceEvaluator
 	 * @param testPercent
 	 *            Percentage of cases used as queries
 	 */
-	public static void splitCaseBase(Collection<CBRCase> wholeCaseBase,
-		List<CBRCase> querySet, List<CBRCase> casebaseSet, int testPercent) 
+	public static void splitCaseBase(Collection wholeCaseBase,
+		List querySet, List casebaseSet, int testPercent) 
 	{	querySet.clear();
 		casebaseSet.clear();
 
@@ -148,7 +149,7 @@ public class MaintenanceHoldOutEvaluator extends MaintenanceEvaluator
 
 		for (int i = 0; i < querySetSize; i++) 
 		{	int random = (int) (Math.random() * casebaseSet.size());
-			CBRCase _case = casebaseSet.get(random);
+			CBRCase _case = (CBRCase)casebaseSet.get(random);
 			casebaseSet.remove(random);
 			querySet.add(_case);
 		}
