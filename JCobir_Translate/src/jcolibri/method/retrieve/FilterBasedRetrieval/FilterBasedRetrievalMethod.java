@@ -35,14 +35,17 @@ public class FilterBasedRetrievalMethod
      * @param filterConfig contains the filter predicates
      * @return a list of cases
      */
-    public static Collection<CBRCase> filterCases(Collection<CBRCase> cases, CBRQuery query, FilterConfig filterConfig)
+    public static Collection filterCases(Collection cases, CBRQuery query, FilterConfig filterConfig)
     {
 	if(filterConfig == null)
 	    return cases;
-	Collection<CBRCase> res = new ArrayList<CBRCase>();
-	for(CBRCase c:cases)
-	    if(filter(c.getDescription(),query.getDescription(),filterConfig))
-		res.add(c);
+	Collection res = new ArrayList();
+	for(Object on: cases){
+		CBRCase c = (CBRCase)on;
+		if(filter(c.getDescription(),query.getDescription(),filterConfig))
+			res.add(c);
+	}
+	    
 	return res;
     }
     
@@ -57,8 +60,9 @@ public class FilterBasedRetrievalMethod
     {
 	try
 	{
-	    for(Attribute att : AttributeUtils.getAttributes(cc))
+	    for(Object on : AttributeUtils.getAttributes(cc))
 	    {
+	    	Attribute att = (Attribute)on;
 	        if(CaseComponent.class.isAssignableFrom(att.getType()))
 	        {    
 	    		if(!filter((CaseComponent)att.getValue(cc),(CaseComponent)att.getValue(qc),config))

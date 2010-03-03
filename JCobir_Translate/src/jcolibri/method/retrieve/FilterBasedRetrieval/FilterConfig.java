@@ -24,14 +24,14 @@ import jcolibri.method.retrieve.FilterBasedRetrieval.predicates.FilterPredicate;
  */
 public class FilterConfig
 {
-    private HashMap<Attribute,FilterPredicate> config;
+    private HashMap config;
     
     /**
      * Creates the FilterConfig object
      */
     public FilterConfig()
     {
-	config = new HashMap<Attribute,FilterPredicate>();
+	config = new HashMap();
     }
     
     /**
@@ -50,13 +50,13 @@ public class FilterConfig
      */
     public FilterPredicate getPredicate(Attribute attribute)
     {
-	return config.get(attribute);
+	return (FilterPredicate)config.get(attribute);
     }
     
     /**
      * Returns a list of attributres that have a predicate defined.
      */
-    public Collection<Attribute> getDefinedAttributes()
+    public Collection getDefinedAttributes()
     {
 	return config.keySet();
     }

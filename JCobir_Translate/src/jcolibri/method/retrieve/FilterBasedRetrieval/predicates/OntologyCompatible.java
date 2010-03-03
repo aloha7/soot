@@ -47,8 +47,8 @@ public class OntologyCompatible implements FilterPredicate
 	    Instance queryInstance = (Instance) queryObject;
 	    OntoBridge ob = jcolibri.util.OntoBridgeSingleton.getOntoBridge();
 
-	    Set<String> lcs = ob.LCS(caseInstance.toString(), queryInstance.toString());
-	    Set<String> directParents = ob.LCS(queryInstance.toString(), queryInstance.toString());
+	    Set lcs = ob.LCS(caseInstance.toString(), queryInstance.toString());
+	    Set directParents = ob.LCS(queryInstance.toString(), queryInstance.toString());
 	    
 	    lcs.retainAll(directParents);
 	    return !lcs.isEmpty();
