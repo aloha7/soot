@@ -45,7 +45,7 @@ public class InformationGain implements SelectAttributeMethod
 
     
     
-    private static ArrayList<Attribute> asked;
+    private static ArrayList asked;
         
     /**
      * Selects an attribute with the highest information gain.
@@ -57,7 +57,7 @@ public class InformationGain implements SelectAttributeMethod
      * @return the selected attribute or null if there are not more attributes to ask.
      * @throws ExecutionException
      */
-    public static Attribute getMoreIGattribute(Collection<CBRCase> cases, boolean init, Collection<CBRCase> completeSetOfCases) throws ExecutionException
+    public static Attribute getMoreIGattribute(Collection cases, boolean init, Collection completeSetOfCases) throws ExecutionException
     {
 	if(cases.isEmpty())
 	{
@@ -65,17 +65,17 @@ public class InformationGain implements SelectAttributeMethod
 	    init = true;
 	}
 	if(init)
-	    asked = new ArrayList<Attribute>();
+	    asked = new ArrayList();
 	if(asked ==null)
 	    throw new ExecutionException("InformationGain method must be initialized each cycle");
-	CBRCase acase = cases.iterator().next();
-	Collection<Attribute> atts = AttributeUtils.getAttributes(acase.getDescription());
+	CBRCase acase = (CBRCase)cases.iterator().next();
+	Collection atts = AttributeUtils.getAttributes(acase.getDescription());
 	atts.remove(acase.getDescription().getIdAttribute());
 	
 	atts.removeAll(asked);
 	if(atts.isEmpty())
 	{
-	    asked = new ArrayList<Attribute>();
+	    asked = new ArrayList();
 	    atts = AttributeUtils.getAttributes(acase.getDescription());
 	    atts.remove(acase.getDescription().getIdAttribute());
 	}
@@ -84,8 +84,9 @@ public class InformationGain implements SelectAttributeMethod
 	
 	double maxIG = 0;
 	Attribute maxIGatt = null;
-	for(Attribute a: atts)
+	for(Object o: atts)
 	{
+		Attribute a = (Attribute)o;
 	    double ig = computeIG(a,cases);
 	    System.out.println("IG "+a.getName()+" --> "+ig);
 	    if(ig>maxIG)
@@ -102,16 +103,17 @@ public class InformationGain implements SelectAttributeMethod
     /**
      * Computes the IG for an attribute
      */
-    private static double computeIG(Attribute a, Collection<CBRCase> cases)
+    private static double computeIG(Attribute a, Collection cases)
     {
-	Hashtable<Object,HashSet<CBRCase>> clases = new Hashtable<Object,HashSet<CBRCase>>();
-	for(CBRCase c: cases)
+	Hashtable clases = new Hashtable();
+	for(Object o: cases)
 	{
+		CBRCase c = (CBRCase)o;
 	    Object value = AttributeUtils.findValue(a, c.getDescription());
-	    HashSet<CBRCase> set = clases.get(value);
+	    HashSet set = (HashSet)clases.get(value);
 	    if(set==null)
 	    {
-		set = new HashSet<CBRCase>();
+		set = new HashSet();
 		clases.put(value, set);
 	    }
 	    set.add(c);
@@ -119,9 +121,9 @@ public class InformationGain implements SelectAttributeMethod
 	
 	double casesSize = cases.size();
 	double res = 0;
-	for(Enumeration<HashSet<CBRCase>> en = clases.elements(); en.hasMoreElements();)
+	for(Enumeration en = clases.elements(); en.hasMoreElements();)
 	{
-	    double setSize = en.nextElement().size();
+	    double setSize = ((HashSet)en.nextElement()).size();
 	    double div = setSize/casesSize;
 	    res+= div * (Math.log(div)/Math.log(2));
 	}
@@ -135,16 +137,16 @@ public class InformationGain implements SelectAttributeMethod
     /**
      * Original set of cases, used when there is not IG
      */
-    private Collection<CBRCase> completeSetOfCases;
+    private Collection completeSetOfCases;
     
     /**
      * Constructor. 
      * @param completeset is the original set of cases, used when there is not IG
      */
-    public InformationGain(Collection<CBRCase> completeset)
+    public InformationGain(Collection completeset)
     {
 	completeSetOfCases = completeset;
-	asked = new ArrayList<Attribute>();
+	asked = new ArrayList();
     }
     
     /**
@@ -154,7 +156,7 @@ public class InformationGain implements SelectAttributeMethod
      * @return selected attribute
      * @throws ExecutionException
      */
-    public Attribute getAttribute(Collection<CBRCase> cases, CBRQuery query) throws ExecutionException 
+    public Attribute getAttribute(Collection cases, CBRQuery query) throws ExecutionException 
     {
 	    return getMoreIGattribute(cases, false, completeSetOfCases);
 

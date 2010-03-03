@@ -50,7 +50,7 @@ public class ObtainQueryWithAttributeQuestionMethod
      * @param cases used to find the available values presented to the user.
      * @return true 
      */
-    public static boolean obtainQueryWithAttributeQuestion(CBRQuery query, Attribute attribute, Map<Attribute, String> labels, Collection<CBRCase> cases)
+    public static boolean obtainQueryWithAttributeQuestion(CBRQuery query, Attribute attribute, Map labels, Collection cases)
     {
 	if(attribute == null)
 	    return false;
@@ -67,14 +67,17 @@ public class ObtainQueryWithAttributeQuestionMethod
 	
 	JPanel main = new JPanel();
 	main.setLayout(new SpringLayout());
-	String label = labels.get(attribute);
+	String label = (String)labels.get(attribute);
 	if(label==null)
 	    label = attribute.getName();
 	main.add(new JLabel(label));
 	
-	HashSet<Object> values = new HashSet<Object>();
-	for(CBRCase c: cases)
-	    values.add(AttributeUtils.findValue(attribute, c));
+	HashSet values = new HashSet();
+	for(Object o: cases){
+		CBRCase c = (CBRCase)o;
+		values.add(AttributeUtils.findValue(attribute, c));
+	}
+	    
 	
 	ParameterEditor pe = ParameterEditorFactory.getEditor(attribute.getType(), values);
 	main.add(pe.getJComponent());

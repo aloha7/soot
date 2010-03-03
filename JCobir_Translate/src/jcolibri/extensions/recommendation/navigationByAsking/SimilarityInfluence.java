@@ -55,7 +55,7 @@ import jcolibri.util.ProgressController;
  */
 public class SimilarityInfluence implements SelectAttributeMethod
 {
-    private static ArrayList<Attribute> asked;
+    private static ArrayList asked;
     
     /******************************************************************************/
     /**                           STATIC METHODS                                 **/
@@ -70,20 +70,20 @@ public class SimilarityInfluence implements SelectAttributeMethod
      * This way, in following iterations past chosen attributes are not computed.
      * @return the selected attribute or null if there are not more attributes to ask.
      */
-    public static Attribute getMoreSimVarAttribute(Collection<CBRCase> cases, CBRQuery query, NNConfig simConfig, boolean init) throws ExecutionException
+    public static Attribute getMoreSimVarAttribute(Collection cases, CBRQuery query, NNConfig simConfig, boolean init) throws ExecutionException
     {
 	if(init)
-	    asked = new ArrayList<Attribute>();
+	    asked = new ArrayList();
 	if(asked ==null)
 	    throw new ExecutionException("Similarity Influence method must be initialized each cycle");
-	CBRCase acase = cases.iterator().next();
-	Collection<Attribute> atts = AttributeUtils.getAttributes(acase.getDescription());
+	CBRCase acase = (CBRCase)cases.iterator().next();
+	Collection atts = AttributeUtils.getAttributes(acase.getDescription());
 	atts.remove(acase.getDescription().getIdAttribute());
 	
 	atts.removeAll(asked);
 	if(atts.isEmpty())
 	{
-	    asked = new ArrayList<Attribute>();
+	    asked = new ArrayList();
 	    atts = AttributeUtils.getAttributes(acase.getDescription());
 	}
 	
@@ -92,8 +92,8 @@ public class SimilarityInfluence implements SelectAttributeMethod
 	
 	double maxSimVar = 0;
 	Attribute maxSimVaratt = null;
-	for(Attribute a: atts)
-	{
+	for(Object o: atts)
+	{	Attribute a = (Attribute)o;
 	    double simVar = computeSimVar(a,cases,query,simConfig);
 	    System.out.println("SimVar("+a.getName()+") = "+simVar);
 	    if(simVar>maxSimVar)
@@ -112,18 +112,19 @@ public class SimilarityInfluence implements SelectAttributeMethod
     /**
      * Computes the simVar of an attribute with respect to a set of cases and a query.
      */
-    private static double computeSimVar(Attribute a, Collection<CBRCase> cases, CBRQuery query, NNConfig simConfig)
+    private static double computeSimVar(Attribute a, Collection cases, CBRQuery query, NNConfig simConfig)
     {
 	double Csize = cases.size();
 	
-	Hashtable<Object,HashSet<CBRCase>> clases = new Hashtable<Object,HashSet<CBRCase>>();
-	for(CBRCase c: cases)
+	Hashtable clases = new Hashtable();
+	for(Object o: cases)
 	{
+		CBRCase c = (CBRCase)o;
 	    Object value = AttributeUtils.findValue(a, c.getDescription());
-	    HashSet<CBRCase> set = clases.get(value);
+	    HashSet set = (HashSet)clases.get(value);
 	    if(set==null)
 	    {
-		set = new HashSet<CBRCase>();
+		set = new HashSet();
 		clases.put(value, set);
 	    }
 	    set.add(c);
@@ -133,7 +134,7 @@ public class SimilarityInfluence implements SelectAttributeMethod
 	double simVar = 0;
 	for(Object v : clases.keySet())
 	{
-	    double pv = ((double)clases.get(v).size()) / Csize;
+	    double pv = ((double)((HashSet)clases.get(v)).size()) / Csize;
 
        	    CBRQuery newQuery = new CBRQuery();
             newQuery.setDescription(CopyUtils.copyCaseComponent(query.getDescription()));
@@ -151,18 +152,24 @@ public class SimilarityInfluence implements SelectAttributeMethod
     /**
      * Computes the Var formulae
      */
-    private static double computeVar(CBRQuery query, Collection<CBRCase> cases, NNConfig simConfig)
+    private static double computeVar(CBRQuery query, Collection cases, NNConfig simConfig)
     {
-	Collection<RetrievalResult> sim = NNScoringMethod.evaluateSimilarity(cases, query, simConfig);
+	Collection sim = NNScoringMethod.evaluateSimilarity(cases, query, simConfig);
 	
 	double niu = 0;
-	for(RetrievalResult rr : sim)
-	    niu += rr.getEval();
+	for( Object o: sim){
+		RetrievalResult rr = (RetrievalResult)o;
+		niu += rr.getEval();
+	}
+	    
 	niu = niu / sim.size();
 	
 	double res = 0;
-	for(RetrievalResult rr : sim)
-	    res += ( (rr.getEval()-niu)*(rr.getEval()-niu) );
+	for(  Object o: sim){
+		RetrievalResult rr=(RetrievalResult)o;
+		res += ( (rr.getEval()-niu)*(rr.getEval()-niu) );
+	}
+	    
 	
 	
 	return res / ((double)cases.size());
@@ -191,7 +198,7 @@ public class SimilarityInfluence implements SelectAttributeMethod
      * @return selected attribute
      * @throws ExecutionException
      */
-    public Attribute getAttribute(Collection<CBRCase> cases, CBRQuery query) throws ExecutionException
+    public Attribute getAttribute(Collection cases, CBRQuery query) throws ExecutionException
     {
 	return  getMoreSimVarAttribute(cases, query, simConfig, false);
     }

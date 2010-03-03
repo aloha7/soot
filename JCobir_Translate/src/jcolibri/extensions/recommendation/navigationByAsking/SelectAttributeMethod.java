@@ -32,5 +32,5 @@ public interface SelectAttributeMethod
      * @return selected attribute or null if there are not more attributes to ask.
      * @throws ExecutionException
      */
-    public Attribute getAttribute(Collection<CBRCase> cases, CBRQuery query) throws ExecutionException; 
+    public Attribute getAttribute(Collection cases, CBRQuery query) throws ExecutionException; 
 }
