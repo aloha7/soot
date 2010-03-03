@@ -27,9 +27,9 @@ import jcolibri.method.retrieve.NNretrieval.similarity.LocalSimilarityFunction;
  */
 public class NNConfig{
 		
-	private java.util.HashMap<Attribute, LocalSimilarityFunction> maplocal = new java.util.HashMap<Attribute, LocalSimilarityFunction>();
-	private java.util.HashMap<Attribute, GlobalSimilarityFunction> mapglobal = new java.util.HashMap<Attribute, GlobalSimilarityFunction>();
-	private java.util.HashMap<Attribute, Double> mapweight = new java.util.HashMap<Attribute, Double>();
+	private java.util.HashMap maplocal = new java.util.HashMap();
+	private java.util.HashMap mapglobal = new java.util.HashMap();
+	private java.util.HashMap mapweight = new java.util.HashMap();
 	
 	private GlobalSimilarityFunction descriptionSimFunction;
 	
@@ -64,7 +64,7 @@ public class NNConfig{
 	 */
 	public LocalSimilarityFunction getLocalSimilFunction(Attribute attribute)
 	{
-		return maplocal.get(attribute);
+		return (LocalSimilarityFunction)maplocal.get(attribute);
 	}
 	
 	/**
@@ -80,7 +80,7 @@ public class NNConfig{
 	 */
 	public GlobalSimilarityFunction getGlobalSimilFunction(Attribute attribute)
 	{
-		return mapglobal.get(attribute);
+		return (GlobalSimilarityFunction)mapglobal.get(attribute);
 	}
 	
 	/**
@@ -96,7 +96,7 @@ public class NNConfig{
 	 */
 	public Double getWeight(Attribute attribute)
 	{
-		Double d = mapweight.get(attribute);
+		Double d = (Double)mapweight.get(attribute);
 		if(d!= null)
 			return d;
 		else

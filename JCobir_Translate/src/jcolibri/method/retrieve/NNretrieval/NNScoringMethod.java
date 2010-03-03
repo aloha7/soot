@@ -31,18 +31,18 @@ import jcolibri.util.ProgressController;
 public class NNScoringMethod {
 
 	
-	@SuppressWarnings("unchecked")
       /**
        * Performs the NN scoring over a collection of cases comparing them with a query. 
        * This method is configured through the NNConfig object.
        */
-	public static Collection<RetrievalResult> evaluateSimilarity(Collection<CBRCase> cases, CBRQuery query, NNConfig simConfig)
+	public static Collection evaluateSimilarity(Collection cases, CBRQuery query, NNConfig simConfig)
 	{
-		List<RetrievalResult> res = new ArrayList<RetrievalResult>();
+		List res = new ArrayList();
 		ProgressController.init(NNScoringMethod.class,"Numeric Similarity Computation", cases.size());
 		GlobalSimilarityFunction gsf = simConfig.getDescriptionSimFunction();
-		for(CBRCase _case: cases)
+		for(Object on: cases)
 		{
+			CBRCase _case = (CBRCase)on;
 			res.add(new RetrievalResult(_case, gsf.compute(_case.getDescription(), query.getDescription(), _case, query, simConfig)));
 			ProgressController.step(NNScoringMethod.class);
 		}
