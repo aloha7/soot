@@ -30,7 +30,7 @@ import jcolibri.cbrcore.Connector;
 public class LinealCaseBase implements CBRCaseBase {
 
 	private jcolibri.cbrcore.Connector connector;
-	private java.util.Collection<CBRCase> cases;
+	private java.util.Collection cases;
 
 	public void init(Connector connector) {
 		this.connector = connector;
@@ -48,7 +48,7 @@ public class LinealCaseBase implements CBRCaseBase {
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.CBRCaseBase#forgetCases(java.util.Collection)
 	 */
-	public void forgetCases(Collection<CBRCase> cases) {
+	public void forgetCases(Collection cases) {
 		// TODO Auto-generated method stub
 
 	}
@@ -56,14 +56,14 @@ public class LinealCaseBase implements CBRCaseBase {
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.CBRCaseBase#getCases()
 	 */
-	public Collection<CBRCase> getCases() {
+	public Collection getCases() {
 		return cases;
 	}
 
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.CBRCaseBase#getCases(jcolibri.cbrcore.CaseBaseFilter)
 	 */
-	public Collection<CBRCase> getCases(CaseBaseFilter filter) {
+	public Collection getCases(CaseBaseFilter filter) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -72,7 +72,7 @@ public class LinealCaseBase implements CBRCaseBase {
 	/* (non-Javadoc)
 	 * @see jcolibri.cbrcore.CBRCaseBase#learnCases(java.util.Collection)
 	 */
-	public void learnCases(Collection<CBRCase> cases) {
+	public void learnCases(Collection cases) {
 		connector.storeCases(cases);
 		this.cases.addAll(cases);
 

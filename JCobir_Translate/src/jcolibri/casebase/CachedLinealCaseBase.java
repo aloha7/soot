@@ -29,19 +29,19 @@ import jcolibri.exception.InitializingException;
 public class CachedLinealCaseBase implements CBRCaseBase {
 
 	private jcolibri.cbrcore.Connector connector;
-	private java.util.Collection<CBRCase> originalCases;
-	private java.util.Collection<CBRCase> workingCases;
+	private java.util.Collection originalCases;
+	private java.util.Collection workingCases;
 	
 	/**
 	 * Closes the case base saving or deleting the cases of the persistence media
 	 */
 	public void close() {
-		java.util.ArrayList<CBRCase> casestoRemove = new java.util.ArrayList<CBRCase>(originalCases);
+		java.util.ArrayList casestoRemove = new java.util.ArrayList(originalCases);
 		casestoRemove.removeAll(workingCases);
 		org.apache.commons.logging.LogFactory.getLog(this.getClass()).info("Deleting "+casestoRemove.size()+" cases from storage media");
 		connector.deleteCases(casestoRemove);
 		
-		java.util.ArrayList<CBRCase> casestoStore = new java.util.ArrayList<CBRCase>(workingCases);
+		java.util.ArrayList casestoStore = new java.util.ArrayList(workingCases);
 		casestoStore.removeAll(originalCases);
 		org.apache.commons.logging.LogFactory.getLog(this.getClass()).info("Storing "+casestoStore.size()+" cases into storage media");
 		
@@ -54,7 +54,7 @@ public class CachedLinealCaseBase implements CBRCaseBase {
 	/**
 	 * Forgets cases. It only removes the cases from the storage media when closing.
 	 */
-	public void forgetCases(Collection<CBRCase> cases) {
+	public void forgetCases(Collection cases) {
 		workingCases.removeAll(cases);
 
 	}
@@ -62,14 +62,14 @@ public class CachedLinealCaseBase implements CBRCaseBase {
 	/**
 	 * Returns working cases.
 	 */
-	public Collection<CBRCase> getCases() {
+	public Collection getCases() {
 		return workingCases;
 	}
 
 	/**
 	 * TODO.
 	 */
-	public Collection<CBRCase> getCases(CaseBaseFilter filter) {
+	public Collection getCases(CaseBaseFilter filter) {
 		// TODO
 		return null;
 	}
@@ -80,13 +80,13 @@ public class CachedLinealCaseBase implements CBRCaseBase {
 	public void init(Connector connector) throws InitializingException {
 		this.connector = connector;
 		originalCases = this.connector.retrieveAllCases();	
-		workingCases = new java.util.ArrayList<CBRCase>(originalCases);
+		workingCases = new java.util.ArrayList(originalCases);
 	}
 
 	/**
 	 * Learns cases that are only saved when closing the Case Base.
 	 */
-	public void learnCases(Collection<CBRCase> cases) {
+	public void learnCases(Collection cases) {
 		workingCases.addAll(cases);
 
 	}
