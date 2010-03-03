@@ -31,35 +31,38 @@ public class CasesVisualization {
 	/**
 	 * Visualizes a collection of cases using a given NN similarity configuration.
 	 */
-	public static void visualize(Collection<CBRCase> cases, NNConfig knnConfig)
+	public static void visualize(Collection cases, NNConfig knnConfig)
 	{
 		CBGraph graph = new CBGraph();
 		
 		// First add all the nodes saving IDs in a table
-		Hashtable<CBRCase,Integer> case2id = new Hashtable<CBRCase,Integer>();
-		for(CBRCase c : cases)
+		Hashtable case2id = new Hashtable();
+		for(Object on : cases)
 		{
+			CBRCase c = (CBRCase)on;
 		    	ClassificationSolution sol = (ClassificationSolution)c.getSolution();
 			int id = graph.addCase(c.getID().toString(), sol.getClassification().toString());
 			case2id.put(c, id);
 		}
 		
 		// Now calculate edges distances
-		Collection<CBRCase> copy = new ArrayList<CBRCase>(cases);
+		Collection copy = new ArrayList(cases);
 		
 		//Compute total cycles
 		int total = cases.size() * (cases.size()-1) / 2;
 		jcolibri.util.ProgressController.init(CasesVisualization.class, "Computing distances", total);
 
-		for(CBRCase c : cases)
+		for(Object om : cases)
 		{
+			CBRCase c = (CBRCase)om;
 			copy.remove(c);
-			Collection<RetrievalResult> result = NNScoringMethod.evaluateSimilarity(copy, c, knnConfig);
-			int currentcaseId = case2id.get(c);
-			for(RetrievalResult sim : result)
+			Collection result = NNScoringMethod.evaluateSimilarity(copy, c, knnConfig);
+			int currentcaseId = (Integer)case2id.get(c);
+			for(Object ot : result)
 			{
+				RetrievalResult sim = (RetrievalResult)ot;
 				CBRCase otherCase = sim.get_case();
-				int othercaseId = case2id.get(otherCase);
+				int othercaseId = (Integer)case2id.get(otherCase);
 				float distance = (float)(1-sim.getEval());
 				graph.addDistance(currentcaseId, othercaseId, distance);
 				System.out.println("Distance: "+c.getID()+" <--> "+otherCase.getID()+": "+ distance);
