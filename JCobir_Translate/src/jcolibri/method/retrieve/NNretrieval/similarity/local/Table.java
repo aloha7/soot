@@ -23,7 +23,7 @@ public class Table implements LocalSimilarityFunction
 
     double matrix[][] = null;
 
-    ArrayList<String> categories = new ArrayList<String>();
+    ArrayList categories = new ArrayList();
 
     public Table(String filename)
     {
