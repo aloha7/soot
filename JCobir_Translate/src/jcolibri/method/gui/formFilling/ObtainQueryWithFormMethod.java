@@ -45,7 +45,7 @@ import jcolibri.util.AttributeUtils;
  */
 public class ObtainQueryWithFormMethod
 {
-    private static Hashtable<Attribute, ParameterEditor> editors;
+    private static Hashtable editors;
     private static JDialog dialog;
 
     /**
@@ -53,7 +53,7 @@ public class ObtainQueryWithFormMethod
      * It shows every attribute and uses the attribute name as the label.
      * @param query to obtain.
      */
-    public static void obtainQueryWithoutInitialValues(CBRQuery query, Collection<Attribute> hiddenAttributes, Map<Attribute, String> labels)
+    public static void obtainQueryWithoutInitialValues(CBRQuery query, Collection hiddenAttributes, Map labels)
     {
 	obtainQuery(query, false, hiddenAttributes, labels);
     }
@@ -63,7 +63,7 @@ public class ObtainQueryWithFormMethod
      * It shows every attribute and uses the attribute name as the label.
      * @param query with the initial values and where the user new values are stored
      */
-    public static void obtainQueryWithInitialValues(CBRQuery query, Collection<Attribute> hiddenAttributes, Map<Attribute, String> labels)
+    public static void obtainQueryWithInitialValues(CBRQuery query, Collection hiddenAttributes, Map labels)
     {
 	obtainQuery(query, true,  hiddenAttributes, labels);
     }
@@ -76,12 +76,12 @@ public class ObtainQueryWithFormMethod
      * @param labels for each attribute. If there is no label for an attribute, 
      * the attribute name is used.
      */
-    static void obtainQuery(CBRQuery query, boolean useQueryvalues, Collection<Attribute> hiddenAttributes, Map<Attribute, String> labels)
+    static void obtainQuery(CBRQuery query, boolean useQueryvalues, Collection hiddenAttributes, Map labels)
     {
 	dialog = new JDialog();
 	dialog.setModal(true);
 	
-	editors = new Hashtable<Attribute, ParameterEditor>();
+	editors = new Hashtable();
 	
 	JPanel panel = new JPanel();
 	
@@ -89,9 +89,10 @@ public class ObtainQueryWithFormMethod
 	
 	if(useQueryvalues)
 	{
-	    for(Attribute a: editors.keySet())
+	    for(Object on: editors.keySet())
 	    {
-		ParameterEditor editor = editors.get(a);
+	    	Attribute a = (Attribute)on;
+		ParameterEditor editor = (ParameterEditor)editors.get(a);
 		editor.setEditorValue(jcolibri.util.AttributeUtils.findValue(a, query));
 	    }
 	}
@@ -116,9 +117,10 @@ public class ObtainQueryWithFormMethod
 	dialog.setTitle("Query");
 	dialog.setVisible(true);
 	
-	for(Attribute a: editors.keySet())
+	for(Object on: editors.keySet())
 	{
-	    Object value = editors.get(a).getEditorValue();
+		Attribute a = (Attribute)on;
+	    Object value = ((ParameterEditor)editors.get(a)).getEditorValue();
 	    jcolibri.util.AttributeUtils.setValue(a, query, value);
 	}
 	System.out.println(query);
@@ -131,7 +133,7 @@ public class ObtainQueryWithFormMethod
      * @param hiddenAttributes attributes not shown
      * @param labels for the attributes
      */
-    private static void addAttributes(CaseComponent cc, JPanel panel, Collection<Attribute> hiddenAttributes, Map<Attribute, String> labels)
+    private static void addAttributes(CaseComponent cc, JPanel panel, Collection hiddenAttributes, Map labels)
     {
 	panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
 	JPanel simplePanel = new JPanel();
@@ -143,17 +145,18 @@ public class ObtainQueryWithFormMethod
 	try
 	{
 	    if(hiddenAttributes == null)
-		hiddenAttributes = new ArrayList<Attribute>();
+		hiddenAttributes = new ArrayList();
 	    if(labels == null)
-		labels = new HashMap<Attribute,String>();
+		labels = new HashMap();
 	    
 	    Attribute[] ats = jcolibri.util.AttributeUtils.getAttributes(cc.getClass());
 	    Attribute id = cc.getIdAttribute();
 	    
-	    ArrayList<Attribute> compounds = new ArrayList<Attribute>();
+	    ArrayList compounds = new ArrayList();
 	    int sAtts = 0;
-	    for(Attribute a: ats)
+	    for(Object on: ats)
 	    {
+	    	Attribute a = (Attribute)on;
 		if(a.equals(id))
 		    continue;
 		else if(a.getType().equals(CaseComponent.class))
@@ -164,7 +167,7 @@ public class ObtainQueryWithFormMethod
 	            continue;
 	        else
 	        {
-	            String label = labels.get(a);
+	            String label = (String)labels.get(a);
 	            if(label==null)
 	        	label = a.getName();
 	            simplePanel.add(new JLabel(label));
@@ -178,8 +181,9 @@ public class ObtainQueryWithFormMethod
 	    
 	    
 	    //Now process compounds
-	    for(Attribute comp: compounds)
+	    for(Object om: compounds)
 	    {
+	    	Attribute comp = (Attribute)om;
 		JPanel subpanel = new JPanel();
 		subpanel.setBorder(javax.swing.BorderFactory.createTitledBorder(comp.getName()));
 		addAttributes((CaseComponent)comp.getValue(cc),subpanel,hiddenAttributes,labels);
