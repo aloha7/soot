@@ -33,7 +33,7 @@ import org.carrot2.core.impl.ArrayOutputComponent;
  */
 public class CarrotClusteringResult {
 
-	private ArrayList<CarrotClusteringResult.Cluster> clusters;
+	private ArrayList clusters;
 	
 	/**
 	 * Internal class that stores the labels and documents for a cluster.
@@ -41,9 +41,9 @@ public class CarrotClusteringResult {
 	 */
 	public class Cluster
 	{
-		List<String> labels;
-		List<LuceneDocument> docs;
-		protected Cluster(List<String> labels, List<LuceneDocument> docs)
+		List labels;
+		List docs;
+		protected Cluster(List labels, List docs)
 		{
 			this.labels = labels;
 			this.docs   = docs;
@@ -51,13 +51,13 @@ public class CarrotClusteringResult {
 		/**
 		 * @return the documents of the cluster
 		 */
-		public List<LuceneDocument> getDocs() {
+		public List getDocs() {
 			return docs;
 		}
 		/**
 		 * @return the labels of the cluster
 		 */
-		public List<String> getLabels() {
+		public List getLabels() {
 			return labels;
 		}
 		
@@ -67,17 +67,16 @@ public class CarrotClusteringResult {
 	/**
 	 * Creates a CarrotClusteringResult object from the Carrot2 output.
 	 */
-	@SuppressWarnings("unchecked")
 	protected CarrotClusteringResult(ArrayOutputComponent.Result result, LuceneIndex index)
 	{
-		clusters = new ArrayList<CarrotClusteringResult.Cluster>();
+		clusters = new ArrayList();
 		
         final List carrotClusters = result.clusters;
         for (Iterator i = carrotClusters.iterator(); i.hasNext(); )
         {
             RawCluster rawc = (RawCluster) i.next();
-            List<String> labels = rawc.getClusterDescription();
-            ArrayList<LuceneDocument> docs = new ArrayList<LuceneDocument>();
+            List labels = rawc.getClusterDescription();
+            ArrayList docs = new ArrayList();
             for (Iterator d = rawc.getDocuments().iterator(); d.hasNext(); ) 
             {
                 RawDocument document = (RawDocument) d.next();
@@ -94,7 +93,7 @@ public class CarrotClusteringResult {
 	/**
 	 * Returns the list of clusters.
 	 */
-	public List<Cluster> getClusters()
+	public List getClusters()
 	{
 		return this.clusters;
 	}

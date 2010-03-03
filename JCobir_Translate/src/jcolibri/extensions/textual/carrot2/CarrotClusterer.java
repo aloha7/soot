@@ -113,7 +113,7 @@ public class CarrotClusterer {
 	            public LocalComponent getInstance() {
 	                // we will use the defaults here, see {@link Example}
 	                // for more verbose configuration.
-	                final HashMap<String,String> parameters = new HashMap<String,String>();
+	                final HashMap parameters = new HashMap();
 	                parameters.put("lsi.threshold.clusterAssignment", "0.01");
 	                parameters.put("lsi.threshold.candidateCluster",  "3.5");
 	                if(_maxclusters>0)
@@ -165,7 +165,7 @@ public class CarrotClusterer {
 	public CarrotClusteringResult cluster(String query, int maxResults)
 	{
         try {
-			final HashMap<String,String> params = new HashMap<String,String>();
+			final HashMap params = new HashMap();
 			if(maxResults>-1)
 				params.put(LocalInputComponent.PARAM_REQUESTED_RESULTS, Integer.toString(maxResults));
 			ProgressController.init(this.getClass(),"Carrot2. Clustering documents", -1);

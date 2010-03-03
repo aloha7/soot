@@ -56,7 +56,7 @@ public class TestCarrot {
 	    
 		// Convert the documents to the Lucene format.
 		
-		Collection<LuceneDocument> docs = null;;
+		Collection docs = null;;
 		try {
 			docs = indexDocs(docDir);
 		} catch (IOException e) {
@@ -83,12 +83,16 @@ public class TestCarrot {
 			// Print the clusters
 			int i=0;
 			int total = ccr.getClusters().size();
-			for(Cluster c: ccr.getClusters())
+			for(Object o: ccr.getClusters())
 			{
+				Cluster c= (Cluster)o;
 				System.out.println("Cluster "+i+++"/"+total+": "+ c.getLabels());
 				System.out.println(c.getDocs().size()+ " documents in cluster");
-				for(LuceneDocument doc: c.getDocs())
+				for(Object o1: c.getDocs()){
+					LuceneDocument doc = (LuceneDocument)o1;
 					System.out.println("  "+doc.getDocID());
+				}
+					
 			}
 			
 		} catch (OutOfMemoryError e) {
@@ -99,9 +103,9 @@ public class TestCarrot {
 	/**
 	 * Converts the documents in the directory to the lucene format
 	 */
-	private static Collection<LuceneDocument> indexDocs(File directory) throws IOException {
+	private static Collection indexDocs(File directory) throws IOException {
 	    
-		java.util.ArrayList<LuceneDocument> docs = new java.util.ArrayList<LuceneDocument>();
+		java.util.ArrayList docs = new java.util.ArrayList();
 		
 	    if (!directory.canRead())
 	    	return docs;
@@ -111,8 +115,9 @@ public class TestCarrot {
 	    
 	    File[] files = directory.listFiles();
 	    
-	    for(File f: files)
+	    for(Object o: files)
 	    {
+	    	File f = (File)o;
 	    	if(f.isDirectory())
 	    		continue;
 	    	java.io.BufferedReader fr = new java.io.BufferedReader(new java.io.FileReader(f));
