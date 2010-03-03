@@ -22,17 +22,17 @@ import jcolibri.exception.InitializingException;
 class RTreeIndexedCBRCaseBase implements IEnhancedCBRCaseBase {
 
     private jcolibri.cbrcore.Connector connector;
-    private java.util.Collection allCases;
-    private ArrayList caseArray;
+    private java.util.Collection<CBRCase> allCases;
+    private ArrayList<CBRCase> caseArray;
     private RTree rtree;
 
     private class NearestSearchIntProcedure implements IntProcedure {
-        private ArrayList _caseArray;
-        private ArrayList _nearestCases;
+        private ArrayList<CBRCase> _caseArray;
+        private ArrayList<CBRCase> _nearestCases;
 
-        public NearestSearchIntProcedure(ArrayList caseArray) {
+        public NearestSearchIntProcedure(ArrayList<CBRCase> caseArray) {
             _caseArray = caseArray;
-            _nearestCases = new ArrayList();
+            _nearestCases = new ArrayList<CBRCase>();
         }
 
         public boolean execute(int id) {
@@ -82,7 +82,7 @@ class RTreeIndexedCBRCaseBase implements IEnhancedCBRCaseBase {
         return rval;
     }
 
-    public void learnCases(Collection cases) {
+    public void learnCases(Collection<CBRCase> cases) {
         try {
         connector.storeCases(cases);
         }
@@ -93,7 +93,7 @@ class RTreeIndexedCBRCaseBase implements IEnhancedCBRCaseBase {
         AddCasesToRTree(cases);
     }
 
-    public void forgetCases(Collection cases) {
+    public void forgetCases(Collection<CBRCase> cases) {
        
     }
 
