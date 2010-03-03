@@ -60,8 +60,8 @@ public class BasicClassificationOracle implements ClassificationOracle {
      * similarity configuration, fasle otherwise.
      */
     public boolean isCorrectPrediction(CBRQuery query, CBRCaseBase caseBase, KNNClassificationConfig knnConfig)
-    {	Collection<CBRCase> cases = caseBase.getCases();
-	Collection<RetrievalResult> knn = NNScoringMethod.evaluateSimilarity(cases, query, knnConfig);
+    {	Collection cases = caseBase.getCases();
+	Collection knn = NNScoringMethod.evaluateSimilarity(cases, query, knnConfig);
 	knn = SelectCases.selectTopKRR(knn, knnConfig.getK());
 	KNNClassificationMethod classifier = knnConfig.getClassificationMethod();
 	ClassificationSolution predictedSolution = classifier.getPredictedSolution(knn);
@@ -108,8 +108,8 @@ public class BasicClassificationOracle implements ClassificationOracle {
      * is correct, 1 otherwise).
      */
     public double getPredictionCost(CBRQuery query, CBRCaseBase caseBase, KNNClassificationConfig knnConfig)
-    {	Collection<CBRCase> cases = caseBase.getCases();
-	Collection<RetrievalResult> knn = NNScoringMethod.evaluateSimilarity(cases, query, knnConfig);
+    {	Collection cases = caseBase.getCases();
+	Collection knn = NNScoringMethod.evaluateSimilarity(cases, query, knnConfig);
 	knn = SelectCases.selectTopKRR(knn, knnConfig.getK());
 	KNNClassificationMethod classifier = knnConfig.getClassificationMethod();
 	ClassificationSolution predictedSolution = classifier.getPredictedSolution(knn);
