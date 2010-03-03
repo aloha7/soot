@@ -25,7 +25,7 @@ public class StoreCasesMethod {
 	/**
 	 * Simple method that adds some cases to the case base invoking caseBase->learnCases().
 	 */
-	public static void storeCases(CBRCaseBase caseBase, Collection<CBRCase> cases)
+	public static void storeCases(CBRCaseBase caseBase, Collection cases)
 	{
 		caseBase.learnCases(cases);
 	}
@@ -35,7 +35,7 @@ public class StoreCasesMethod {
 	 */
 	public static void storeCase(CBRCaseBase caseBase, CBRCase _case)
 	{
-		Collection<CBRCase> cases = new ArrayList<CBRCase>();
+		Collection cases = new ArrayList();
 		cases.add(_case);
 		caseBase.learnCases(cases);
 	}
