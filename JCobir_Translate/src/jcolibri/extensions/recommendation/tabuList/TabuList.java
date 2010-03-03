@@ -23,16 +23,16 @@ import jcolibri.cbrcore.CBRCase;
  */
 public class TabuList
 {
-    private static ArrayList<CBRCase> tabu = new ArrayList<CBRCase>();
+    private static ArrayList tabu = new ArrayList();
     
     /**
      * Removes cases from the tabu list. 
      * @param cases to remove
      * @return updated tabu list.
      */
-    public static Collection<CBRCase> removeTabuList(Collection<CBRCase> cases)
+    public static Collection removeTabuList(Collection cases)
     {
-	ArrayList<CBRCase> newList =  new ArrayList<CBRCase>(cases);
+	ArrayList newList =  new ArrayList(cases);
 	newList.removeAll(tabu);
 	return newList;
     }
@@ -41,7 +41,7 @@ public class TabuList
      * Adds cases to the tabu list.
      * @param tabuCases to add
      */
-    public static void updateTabuList(Collection<CBRCase> tabuCases)
+    public static void updateTabuList(Collection tabuCases)
     {
 	tabu.addAll(tabuCases);
     }
