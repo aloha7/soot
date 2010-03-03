@@ -41,7 +41,7 @@ public class DisplayCasesIfNumberAndChangeNavigation
      * @param max is the threshold
      * @param cases is the working cases set
      */
-    public static boolean displayCasesIfNumberAndChangeNavigation(int max, Collection<CBRCase> cases)
+    public static boolean displayCasesIfNumberAndChangeNavigation(int max, Collection cases)
     {
 	if(cases.size()<max)
 	{

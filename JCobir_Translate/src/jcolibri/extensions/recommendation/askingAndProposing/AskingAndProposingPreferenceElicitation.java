@@ -56,12 +56,12 @@ public class AskingAndProposingPreferenceElicitation
      * @param cuc is the user critique in NbP mode.
      * @throws ExecutionException if any error.
      */
-    public static void doPreferenceElicitation(CBRQuery query, Collection<CBRCase> cases, SelectAttributeMethod sam, CriticalUserChoice cuc) throws ExecutionException
+    public static void doPreferenceElicitation(CBRQuery query, Collection cases, SelectAttributeMethod sam, CriticalUserChoice cuc) throws ExecutionException
     {
 	if(mode == NavigationMode.NBA)
 	{
 	    Attribute att = sam.getAttribute(cases, query);
-	    Map<Attribute,String> labels = new HashMap<Attribute,String>();
+	    Map labels = new HashMap();
 	    ObtainQueryWithAttributeQuestionMethod.obtainQueryWithAttributeQuestion(query, att, labels,cases);
 	} 
 	else if(mode == NavigationMode.NBP)
