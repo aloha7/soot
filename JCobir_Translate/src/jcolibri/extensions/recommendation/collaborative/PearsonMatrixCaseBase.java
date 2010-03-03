@@ -51,7 +51,6 @@ public class PearsonMatrixCaseBase extends MatrixCaseBase
     }
     
     
-    @Override
     /**
      * Computes the similarity between users
      */
@@ -63,49 +62,49 @@ public class PearsonMatrixCaseBase extends MatrixCaseBase
     }
     
     // stores the similarity lists
-    private HashMap<Integer,Collection<SimilarTuple>> similLists;
+    private HashMap similLists;
     
-    @SuppressWarnings("unchecked")
     private void computeSimilarityLists()
     {
-	similLists = new HashMap<Integer,Collection<SimilarTuple>>();
-	for(Integer key: similarities.keySet())
+	similLists = new HashMap();
+	for(Object o: similarities.keySet())
 	{
-	    ArrayList<SimilarTuple> list = new ArrayList<SimilarTuple>();
-	    HashMap<Integer,Double> similMap = similarities.get(key);
-	    for(Entry<Integer,Double> entry : similMap.entrySet())
-		list.add(new SimilarTuple(entry.getKey(), entry.getValue()));
+		Integer key = (Integer)o;
+	    ArrayList list = new ArrayList();
+	    HashMap similMap = (HashMap)similarities.get(key);
+	    for(Object o1 : similMap.entrySet()){
+	    	Entry entry = (Entry)o1;
+	    	list.add(new SimilarTuple((Integer)entry.getKey(), (Double)entry.getValue()));	
+	    }
+		
 	    java.util.Collections.sort(list);
 	    similLists.put(key, list);
 	}
     }
     
-    @Override
     /**
      * Returns a list of similar users to a given one in decreasing order 
      */
-    public Collection<SimilarTuple> getSimilar(Integer id)
+    public Collection getSimilar(Integer id)
     {
-	return similLists.get(id);
+	return (Collection)similLists.get(id);
     }
     
     
-    @Override
     /**
      * Returns the similarity between two users
      */
     public double getSimil(Integer id1, Integer id2)
     {
-	return similarities.get(id1).get(id2);
+	return (Double)((HashMap)similarities.get(id1)).get(id2);
     }
     
     
     // table to store the similarities
-    private HashMap<Integer,HashMap<Integer,Double>> similarities;
+    private HashMap similarities;
  
     
 
-    @SuppressWarnings("unchecked")
     /**
      * Computes the Pearson Correlation between users in a smart and efficient way.
      * This code is an adaptation of the one developed by Jerome Kelleher and Derek Bridge 
@@ -114,15 +113,16 @@ public class PearsonMatrixCaseBase extends MatrixCaseBase
     private void computeSimilarityByDescriptionId()
     {
 	org.apache.commons.logging.LogFactory.getLog(this.getClass()).info("Computing similarities");
-	similarities = new HashMap<Integer, HashMap<Integer,Double>>();
-	HashSet<Integer> keyCopy = new HashSet<Integer>(byDescriptionId.keySet());
-	for(Integer me : byDescriptionId.keySet())
+	similarities = new HashMap();
+	HashSet keyCopy = new HashSet(byDescriptionId.keySet());
+	for( Object o: byDescriptionId.keySet())
 	{
+		Integer me= (Integer)o;
 	    keyCopy.remove(me);
-	    for(Integer you : keyCopy)
+	    for( Object o1: keyCopy)
 	    {
-		
-		      Iterator ratings = new CommonRatingsIterator(me, you, byDescriptionId.get(me), byDescriptionId.get(you));
+	    	Integer you = (Integer)o1;
+		      Iterator ratings = new CommonRatingsIterator(me, you, (Collection)byDescriptionId.get(me), (Collection)byDescriptionId.get(you));
 		      double sumX = 0.0;
 		      double sumXSquared = 0.0;
 		      double sumY = 0.0;
@@ -163,18 +163,18 @@ public class PearsonMatrixCaseBase extends MatrixCaseBase
 		
 		
 		
-		HashMap<Integer,Double> mySimilList = similarities.get(me);
+		HashMap mySimilList = (HashMap)similarities.get(me);
 		if(mySimilList == null)
 		{
-		    mySimilList = new HashMap<Integer, Double>();
+		    mySimilList = new HashMap();
 		    similarities.put(me, mySimilList);
 		}
 		mySimilList.put(you, correlation);
 		
-		HashMap<Integer,Double> yourSimilList = similarities.get(you);
+		HashMap yourSimilList = (HashMap)similarities.get(you);
 		if(yourSimilList == null)
 		{
-		    yourSimilList = new HashMap<Integer, Double>();
+		    yourSimilList = new HashMap();
 		    similarities.put(you, yourSimilList);
 		}
 		yourSimilList.put(me, correlation);
@@ -184,19 +184,23 @@ public class PearsonMatrixCaseBase extends MatrixCaseBase
     }
 
     // stores the averages
-    private HashMap<Integer,Double> averages;
+    private HashMap averages;
     
     // computes the averages
     private void computeAverages()
     {
 	org.apache.commons.logging.LogFactory.getLog(this.getClass()).info("Computing Averages");
-	averages = new HashMap<Integer, Double>();
-	for(Integer i : byDescriptionId.keySet())
+	averages = new HashMap();
+	for(Object o : byDescriptionId.keySet())
 	{
-	    ArrayList<RatingTuple> list = byDescriptionId.get(i);
+		Integer i = (Integer)o;
+	    ArrayList list = (ArrayList)byDescriptionId.get(i);
 	    double acum = 0;
-	    for(RatingTuple rt : list)
-		acum += rt.getRating();
+	    for(Object o1 : list){
+	    	RatingTuple rt = (RatingTuple)o1;
+	    	acum += rt.getRating();	
+	    }
+		
 	    double size = list.size();
 	    averages.put(i, acum/size);
 	}
@@ -209,7 +213,7 @@ public class PearsonMatrixCaseBase extends MatrixCaseBase
      */
     public double getAverage(int id)
     {
-	return averages.get(id);
+	return (Double)averages.get(id);
     }
     
     

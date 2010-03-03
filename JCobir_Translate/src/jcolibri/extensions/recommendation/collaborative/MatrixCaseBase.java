@@ -97,7 +97,7 @@ public abstract class MatrixCaseBase implements CBRCaseBase
      * @param id of the neighbor
      * @return a list of SimilarTuple (other neighbor id + similarity value).
      */
-    public abstract Collection<SimilarTuple> getSimilar(Integer id);
+    public abstract Collection getSimilar(Integer id);
     
     //////////////////////////////////////////////////////////////////
     
@@ -105,7 +105,7 @@ public abstract class MatrixCaseBase implements CBRCaseBase
     // Connector
     private jcolibri.cbrcore.Connector connector;
     // Cases list
-    private java.util.Collection<CBRCase> cases;
+    private java.util.Collection cases;
     
     // Attribute of the result that stores the ratings
     private Attribute value;
@@ -140,16 +140,16 @@ public abstract class MatrixCaseBase implements CBRCaseBase
      */
     public CaseComponent getDescription(Integer id)
     {
-	return descriptions.get(id);
+	return (CaseComponent)descriptions.get(id);
     }
 
     /**
      * Utility method to obtain all the descriptions stored in this case base
      * @return a set of ids.
      */
-    public Set<Integer> getDescriptions()
+    public Set getDescriptions()
     {
-	return descriptions.keySet();
+	return (Set)descriptions.keySet();
     }
     
     /**
@@ -159,16 +159,16 @@ public abstract class MatrixCaseBase implements CBRCaseBase
      */
     public CaseComponent getSolution(Integer id)
     {
-	return solutions.get(id);
+	return (CaseComponent)solutions.get(id);
     }
     
     /**
      * Utility method to obtain all the solutions stored in this case base
      * @return a set of ids.
      */
-    public Set<Integer> getSolutions()
+    public Set getSolutions()
     {
-	return solutions.keySet();
+	return (Set)solutions.keySet();
     }
     
     /**
@@ -176,19 +176,18 @@ public abstract class MatrixCaseBase implements CBRCaseBase
      * @param descriptionId of the user
      * @return collection of rating tuples (solution id + rating value)
      */
-    public Collection<RatingTuple> getRatingTuples(int descriptionId)
+    public Collection getRatingTuples(int descriptionId)
     {
-	return byDescriptionId.get(descriptionId);
+	return (Collection)byDescriptionId.get(descriptionId);
     }
     
     /** Table that stores the list of ratingTuples for each description id (user)*/
-    HashMap<Integer,ArrayList<RatingTuple>> byDescriptionId;
+    HashMap byDescriptionId;
     /** Table that organizes description components by id */
-    HashMap<Integer,CaseComponent> descriptions;
+    HashMap descriptions;
     /** Table that organizes solution components by id */
-    HashMap<Integer,CaseComponent> solutions;
+    HashMap solutions;
     
-    @SuppressWarnings("unchecked")
     /**
      * Organizes cases by the description id.
      */
@@ -197,16 +196,17 @@ public abstract class MatrixCaseBase implements CBRCaseBase
 	org.apache.commons.logging.LogFactory.getLog(this.getClass()).info("Organizing cases");
 	try
 	{
-	    byDescriptionId = new HashMap<Integer,ArrayList<RatingTuple>>();
-	    descriptions = new HashMap<Integer, CaseComponent>();
-	    solutions = new HashMap<Integer, CaseComponent>();
-	    for(CBRCase c: cases)
+	    byDescriptionId = new HashMap();
+	    descriptions = new HashMap();
+	    solutions = new HashMap();
+	    for(Object o: cases)
 	    {
+	    	CBRCase c = (CBRCase)o;
 	        Integer descId = (Integer)c.getID();
-	        ArrayList<RatingTuple> list = byDescriptionId.get(descId);
+	        ArrayList list = (ArrayList)byDescriptionId.get(descId);
 	        if(list == null)
 	        {
-	    		list = new ArrayList<RatingTuple>();
+	    		list = new ArrayList();
 	    		byDescriptionId.put(descId, list);
 	    		descriptions.put(descId,c.getDescription());
 	        }
@@ -217,8 +217,11 @@ public abstract class MatrixCaseBase implements CBRCaseBase
 		ProgressController.step(MatrixCaseBase.class);
 
 	    }
-	    for(ArrayList<RatingTuple> list: byDescriptionId.values())
-		java.util.Collections.sort(list);
+	    for(Object o: byDescriptionId.values()){
+	    	ArrayList list = (ArrayList)o;
+	    	java.util.Collections.sort(list);	
+	    }
+		
 	} catch (AttributeAccessException e)
 	{
 	    org.apache.commons.logging.LogFactory.getLog(this.getClass()).error(e);
@@ -237,14 +240,14 @@ public abstract class MatrixCaseBase implements CBRCaseBase
     /**
      * Forgets cases. It does nothing in this implementation
      */ 
-    public void forgetCases(Collection<CBRCase> cases)
+    public void forgetCases(Collection cases)
     {
     }
 
     /**
      * Returns the stored cases
      */
-    public Collection<CBRCase> getCases()
+    public Collection getCases()
     {
 	return cases;
     }
@@ -252,7 +255,7 @@ public abstract class MatrixCaseBase implements CBRCaseBase
     /**
      * Returns selected cases. It does nothing in this implementation.
      */
-    public Collection<CBRCase> getCases(CaseBaseFilter filter)
+    public Collection getCases(CaseBaseFilter filter)
     {
 	return null;
     }
@@ -260,7 +263,7 @@ public abstract class MatrixCaseBase implements CBRCaseBase
     /**
      * Adds new cases to the case base, reorganizing the cases base and re-computing neighbors similarities.
      */
-    public void learnCases(Collection<CBRCase> cases)
+    public void learnCases(Collection cases)
     {
 	this.cases.addAll(cases);
 	connector.storeCases(cases);
@@ -431,17 +434,17 @@ public abstract class MatrixCaseBase implements CBRCaseBase
     {
 	int idA;
 	int idB;
-	Collection<RatingTuple> rtsA;
-	Collection<RatingTuple> rtsB;
-	Iterator<RatingTuple> iterA;
-	Iterator<RatingTuple> iterB;
+	Collection rtsA;
+	Collection rtsB;
+	Iterator iterA;
+	Iterator iterB;
 	
 	RatingTuple rka;
 	RatingTuple rkb;
 	boolean moreRatings;
 	CommonRatingTuple current;
 
-	public CommonRatingsIterator(int idA, int idB, Collection<RatingTuple> rtsA, Collection<RatingTuple> rtsB)
+	public CommonRatingsIterator(int idA, int idB, Collection rtsA, Collection rtsB)
 	{
 	    super();
 	    this.idA = idA;

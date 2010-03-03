@@ -38,7 +38,6 @@ import jcolibri.method.retrieve.RetrievalResult;
  */
 public class CollaborativeRetrievalMethod
 {
-    @SuppressWarnings("unchecked")
     /**
      * Returns a list of cases scored following the collaborative recommendation formulae.
      * @param cb is the case base that contains the cases
@@ -46,12 +45,12 @@ public class CollaborativeRetrievalMethod
      * @param kItems is the number of items/ratings to return
      * @param kUsers defines the number of users taken into account to score the cases. 
      */
-    public static Collection<RetrievalResult> getRecommendation(PearsonMatrixCaseBase cb, CBRQuery query, int kUsers)
+    public static Collection getRecommendation(PearsonMatrixCaseBase cb, CBRQuery query, int kUsers)
     {
-	ArrayList<RetrievalResult> result = new ArrayList<RetrievalResult>();
+	ArrayList result = new ArrayList();
 	
 	int id = (Integer)query.getID();
-	Collection<SimilarTuple> simil = cb.getSimilar(id);
+	Collection simil = cb.getSimilar(id);
 	
 	if(simil == null)
 	{
@@ -60,31 +59,34 @@ public class CollaborativeRetrievalMethod
 	}
 	
 	
-	ArrayList<SimilarTuple> select = new ArrayList<SimilarTuple>();
+	ArrayList select = new ArrayList();
 	int i=0;
-	for(Iterator<SimilarTuple> iter = simil.iterator(); (iter.hasNext() && i<kUsers);i++)
-	    select.add(iter.next());
+	for(Iterator iter = simil.iterator(); (iter.hasNext() && i<kUsers);i++)
+	    select.add((SimilarTuple)iter.next());
 	
 	
 	/////// debug
 	System.out.println("\nQuery: "+ cb.getDescription(id));
 	System.out.println(cb.getRatingTuples(id).size()+" Ratings: "+cb.getRatingTuples(id));	
 	System.out.println("\nSimilar ratings:");
-	for(SimilarTuple st: select)
+	for(Object o: select)
 	{
+		SimilarTuple st = (SimilarTuple)o;
 	    System.out.print(st.getSimilarity()+" <--- ");
 	    System.out.println(cb.getDescription(st.getSimilarId()));
 	    System.out.println(cb.getRatingTuples(st.getSimilarId()).size()+" Ratings: "+cb.getRatingTuples(st.getSimilarId()));
 	}
 	/////////////
 	
-	for(Integer solId : cb.getSolutions())
+	for(Object o : cb.getSolutions())
 	{
+		Integer solId = (Integer)o;
 	    double mean = cb.getAverage(id);
 	    double acum = 0;
 	    double simacum = 0;
-	    for(SimilarTuple st : select)
+	    for(Object o1 : select)
 	    {
+	    	SimilarTuple st = (SimilarTuple)o1;
 		int other = st.getSimilarId();
 		double rating = findRating(cb, other, solId);
 		double otherMean = cb.getAverage(other);
@@ -107,8 +109,9 @@ public class CollaborativeRetrievalMethod
     
     private static double findRating(PearsonMatrixCaseBase cb, int descId, int solId)
     {
-	for(RatingTuple rt: cb.getRatingTuples(descId))
+	for(Object o: cb.getRatingTuples(descId))
 	{
+		RatingTuple rt = (RatingTuple)o; 
 	    if(rt.getSolutionId() == solId)
 		return rt.getRating();
 	}
