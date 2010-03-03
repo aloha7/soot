@@ -33,27 +33,33 @@ public class AttributeUtils {
 		Field[] fields = c.getDeclaredFields();
 		Attribute[] res = new Attribute[fields.length];
 		int i=0;
-		for(Field f : fields)
+		for(Object on : fields){
+			Field f = (Field)on;
 			res[i++] = new Attribute(f);
+		}
+			
 		return res;
 	}
 	
 	/**
 	 * Returns the list of attributes of a CaseComponents and all its sub-caseComponents.
 	 */
-	public static Collection<Attribute> getAttributes(CaseComponent cc)
+	public static Collection getAttributes(CaseComponent cc)
 	{
 	    	if(cc == null)
 	    	    return null;
-	    	Collection<Attribute> res = new ArrayList<Attribute>();
+	    	Collection res = new ArrayList();
 	    	try
 		{
 		    Attribute[] ats = getAttributes(cc.getClass());
-		    for(Attribute a: ats)
-		        if(a.getType().equals(CaseComponent.class))
+		    for(Object on: ats){
+		    	Attribute a = (Attribute)on;
+		    	if(a.getType().equals(CaseComponent.class))
 		    		res.addAll(getAttributes((CaseComponent)a.getValue(cc)));
 		        else
 		    		res.add(a);
+		    }
+		        
 		} catch (AttributeAccessException e)
 		{
 		    org.apache.commons.logging.LogFactory.getLog(AttributeUtils.class).error(e);
@@ -64,19 +70,22 @@ public class AttributeUtils {
 	/**
 	 * Returns the list of attributes of a CaseComponents and all its sub-caseComponents which values are instance of a given class
 	 */
-	public static Collection<Attribute> getAttributes(CaseComponent cc, Class _class)
+	public static Collection getAttributes(CaseComponent cc, Class _class)
 	{
 	    	if(cc == null)
 	    	    return null;
-	    	Collection<Attribute> res = new ArrayList<Attribute>();
+	    	Collection res = new ArrayList();
 	    	try
 		{
 		    Attribute[] ats = getAttributes(cc.getClass());
-		    for(Attribute a: ats)
-		        if(a.getType().equals(CaseComponent.class))
+		    for(Object on: ats){
+		    	Attribute a = (Attribute)on;
+		    	if(a.getType().equals(CaseComponent.class))
 		    		res.addAll(getAttributes((CaseComponent)a.getValue(cc)));
 		        else if(_class.isInstance(a.getValue(cc)))
 		    		res.add(a);
+		    }
+		        
 		} catch (AttributeAccessException e)
 		{
 		    org.apache.commons.logging.LogFactory.getLog(AttributeUtils.class).error(e);
@@ -95,8 +104,9 @@ public class AttributeUtils {
 			if(at.getDeclaringClass().equals(cc.getClass()))
 				return cc;
 			Attribute[] atts = getAttributes(cc.getClass());
-			for(Attribute a : atts)
+			for(Object on : atts)
 			{
+				Attribute a = (Attribute)on;
 				Object o = a.getValue(cc);
 				if(o == null)
 					continue;

@@ -31,7 +31,6 @@ public class FileIO {
 	 * <li>"/"+path inside a jar
 	 * </ul>
 	 */
-	@SuppressWarnings("deprecation")
 	public static URL findFile(String file)
 	{
 		

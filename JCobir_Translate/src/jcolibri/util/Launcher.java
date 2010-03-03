@@ -62,7 +62,7 @@ public class Launcher
         		System.out.println("Adding library: "+libraries[i]);
         	}
         	
-        	Class<?> mainClass = Class.forName(args[0]);
+        	Class mainClass = Class.forName(args[0]);
         	org.apache.commons.logging.LogFactory.getLog(Launcher.class).info("Executing class: "+args[0]);
         	Method mainMethod = mainClass.getMethod("main", args.getClass());
         	
@@ -86,7 +86,7 @@ public class Launcher
      */
     public static void addURLtoClassLoader(URL u) throws IOException {	
     	URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-    	Class<URLClassLoader> sysclass = URLClassLoader.class;
+    	Class sysclass = URLClassLoader.class;
      
     	try {
     		//Please don't read this code. It is a dark way to invoke a private method using reflection.
@@ -107,7 +107,7 @@ public class Launcher
     protected static URL[] getClassPath(String classpathfile) throws Exception
     {
         
-        java.util.ArrayList<URL> CLASSPATH = new java.util.ArrayList<URL>();
+        java.util.ArrayList CLASSPATH = new java.util.ArrayList();
         try
         {
             DocumentBuilder db = DocumentBuilderFactory.newInstance()

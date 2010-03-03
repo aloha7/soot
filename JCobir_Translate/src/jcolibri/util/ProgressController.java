@@ -32,8 +32,8 @@ public class ProgressController {
 	/** Defines unknown number of steps for a progress */
 	public static final int UNKNOWN_STEPS = -1;
 	
-	static Hashtable<Class, Collection<ProgressListener>> listeners = new Hashtable<Class, Collection<ProgressListener>>();
-	static Collection<ProgressListener> listenersEverything = new ArrayList<ProgressListener>();
+	static Hashtable listeners = new Hashtable();
+	static Collection listenersEverything = new ArrayList();
 	
 	/**
 	 * Removes all listeners
@@ -49,10 +49,10 @@ public class ProgressController {
 	 */
 	public static void register(ProgressListener pl, Class c)
 	{
-		Collection<ProgressListener> l = listeners.get(c);
+		Collection l = (Collection)listeners.get(c);
 		if(l==null)
 		{
-			l = new ArrayList<ProgressListener>();
+			l = new ArrayList();
 			listeners.put(c, l);
 		}
 		l.add(pl);
@@ -71,7 +71,7 @@ public class ProgressController {
 	 */
 	public static void deregister(ProgressListener pl, Class c)
 	{
-		Collection<ProgressListener> l = listeners.get(c);
+		Collection l = (Collection)listeners.get(c);
 		if(l!=null)
 			l.remove(pl);
 	}
@@ -92,12 +92,20 @@ public class ProgressController {
 	 */
 	public static void init(Class c, String info, int numberOfSteps)
 	{
-		Collection<ProgressListener> ls = listeners.get(c);
-		if(ls!=null)
-			for(ProgressListener pl: ls)
+		Collection ls = (Collection)listeners.get(c);
+		if(ls!=null){
+			for(Object on: ls){
+				ProgressListener pl = (ProgressListener)on;
 				pl.init(info, numberOfSteps);
-		for(ProgressListener pl: listenersEverything)
+			}
+				
+		}
+			
+		for(Object om: listenersEverything){
+			ProgressListener pl = (ProgressListener)om;
 			pl.init(info, numberOfSteps);
+		}
+			
 	}
 	
 	/**
@@ -105,12 +113,19 @@ public class ProgressController {
 	 */
 	public static void step(Class c)
 	{
-		Collection<ProgressListener> ls = listeners.get(c);
-		if(ls!=null)
-			for(ProgressListener pl:ls)
+		Collection ls = (Collection)listeners.get(c);
+		if(ls!=null){
+			for(Object on:ls){
+				ProgressListener pl = (ProgressListener)on;
 				pl.step();
-		for(ProgressListener pl: listenersEverything)
+			}
+		}
+			
+		for(Object om: listenersEverything){
+			ProgressListener pl = (ProgressListener)om;
 			pl.step();
+		}
+			
 		
 	}
 	
@@ -119,13 +134,18 @@ public class ProgressController {
 	 */
 	public static void finish(Class c)
 	{
-		Collection<ProgressListener> ls = listeners.get(c);
-		if(ls!=null)
-			for(ProgressListener pl:ls)
+		Collection ls = (Collection)listeners.get(c);
+		if(ls!=null){
+			for(Object on:ls){
+				ProgressListener pl = (ProgressListener)on;
 				pl.finish();
-		for(ProgressListener pl: listenersEverything)
+			}
+		}
+			
+		for(Object om: listenersEverything){
+			ProgressListener pl = (ProgressListener)om;
 			pl.finish();
-
+		}
 	}
 	
 }

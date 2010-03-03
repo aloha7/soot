@@ -44,7 +44,7 @@ public interface CBRCaseBase {
 	 * 
 	 * @return all the cases available on this case base
 	 */
-	public Collection<CBRCase> getCases();
+	public Collection getCases();
 	
 	
     /**
@@ -52,7 +52,7 @@ public interface CBRCaseBase {
      * @param filter a case base filter
      * @return a collection of cases
      */
-    public Collection<CBRCase> getCases(CaseBaseFilter filter);
+    public Collection getCases(CaseBaseFilter filter);
 
 
 	/**
@@ -61,7 +61,7 @@ public interface CBRCaseBase {
 	 * @param cases
 	 *            to be added
 	 */
-	public void learnCases(Collection<CBRCase> cases);
+	public void learnCases(Collection cases);
 
 	/**
 	 * Removes a collection of new CBRCase objects to the current case base
@@ -69,7 +69,7 @@ public interface CBRCaseBase {
 	 * @param cases
 	 *            to be removed
 	 */
-	public void forgetCases(Collection<CBRCase> cases);
+	public void forgetCases(Collection cases);
 
 
 

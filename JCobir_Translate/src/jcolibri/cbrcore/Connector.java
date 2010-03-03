@@ -47,7 +47,7 @@ public interface Connector {
 	 * @param cases
 	 *            List of cases
 	 */
-	public void storeCases(Collection<CBRCase> cases);
+	public void storeCases(Collection cases);
 
 	/**
 	 * Deletes given cases for the storage media
@@ -55,18 +55,18 @@ public interface Connector {
 	 * @param cases
 	 *            List of cases
 	 */
-	public void deleteCases(Collection<CBRCase> cases);
+	public void deleteCases(Collection cases);
 
 	/**
 	 * Returns max cases without any special consideration
 	 * 
 	 * @return The list of retrieved cases
 	 */
-	public Collection<CBRCase> retrieveAllCases();
+	public Collection retrieveAllCases();
 
 	/**
 	 * Retrieves some cases depending on the filter. TODO.
 	 */
-	public Collection<CBRCase> retrieveSomeCases(CaseBaseFilter filter);
+	public Collection retrieveSomeCases(CaseBaseFilter filter);
 
 }
