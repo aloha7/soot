@@ -29,11 +29,14 @@ public class SelectCases
      * @param cases to select
      * @return all cases
      */
-    public static Collection<CBRCase> selectAll(Collection<RetrievalResult> cases)
+    public static Collection selectAll(Collection cases)
     {
-	Collection<CBRCase> res = new ArrayList<CBRCase>();
-	for(RetrievalResult rr: cases)
+	Collection res = new ArrayList();
+	for(Object on: cases){
+		RetrievalResult rr = (RetrievalResult)on;
 		res.add(rr.get_case());
+	}
+		
 	return res;
     }
     
@@ -43,12 +46,12 @@ public class SelectCases
      * @param k is the number of csaes to select
      * @return top k cases
      */
-    public static Collection<CBRCase> selectTopK(Collection<RetrievalResult> cases, int k)
+    public static Collection selectTopK(Collection cases, int k)
     {
-	ArrayList<CBRCase> res = new ArrayList<CBRCase>();
-	Iterator<RetrievalResult> cIter  =cases.iterator(); 
+	ArrayList res = new ArrayList();
+	Iterator cIter  =cases.iterator(); 
 	for(int c=0; c<k && c<cases.size(); c++)
-	    res.add(cIter.next().get_case());
+	    res.add(((RetrievalResult)cIter.next()).get_case());
 	return res;    
     }
     
@@ -57,7 +60,7 @@ public class SelectCases
      * @param cases to select
      * @return all cases into RetrievalResult objects
      */
-    public static Collection<RetrievalResult> selectAllRR(Collection<RetrievalResult> cases)
+    public static Collection selectAllRR(Collection cases)
     {
 	return cases;
     }
@@ -67,12 +70,12 @@ public class SelectCases
      * @param cases to select
      * @return top k cases into RetrievalResult objects
      */
-    public static Collection<RetrievalResult> selectTopKRR(Collection<RetrievalResult> cases, int k)
+    public static Collection selectTopKRR(Collection cases, int k)
     {
-	ArrayList<RetrievalResult> res = new ArrayList<RetrievalResult>();
-	Iterator<RetrievalResult> cIter  =cases.iterator(); 
+	ArrayList res = new ArrayList();
+	Iterator cIter  =cases.iterator(); 
 	for(int c=0; c<k && c<cases.size(); c++)
-	    res.add(cIter.next());
+	    res.add((RetrievalResult)cIter.next());
 	return res;    
     }
 }
