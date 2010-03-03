@@ -31,10 +31,11 @@ public class LuceneIndexCreator {
 	 * This method creates a LuceneDocument for each case, and adds a new field for each attribute (recived as parameter). 
 	 * The name and content of the Lucene document field is the name and content of the attribute.
 	 */
-	public static LuceneIndex createLuceneIndex(CBRCaseBase casebase, Collection<Attribute> fields)
+	public static LuceneIndex createLuceneIndex(CBRCaseBase casebase, Collection fields)
 	{
-		for(Attribute field: fields)
+		for(Object on: fields)
 		{	
+			Attribute field = (Attribute)on;
 			Class c = field.getType();
 			if(!Text.class.isAssignableFrom(c))
 			{
@@ -43,12 +44,16 @@ public class LuceneIndexCreator {
 			}
 		}
 		
-		ArrayList<LuceneDocument> docs = new ArrayList<LuceneDocument>();
-		for(CBRCase c: casebase.getCases())
+		ArrayList docs = new ArrayList();
+		for(Object om: casebase.getCases())
 		{
+			CBRCase c = (CBRCase)om;
 			LuceneDocument ld = new LuceneDocument((String)c.getID());
-			for(Attribute field: fields)
+			for(Object ot: fields){
+				Attribute field = (Attribute)ot;
 				ld.addContentField(field.getName(), (Text)jcolibri.util.AttributeUtils.findValue(field, c));
+			}
+				
 			docs.add(ld);
 		}
 		return new LuceneIndex(docs);
@@ -63,8 +68,8 @@ public class LuceneIndexCreator {
 	 */
 	public static LuceneIndex createLuceneIndex(CBRCaseBase casebase)
 	{
-	    	CBRCase _case = casebase.getCases().iterator().next();
-	    	Collection<Attribute> attributes = new ArrayList<Attribute>();
+	    	CBRCase _case = (CBRCase)casebase.getCases().iterator().next();
+	    	Collection attributes = new ArrayList();
 	    	if(_case.getDescription() != null)
 	    	    attributes.addAll(jcolibri.util.AttributeUtils.getAttributes(_case.getDescription(), Text.class));
 	    	if(_case.getSolution() != null)
