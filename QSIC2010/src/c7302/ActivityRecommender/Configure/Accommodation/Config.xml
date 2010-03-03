@@ -1,0 +1,7 @@
+<DataBaseConfiguration>
+	<HibernateConfigFile>c7302/ActivityRecommender/Configure/Accommodation/hibernate.cfg.xml</HibernateConfigFile>
+	<DescriptionMappingFile>c7302/ActivityRecommender/Configure/Accommodation/Description.hbm.xml</DescriptionMappingFile>
+	<DescriptionClassName>c7302.ActivityRecommender.Accommodation.Description</DescriptionClassName>
+	<SolutionMappingFile>c7302/ActivityRecommender/Configure/Accommodation/Solution.hbm.xml</SolutionMappingFile>
+	<SolutionClassName>c7302.ActivityRecommender.Accommodation.Solution</SolutionClassName>
+</DataBaseConfiguration>

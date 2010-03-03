@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+<class name="c7302.ActivityRecommender.Accommodation.Description" table="accommodation_casebase">
+	<id name="caseId" column="CaseId"></id>
+	
+	<property name="timestamp" column="Timestamp"/>
+  	
+  	<property name="roomType" column="RoomType">
+		<type name="jcolibri.connector.databaseutils.EnumUserType">
+			<param name="enumClassName">c7302.ActivityRecommender.Accommodation.Description$RoomType</param>
+    	</type>
+  	</property>
+  	
+  	<property name="expenditure" column="Expenditure"/>
+	
+	<property name="paymentMethod" column="PaymendMethod">
+		<type name="jcolibri.connector.databaseutils.EnumUserType">
+			<param name="enumClassName">c7302.ActivityRecommender.Accommodation.Description$PaymentMethod</param>
+    	</type>
+  	</property>
+	
+	<property name="facility" column="Facility"></property>
+	
+	<property name="accomType" column="AccomType">
+		<type name="jcolibri.connector.databaseutils.EnumUserType">
+			<param name="enumClassName">c7302.ActivityRecommender.Accommodation.Description$AccomType</param>
+    	</type>
+  	</property>
+  	
+  	<property name="gpsLocation" column="GPSLocation"/>
+  	
+  	<property name="rate" column="Rate"/>
+</class>
+</hibernate-mapping>

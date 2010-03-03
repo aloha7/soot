@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+<class name="c7302.ActivityRecommender.Accommodation.Solution" table="accommodation_casebase">
+	<id name="caseId" column="CaseId"></id>
+	<property name="poiID" column="PoiID"/>
+	<property name="name" column="Name"/>
+	<property name="address" column="Address"/>
+        <property name="stay" column="Stay"/>
+</class>
+</hibernate-mapping>
+
