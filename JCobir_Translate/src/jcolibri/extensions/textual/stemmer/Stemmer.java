@@ -71,7 +71,7 @@ public class Stemmer {
 		if (_stemmer == null)
 			return word;
 		_stemmer.setCurrent(word.toLowerCase());
-//		_stemmer.stem();
+		_stemmer.stem();
 		return _stemmer.getCurrent();
 	}
 	
