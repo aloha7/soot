@@ -40,9 +40,9 @@ public class LuceneRetrieval {
 	 * @param k max number of retrieved cases
 	 * @see jcolibri.method.precycle.LuceneIndexCreator
 	 */
-	public static Collection<RetrievalResult> LuceneRetrieve(CBRCaseBase casebase, CBRQuery query, LuceneIndex index, Attribute searchField, boolean normalized, int k)
+	public static Collection LuceneRetrieve(CBRCaseBase casebase, CBRQuery query, LuceneIndex index, Attribute searchField, boolean normalized, int k)
 	{
-		ArrayList<RetrievalResult> res = new ArrayList<RetrievalResult>();
+		ArrayList res = new ArrayList();
 		Object queryString = jcolibri.util.AttributeUtils.findValue(searchField, query);
 		if(!(queryString instanceof Text))
 		{
@@ -71,8 +71,9 @@ public class LuceneRetrieval {
 		}
 		else // O(n)
 		{
-			for(CBRCase c: casebase.getCases())
+			for(Object on: casebase.getCases())
 			{
+				CBRCase c = (CBRCase)on;
 				try {
 					Object descIDObj = c.getDescription().getIdAttribute().getValue(c.getDescription());
 					String descID = (String)descIDObj;
