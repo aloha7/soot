@@ -118,33 +118,6 @@ public class ASE10 {
 				sb.append("\n");
 			}
 			
-			
-			
-//			threshold_counter = classifyDiff(AS_diffs, 0.1);
-//			sb.append(threshold_counter.get(0.1)+" (" + format.format((double)threshold_counter.get(0.1)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(-0.1)+" (" + format.format((double)threshold_counter.get(-0.1)*100/(double)AS_diffs.size()) + "%)\n");
-//			
-//			threshold_counter = classifyDiff(ASU_diffs, 0.05);
-//			sb.append("ASU\t").append(threshold_counter.get(0.05)+" (" + format.format((double)threshold_counter.get(0.05)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(-0.05)+" (" + format.format((double)threshold_counter.get(-0.05)*100/(double)AS_diffs.size()) + "%)\t");
-//			
-//			threshold_counter = classifyDiff(ASU_diffs, 0.1);
-//			sb.append(threshold_counter.get(0.1)+" (" + format.format((double)threshold_counter.get(0.1)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(-0.1)+" (" + format.format((double)threshold_counter.get(-0.1)*100/(double)AS_diffs.size()) + "%)\n");
-//			
-//			threshold_counter = classifyDiff(A2SU_diffs, 0.05);
-//			sb.append("A2SU\t").append(threshold_counter.get(0.05)+" (" + format.format((double)threshold_counter.get(0.05)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(-0.05)+" (" + format.format((double)threshold_counter.get(-0.05)*100/(double)AS_diffs.size()) + "%)\t");
-//			
-//			threshold_counter = classifyDiff(A2SU_diffs, 0.1);
-//			sb.append(threshold_counter.get(0.1)+" (" + format.format((double)threshold_counter.get(0.1)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_diffs.size()) + "%)\t").
-//			append(threshold_counter.get(-0.1)+" (" + format.format((double)threshold_counter.get(-0.1)*100/(double)AS_diffs.size()) + "%)\n");
-			
 			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
 			""+date+"/" + size_ART + "/effectivenessDiff.txt";
 			Logger.getInstance().setPath(filename, false);
@@ -184,10 +157,10 @@ public class ASE10 {
 		boolean containHeader = false;
 		StringBuilder sb = new StringBuilder();
 		
-		for(int i = 0; i < rename.length; i ++){
-			sb.append(rename[i]).append("\t");	
-		}
-		sb.append("\n");
+//		for(int i = 0; i < rename.length; i ++){
+//			sb.append(rename[i]).append("\t");	
+//		}
+//		sb.append("\n");
 		
 		HashMap<String, ArrayList<TestSet>> criterion_TestSets = new HashMap<String, ArrayList<TestSet>>();
 		int testSetNum = 0;
@@ -202,41 +175,23 @@ public class ASE10 {
 		
 		//2010-03-15: list the detailed generation time and descriptions of these time
 		//list the generation time for each testing criterion
-		for(int j = 0; j < testSetNum; j ++){
-			
-			for(int i = 0; i < criteria.length; i ++){
-				String criterion = criteria[i];
-				ArrayList<TestSet> testSets = criterion_TestSets.get(criterion);
-				sb.append(testSets.get(j).geneTime).append("\t");
-			}		
-			sb.append("\n");
-		}
-		
-		
-		sb.append("Criterion\t").append("min").append("\t").append("mean").append("\t").
-		append("median").append("\t").append("max").append("\t").append("std").append("\n");
-		
-		for(int i = 0; i < criteria.length; i ++){
-			String criterion = criteria[i];
-			
-			
-			ArrayList<TestSet> testSets = criterion_TestSets.get(criterion);
-			
-			double[] generationTime = new double[testSets.size()];
-			for(int j = 0; j < generationTime.length; j ++){
-				generationTime[j] = testSets.get(j).geneTime;
-			}
-			
-			DataDescriptionResult description = DataAnalyzeManager.getDataDescriptive(generationTime);
-			sb.append(rename[i]).append("\t").append(""+ description.min).append("\t").
-			append(description.mean).append("\t").append(""+description.median).append("\t").
-			append(description.max).append("\t").append(description.std).append("\n");						
-		}
-		
-		//2010-03-16: only list the mean generation time
-//		sb.append("Criterion\t").append("mean\n");
+//		for(int j = 0; j < testSetNum; j ++){
+//			
+//			for(int i = 0; i < criteria.length; i ++){
+//				String criterion = criteria[i];
+//				ArrayList<TestSet> testSets = criterion_TestSets.get(criterion);
+//				sb.append(testSets.get(j).geneTime).append("\t");
+//			}		
+//			sb.append("\n");
+//		}
+//		
+//		
+//		sb.append("Criterion\t").append("min").append("\t").append("mean").append("\t").
+//		append("median").append("\t").append("max").append("\t").append("std").append("\n");
+//		
 //		for(int i = 0; i < criteria.length; i ++){
 //			String criterion = criteria[i];
+//			
 //			
 //			ArrayList<TestSet> testSets = criterion_TestSets.get(criterion);
 //			
@@ -244,9 +199,27 @@ public class ASE10 {
 //			for(int j = 0; j < generationTime.length; j ++){
 //				generationTime[j] = testSets.get(j).geneTime;
 //			}
+//			
 //			DataDescriptionResult description = DataAnalyzeManager.getDataDescriptive(generationTime);
-//			sb.append(rename[i]).append("\t").append(description.mean).append("\n");			
+//			sb.append(rename[i]).append("\t").append(""+ description.min).append("\t").
+//			append(description.mean).append("\t").append(""+description.median).append("\t").
+//			append(description.max).append("\t").append(description.std).append("\n");						
 //		}
+		
+		//2010-03-16: only list the mean generation time
+		sb.append("Criterion\t").append("mean\n");
+		for(int i = 0; i < criteria.length; i ++){
+			String criterion = criteria[i];
+			
+			ArrayList<TestSet> testSets = criterion_TestSets.get(criterion);
+			
+			double[] generationTime = new double[testSets.size()];
+			for(int j = 0; j < generationTime.length; j ++){
+				generationTime[j] = testSets.get(j).geneTime;
+			}
+			DataDescriptionResult description = DataAnalyzeManager.getDataDescriptive(generationTime);
+			sb.append(rename[i]).append("\t").append(description.mean).append("\n");			
+		}
 		
 		String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
 		""+date+"/" + size_ART + "/genTime.txt";
