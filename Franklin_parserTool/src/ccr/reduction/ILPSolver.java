@@ -935,14 +935,13 @@ public class ILPSolver {
 			int testSetId = testSets.size();
 			ILPOutput output_oracle = solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
 					criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime);
-			System.out.println("[ILPSolver.buildAndSolveILPs_BiCriteria_Manager_CD]TestSetNum:"+ testSets.size());
+			
 			TestSet testSet_temp = output_oracle.reducedTestSet;
 			testSet_temp.index = "" + output_oracle.reducedTestSet;
 			testSets.add(testSet_temp);
+			System.out.println("[ILPSolver.buildAndSolveILPs_BiCriteria_Manager_CD]TestSetNum:"+ testSets.size());
 			
 			index_excludedTestCase ++;
-			
-			
 			int usedTestCaseNum;
 			StringBuilder sb = new StringBuilder();			
 			sb.append("Oracle objective value:" + output_oracle.objectiveValue).append("\n");
@@ -979,6 +978,7 @@ public class ILPSolver {
 					usedTestCaseNum = testCases_disabled.size();
 					
 				}while(testSets.size() < testSetNum && index_excludedTestCase < usedTestCaseNum);
+				System.out.println("Hello");
 			}
 			String filename ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/ILPModel/"+ criterion + "/ObjectiveDistance.txt";;
