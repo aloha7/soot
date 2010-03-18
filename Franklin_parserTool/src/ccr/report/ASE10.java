@@ -663,12 +663,13 @@ public class ASE10 {
 				String mutantFile_date = str.substring(str.indexOf(":")+1);			
 				
 				str = br.readLine();
-				String mutantTestingDetail_date = str.substring(str.indexOf(":")+1);				
+				String mutantDetailDir = System.getProperty("user.dir") + "/src/ccr"
+				+ "/experiment/Context-Intensity_backup/TestHarness/" + str.substring(str.indexOf(":")+1);				
 				br.close();
 				
 				saveFDR_ILPModel_offline(date, criteria, alpha_min, alpha_max, alpha_interval, 
 						betas_min, betas_max, testSetNum, timeLimit, sleepTime, 
-						mutantFile_date, mutantTestingDetail_date);
+						mutantFile_date, mutantDetailDir);
 				
 			
 			}else{
