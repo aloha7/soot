@@ -98,23 +98,23 @@ public class Reporter_Reduction {
 		containHeader_mutant, mutantDetailDir, containHeader_testing);
 		
 		//2010-03-18: for debugging purpose
-		StringBuilder sb = new StringBuilder();
-		Iterator<String> mutants = mutant_validTestCases.keySet().iterator();
-		while(mutants.hasNext()){
-			String mutant = mutants.next();
-			ArrayList<String> validTestCases = mutant_validTestCases.get(mutant);
-			if(validTestCases.size() < 10){
-				sb.append(mutant).append("\t").append(validTestCases.size()).append("\t");
-				for(int i = 0; i < validTestCases.size(); i ++){
-					sb.append(validTestCases.get(i)).append("\t");
-				}
-				sb.append("\n");
-			}
-		}
-		String filename = "c:\\a.txt";
-		Logger.getInstance().setPath(filename, false);
-		Logger.getInstance().write(sb.toString());
-		Logger.getInstance().close();
+//		StringBuilder sb = new StringBuilder();
+//		Iterator<String> mutants = mutant_validTestCases.keySet().iterator();
+//		while(mutants.hasNext()){
+//			String mutant = mutants.next();
+//			ArrayList<String> validTestCases = mutant_validTestCases.get(mutant);
+//			if(validTestCases.size() < 10){
+//				sb.append(mutant).append("\t").append(validTestCases.size()).append("\t");
+//				for(int i = 0; i < validTestCases.size(); i ++){
+//					sb.append(validTestCases.get(i)).append("\t");
+//				}
+//				sb.append("\n");
+//			}
+//		}
+//		String filename = "c:\\a.txt";
+//		Logger.getInstance().setPath(filename, false);
+//		Logger.getInstance().write(sb.toString());
+//		Logger.getInstance().close();
 		
 		Iterator<String> ite_mutant = mutant_validTestCases.keySet().iterator();
 		while(ite_mutant.hasNext()){
@@ -891,12 +891,12 @@ public class Reporter_Reduction {
 			for(int i = sizeConstraint_min; i < sizeConstraint_max; i ++){
 				int sizeConstraint = i;
 				//2010-02-07: only interest in the first reduced test set with a given sizeConstraint
-				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
-				"\\_0\\_output\\.txt";	
+//				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+//				"\\_0\\_output\\.txt";	
 				
 				//2010-03-18: interest in multiple reduced test sets with a 
-//				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
-//				"\\_[0-9]+\\_output\\.txt";
+				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+				"\\_[0-9]+\\_output\\.txt";
 				
 				 ArrayList<TestSet> testsets = TestSetStatistics.loadReducedTestSet_offline(
 						testSetDir, containHeader, pattern);
