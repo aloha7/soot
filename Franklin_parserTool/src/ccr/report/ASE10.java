@@ -696,11 +696,11 @@ public class ASE10 {
 	public static void saveFDR_ILPModel_offline(String date, String[] criteria, double alpha_min,
 			double alpha_max, double alpha_interval, int[] betas_min, 
 			int[] betas_max, int testSetNum, long timeLimit,
-			long sleepTime, String mutantFile_date, String mutantDetail_date){
+			long sleepTime, String mutantFile_date, String mutantDetailDir){
 		
 		//1. build and solve bi-criteria ILP models via sequential rather than concurrent model 
-		buildAndSolveILPs_BiCriteria_concurrent(date, criteria, 
-				alpha_min, alpha_max, alpha_interval, betas_min, betas_max, testSetNum, timeLimit, sleepTime);
+//		buildAndSolveILPs_BiCriteria_concurrent(date, criteria, 
+//				alpha_min, alpha_max, alpha_interval, betas_min, betas_max, testSetNum, timeLimit, sleepTime);
 		
 		//2. save the fault detection rate of reduced test suites in offline way
 		for(int i = 0; i < criteria.length; i ++){
@@ -710,19 +710,20 @@ public class ASE10 {
 			boolean containHeader_testing = true;
 			boolean single_enabled = false;
 			
-			HashMap<Double, Double> alpha_fdr = new HashMap<Double, Double>();
+			HashMap<Double, HashMap<String, Double>> alpha_mutant_fdr = new 
+				HashMap<Double, HashMap<String,Double>>();
 			int sizeConstraint_min =  betas_min[i];
 			int sizeConstraint_max =  betas_max[i];
 			
-			alpha_fdr = Reporter_Reduction.getFaultDetectionRate_averaged_BILP_offline(date, criterion, mutantFile_date, containHeader_mutant, 
-					mutantDetail_date, containHeader_testing, alpha_min, alpha_max, 
-					alpha_interval, sizeConstraint_min, sizeConstraint_max, single_enabled);
+			alpha_mutant_fdr = Reporter_Reduction.getFaultDetectionRate_detailed_BILP_offline(date, 
+					criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
+					alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, single_enabled);
 			
 			
 			String saveFile = System.getProperty("user.dir") + "/src/ccr"
 			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
-			+ "/ILPModel/"+ criterion+"/FaultDetectionRate_First.txt";
-			Reporter_Reduction.saveToFile_alpha_fdr(alpha_fdr, saveFile);
+			+ "/ILPModel/"+ criterion+"/FaultDetectionRate_AllEquivalencies.txt";
+			Reporter_Reduction.saveToFile_alpha_mutant_fdrs(alpha_mutant_fdr, saveFile);
 			
 			long duration = System.currentTimeMillis() - start;
 			System.out.println("[Reporter_Reduction.Main]It takes " + duration/(1000*60) + " mins for " + criterion);
@@ -860,8 +861,8 @@ public class ASE10 {
 			//2010-03-18:build and solve ILP models, and then save the 
 			//fault detection rate of reduced test suites in offline way 		
 			String date_configurationFile = "20100315";
-			String criterion = "All1ResolvedDU";
-			if(args.length == 2){
+			String criterion = "All2ResolvedDU";
+			if(args.length == 3){
 				date_configurationFile = args[1];
 				criterion = args[2];
 			}
