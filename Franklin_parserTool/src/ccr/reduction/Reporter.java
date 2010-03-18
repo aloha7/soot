@@ -76,7 +76,8 @@ public class Reporter_Reduction {
 	}
 	
 	/**2010-01-27: decouple this method from from getValidTestCases_testSet_mutant()
-	 * to reused by test suite reduction experiments
+	 * to reused by test suite reduction experiments. For a given mutant and a set of test sets,
+	 * return all valid test cases within a test set to kill it
 	 * 
 	 * @param testSetArray
 	 * @param mutantFile_date
@@ -96,7 +97,25 @@ public class Reporter_Reduction {
 		HashMap<String, ArrayList<String>> mutant_validTestCases = getMutant_ValidTestCases_offline(mutantFile_date, 
 		containHeader_mutant, mutantDetailDir, containHeader_testing);
 		
-
+		//2010-03-18: for debugging purpose
+		StringBuilder sb = new StringBuilder();
+		Iterator<String> mutants = mutant_validTestCases.keySet().iterator();
+		while(mutants.hasNext()){
+			String mutant = mutants.next();
+			ArrayList<String> validTestCases = mutant_validTestCases.get(mutant);
+			if(validTestCases.size() < 10){
+				sb.append(mutant).append("\t").append(validTestCases.size()).append("\t");
+				for(int i = 0; i < validTestCases.size(); i ++){
+					sb.append(validTestCases.get(i)).append("\t");
+				}
+				sb.append("\n");
+			}
+		}
+		String filename = "c:\\a.txt";
+		Logger.getInstance().setPath(filename, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+		
 		Iterator<String> ite_mutant = mutant_validTestCases.keySet().iterator();
 		while(ite_mutant.hasNext()){
 			String mutantID = ite_mutant.next();
@@ -146,6 +165,7 @@ public class Reporter_Reduction {
 		
 	}
 	
+	
 	/**2010-01-27: given some test sets and some mutants, return the fault detection rate
 	 * of each test set with respect to each mutant (online way is useful for test suite reduction)
 	 * 
@@ -173,21 +193,33 @@ public class Reporter_Reduction {
 			HashMap<String, ArrayList<String>> testSet_validTestCases = 
 				mutant_testSet_validTestCases.get(mutant);
 			
-			
-			Iterator<String> ite_testSet = testSet_validTestCases.keySet().iterator();
-			//2. if there is one valid test case with a test set, then this set is valid to kill this mutant
-			int validTestSet_counter = 0;
-			while(ite_testSet.hasNext()){
-				String testSet = ite_testSet.next();
-				ArrayList<String> validTestCases = testSet_validTestCases.get(testSet);
-				if(validTestCases.size() > 0){
-					validTestSet_counter ++;
+			//2010-03-18: when the number of test sets is larger than 1, then FDR = percentage of valid test sets 
+			//which contain at least one test case to kill a mutant
+//			if(testSet_validTestCases.size() > 1){
+				Iterator<String> ite_testSet = testSet_validTestCases.keySet().iterator();
+				//2. if there is one valid test case with a test set, then this set is valid to kill this mutant
+				int validTestSet_counter = 0;
+				while(ite_testSet.hasNext()){
+					String testSet = ite_testSet.next();
+					ArrayList<String> validTestCases = testSet_validTestCases.get(testSet);
+					if(validTestCases.size() > 0){
+						validTestSet_counter ++;
+					}
 				}
-			}
-			
-			//3. FDR = the percentage of valid test sets
-			double FDR = (double)validTestSet_counter/(double)testSet_validTestCases.size();
-			mutant_FDR.put(mutant, FDR);
+				
+				//3. FDR = the percentage of valid test sets
+				double FDR = (double)validTestSet_counter/(double)testSet_validTestCases.size();
+				mutant_FDR.put(mutant, FDR);	
+//			}else if(testSet_validTestCases.size() == 1){
+//				//2010-03-18: when the number of test sets is 1, then FDR = percentage of valid test cases 
+//				//which can kill a mutant
+//				Iterator<String> ite_testSet = testSet_validTestCases.keySet().iterator();
+//				String testSet = ite_testSet.next();
+//				ArrayList<String> validTestCases = testSet_validTestCases.get(testSet);
+//				double FDR = (double)validTestCases.size()/(double)testSets.get(0).size();
+//					
+//				mutant_FDR.put(mutant, FDR);
+//			}
 		}		
 		return mutant_FDR;
 	}
@@ -234,6 +266,7 @@ public class Reporter_Reduction {
 		return getFaultDetectionRate_average_online(testSets, mutantFile_date,
 				containHeader_mutant, mutantDetailDir, containHeader_testing);
 	}
+
 	
 	/**2010-01-27: given some criterion-adequate test sets and some mutants, 
 	 * return the averaged fault detection rate of the criterion with respect 
@@ -858,12 +891,12 @@ public class Reporter_Reduction {
 			for(int i = sizeConstraint_min; i < sizeConstraint_max; i ++){
 				int sizeConstraint = i;
 				//2010-02-07: only interest in the first reduced test set with a given sizeConstraint
-//				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
-//				"\\_0\\_output\\.txt";	
+				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+				"\\_0\\_output\\.txt";	
 				
 				//2010-03-18: interest in multiple reduced test sets with a 
-				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
-				"\\_[0-9]+\\_output\\.txt";
+//				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+//				"\\_[0-9]+\\_output\\.txt";
 				
 				 ArrayList<TestSet> testsets = TestSetStatistics.loadReducedTestSet_offline(
 						testSetDir, containHeader, pattern);
