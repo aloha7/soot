@@ -326,7 +326,9 @@ public class ILPSolver {
 	}
 	
 	/**2010-03-18: different from buildILPModel_BiCriteria() which tries to 
-	 * maximize CR(the normalized CD), this method tries to maximize CD.
+	 * maximize CR(the normalized CD), this method tries to maximize CD. In addition,
+	 * it removes one test case from the test pool rather than remove all test cases
+	 * within testSets
 	 * 
 	 * @param testcaseFile
 	 * @param containHeader
@@ -335,36 +337,40 @@ public class ILPSolver {
 	 * @param infoFile
 	 * @param maxSize
 	 * @param testSets
+	 * @param index_excludedTestCase: the index of test case which is removed from testSets
 	 * @return
 	 */
 	public static ArrayList<TestCase> buildILPModel_BiCriteria_CD(String testcaseFile, boolean containHeader, 
-			double alpha, String modelFile, String infoFile, int maxSize, ArrayList<TestSet> testSets){
+			double alpha, String modelFile, String infoFile, int maxSize, ArrayList<TestSet> testSets, int index_excludedTestCase){
 		ArrayList<TestCase> tcArray = new ArrayList<TestCase>(); 
 		//1. read info of all test cases
 		tcArray = getStatisticsOfTestCase(testcaseFile, containHeader);
 		int rowNo = tcArray.get(0).hitSet.size();
 		
-		//2010-01-30: 
-		//2. exclude disabled test cases which have been used before;			
-		if(testSets.size() > 0){ //exclude all used test cases
-			
-			ArrayList<String> testCases_disabled = new ArrayList<String>();
-			//a. get all indexes of disabled test cases which are used before 
-			for(int i = 0; i < testSets.size(); i ++){
-				ArrayList<String> testcases = testSets.get(i).testcases;									
-				for(int j = 0; j < testcases.size(); j ++){
-					String testCase = testcases.get(j);
-					if(!testCases_disabled.contains(testCase)){
-						testCases_disabled.add(testCase);	
-					}
+		ArrayList<String> testCases_disabled = new ArrayList<String>();
+		//a. get all indexes of disabled test cases which are used before 
+		for(int i = 0; i < testSets.size(); i ++){
+			ArrayList<String> testcases = testSets.get(i).testcases;									
+			for(int j = 0; j < testcases.size(); j ++){
+				String testCase = testcases.get(j);
+				if(!testCases_disabled.contains(testCase)){
+					testCases_disabled.add(testCase);	
 				}
 			}
+		}
+		int usedTestCaseNum = testCases_disabled.size();
+		
+		//2010-01-30: 
+		//2. exclude disabled test cases which have been used before;			
+		if(testSets.size() > 0 && index_excludedTestCase < usedTestCaseNum && index_excludedTestCase != -1){ //exclude all used test cases
+			
+			String excludedTestCase = testCases_disabled.get(index_excludedTestCase);
 			
 			ArrayList<TestCase> tcArray_enabled = new ArrayList<TestCase>();
 			//b. exclude disable test cases from current test pool				
 			for(int i = 0; i < tcArray.size(); i ++){
 				TestCase tc = tcArray.get(i);
-				if(!testCases_disabled.contains(tc.index)){
+				if(!tc.index.equals(excludedTestCase)){
 					tcArray_enabled.add(tc);
 				}
 			}
@@ -754,7 +760,7 @@ public class ILPSolver {
 		
 		return testSet;
 	}
-	
+
 	/**2010-03-18: different from buildILPModels_BiCriteria_Manager() which tries to 
 	 * maximize CR(the normalized CD), this method tries to maximize CD.
 	 * 
@@ -763,10 +769,11 @@ public class ILPSolver {
 	 * @param alpha
 	 * @param maxSize
 	 * @param testSets
+	 * @param index_excludedTestCase
 	 * @return
 	 */
 	public static ArrayList<TestCase> buildILPModels_BiCriteria_Manager_CD(String date, String criterion,
-			double alpha, int maxSize, ArrayList<TestSet> testSets){
+			double alpha, int maxSize, ArrayList<TestSet> testSets, int index_excludedTestCase){
 		
 		ArrayList<TestCase> testSet = null;
 		boolean containHeader = true;
@@ -788,11 +795,46 @@ public class ILPSolver {
 		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSets.size() +".txt";			
 		testSet = buildILPModel_BiCriteria_CD(testcaseFile, containHeader, alpha, modelFile,
-				infoFile, maxSize, testSets);
+				infoFile, maxSize, testSets, index_excludedTestCase);
 		
 		return testSet;
 	}
 	
+	/**2010-03-18: different from solveILPModels_BiCriteria_Manager_TimeLimited(),
+	 * this method returns a ILPOutput result
+	 * @param date
+	 * @param criterion
+	 * @param tcArray
+	 * @param alpha
+	 * @param maxSize
+	 * @param testSetId
+	 * @param timeLimit
+	 * @param sleepTime
+	 * @return
+	 */
+	public static ILPOutput solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(String date, String criterion,
+			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId, 
+			long timeLimit, long sleepTime){
+		
+		DecimalFormat format = new DecimalFormat("0.0");
+		String alpha_str = format.format(alpha);
+		
+		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize + "_"+ testSetId +".lp";
+		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSetId +".txt";
+		
+		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn]Start to solve the model:(Criterion:" + criterion 
+				+ " ,Alpha:" + alpha_str + ",testSetSize:" + maxSize+ ",testSetID:"+ testSetId + ")");
+
+		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
+				infoFile, timeLimit, sleepTime);
+		
+		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn]Finish to solve the model(Criterion:" + criterion 
+				+ ",Alpha:" + alpha_str + ", testSetSize:"+ maxSize+", testSetID:"+ testSetId + ")"+ "\n");
+		
+		return output;
+	}
 
 	public static TestSet solveILPModels_BiCriteria_Manager_TimeLimited(String date, String criterion,
 			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId, 
@@ -868,23 +910,83 @@ public class ILPSolver {
 		for(double alpha = alpha_min;  Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){
 			ArrayList<TestCase> tcArray = new ArrayList<TestCase>();
 			ArrayList<TestSet> testSets = new ArrayList<TestSet>();
-			for(int i = 0; i < testSetNum; i ++){
-				tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, alpha, maxSize, testSets);
-				
-				//2010-03-18: sequential version
-//				TestSet testSet = solveILPModels_BiCriteria_Manager(
-//						date, criterion, tcArray, alpha, maxSize, i);
-				
-				//2010-01-31: a concurrent version
-				
-				TestSet testSet = solveILPModels_BiCriteria_Manager_TimeLimited(date, 
-						criterion, tcArray, alpha, maxSize, i, timeLimit, sleepTime);
-				
-				if(testSet.size() == 0){ //fail to solve the ILP model
-					break;
-				}
-				testSets.add(testSet);
+//			for(int i = 0; i < testSetNum; i ++){
+//				tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, alpha, maxSize, testSets);
+//				
+//				//2010-03-18: sequential version
+////				TestSet testSet = solveILPModels_BiCriteria_Manager(
+////						date, criterion, tcArray, alpha, maxSize, i);
+//				
+//				//2010-01-31: a concurrent version
+//				
+//				TestSet testSet = solveILPModels_BiCriteria_Manager_TimeLimited(date, 
+//						criterion, tcArray, alpha, maxSize, i, timeLimit, sleepTime);
+//				
+//				if(testSet.size() == 0){ //fail to solve the ILP model
+//					break;
+//				}
+//				testSets.add(testSet);
+//			}
+			
+			int index_excludedTestCase = -1;
+			tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, 
+					alpha, maxSize, testSets, index_excludedTestCase);
+						
+			int testSetId = testSets.size();
+			ILPOutput output_oracle = solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
+					criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime);
+			System.out.println("[ILPSolver.buildAndSolveILPs_BiCriteria_Manager_CD]TestSetNum:"+ testSets.size());
+			TestSet testSet_temp = output_oracle.reducedTestSet;
+			testSet_temp.index = "" + output_oracle.reducedTestSet;
+			testSets.add(testSet_temp);
+			
+			index_excludedTestCase ++;
+			
+			
+			int usedTestCaseNum;
+			StringBuilder sb = new StringBuilder();			
+			sb.append("Oracle objective value:" + output_oracle.objectiveValue).append("\n");
+			//build multiple equivalent optimal solutions when they share the objective values
+			if(index_excludedTestCase < testSets.get(0).size()){
+				do{
+					//build the ILP model which remove the ith used test cases from the model
+					tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, alpha, maxSize, testSets, index_excludedTestCase);
+					testSetId = testSets.size();
+					ILPOutput output = solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
+							criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime);
+					if(Math.abs(output.objectiveValue - output_oracle.objectiveValue) < 0.001){
+						TestSet testSet = output.reducedTestSet;
+						testSet.index = "" + output.reducedTestSet;
+						testSets.add(testSet);
+						System.out.println("[ILPSolver.buildAndSolveILPs_BiCriteria_Manager_CD]TestSetNum:"+ testSets.size());	
+					}else{
+						sb.append(output.objectiveValue).append("\t").
+						append(Math.abs(output.objectiveValue - output_oracle.objectiveValue) + "\n");
+					}
+					index_excludedTestCase ++;
+					
+					ArrayList<String> testCases_disabled = new ArrayList<String>();
+					//a. get all indexes of disabled test cases which are used before 
+					for(int i = 0; i < testSets.size(); i ++){
+						ArrayList<String> testcases = testSets.get(i).testcases;									
+						for(int j = 0; j < testcases.size(); j ++){
+							String testCase = testcases.get(j);
+							if(!testCases_disabled.contains(testCase)){
+								testCases_disabled.add(testCase);	
+							}
+						}
+					}
+					usedTestCaseNum = testCases_disabled.size();
+					
+				}while(testSets.size() < testSetNum && index_excludedTestCase < usedTestCaseNum);
 			}
+			String filename ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/ObjectiveDistance.txt";;
+			Logger.getInstance().setPath(filename, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		
+			
 			alpha_testSets.put(alpha, testSets);
 		}
 		
@@ -916,7 +1018,7 @@ public class ILPSolver {
 			ArrayList<TestCase> tcArray = new ArrayList<TestCase>();
 			ArrayList<TestSet> testSets = new ArrayList<TestSet>();
 			for(int i = 0; i < testSetNum; i ++){
-				tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, alpha, maxSize, testSets);
+				tcArray = buildILPModels_BiCriteria_Manager(date, criterion, alpha, maxSize, testSets);
 				
 				//2010-01-30: a sequential version
 //				TestSet testSet = solveILPModels_BiCriteria_Manager(date, criterion, tcArray,
