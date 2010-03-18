@@ -844,10 +844,12 @@ public class Reporter_Reduction {
 			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/ILPModel/"+ criterion + "/";
 			containHeader = false;
+			
+			//2010-03-18: interest in multiple reduced test sets with varying sizeConstraint
 //			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
 //			"\\_[0-9]+\\_output\\.txt";
 			
-			//2010-02-01:only interest in the first reduced test set
+			//2010-02-01:only interest in the first reduced test set with varying sizeConstraint
 //			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
 //			"\\_0\\_output\\.txt";
 			
@@ -855,8 +857,14 @@ public class Reporter_Reduction {
 			ArrayList<TestSet> testSet_biCriteria = new ArrayList<TestSet>();
 			for(int i = sizeConstraint_min; i < sizeConstraint_max; i ++){
 				int sizeConstraint = i;
+				//2010-02-07: only interest in the first reduced test set with a given sizeConstraint
+//				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+//				"\\_0\\_output\\.txt";	
+				
+				//2010-03-18: interest in multiple reduced test sets with a 
 				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
-				"\\_0\\_output\\.txt";	
+				"\\_[0-9]+\\_output\\.txt";
+				
 				 ArrayList<TestSet> testsets = TestSetStatistics.loadReducedTestSet_offline(
 						testSetDir, containHeader, pattern);
 				 for(int j = 0; j < testsets.size(); j ++){
@@ -868,7 +876,7 @@ public class Reporter_Reduction {
 		
 		
 		//3. combine all test sets
-		if(testSets != null){ //single-objective ILP is enabled
+		if(testSets.size()!=0){ //single-objective ILP is enabled
 			alpha_testSets.put(Double.MIN_VALUE, testSets);
 		}
 		
@@ -1056,7 +1064,7 @@ public class Reporter_Reduction {
 			long sleepTime = Long.parseLong(args[8]); //1000 = 1 second
 			if(timeLimit == 0){ //"0" means no time limit
 				timeLimit = Long.MAX_VALUE;
-				sleepTime = 60 * 60 * 1000; //1 hour
+//				sleepTime = 60 * 60 * 1000; //1 hour
 			}
 			
 			
