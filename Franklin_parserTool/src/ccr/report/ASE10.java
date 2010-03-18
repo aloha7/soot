@@ -124,7 +124,6 @@ public class ASE10 {
 					A2SU_RAH_RAR_diffs.add(A2SU_RAH_RAR_diff);
 					A2SU_RAH_Random_diffs.add(A2SU_RAH_Random_diff);
 				}
-				
 			}
 			
 			DecimalFormat format = new DecimalFormat("0.00");
