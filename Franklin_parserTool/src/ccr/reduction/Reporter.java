@@ -13,6 +13,7 @@ import java.util.Iterator;
 
 import ccr.help.CurveFittingResult;
 import ccr.help.DataAnalyzeManager;
+import ccr.help.DataDescriptionResult;
 import ccr.help.ILPOutput;
 import ccr.help.MutantStatistics;
 import ccr.help.TestSetStatistics;
@@ -266,7 +267,8 @@ public class Reporter_Reduction {
 		return getFaultDetectionRate_average_online(testSets, mutantFile_date,
 				containHeader_mutant, mutantDetailDir, containHeader_testing);
 	}
-
+	
+	
 	
 	/**2010-01-27: given some criterion-adequate test sets and some mutants, 
 	 * return the averaged fault detection rate of the criterion with respect 
@@ -822,6 +824,113 @@ public class Reporter_Reduction {
 		return alpha_size_outputs;
 	}
 	
+	/**2010-03-19: get detailed fdr w.r.t each mutant for a given set of adequate test sets
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param mutantFile_date
+	 * @param containHeader_mutant
+	 * @param mutantDetailDir
+	 * @param containHeader_testing
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
+	 * @param sizeConstraint_min
+	 * @param sizeConstraint_max
+	 * @param single_enabled
+	 * @return
+	 */
+	public static HashMap<Double, HashMap<String, Double>> getFaultDetectionRate_detailed_BILP_offline(String date, String criterion,
+			String mutantFile_date, boolean containHeader_mutant, 
+			String mutantDetailDir, boolean containHeader_testing, double alpha_min, double alpha_max, 
+			double alpha_interval, int sizeConstraint_min, int sizeConstraint_max, boolean single_enabled){
+
+		HashMap<Double, HashMap<String, Double>> alpha_mutant_fdr = new 
+			HashMap<Double, HashMap<String,Double>>();
+		
+		
+		HashMap<Double, ArrayList<TestSet>> alpha_testSets  = new HashMap<Double, ArrayList<TestSet>>();
+		
+		ArrayList<TestSet> testSets = new ArrayList<TestSet>();
+		
+		String testSetDir = "";
+		boolean containHeader = false;
+		String pattern = "";
+		if(single_enabled){
+
+			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			containHeader = false;
+//			pattern = "Model\\_" + criterion +"\\_SingleObj\\_[0-9]+\\_output\\.txt";
+			//2010-02-01:only interest in the first reduced test set
+			pattern = "Model\\_" + criterion +"\\_SingleObj\\_0\\_output\\.txt";
+			testSets = TestSetStatistics.loadReducedTestSet_offline(testSetDir, containHeader, pattern);
+	}
+		
+		
+		//2. reduced test sets of bi-criteria ILP
+		//2010-02-01: for two double we  use "|alpha_max - alpha| > 0.0001" rather than "alpha_max - alpha"
+		// to determine whether alpha_max is larger than alpha or not
+		for(double alpha = alpha_min; Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){
+			DecimalFormat format = new DecimalFormat("0.0");
+			String alpha_str = format.format(alpha);
+			
+			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			containHeader = false;
+			
+			//2010-03-18: interest in multiple reduced test sets with varying sizeConstraint
+//			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+//			"\\_[0-9]+\\_output\\.txt";
+			
+			//2010-02-01:only interest in the first reduced test set with varying sizeConstraint
+//			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+//			"\\_0\\_output\\.txt";
+			
+			//2010-02-07: only interest in the first reduced test set with some size constraint;
+			ArrayList<TestSet> testSet_biCriteria = new ArrayList<TestSet>();
+			for(int i = sizeConstraint_min; i < sizeConstraint_max; i ++){
+				int sizeConstraint = i;
+				//2010-02-07: only interest in the first reduced test set with a given sizeConstraint
+//				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+//				"\\_0\\_output\\.txt";	
+				
+				//2010-03-18: interest in multiple reduced test sets with a 
+				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+				"\\_[0-9]+\\_output\\.txt";
+				
+				 ArrayList<TestSet> testsets = TestSetStatistics.loadReducedTestSet_offline(
+						testSetDir, containHeader, pattern);
+				 for(int j = 0; j < testsets.size(); j ++){
+					 testSet_biCriteria.add(testsets.get(j));
+				 }
+			}
+			alpha_testSets.put(alpha, testSet_biCriteria);
+		}
+		
+		
+		//3. combine all test sets
+		if(testSets.size()!=0){ //single-objective ILP is enabled
+			alpha_testSets.put(Double.MIN_VALUE, testSets);
+		}
+		
+		Double[] alphas = alpha_testSets.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);		
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];
+			ArrayList<TestSet> reducedTestSets = alpha_testSets.get(alpha);
+			
+			//2010-02-01: fix another important bug here
+			HashMap<String, Double> mutant_fdr = getFaultDetectionRate_detailed_online(
+					reducedTestSets, mutantFile_date, containHeader_mutant, mutantDetailDir, 
+					containHeader_testing);
+			
+			alpha_mutant_fdr.put(alpha, mutant_fdr);
+		}
+		
+		return alpha_mutant_fdr;
+	}
+	
 	
 	/**2010-02-01: get averaged fault detection rates of reduced test sets
 	 * with respect to a set of mutants in an offline way
@@ -1005,6 +1114,58 @@ public class Reporter_Reduction {
 		}
 		
 		return alpha_fdr;
+	}
+	
+	
+	
+	public static void saveToFile_alpha_mutant_fdrs(HashMap<Double, HashMap<String, Double>> alpha_mutant_fdr, String saveFile){
+		
+		Double[] alphas = alpha_mutant_fdr.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("Alpha\tMutant\tFaultDetectionRate\n");
+		
+		DecimalFormat format = new DecimalFormat("0.00000");
+		
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];			
+			HashMap<String, Double> mutant_fdr = alpha_mutant_fdr.get(alpha);
+			String[] mutants = mutant_fdr.keySet().toArray(new String[0]);
+			Arrays.sort(mutants);
+			
+			double[] fdrs = new double[mutants.length];
+			
+			if(alpha == Double.MIN_VALUE){
+				for(int j = 0; j < mutants.length; j ++){
+					String mutant = mutants[j];
+					double fdr = mutant_fdr.get(mutant);
+					fdrs[j] = fdr;
+					sb.append("SingleObj").append("\t").append(mutant).append("\t").
+					append(format.format(fdr)).append("\n");
+				}
+				DataDescriptionResult result = DataAnalyzeManager.getDataDescriptive(fdrs);
+				sb.append("min\tmean\tmedian\tmax\tstd\n");
+				sb.append(result.min).append("\t").append(result.mean).append("\t").
+				append(result.median).append("\t").append(result.max).append("\t").append(result.std).append("\n");
+			}else{
+				for(int j = 0; j < mutants.length; j ++){
+					String mutant = mutants[j];
+					double fdr = mutant_fdr.get(mutant);
+					fdrs[j] = fdr;
+					sb.append(format.format(alpha)).append("\t").append(mutant).append("\t").
+					append(format.format(fdr)).append("\n");	
+				}				
+				DataDescriptionResult result = DataAnalyzeManager.getDataDescriptive(fdrs);
+				sb.append("min\tmean\tmedian\tmax\tstd\n");
+				sb.append(result.min).append("\t").append(result.mean).append("\t").
+				append(result.median).append("\t").append(result.max).append("\t").append(result.std).append("\n");
+			}
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
 	}
 	
 	public static void saveToFile_alpha_fdr(HashMap<Double, Double> alpha_fdr, String saveFile){
