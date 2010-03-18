@@ -215,21 +215,12 @@ public class MutantStatistics {
 			System.out.println("There are no faults specified");
 		}
 	}
-
-	/**
-	 * 2010-01-22: load mutants from the file via the offline way.
-	 * 
-	 * @param date
-	 * @param containHeader
-	 * @return
-	 */
-	public static ArrayList<String> loadMutants_offline(String date,
-			boolean containHeader) {
+	
+	public static ArrayList<String> loadFaults_offline(String mutantFile,
+			boolean containHeader){
+		
 		ArrayList<String> mutantList = new ArrayList<String>();
-		String mutantFile = System.getProperty("user.dir") + "/src/ccr"
-				+ "/experiment/Context-Intensity_backup/TestHarness/" + date
-				+ "/Mutant/FaultList.txt";
-
+		
 		File tmp = new File(mutantFile);
 		if (tmp.exists()) {
 			try {
@@ -255,6 +246,23 @@ public class MutantStatistics {
 		}
 
 		return mutantList;
+	}
+	
+	/**
+	 * 2010-01-22: load mutants from the file via the offline way.
+	 * 
+	 * @param date
+	 * @param containHeader
+	 * @return
+	 */
+	public static ArrayList<String> loadMutants_offline(String date,
+			boolean containHeader) {
+		
+		String mutantFile = System.getProperty("user.dir") + "/src/ccr"
+				+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+				+ "/Mutant/FaultList.txt";
+		
+		return loadFaults_offline(mutantFile, containHeader);
 	}
 
 	public HashMap<String, HashMap<String, Integer>> getStatistics_ClassLevel(
