@@ -106,7 +106,7 @@ public class DataAnalyzeManager {
 	 */
 	public static DataDescriptionResult getDataDescriptive(double[] data){
 		DataDescriptionResult descriptionResult = new DataDescriptionResult();
-		
+		Arrays.sort(data);
 		double min = data[0];
 		double max = data[data.length - 1];
 		double sum = 0.0;
