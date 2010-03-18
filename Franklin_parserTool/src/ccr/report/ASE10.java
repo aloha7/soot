@@ -46,9 +46,10 @@ public class ASE10 {
 		return threshold_counter;
 	}
 	
-	public static void saveEffectivenessDifference(String date, String size_ART, double[] diffs){
+	public static String saveEffectivenessDifference(String date, String size_ART, double[] diffs){
 		String testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
 		""+date+"/" + size_ART + "/PerValidTS.txt";
+		StringBuilder sb = new StringBuilder();
 		
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(testSetFile));
@@ -129,36 +130,41 @@ public class ASE10 {
 			DecimalFormat format = new DecimalFormat("0.00");
 			String[] criteria = {"AS", "ASU", "A2SU"};
 			
-			StringBuilder sb = new StringBuilder();
+			//2010-03-18: reformulate the header
 			
-			sb.append("Criterion\t");			
-			for(int k = 0; k < diffs.length; k ++){
-				double diff = diffs[k];
-				sb.append(">"+diff+"\t").append("-" + diff + " to " + diff +"\t").append("<-"+ diff + "\t");			
+			sb.append("\t");
+			for(int k = 0; k < diffs.length; k++){
+				sb.append("n=" + size_ART + "\t");	
 			}
 			sb.append("\n");
-
-			//compare RA-H with CA
-			for(int i = 0; i < criteria.length; i ++){
-				String criterion = criteria[i];
-				sb.append( criterion+"_RAH-CA\t");
-				for(int k = 0; k < diffs.length; k ++){
-					double diff = diffs[k];
-					ArrayList criterion_diffs = null;
-					if(criterion.equals("AS"))
-						criterion_diffs = AS_RAH_CA_diffs;
-					else if(criterion.equals("ASU"))
-						criterion_diffs = ASU_RAH_CA_diffs;
-					else if(criterion.equals("A2SU"))
-						criterion_diffs = A2SU_RAH_CA_diffs;
-					
-					HashMap<Double, Integer> threshold_counter = classifyDiff(criterion_diffs, diff);
-					sb.append(threshold_counter.get(diff)+" (" + format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_CA_diffs.size()) + "%)\t").
-					append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_RAH_CA_diffs.size()) + "%)\t").
-					append(threshold_counter.get(-diff)+" (" + format.format((double)threshold_counter.get(-diff)*100/(double)AS_RAH_CA_diffs.size()) + "%)\t");
-				}
-				sb.append("\n");
+			
+			sb.append("Criterion\t");	
+			//2010-03-18: only interest in ">" items
+			for(int k = 0; k < diffs.length; k ++){
+				double diff = diffs[k];
+				sb.append(">"+diff+"\t");
 			}
+			sb.append("\n");
+			
+			//compare RA-H with CA
+//			for(int i = 0; i < criteria.length; i ++){
+//				String criterion = criteria[i];
+//				sb.append( criterion+"_RAH-CA\t");
+//				for(int k = 0; k < diffs.length; k ++){
+//					double diff = diffs[k];
+//					ArrayList criterion_diffs = null;
+//					if(criterion.equals("AS"))
+//						criterion_diffs = AS_RAH_CA_diffs;
+//					else if(criterion.equals("ASU"))
+//						criterion_diffs = ASU_RAH_CA_diffs;
+//					else if(criterion.equals("A2SU"))
+//						criterion_diffs = A2SU_RAH_CA_diffs;
+//					
+//					HashMap<Double, Integer> threshold_counter = classifyDiff(criterion_diffs, diff);
+//					sb.append(format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_CA_diffs.size()) + "%\t");					
+//				}
+//				sb.append("\n");
+//			}
 			
 			//compare RA-H with RA-L
 			for(int i = 0; i < criteria.length; i ++){
@@ -175,9 +181,7 @@ public class ASE10 {
 						criterion_diffs = A2SU_RAH_RAL_diffs;
 					
 					HashMap<Double, Integer> threshold_counter = classifyDiff(criterion_diffs, diff);
-					sb.append(threshold_counter.get(diff)+" (" + format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_RAL_diffs.size()) + "%)\t").
-					append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_RAH_RAL_diffs.size()) + "%)\t").
-					append(threshold_counter.get(-diff)+" (" + format.format((double)threshold_counter.get(-diff)*100/(double)AS_RAH_RAL_diffs.size()) + "%)\t");
+					sb.append( format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_RAL_diffs.size()) + "%\t");
 				}
 				sb.append("\n");
 			}
@@ -197,9 +201,8 @@ public class ASE10 {
 						criterion_diffs = A2SU_RAH_RAR_diffs;
 					
 					HashMap<Double, Integer> threshold_counter = classifyDiff(criterion_diffs, diff);
-					sb.append(threshold_counter.get(diff)+" (" + format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_RAR_diffs.size()) + "%)\t").
-					append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_RAH_RAR_diffs.size()) + "%)\t").
-					append(threshold_counter.get(-diff)+" (" + format.format((double)threshold_counter.get(-diff)*100/(double)AS_RAH_RAR_diffs.size()) + "%)\t");
+					sb.append(format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_RAR_diffs.size()) + "%\t");
+
 				}
 				sb.append("\n");
 			}
@@ -219,9 +222,8 @@ public class ASE10 {
 						criterion_diffs = A2SU_RAH_Random_diffs;
 					
 					HashMap<Double, Integer> threshold_counter = classifyDiff(criterion_diffs, diff);
-					sb.append(threshold_counter.get(diff)+" (" + format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_Random_diffs.size()) + "%)\t").
-					append(threshold_counter.get(0.0)+" (" + format.format((double)threshold_counter.get(0.0)*100/(double)AS_RAH_Random_diffs.size()) + "%)\t").
-					append(threshold_counter.get(-diff)+" (" + format.format((double)threshold_counter.get(-diff)*100/(double)AS_RAH_Random_diffs.size()) + "%)\t");
+					sb.append(format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_Random_diffs.size()) + "%\t");
+
 				}
 				sb.append("\n");
 			}
@@ -239,6 +241,8 @@ public class ASE10 {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		return sb.toString();
 	}
 	
 	
@@ -837,8 +841,19 @@ public class ASE10 {
 				size_ART = args[2];	
 			}
 			
-			double[] threshold = new double[]{0.05, 0.1}; 
-			saveEffectivenessDifference(date, size_ART, threshold);
+			String[] size_ARTs = {"1", "2", "4", "8", "16", "32", "64", "70"};
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < size_ARTs.length; i ++){
+				size_ART = size_ARTs[i];
+				double[] threshold = new double[]{0.05, 0.1}; 
+				sb.append(saveEffectivenessDifference(date, size_ART, threshold));	
+			}
+			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
+			""+date+"/effectivenessDiff.txt";
+			Logger.getInstance().setPath(filename, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+			
 		}else if(instruction.equals("saveFDR_ILPModel_offline")){
 			//2010-03-18:build and solve ILP models, and then save the 
 			//fault detection rate of reduced test suites in offline way 
