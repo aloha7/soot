@@ -10,6 +10,7 @@ import java.util.HashMap;
 
 import ccr.help.DataAnalyzeManager;
 import ccr.help.DataDescriptionResult;
+import ccr.help.MutantStatistics;
 import ccr.help.TestSetStatistics;
 import ccr.stat.CFG;
 import ccr.stat.Criterion;
@@ -369,9 +370,6 @@ public class ASE10 {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
 	}
 	
 	public static void getAdequateTestSets(int testSetNum, double min_CI, double max_CI, String date,
@@ -414,7 +412,6 @@ public class ASE10 {
 
 							String saveFile = TestSetStatistics.getTestSetFile(date, criterion, testSuiteSize, 
 									oldOrNew, randomOrCriterion, H_L_R, size_ART);
-							
 
 							String appClassName = "TestCFG2_ins";
 							int maxTrials = 2000;
@@ -428,7 +425,6 @@ public class ASE10 {
 							
 							TestSetManager.attachTSWithCI_Activation_replacement(testSets[0],
 									saveFile);
-							
 						}	
 					}else{
 						H_L_R = "R";
@@ -457,7 +453,141 @@ public class ASE10 {
 								saveFile);
 						
 					}
-					
+				}
+			}
+		}
+	}
+	
+	/**2010-03-18: load complex parameters from configuration files and 
+	 * save fault detection rate of adequate test sets for each
+	 * fault w.r.t a given size_ART, and get the descriptions(e.g., min/mean/median/max/std/)
+	 * of fault detection rates
+	 * 
+	 * @param date_configurationFile
+	 */
+	public static void saveTestingResults_TestSets(String date_configurationFile){
+		
+		String configFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
+		""+date_configurationFile+"/saveTestResult_TestSet.txt";
+		try {
+			
+			//1. load test suite generation parameters from configuration files 
+			BufferedReader br = new BufferedReader(new FileReader(configFile));
+			String str = br.readLine();
+			String date_testSets = str.substring(str.indexOf(":")+1);
+
+			str = br.readLine();
+			String tmp = str.substring(str.indexOf(":")+1);			
+			String[] criteria = tmp.split(",");
+
+			str = br.readLine();
+			int testSuiteSize = Integer.parseInt(str.substring(str.indexOf(":")+1));
+			
+			str = br.readLine();
+			tmp = str.substring(str.indexOf(":")+1);			
+			String[] oldOrNews = tmp.split(",");
+
+			str = br.readLine();
+			String randomOrCriterion = str.substring(str.indexOf(":")+1);
+			
+			str = br.readLine();
+			tmp = str.substring(str.indexOf(":")+1);			
+			String[] H_L_Rs = tmp.split(",");
+			
+			str = br.readLine();
+			tmp = str.substring(str.indexOf(":")+1);			
+			String[] sizes = tmp.split(",");
+			int[] size_ARTs = new int[sizes.length];
+			for(int i = 0; i < size_ARTs.length; i ++){
+				size_ARTs[i] = Integer.parseInt(sizes[i]);
+			}						
+			br.close();
+
+			str = br.readLine();
+			String date_TestPool = str.substring(str.indexOf(":")+1);
+			
+			str = br.readLine();
+			String date_FaultList = str.substring(str.indexOf(":")+1);
+			
+			//2. save fault detection rate of adequate test sets for each
+			//fault w.r.t a given size_ART, and get the descriptions(e.g., min/mean/median/max/std/)
+			//of fault detection rates
+			saveTestingResults_TestSets(date_testSets, criteria, testSuiteSize, 
+					oldOrNews, randomOrCriterion, H_L_Rs, size_ARTs,
+					date_TestPool, date_FaultList);
+			
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	
+	
+	public static void saveTestingResults_TestSets(String date_testSets, String[] criteria, int testSuiteSize,
+			String[] oldOrNews, String randomOrCriterion, String[] H_L_Rs, int[] size_ARTs, 
+			String date_TestPool, String date_FaultList){
+	
+		//1. load the fault list
+		String mutantFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date_FaultList+ "/FaultList.txt";
+		boolean containHeader = false;
+		ArrayList<String> faultList = MutantStatistics.loadFaults_offline(mutantFile, containHeader);
+		
+		//2. save test results
+		int size_ART;
+		String criterion;
+		String oldOrNew;
+		String H_L_R;
+		for(int i = 0; i < size_ARTs.length; i++){ //for each ART_size
+			size_ART = size_ARTs[i];
+			for(int j = 0; j < criteria.length; j ++){ //for each testing criterion
+				criterion = criteria[j];
+				for(int k = 0; k < oldOrNews.length; k ++){
+					oldOrNew = oldOrNews[k];
+					if(oldOrNew.equals("new")){
+						for(int m = 0; m < H_L_Rs.length; m ++){
+							H_L_R = H_L_Rs[m];
+
+							//2.1.load the test sets
+							String testSetFile = TestSetStatistics.getTestSetFile(date_testSets, criterion, testSuiteSize, 
+									oldOrNew, randomOrCriterion, H_L_R, size_ART);
+							TestSet testSets[][] = new TestSet[1][];
+							testSets[0] = Adequacy.getTestSets(testSetFile);
+							String saveFile = testSetFile.substring(0, testSetFile
+									.indexOf("."))
+									+ "_limited_load.txt";
+							
+							String date_execHisotry =  date_FaultList;
+
+							//2.2. test the specified faults
+							TestDriver
+									.test_load(testSets, faultList, date_execHisotry, saveFile);
+
+						}	
+					}else{
+						H_L_R = "R"; //this paramter does not matter
+						//2.1.load the test sets
+						String testSetFile = TestSetStatistics.getTestSetFile(date_testSets, criterion, testSuiteSize, 
+								oldOrNew, randomOrCriterion, H_L_R, size_ART);
+						TestSet testSets[][] = new TestSet[1][];
+						testSets[0] = Adequacy.getTestSets(testSetFile);
+						String saveFile = testSetFile.substring(0, testSetFile
+								.indexOf("."))
+								+ "_limited_load.txt";
+						
+						String date_execHisotry =  date_FaultList;
+
+						//2.2. test the specified faults
+						TestDriver
+								.test_load(testSets, faultList, date_execHisotry, saveFile);
+					}
 				}
 			}
 		}
@@ -499,6 +629,7 @@ public class ASE10 {
 			
 		}else if(instruction.equals("getAdequateTestSet")){
 			//2010-03-18: load complex test suite construction parameters from configuration files
+			//Typical input: getAdequateTestSet 20100315
 			String date_configurationFile = "20100315";
 			if(args.length == 2){
 				date_configurationFile = args[1];
@@ -507,63 +638,16 @@ public class ASE10 {
 			
 		}else if(instruction.equals("saveTestingResults_TestSet")){
 			//2010-03-01: save the testing effectiveness of test sets into "x_limit_load.txt"
-			//Typical input: saveTestingResults_TestSet 20100301 AllPolicies -1 new random H 20 20100301 20100301
-			
-			String date_testSets = "20100301";
-			String criterion = "AllPolicies";
-			int testSuiteSize = -1;
-			String oldOrNew = "old";
-			String randomOrCriterion = "random";
-			String H_L_R = "H";
-			int size_ART = 64;
-			String date_testPool = "20100301";
-			String date_faultList = "20100301";
-			if(args.length > 8){
-				date_testSets = args[1];
-				criterion = args[2];
-				testSuiteSize = Integer.parseInt(args[3]);
-				oldOrNew = args[4];
-				randomOrCriterion = args[5];
-				H_L_R = args[6];
-				size_ART = Integer.parseInt(args[7]);
-				date_testPool = args[8];
-				date_faultList = args[9];
+			//Typical input: saveTestingResults_TestSet 20100301
+			String date_configurationFile = "20100301";
+			if(args.length == 2){
+				date_configurationFile = args[1];
 			}
-			
-			String testSetFile = TestSetStatistics.getTestSetFile(date_testSets, criterion, testSuiteSize, 
-					oldOrNew, randomOrCriterion, H_L_R, size_ART);
-			TestSet testSets[][] = new TestSet[1][];
-			testSets[0] = Adequacy.getTestSets(testSetFile);
-			
-			String date_execHisotry = args[8];
-			
-			String saveFile = testSetFile.substring(0, testSetFile
-					.indexOf("."))
-					+ "_limited_load.txt";
-			String faultListFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-					+ date_testPool+ "/FaultList.txt";
-
-			// 1. load the fault list
-			ArrayList faultList = new ArrayList();
-			try {
-				BufferedReader br = new BufferedReader(new FileReader(
-						faultListFile));
-				String line = null;
-				while ((line = br.readLine()) != null) {
-					faultList.add(line.trim());
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			// 2. test the specified faults
-			TestDriver
-					.test_load(testSets, faultList, date_execHisotry, saveFile);
-			
+			saveTestingResults_TestSets(date_configurationFile);
 		}else if(instruction.equals("saveTestingEffectiveness_FixARTSize")){
-			//2010-03-01: save the min/max/mean fault detection rate of adequate test set
-			//with respect to a ART size
+			//2010-03-01: save the fault detection rate of adequate test suites 
+			//for each fault and the min/max/mean fault detection rate of adequate test set
+			//w.r.t a ART size
 			//Typical input: saveTestingEffectiveness_FixARTSize 20100301 64
 			
 			String date = args[1];
