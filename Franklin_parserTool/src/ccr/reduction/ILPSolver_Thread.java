@@ -15,17 +15,19 @@ public class ILPSolver_Thread extends ProgramRunnable {
 	public String modelFile;
 	ArrayList<TestCase> tcArray = new ArrayList<TestCase>();
 	public String infoFile;
+	public long modelBuildTime;
 	public ILPOutput output= new ILPOutput();
 	
-	public ILPSolver_Thread(String modelFile, ArrayList<TestCase> tcArray, String infoFile){
+	public ILPSolver_Thread(String modelFile, ArrayList<TestCase> tcArray, String infoFile, long modelBuildTime){
 		this.modelFile = modelFile;
 		this.tcArray = tcArray;
 		this.infoFile = infoFile;
+		this.modelBuildTime = modelBuildTime;
 	}
 	
 	
 	public void run() {
-		output = ILPSolver.solveILPModel(modelFile, tcArray, infoFile);
+		output = ILPSolver.solveILPModel(modelFile, tcArray, infoFile, modelBuildTime);
 	}
 
 }
