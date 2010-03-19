@@ -12,6 +12,7 @@ import java.util.HashMap;
 import lpsolve.LpSolve;
 import lpsolve.LpSolveException;
 import ccr.help.ILPOutput;
+import ccr.help.TestSetStatistics;
 import ccr.help.ThreadManager;
 import ccr.test.Logger;
 import ccr.test.TestCase;
@@ -532,12 +533,12 @@ public class ILPSolver {
 	 * @return
 	 */
 	public static ILPOutput solveILPModel_TimeLimited(String modelFile, ArrayList<TestCase> tcArray,
-			String infoFile, long timeLimit, long sleepTime){
+			String infoFile, long timeLimit, long sleepTime, long modelBuildTime){
 		
 		ILPOutput output = new ILPOutput();
 		
 		ThreadManager manager = new ThreadManager(timeLimit, sleepTime);
-		ILPSolver_Thread programRunnable = new ILPSolver_Thread(modelFile, tcArray, infoFile);
+		ILPSolver_Thread programRunnable = new ILPSolver_Thread(modelFile, tcArray, infoFile, modelBuildTime);
 		manager.startThread(programRunnable);
 		
 		if(manager.finished){
@@ -555,7 +556,7 @@ public class ILPSolver {
 	 * @param infoFile: the file to save info collected during solving the model
 	 * @return: the test case indexes within the reduced test set
 	 */
-	public static ILPOutput solveILPModel(String modelFile, ArrayList<TestCase> tcArray, String infoFile){
+	public static ILPOutput solveILPModel(String modelFile, ArrayList<TestCase> tcArray, String infoFile, long modelBuildTime){
 		ILPOutput output = new ILPOutput();
 		
 		ArrayList<String> selectedTestCases = new ArrayList<String>();
@@ -577,15 +578,15 @@ public class ILPSolver {
 				}
 				
 				
-				
-				LpSolve solver = LpSolve.readLp(modelFile, LpSolve.CRITICAL, null);
-
 				long startTime = System.currentTimeMillis();
+				LpSolve solver = LpSolve.readLp(modelFile, LpSolve.CRITICAL, null);
 				int ret = solver.solve();
 				long exeTime = System.currentTimeMillis() - startTime;
+				infoRecorder.append("ModelBuildTime:").append(modelBuildTime/(double)1000).append(" s\n");
 				infoRecorder.append("Execute Time:").append(exeTime/(double)1000).append(" s\n");
+				infoRecorder.append("Total Time:").append((exeTime + modelBuildTime)/(double)1000).append(" s\n");
 				
-				output.time = (double)exeTime/(double)1000;
+				output.time = (double)(exeTime + modelBuildTime)/(double)1000;
 				
 				if(ret == LpSolve.OPTIMAL)
 					ret = 0;
@@ -651,7 +652,7 @@ public class ILPSolver {
 	 * @return
 	 */
 	public static TestSet solveILPModel_SingleObj_Manager_TimeLimited(String date, String criterion,
-			ArrayList<TestCase> tcArray, int testSetId, long timeLimit, long sleepTime){
+			ArrayList<TestCase> tcArray, int testSetId, long timeLimit, long sleepTime,long modelBuildTime){
 		
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj_" + testSetId + ".lp";
@@ -661,7 +662,7 @@ public class ILPSolver {
 		System.out.println("\n[ILPSolver.solveILPModel_SingleObje_Manager_TimeLimited]Start to solve the model with the single objective:(Criterion:" +criterion +", TestSetID:"+ testSetId+")");
 		
 		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
-				infoFile, timeLimit, sleepTime);
+				infoFile, timeLimit, sleepTime, modelBuildTime);
 		
 		TestSet testSet = output.reducedTestSet;
 		//2010-02-01: fix an important bug here
@@ -676,7 +677,7 @@ public class ILPSolver {
 	
 	
 	public static TestSet solveILPModel_SingleObj_Manager(String date, String criterion,
-			ArrayList<TestCase> tcArray, int testSetId){
+			ArrayList<TestCase> tcArray, int testSetId, long modelBuildTime){
 		
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_SingleObj_" + testSetId + ".lp";
@@ -684,7 +685,7 @@ public class ILPSolver {
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_SingleObj_" + testSetId + ".txt";
 		
 		System.out.println("\n[ILPSolver.solveILPModel_SingleObje_Manager]Start to solve the model with the single objective:(Criterion:" +criterion +", TestSetID:"+ testSetId+")");
-		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile);
+		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile, modelBuildTime);
 		TestSet testSet = output.reducedTestSet;
 		//2010-02-01: fix an important bug here
 		testSet.index = ""+output.testSetId;
@@ -814,7 +815,7 @@ public class ILPSolver {
 	 */
 	public static ILPOutput solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(String date, String criterion,
 			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId, 
-			long timeLimit, long sleepTime){
+			long timeLimit, long sleepTime, long modelBuildTime){
 		
 		DecimalFormat format = new DecimalFormat("0.0");
 		String alpha_str = format.format(alpha);
@@ -828,7 +829,7 @@ public class ILPSolver {
 				+ " ,Alpha:" + alpha_str + ",testSetSize:" + maxSize+ ",testSetID:"+ testSetId + ")");
 
 		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
-				infoFile, timeLimit, sleepTime);
+				infoFile, timeLimit, sleepTime, modelBuildTime);
 		
 		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn]Finish to solve the model(Criterion:" + criterion 
 				+ ",Alpha:" + alpha_str + ", testSetSize:"+ maxSize+", testSetID:"+ testSetId + ")"+ "\n");
@@ -838,7 +839,7 @@ public class ILPSolver {
 
 	public static TestSet solveILPModels_BiCriteria_Manager_TimeLimited(String date, String criterion,
 			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId, 
-			long timeLimit, long sleepTime){
+			long timeLimit, long sleepTime, long modelBuildTime){
 		
 		DecimalFormat format = new DecimalFormat("0.0");
 		String alpha_str = format.format(alpha);
@@ -852,7 +853,7 @@ public class ILPSolver {
 				+ " ,Alpha:" + alpha_str + ",testSetSize:" + maxSize+ ",testSetID:"+ testSetId + ")");
 
 		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
-				infoFile, timeLimit, sleepTime);
+				infoFile, timeLimit, sleepTime, modelBuildTime);
 		
 		TestSet testSet = output.reducedTestSet;
 		//2010-02-01: fix an important bug here
@@ -865,7 +866,8 @@ public class ILPSolver {
 	}
 
 	public static TestSet solveILPModels_BiCriteria_Manager(String date, String criterion,
-			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId){
+			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId,
+			long modelBuildTime){
 		
 		DecimalFormat format = new DecimalFormat("0.0");
 		String alpha_str = format.format(alpha);
@@ -877,7 +879,7 @@ public class ILPSolver {
 		
 		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager]Start to solve the model:(Criterion:" + criterion 
 				+ " ,Alpha:" + alpha_str + ",testSetSize:" + maxSize+ ",testSetID:"+ testSetId + ")");
-		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile);		
+		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile, modelBuildTime);		
 		TestSet testSet = output.reducedTestSet;
 		//2010-02-01: fix an important bug here
 		testSet.index = ""+output.testSetId;
@@ -903,41 +905,37 @@ public class ILPSolver {
 	 * @return
 	 */
 	public static HashMap<Double, ArrayList<TestSet>> buildAndSolveILPs_BiCriteria_Manager_CD(String date, String criterion, 
-			double alpha_min, double alpha_max, double alpha_interval, int maxSize, int testSetNum, long timeLimit,	long sleepTime){
+			double alpha_min, double alpha_max, double alpha_interval, int maxSize,
+			int testSetNum, long timeLimit,	long sleepTime){
 		
 		HashMap<Double, ArrayList<TestSet>> alpha_testSets = new HashMap<Double, ArrayList<TestSet>>();
 		
 		for(double alpha = alpha_min;  Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){
 			ArrayList<TestCase> tcArray = new ArrayList<TestCase>();
 			ArrayList<TestSet> testSets = new ArrayList<TestSet>();
-//			for(int i = 0; i < testSetNum; i ++){
-//				tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, alpha, maxSize, testSets);
-//				
-//				//2010-03-18: sequential version
-////				TestSet testSet = solveILPModels_BiCriteria_Manager(
-////						date, criterion, tcArray, alpha, maxSize, i);
-//				
-//				//2010-01-31: a concurrent version
-//				
-//				TestSet testSet = solveILPModels_BiCriteria_Manager_TimeLimited(date, 
-//						criterion, tcArray, alpha, maxSize, i, timeLimit, sleepTime);
-//				
-//				if(testSet.size() == 0){ //fail to solve the ILP model
-//					break;
-//				}
-//				testSets.add(testSet);
-//			}
 			
 			int index_excludedTestCase = -1;
+			long start = System.currentTimeMillis();
 			tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, 
 					alpha, maxSize, testSets, index_excludedTestCase);
-						
-			int testSetId = testSets.size();
-			ILPOutput output_oracle = solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
-					criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime);
+			long modelBuildTime = System.currentTimeMillis() - start;
 			
-			TestSet testSet_temp = output_oracle.reducedTestSet;
-			testSet_temp.index = "" + output_oracle.reducedTestSet;
+			int testSetId = testSets.size();
+			 solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
+					criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime, modelBuildTime);
+			
+			//2010-03-18:load the result from file 
+			String pattern = "Model\\_" + criterion +"\\_"+ alpha+"\\_" + maxSize +
+			"\\_0\\_output\\.txt";
+			String testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			boolean containHeader = false;
+
+			ArrayList<ILPOutput> tmp = TestSetStatistics.loadILPOutput_offline(testSetDir, containHeader, pattern);
+
+			ILPOutput output_oracle = tmp.get(0);
+			TestSet testSet_temp = output_oracle.reducedTestSet;			
+			testSet_temp.index = ""+output_oracle.testSetId;
 			testSets.add(testSet_temp);
 			System.out.println("[ILPSolver.buildAndSolveILPs_BiCriteria_Manager_CD]TestSetNum:"+ testSets.size());
 			
@@ -949,13 +947,21 @@ public class ILPSolver {
 			if(index_excludedTestCase < testSets.get(0).size()){
 				do{
 					//build the ILP model which remove the ith used test cases from the model
+					start = System.currentTimeMillis();
 					tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, alpha, maxSize, testSets, index_excludedTestCase);
+					modelBuildTime = System.currentTimeMillis() - start;
+					
 					testSetId = testSets.size();
-					ILPOutput output = solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
-							criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime);
+					solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
+							criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime, modelBuildTime);
+					
+					pattern = "Model\\_" + criterion +"\\_"+ alpha+"\\_" + maxSize +
+					"\\_"+ testSetId + "\\_output\\.txt";										
+					ArrayList<ILPOutput> outputs = TestSetStatistics.loadILPOutput_offline(testSetDir, containHeader, pattern);
+					ILPOutput output = outputs.get(0);
 					if(Math.abs(output.objectiveValue - output_oracle.objectiveValue) < 0.001){
 						TestSet testSet = output.reducedTestSet;
-						testSet.index = "" + output.reducedTestSet;
+						testSet.index = "" + output.testSetId;
 						testSets.add(testSet);
 						System.out.println("[ILPSolver.buildAndSolveILPs_BiCriteria_Manager_CD]TestSetNum:"+ testSets.size());	
 					}else{
@@ -1018,7 +1024,9 @@ public class ILPSolver {
 			ArrayList<TestCase> tcArray = new ArrayList<TestCase>();
 			ArrayList<TestSet> testSets = new ArrayList<TestSet>();
 			for(int i = 0; i < testSetNum; i ++){
+				long start = System.currentTimeMillis();
 				tcArray = buildILPModels_BiCriteria_Manager(date, criterion, alpha, maxSize, testSets);
+				long modelBuildTime = System.currentTimeMillis() - start;
 				
 				//2010-01-30: a sequential version
 //				TestSet testSet = solveILPModels_BiCriteria_Manager(date, criterion, tcArray,
@@ -1026,7 +1034,7 @@ public class ILPSolver {
 				
 				//2010-01-31: a concurrent version
 				TestSet testSet = solveILPModels_BiCriteria_Manager_TimeLimited(date, 
-						criterion, tcArray, alpha, maxSize, i, timeLimit, sleepTime);
+						criterion, tcArray, alpha, maxSize, i, timeLimit, sleepTime, modelBuildTime);
 				
 				if(testSet.size() == 0){ //fail to solve the ILP model
 					break;
@@ -1051,8 +1059,9 @@ public class ILPSolver {
 		
 		ArrayList<TestSet> testSets = new ArrayList<TestSet>();		
 		for(int i = 0; i < testSetNum; i ++){
+			long start = System.currentTimeMillis();
 			ArrayList<TestCase> tcArray = buildILPModel_SingleObj_Manager(date, criterion, testSets);
-			
+			long modelBuildTime = System.currentTimeMillis() - start;
 			//2010-01-30:sequential version
 //			TestSet testSet = solveILPModel_SingleObj_Manager(date, criterion, 
 //					tcArray, i);
@@ -1060,7 +1069,7 @@ public class ILPSolver {
 			//2010-01-31:Concurrent version
 		
 			TestSet testSet = solveILPModel_SingleObj_Manager_TimeLimited(date, 
-					criterion, tcArray, i, timeLimit, sleepTime);
+					criterion, tcArray, i, timeLimit, sleepTime, modelBuildTime);
 			
 			if(testSet.size() == 0){ //fail to solve the ILP model
 				break;
@@ -1141,7 +1150,7 @@ public class ILPSolver {
 			boolean containHeader = true;
 			ArrayList<TestCase> tcArray = getStatisticsOfTestCase(testcaseFile, containHeader);
 			
-			solveILPModels_BiCriteria_Manager(date, criterion, tcArray, alpha, maxSize, 0);
+			solveILPModels_BiCriteria_Manager(date, criterion, tcArray, alpha, maxSize, 0, 0);
 			
 //			solveILPModels_BiCriteria_Manager(date, criterion,
 //					tcArray, alpha_min, alpha_max, alpha_interval, maxSize);
