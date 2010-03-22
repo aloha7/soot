@@ -327,7 +327,7 @@ public class ILPSolver {
 	}
 	
 	/**2010-03-18: different from buildILPModel_BiCriteria() which tries to 
-	 * maximize CR(the normalized CD), this method tries to maximize CD. In addition,
+	 * maximize CR(the normalized CD), this method tries to maximize/minimize/randomize CD. In addition,
 	 * it removes one test case from the test pool rather than remove all test cases
 	 * within testSets
 	 * 
@@ -342,7 +342,8 @@ public class ILPSolver {
 	 * @return
 	 */
 	public static ArrayList<TestCase> buildILPModel_BiCriteria_CD(String testcaseFile, boolean containHeader, 
-			double alpha, String modelFile, String infoFile, int maxSize, ArrayList<TestSet> testSets, int index_excludedTestCase){
+			double alpha, String modelFile, String infoFile, int maxSize, ArrayList<TestSet> testSets, 
+			int index_excludedTestCase, String H_L_D){
 		ArrayList<TestCase> tcArray = new ArrayList<TestCase>(); 
 		//1. read info of all test cases
 		tcArray = getStatisticsOfTestCase(testcaseFile, containHeader);
@@ -390,7 +391,17 @@ public class ILPSolver {
 			//2009-12-20: use CR rather than CD for scaling purpose
 			TestCase tc = tcArray.get(i);
 			double CD = tc.CI; //2010-03-18(big difference here):double CR = tc.CI/Double.parseDouble(tc.length);
-			double weight = alpha - (1-alpha)*CD;
+			double weight = 0.0;
+			
+			//2010-03-22: the objective function is quite different for diverse RA strategies
+			if(H_L_D.equals("H")){ //for RA-H: minimize the context diversity values
+				weight = alpha - (1-alpha)*CD;	
+			}else if(H_L_D.equals("L")){ //For RA-L: maximize the context diversity values
+				weight = alpha + (1-alpha) * CD;
+			}else if(H_L_D.equals("D")){ //For RA-D: randomize the context diversity values
+				weight = 0.0; //2010-03-22: no idea how to model RA-D
+			}
+			
 			sb.append(" + " + new DecimalFormat("0.0000").format(weight) + " x"+ i);
 		}
 		sb.append(";\n");
@@ -774,7 +785,7 @@ public class ILPSolver {
 	 * @return
 	 */
 	public static ArrayList<TestCase> buildILPModels_BiCriteria_Manager_CD(String date, String criterion,
-			double alpha, int maxSize, ArrayList<TestSet> testSets, int index_excludedTestCase){
+			double alpha, int maxSize, ArrayList<TestSet> testSets, int index_excludedTestCase, String H_L_D){
 		
 		ArrayList<TestCase> testSet = null;
 		boolean containHeader = true;
@@ -792,11 +803,13 @@ public class ILPSolver {
 
 		String alpha_str = format.format(alpha);
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize + "_"+ testSets.size() +".lp";
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" 
+			+ maxSize + "_"+ testSets.size() +"_RA_" + H_L_D + ".lp";
 		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSets.size() +".txt";			
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" 
+			+ maxSize + "_"+ testSets.size() +"_RA_" + H_L_D + ".txt";			
 		testSet = buildILPModel_BiCriteria_CD(testcaseFile, containHeader, alpha, modelFile,
-				infoFile, maxSize, testSets, index_excludedTestCase);
+				infoFile, maxSize, testSets, index_excludedTestCase, H_L_D);
 		
 		return testSet;
 	}
@@ -815,15 +828,17 @@ public class ILPSolver {
 	 */
 	public static ILPOutput solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(String date, String criterion,
 			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId, 
-			long timeLimit, long sleepTime, long modelBuildTime){
+			String H_L_D, long timeLimit, long sleepTime, long modelBuildTime){
 		
 		DecimalFormat format = new DecimalFormat("0.0");
 		String alpha_str = format.format(alpha);
 		
 		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str + "_" + maxSize + "_"+ testSetId +".lp";
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str 
+			+ "_" + maxSize + "_"+ testSetId +"_RA_" + H_L_D + ".lp";
 		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str +"_" + maxSize + "_"+ testSetId +".txt";
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str 
+			+"_" + maxSize + "_"+ testSetId +"_RA_" + H_L_D + ".txt";
 		
 		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn]Start to solve the model:(Criterion:" + criterion 
 				+ " ,Alpha:" + alpha_str + ",testSetSize:" + maxSize+ ",testSetID:"+ testSetId + ")");
@@ -890,7 +905,7 @@ public class ILPSolver {
 	}
 	
 	/**2010-03-18: different from buildAndSolveILPs_BiCriteria_Manager() which tries to 
-	 * maximize CR(the normalized CD), this method tries to maximize CD.
+	 * maximize CR(the normalized CD), this method tries to maximize/minimize/randomize CD(RA-H, RA-L, RA-D).
 	 * 
 	 * 
 	 * @param date
@@ -906,7 +921,7 @@ public class ILPSolver {
 	 */
 	public static HashMap<Double, ArrayList<TestSet>> buildAndSolveILPs_BiCriteria_Manager_CD(String date, String criterion, 
 			double alpha_min, double alpha_max, double alpha_interval, int maxSize,
-			int testSetNum, long timeLimit,	long sleepTime){
+			int testSetNum, String H_L_D, long timeLimit,	long sleepTime){
 		
 		HashMap<Double, ArrayList<TestSet>> alpha_testSets = new HashMap<Double, ArrayList<TestSet>>();
 		
@@ -917,16 +932,17 @@ public class ILPSolver {
 			int index_excludedTestCase = -1;
 			long start = System.currentTimeMillis();
 			tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, 
-					alpha, maxSize, testSets, index_excludedTestCase);
+					alpha, maxSize, testSets, index_excludedTestCase, H_L_D);
 			long modelBuildTime = System.currentTimeMillis() - start;
 			
 			int testSetId = testSets.size();
 			 solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
-					criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime, modelBuildTime);
+					criterion, tcArray, alpha, maxSize, testSetId, H_L_D,
+					timeLimit, sleepTime, modelBuildTime);
 			
 			//2010-03-18:load the result from file 
 			String pattern = "Model\\_" + criterion +"\\_"+ alpha+"\\_" + maxSize +
-			"\\_0\\_output\\.txt";
+			"\\_0\\_RA\\_"+H_L_D+"_output\\.txt";
 			String testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/ILPModel/"+ criterion + "/";
 			boolean containHeader = false;
@@ -944,19 +960,21 @@ public class ILPSolver {
 			StringBuilder sb = new StringBuilder();			
 			sb.append("Oracle objective value:" + output_oracle.objectiveValue).append("\n");
 			//build multiple equivalent optimal solutions when they share the objective values
-			if(index_excludedTestCase < testSets.get(0).size()){
+			if(index_excludedTestCase < testSets.get(0).size() && testSets.size() < testSetNum){
 				do{
 					//build the ILP model which remove the ith used test cases from the model
 					start = System.currentTimeMillis();
-					tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, alpha, maxSize, testSets, index_excludedTestCase);
+					tcArray = buildILPModels_BiCriteria_Manager_CD(date, criterion, alpha, maxSize, testSets,
+							index_excludedTestCase, H_L_D);
 					modelBuildTime = System.currentTimeMillis() - start;
 					
 					testSetId = testSets.size();
 					solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
-							criterion, tcArray, alpha, maxSize, testSetId, timeLimit, sleepTime, modelBuildTime);
+							criterion, tcArray, alpha, maxSize, testSetId, 
+							H_L_D, timeLimit, sleepTime, modelBuildTime);
 					
 					pattern = "Model\\_" + criterion +"\\_"+ alpha+"\\_" + maxSize +
-					"\\_"+ testSetId + "\\_output\\.txt";										
+					"\\_"+ testSetId + "\\_RA_" + H_L_D + "_output.txt";										
 					ArrayList<ILPOutput> outputs = TestSetStatistics.loadILPOutput_offline(testSetDir, containHeader, pattern);
 					ILPOutput output = outputs.get(0);
 					if(Math.abs(output.objectiveValue - output_oracle.objectiveValue) < 0.001){
@@ -987,7 +1005,7 @@ public class ILPSolver {
 				System.out.println("Hello");
 			}
 			String filename ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/ILPModel/"+ criterion + "/ObjectiveDistance.txt";;
+				+ date + "/ILPModel/"+ criterion + "/ObjectiveDistance_RA_"+H_L_D+".txt";;
 			Logger.getInstance().setPath(filename, false);
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
