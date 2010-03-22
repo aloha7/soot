@@ -620,6 +620,10 @@ public class ASE10 {
 
 			str = br.readLine();
 			tmp = str.substring(str.indexOf(":")+1);			
+			String[] H_L_Ds = tmp.split(",");
+			
+			str = br.readLine();
+			tmp = str.substring(str.indexOf(":")+1);			
 			String[] beta_min_str = tmp.split(",");
 			
 			str = br.readLine();
@@ -670,7 +674,7 @@ public class ASE10 {
 				br.close();
 				
 				saveFDR_cost_ILPModel_offline(date, criteria, alpha_min, alpha_max, alpha_interval, 
-						betas_min, betas_max, testSetNum, timeLimit, sleepTime, 
+						betas_min, betas_max, testSetNum, H_L_Ds, timeLimit, sleepTime, 
 						mutantFile_date, mutantDetailDir);
 				
 			
@@ -689,6 +693,8 @@ public class ASE10 {
 			e.printStackTrace();
 		}
 	}
+	
+	
 	
 	/**2010-03-18:build and solve ILP models, then save the 
 	 *fault detection rate of reduced test suites in offline way
@@ -709,48 +715,56 @@ public class ASE10 {
 	 */
 	public static void saveFDR_cost_ILPModel_offline(String date, String[] criteria, double alpha_min,
 			double alpha_max, double alpha_interval, int[] betas_min, 
-			int[] betas_max, int testSetNum, long timeLimit,
+			int[] betas_max, int testSetNum, String[] H_L_Ds, long timeLimit, 
 			long sleepTime, String mutantFile_date, String mutantDetailDir){
 		
-		//1. build and solve bi-criteria ILP models via sequential rather than concurrent model 
-		buildAndSolveILPs_BiCriteria_concurrent(date, criteria, 
-				alpha_min, alpha_max, alpha_interval, betas_min, betas_max, testSetNum, timeLimit, sleepTime);
+//		//1. build and solve bi-criteria ILP models via sequential rather than concurrent model 
+//		buildAndSolveILPs_BiCriteria_concurrent(date, criteria, 
+//				alpha_min, alpha_max, alpha_interval, betas_min, betas_max, 
+//				testSetNum, H_L_Ds, timeLimit, sleepTime);
 		
 		//2. save the fault detection rate of reduced test suites in offline way
-		for(int i = 0; i < criteria.length; i ++){
-			long start = System.currentTimeMillis();
-			String criterion = criteria[i];
-			boolean containHeader_mutant = false;
-			boolean containHeader_testing = true;
-			boolean single_enabled = false;
-			
-			HashMap<Double, HashMap<String, Double>> alpha_mutant_fdr = new 
-				HashMap<Double, HashMap<String,Double>>();
-			int sizeConstraint_min =  betas_min[i];
-			int sizeConstraint_max =  betas_max[i];
-			
-			alpha_mutant_fdr = Reporter_Reduction.getFaultDetectionRate_detailed_BILP_offline(date, 
-					criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
-					alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, single_enabled);
-			
-			
-			String saveFile = System.getProperty("user.dir") + "/src/ccr"
-			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
-			+ "/ILPModel/"+ criterion+"/FaultDetectionRate_AllEquivalencies.txt";
-			Reporter_Reduction.saveToFile_alpha_mutant_fdrs(alpha_mutant_fdr, saveFile);
-			
-			HashMap<Double, ArrayList<Double>> alpha_times = Reporter_Reduction.getTimeCost_detailed_BILP_offline(date, 
-					criterion, alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, single_enabled);
-			saveFile = System.getProperty("user.dir") + "/src/ccr"
-			+ "/experiment/Context-Intensity_backup/TestHarness/" + date
-			+ "/ILPModel/"+ criterion+"/TimeCost_AllEquivalencies.txt";
-			Reporter_Reduction.saveToFile_alpha_times(alpha_times, saveFile);
-			long duration = System.currentTimeMillis() - start;
-			System.out.println("[Reporter_Reduction.Main]It takes " + duration/(1000*60) + " mins for " + criterion);
+		String H_L_D ="";
+		for(int k = 0; k < H_L_Ds.length; k ++){
+			H_L_D = H_L_Ds[k];
+			for(int i = 0; i < criteria.length; i ++){
+				long start = System.currentTimeMillis();
+				String criterion = criteria[i];
+				boolean containHeader_mutant = false;
+				boolean containHeader_testing = true;
+				boolean single_enabled = false;
+				
+				HashMap<Double, HashMap<String, Double>> alpha_mutant_fdr = new 
+					HashMap<Double, HashMap<String,Double>>();
+				int sizeConstraint_min =  betas_min[i];
+				int sizeConstraint_max =  betas_max[i];
+				
+				alpha_mutant_fdr = Reporter_Reduction.getFaultDetectionRate_detailed_BILP_offline(date, 
+						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
+						alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, 
+						H_L_D, single_enabled);
+				
+				
+				String saveFile = System.getProperty("user.dir") + "/src/ccr"
+				+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+				+ "/ILPModel/"+ criterion+"/RA_"+H_L_D+"_FaultDetectionRate_AllEquivalencies.txt";
+				Reporter_Reduction.saveToFile_alpha_mutant_fdrs(alpha_mutant_fdr, saveFile);
+				
+				HashMap<Double, ArrayList<Double>> alpha_times = Reporter_Reduction.getTimeCost_detailed_BILP_offline(date, 
+						criterion, alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, 
+						H_L_D, single_enabled);
+				saveFile = System.getProperty("user.dir") + "/src/ccr"
+				+ "/experiment/Context-Intensity_backup/TestHarness/" + date
+				+ "/ILPModel/"+ criterion+"/RA_"+H_L_D+"_TimeCost_AllEquivalencies.txt";
+				
+				Reporter_Reduction.saveToFile_alpha_times(alpha_times, saveFile);
+				long duration = System.currentTimeMillis() - start;
+				System.out.println("[Reporter_Reduction.Main]It takes " + duration/(1000*60) + " mins for " + criterion);
+			}	
 		}
 	}
 	
-
+	
 
 	/**2010-03-18: build and solve the bi-criteria ILP model which tries to maximize CD while minimize the 
 	 * test suite size
@@ -766,21 +780,108 @@ public class ASE10 {
 	 * @param timeLimit
 	 * @param sleepTime
 	 */
-	public static void buildAndSolveILPs_BiCriteria_concurrent(String date, String[] criteria, double alpha_min,
-			double alpha_max, double alpha_interval, int[] betas_min, int[] betas_max, 
-			int testSetNum, long timeLimit, long sleepTime){
-		
-		for(int i = 0; i < criteria.length; i ++){
-			String criterion = criteria[i];
-			int beta_min = betas_min[i];
-			int beta_max = betas_max[i];
-			for(int j = beta_min; j < beta_max; j ++){
-				int beta = j;
-				HashMap<Double, ArrayList<TestSet>> alpha_reducedTestSets = 
-					ILPSolver.buildAndSolveILPs_BiCriteria_Manager_CD(date, criterion, alpha_min, alpha_max, 
-						alpha_interval, beta, testSetNum, timeLimit, sleepTime);	
+	public static void buildAndSolveILPs_BiCriteria_concurrent(String date_configurationFile, String criterion){
+		String configFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
+		""+date_configurationFile+"/saveFDR_ILPModel_"+criterion+".txt";		
+		try {
+			
+			//1. load parameters from configuration files 
+			BufferedReader br = new BufferedReader(new FileReader(configFile));
+			String str = br.readLine();
+			String date = str.substring(str.indexOf(":")+1);
+
+			str = br.readLine();
+			String tmp = str.substring(str.indexOf(":")+1);			
+			String[] criteria = tmp.split(",");
+
+			str = br.readLine();
+			tmp = str.substring(str.indexOf(":")+1);			
+			String[] H_L_Ds = tmp.split(",");
+			
+			str = br.readLine();
+			tmp = str.substring(str.indexOf(":")+1);			
+			String[] beta_min_str = tmp.split(",");
+			
+			str = br.readLine();
+			tmp = str.substring(str.indexOf(":")+1);			
+			String[] beta_max_str = tmp.split(",");
+			
+			if(beta_max_str.length == criteria.length && 
+					beta_min_str.length ==  criteria.length){
+				
+				int[] betas_min = new int[beta_min_str.length];
+				for(int i = 0; i < betas_min.length; i ++){
+					betas_min[i] = Integer.parseInt(beta_min_str[i]);
+				}
+				
+				int[] betas_max = new int[beta_max_str.length];
+				for(int i = 0; i < betas_max.length; i ++){
+					betas_max[i] = Integer.parseInt(beta_max_str[i]);
+				}						
+				
+				str = br.readLine();
+				int testSetNum = Integer.parseInt(str.substring(str.indexOf(":")+1));
+				
+				str = br.readLine();
+				long timeLimit = Long.parseLong(str.substring(str.indexOf(":")+1));
+				if(timeLimit == 0){
+					timeLimit = Long.MAX_VALUE;
+				}
+				
+				str = br.readLine();
+				long sleepTime = Long.parseLong(str.substring(str.indexOf(":")+1));
+				
+				str = br.readLine();
+				double alpha_min = Double.parseDouble(str.substring(str.indexOf(":")+1));			
+				
+				str = br.readLine();
+				double alpha_max = Double.parseDouble(str.substring(str.indexOf(":")+1));
+				
+				str = br.readLine();
+				double alpha_interval = Double.parseDouble(str.substring(str.indexOf(":")+1));
+			
+				
+//				str = br.readLine();
+//				String mutantFile_date = str.substring(str.indexOf(":")+1);			
+//				
+//				str = br.readLine();
+//				String mutantDetailDir = System.getProperty("user.dir") + "/src/ccr"
+//				+ "/experiment/Context-Intensity_backup/TestHarness/" + str.substring(str.indexOf(":")+1);
+				
+				br.close();
+				
+				String H_L_D = "";
+				for(int i = 0; i < criteria.length; i ++){
+					String criterion_tmp = criteria[i];
+					int beta_min = betas_min[i];
+					int beta_max = betas_max[i];
+					for(int j = beta_min; j < beta_max; j ++){
+						int beta = j;
+						for(int k = 0; k < H_L_Ds.length; k ++){
+							H_L_D = H_L_Ds[k];
+							ILPSolver.buildAndSolveILPs_BiCriteria_Manager_CD(date, criterion_tmp, alpha_min, alpha_max,
+									alpha_interval, beta, testSetNum, H_L_D, timeLimit, sleepTime);
+						}
+					}
+				}
+				
+			
+			}else{
+				System.out.println("Invalid paramters: " +
+						"numbers of criteria and betas do not match with each other!");
 			}
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
+		
 	}
 
 	
@@ -882,7 +983,9 @@ public class ASE10 {
 			//fault detection rate of reduced test suites in offline way 		
 			String date_configurationFile = "20100315";
 			String criterion = "AllPolicies";
-			if(args.length == 3){
+			if(args.length == 2){
+				date_configurationFile = args[1];
+			}else if(args.length == 3){
 				date_configurationFile = args[1];
 				criterion = args[2];
 			}
@@ -896,6 +999,23 @@ public class ASE10 {
 			
 			
 			System.exit(0);
+		}else if(instruction.equals("buildAndSolveILPModels")){
+			String date_configurationFile = "20100315";
+			String criterion = "AllPolicies";
+			if(args.length == 2){
+				date_configurationFile = args[1];
+			}else if(args.length == 3){
+				date_configurationFile = args[1];
+				criterion = args[2];
+			}
+
+			buildAndSolveILPs_BiCriteria_concurrent(date_configurationFile, criterion);
+			
+			String[] criteria = {"AllPolicies", "All1ResolvedDU", "All2ResolvedDU"};
+//			for(int i = 0; i < criteria.length; i ++){
+//				criterion = criteria[i];
+//				buildAndSolveILPs_BiCriteria_concurrent(date_configurationFile, criterion);	
+//			}
 		}
 	}
 
