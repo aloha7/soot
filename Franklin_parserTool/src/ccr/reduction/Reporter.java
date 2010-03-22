@@ -414,6 +414,97 @@ public class Reporter_Reduction {
 		return alpha_size;
 	}
 	
+	/**2010-03-19: save the time cost of each test suite constructed by
+	 * ILP model and save the corresponding data description(e.g., min/mean/median/max/std)
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param alpha_min
+	 * @param alpha_max
+	 * @param alpha_interval
+	 * @param sizeConstraint_min
+	 * @param sizeConstraint_max
+	 * @param single_enabled
+	 * @return: alpha->times
+	 */
+	public static HashMap<Double, ArrayList<Double>> getTimeCost_detailed_BILP_offline(String date, 
+			String criterion, double alpha_min, double alpha_max, 
+			double alpha_interval, int sizeConstraint_min, int sizeConstraint_max, boolean single_enabled){
+		
+		HashMap<Double, ArrayList<Double>> alpha_times = new HashMap<Double, ArrayList<Double>>();
+		
+		HashMap<Double, ArrayList<ILPOutput>> alpha_outputs  = new HashMap<Double, ArrayList<ILPOutput>>();
+		
+		ArrayList<ILPOutput> outputs = new ArrayList<ILPOutput>();
+		
+		String testSetDir = "";
+		boolean containHeader = false;
+		String pattern = "";
+		if(single_enabled){
+
+			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			containHeader = false;
+
+//			pattern = "Model\\_" + criterion +"\\_SingleObj\\_[0-9]+\\_output\\.txt";
+			//2010-02-01:only interest in the first reduced test set
+			pattern = "Model\\_" + criterion +"\\_SingleObj\\_0\\_output\\.txt";
+			outputs = TestSetStatistics.loadILPOutput_offline(testSetDir, containHeader, pattern);			
+		}
+		
+		
+		//2. reduced test sets of bi-criteria ILP
+		//2010-02-01: for two double we  use "|alpha_max - alpha| > 0.0001" rather than "alpha_max - alpha"
+		// to determine whether alpha_max is larger than alpha or not
+		for(double alpha = alpha_min; Math.abs(alpha_max - alpha) > 0.0001; alpha = alpha + alpha_interval){
+			
+			DecimalFormat format = new DecimalFormat("0.0");
+			String alpha_str = format.format(alpha);
+			
+			testSetDir =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+				+ date + "/ILPModel/"+ criterion + "/";
+			containHeader = false;
+			
+//			pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_[0-9]+" +
+//			"\\_[0-9]+\\_output\\.txt";
+			for(int i = sizeConstraint_min; i < sizeConstraint_max; i ++){
+				int sizeConstraint = i;
+				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+				"\\_[0-9]+\\_output\\.txt";
+			
+				//2010-02-01:only interest in the first reduced test set
+//				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
+//				"\\_0\\_output\\.txt";
+			
+				ArrayList<ILPOutput> output_biCriteria = TestSetStatistics.loadILPOutput_offline(testSetDir, containHeader, pattern);
+			
+				alpha_outputs.put(alpha, output_biCriteria);
+			}
+		}
+		
+		
+		//3. combine all test sets
+		if(outputs.size() != 0){ //single-objective ILP is enabled
+			alpha_outputs.put(Double.MIN_VALUE, outputs);			
+		}
+		
+		Double[] alphas = alpha_outputs.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);	
+		
+		
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];
+			ArrayList<ILPOutput> ILPoutputs = alpha_outputs.get(alpha);
+			
+			ArrayList<Double> times = new ArrayList<Double>();
+			for(int j = 0; j < ILPoutputs.size(); j ++){
+				times.add(ILPoutputs.get(j).time);
+			}
+			alpha_times.put(alpha, times);
+		}
+		
+		return alpha_times;
+	}
 	
 	/**2010-02-01: get the time cost to solve ILP model with respect to various 
 	 * testing criteria and weighting factors
@@ -1124,8 +1215,8 @@ public class Reporter_Reduction {
 		Arrays.sort(alphas);
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("Alpha\tMutant\tFaultDetectionRate\n");
-		
+//		sb.append("Alpha\tMutant\tFaultDetectionRate\n");
+		sb.append("alpha\tmin\tmean\tmedian\tmax\tstd\n");
 		DecimalFormat format = new DecimalFormat("0.00000");
 		
 		for(int i = 0; i < alphas.length; i ++){
@@ -1141,24 +1232,23 @@ public class Reporter_Reduction {
 					String mutant = mutants[j];
 					double fdr = mutant_fdr.get(mutant);
 					fdrs[j] = fdr;
-					sb.append("SingleObj").append("\t").append(mutant).append("\t").
-					append(format.format(fdr)).append("\n");
+//					sb.append("SingleObj").append("\t").append(mutant).append("\t").
+//					append(format.format(fdr)).append("\n");
 				}
 				DataDescriptionResult result = DataAnalyzeManager.getDataDescriptive(fdrs);
-				sb.append("min\tmean\tmedian\tmax\tstd\n");
-				sb.append(result.min).append("\t").append(result.mean).append("\t").
+				
+				sb.append(format.format(alpha)).append("\t").append(result.min).append("\t").append(result.mean).append("\t").
 				append(result.median).append("\t").append(result.max).append("\t").append(result.std).append("\n");
 			}else{
 				for(int j = 0; j < mutants.length; j ++){
 					String mutant = mutants[j];
 					double fdr = mutant_fdr.get(mutant);
 					fdrs[j] = fdr;
-					sb.append(format.format(alpha)).append("\t").append(mutant).append("\t").
-					append(format.format(fdr)).append("\n");	
+//					sb.append(format.format(alpha)).append("\t").append(mutant).append("\t").
+//					append(format.format(fdr)).append("\n");	
 				}				
 				DataDescriptionResult result = DataAnalyzeManager.getDataDescriptive(fdrs);
-				sb.append("min\tmean\tmedian\tmax\tstd\n");
-				sb.append(result.min).append("\t").append(result.mean).append("\t").
+				sb.append(format.format(alpha)).append("\t").append(result.min).append("\t").append(result.mean).append("\t").
 				append(result.median).append("\t").append(result.max).append("\t").append(result.std).append("\n");
 			}
 		}
@@ -1193,7 +1283,41 @@ public class Reporter_Reduction {
 		Logger.getInstance().close();
 	}
 	
+
+	public static void saveToFile_alpha_times(HashMap<Double, ArrayList<Double>> alpha_times, String saveFile){
+		
+		Double[] alphas = alpha_times.keySet().toArray(new Double[0]);
+		Arrays.sort(alphas);
+
+		StringBuilder sb = new StringBuilder();
+		
+		DecimalFormat format = new DecimalFormat("0.00000");
 	
+		sb.append("Alpha\t").append("min\tmean\tmedian\tmax\tstd\n");;
+		for(int i = 0; i < alphas.length; i ++){
+			double alpha = alphas[i];			
+			ArrayList<Double> times = alpha_times.get(alpha);
+			double[] times_tmp = new double[times.size()];
+			for(int j =0; j < times.size(); j ++){
+				times_tmp[j] = times.get(j);
+			}
+			DataDescriptionResult result = DataAnalyzeManager.getDataDescriptive(times_tmp);
+		
+			
+			if(alpha == Double.MIN_VALUE){
+				sb.append("SingleObject\t");
+			}else{
+				sb.append(format.format(alpha)).append("\t");	
+			}
+			
+			sb.append(result.min).append("\t").append(result.mean).append("\t").
+			append(result.median).append("\t").append(result.max).append("\t").append(result.std).append("\n");
+		}
+		
+		Logger.getInstance().setPath(saveFile, false);
+		Logger.getInstance().write(sb.toString());
+		Logger.getInstance().close();
+	}
 	
 	public static void main(String[] args) {
 		String instruction = args[0];
