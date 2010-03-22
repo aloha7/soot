@@ -3769,9 +3769,9 @@ public class TestSetManager {
 
 		} else if (instruction.equals("RandomTestSet_Conventional")) {
 			// 2009-02-22: get random test sets
-			int testSetNum = Integer.parseInt(args[0]);
-			int testSuiteSize = Integer.parseInt(args[1]);
-			String date = args[2];
+			int testSetNum = Integer.parseInt(args[1]);
+			int testSuiteSize = Integer.parseInt(args[2]);
+			String date = args[3];
 
 			String saveFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 					+ date + "/RandomTestSets_" + testSuiteSize + ".txt";
