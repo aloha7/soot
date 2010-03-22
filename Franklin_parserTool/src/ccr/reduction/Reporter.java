@@ -429,7 +429,8 @@ public class Reporter_Reduction {
 	 */
 	public static HashMap<Double, ArrayList<Double>> getTimeCost_detailed_BILP_offline(String date, 
 			String criterion, double alpha_min, double alpha_max, 
-			double alpha_interval, int sizeConstraint_min, int sizeConstraint_max, boolean single_enabled){
+			double alpha_interval, int sizeConstraint_min, int sizeConstraint_max, 
+			String H_L_D, boolean single_enabled){
 		
 		HashMap<Double, ArrayList<Double>> alpha_times = new HashMap<Double, ArrayList<Double>>();
 		
@@ -469,9 +470,11 @@ public class Reporter_Reduction {
 //			"\\_[0-9]+\\_output\\.txt";
 			for(int i = sizeConstraint_min; i < sizeConstraint_max; i ++){
 				int sizeConstraint = i;
+				
+				//2010-03-18: interest in multiple reduced test sets with a 
 				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
-				"\\_[0-9]+\\_output\\.txt";
-			
+				"\\_[0-9]+\\_RA_"+H_L_D+"\\_output\\.txt";
+
 				//2010-02-01:only interest in the first reduced test set
 //				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
 //				"\\_0\\_output\\.txt";
@@ -934,7 +937,7 @@ public class Reporter_Reduction {
 	public static HashMap<Double, HashMap<String, Double>> getFaultDetectionRate_detailed_BILP_offline(String date, String criterion,
 			String mutantFile_date, boolean containHeader_mutant, 
 			String mutantDetailDir, boolean containHeader_testing, double alpha_min, double alpha_max, 
-			double alpha_interval, int sizeConstraint_min, int sizeConstraint_max, boolean single_enabled){
+			double alpha_interval, int sizeConstraint_min, int sizeConstraint_max, String H_L_D, boolean single_enabled){
 
 		HashMap<Double, HashMap<String, Double>> alpha_mutant_fdr = new 
 			HashMap<Double, HashMap<String,Double>>();
@@ -954,7 +957,7 @@ public class Reporter_Reduction {
 			containHeader = false;
 //			pattern = "Model\\_" + criterion +"\\_SingleObj\\_[0-9]+\\_output\\.txt";
 			//2010-02-01:only interest in the first reduced test set
-			pattern = "Model\\_" + criterion +"\\_SingleObj\\_0\\_output\\.txt";
+			pattern = "Model\\_" + criterion +"\\_SingleObj\\_0\\_RA\\_"+H_L_D+"\\_output\\.txt";
 			testSets = TestSetStatistics.loadReducedTestSet_offline(testSetDir, containHeader, pattern);
 	}
 		
@@ -988,7 +991,7 @@ public class Reporter_Reduction {
 				
 				//2010-03-18: interest in multiple reduced test sets with a 
 				pattern = "Model\\_" + criterion +"\\_"+ alpha_str+"\\_" + sizeConstraint +
-				"\\_[0-9]+\\_output\\.txt";
+				"\\_[0-9]+\\_RA_"+H_L_D+"\\_output\\.txt";
 				
 				 ArrayList<TestSet> testsets = TestSetStatistics.loadReducedTestSet_offline(
 						testSetDir, containHeader, pattern);
