@@ -34,7 +34,7 @@ public class TestCase {
 		this.index = ts[0];
 		this.length = ts[1];
 		this.CI = Double.parseDouble(ts[2]);
-//		this.activation = Integer.parseInt(ts[3]);
+		this.activation = Integer.parseInt(ts[3]);
 	}
 	
 	/**2009-12-18: for test suite reduction research, 
