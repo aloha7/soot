@@ -842,14 +842,14 @@ public class ILPSolver {
 			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str 
 			+"_" + maxSize + "_"+ testSetId +"_RA_" + H_L_D + ".txt";
 		
-		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn]Start to solve the model:(Criterion:" + criterion 
+		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager_Sequential_CompleteReturn]Start to solve the model:(Criterion:" + criterion 
 				+ " ,Alpha:" + alpha_str + ",testSetSize:" + maxSize+ ",testSetID:"+ testSetId + ")");
 
 		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile, modelBuildTime);
 //		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
 //				infoFile, timeLimit, sleepTime, modelBuildTime);
 		
-		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn]Finish to solve the model(Criterion:" + criterion 
+		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager_Sequential_CompleteReturn]Finish to solve the model(Criterion:" + criterion 
 				+ ",Alpha:" + alpha_str + ", testSetSize:"+ maxSize+", testSetID:"+ testSetId + ")"+ "\n");
 		
 		return output;
@@ -1006,7 +1006,7 @@ public class ILPSolver {
 			index_excludedTestCase ++;
 			int usedTestCaseNum;
 			StringBuilder sb = new StringBuilder();			
-			sb.append("Oracle objective value:" + output_oracle.objectiveValue).append("\n");
+			sb.append("Oracle objective value(alpha:"+ new DecimalFormat("0.00").format(alpha)+"):" + output_oracle.objectiveValue).append("\n");
 			//build multiple equivalent optimal solutions when they share the objective values
 			if(index_excludedTestCase < testSets.get(0).size() && testSets.size() < testSetNum){
 				do{
@@ -1060,7 +1060,7 @@ public class ILPSolver {
 			}
 			String filename ="src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 				+ date + "/ILPModel/"+ criterion + "/ObjectiveDistance_RA_"+H_L_D+".txt";;
-			Logger.getInstance().setPath(filename, false);
+			Logger.getInstance().setPath(filename, true);
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
 		
