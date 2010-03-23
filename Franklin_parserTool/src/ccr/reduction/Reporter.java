@@ -1230,7 +1230,7 @@ public class Reporter_Reduction {
 			
 			double[] fdrs = new double[mutants.length];
 			
-			if(alpha == Double.MIN_VALUE){
+			if(alpha == Double.MIN_VALUE){ //2010-03-23:for single-objective ILP models
 				for(int j = 0; j < mutants.length; j ++){
 					String mutant = mutants[j];
 					double fdr = mutant_fdr.get(mutant);
@@ -1296,7 +1296,7 @@ public class Reporter_Reduction {
 		
 		DecimalFormat format = new DecimalFormat("0.00000");
 	
-		sb.append("Alpha\t").append("min\tmean\tmedian\tmax\tstd\n");;
+		sb.append("Alpha\tTestSuiteNum\t").append("min\tmean\tmedian\tmax\tstd\n");;
 		for(int i = 0; i < alphas.length; i ++){
 			double alpha = alphas[i];			
 			ArrayList<Double> times = alpha_times.get(alpha);
@@ -1313,7 +1313,7 @@ public class Reporter_Reduction {
 				sb.append(format.format(alpha)).append("\t");	
 			}
 			
-			sb.append(result.min).append("\t").append(result.mean).append("\t").
+			sb.append(result.min).append("\t").append(times_tmp.length).append("\t").append(result.mean).append("\t").
 			append(result.median).append("\t").append(result.max).append("\t").append(result.std).append("\n");
 		}
 		
