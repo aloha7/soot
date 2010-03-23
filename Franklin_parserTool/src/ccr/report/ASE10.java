@@ -739,10 +739,10 @@ public class ASE10 {
 				int sizeConstraint_min =  betas_min[i];
 				int sizeConstraint_max =  betas_max[i];
 				
-				alpha_mutant_fdr = Reporter_Reduction.getFaultDetectionRate_detailed_BILP_offline(date, 
-						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
-						alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, 
-						H_L_D, single_enabled);
+//				alpha_mutant_fdr = Reporter_Reduction.getFaultDetectionRate_detailed_BILP_offline(date, 
+//						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
+//						alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, 
+//						H_L_D, single_enabled);
 				
 				
 				String saveFile = System.getProperty("user.dir") + "/src/ccr"
@@ -763,7 +763,6 @@ public class ASE10 {
 			}	
 		}
 	}
-	
 	
 
 	/**2010-03-18: build and solve the bi-criteria ILP model which tries to maximize CD while minimize the 
@@ -880,8 +879,6 @@ public class ASE10 {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
 	}
 
 	
