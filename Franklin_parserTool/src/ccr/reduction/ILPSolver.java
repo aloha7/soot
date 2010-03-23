@@ -814,6 +814,48 @@ public class ILPSolver {
 		return testSet;
 	}
 	
+	/**2010-03-23: solve ILP models in sequence rather than concurrent
+	 * 
+	 * @param date
+	 * @param criterion
+	 * @param tcArray
+	 * @param alpha
+	 * @param maxSize
+	 * @param testSetId
+	 * @param H_L_D
+	 * @param timeLimit
+	 * @param sleepTime
+	 * @param modelBuildTime
+	 * @return
+	 */
+	public static ILPOutput solveILPModels_BiCriteria_Manager_Sequential_CompleteReturn(String date, String criterion,
+			ArrayList<TestCase> tcArray, double alpha, int maxSize, int testSetId, 
+			String H_L_D, long timeLimit, long sleepTime, long modelBuildTime){
+		
+		DecimalFormat format = new DecimalFormat("0.0");
+		String alpha_str = format.format(alpha);
+		
+		String modelFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion +"/Model_" + criterion + "_" + alpha_str 
+			+ "_" + maxSize + "_"+ testSetId +"_RA_" + H_L_D + ".lp";
+		String infoFile =  "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
+			+ date +"/ILPModel/"+ criterion + "/Result_" + criterion + "_" + alpha_str 
+			+"_" + maxSize + "_"+ testSetId +"_RA_" + H_L_D + ".txt";
+		
+		System.out.println("\n[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn]Start to solve the model:(Criterion:" + criterion 
+				+ " ,Alpha:" + alpha_str + ",testSetSize:" + maxSize+ ",testSetID:"+ testSetId + ")");
+
+		ILPOutput output = solveILPModel(modelFile, tcArray, infoFile, modelBuildTime);
+//		ILPOutput output = solveILPModel_TimeLimited(modelFile, tcArray, 
+//				infoFile, timeLimit, sleepTime, modelBuildTime);
+		
+		System.out.println("[ILPSolver.solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn]Finish to solve the model(Criterion:" + criterion 
+				+ ",Alpha:" + alpha_str + ", testSetSize:"+ maxSize+", testSetID:"+ testSetId + ")"+ "\n");
+		
+		return output;
+	}
+	
+	
 	/**2010-03-18: different from solveILPModels_BiCriteria_Manager_TimeLimited(),
 	 * this method returns a ILPOutput result
 	 * @param date
@@ -936,9 +978,15 @@ public class ILPSolver {
 			long modelBuildTime = System.currentTimeMillis() - start;
 			
 			int testSetId = testSets.size();
-			 solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
-					criterion, tcArray, alpha, maxSize, testSetId, H_L_D,
-					timeLimit, sleepTime, modelBuildTime);
+			//2010-03-23: solve ILP models in concurrent
+//			 solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
+//					criterion, tcArray, alpha, maxSize, testSetId, H_L_D,
+//					timeLimit, sleepTime, modelBuildTime);
+			 
+			 //2010-03-23: solve ILP models in sequence
+			 solveILPModels_BiCriteria_Manager_Sequential_CompleteReturn(date,
+					 criterion, tcArray, alpha, maxSize, testSetId, H_L_D,
+					 timeLimit, sleepTime, modelBuildTime);
 			
 			//2010-03-18:load the result from file 
 			String pattern = "Model\\_" + criterion +"\\_"+ alpha+"\\_" + maxSize +
@@ -969,9 +1017,15 @@ public class ILPSolver {
 					modelBuildTime = System.currentTimeMillis() - start;
 					
 					testSetId = testSets.size();
-					solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
-							criterion, tcArray, alpha, maxSize, testSetId, 
-							H_L_D, timeLimit, sleepTime, modelBuildTime);
+					//2010-03-23: solve ILP models in concurrent
+//					solveILPModels_BiCriteria_Manager_TimeLimited_CompleteReturn(date, 
+//							criterion, tcArray, alpha, maxSize, testSetId, 
+//							H_L_D, timeLimit, sleepTime, modelBuildTime);
+					
+					 //2010-03-23: solve ILP models in sequence
+					 solveILPModels_BiCriteria_Manager_Sequential_CompleteReturn(date,
+							 criterion, tcArray, alpha, maxSize, testSetId, H_L_D,
+							 timeLimit, sleepTime, modelBuildTime);
 					
 					pattern = "Model\\_" + criterion +"\\_"+ alpha+"\\_" + maxSize +
 					"\\_"+ testSetId + "\\_RA_" + H_L_D + "_output.txt";										
