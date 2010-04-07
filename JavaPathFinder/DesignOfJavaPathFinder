@@ -1,0 +1,59 @@
+1.State is a snapshot of the current execution status 
+of the application (mostly thread and heap states), plus the execution
+history (path) that lead to this state. State is encapsulated in the
+gov.nasa.jpf.jvm.SystemState instance.
+KernalState: the application snapshot (threads and heaps)
+trail: the last Transaction (execution history)
+current and next ChoiceGenerator: the choice enumeration that produces
+different transitions (but not necessarily new states)
+2.gov.nasa.jpf.jvm.Transition is the sequence of instructions that leads from one state
+to the next. There is no context switch within a transition, it's all in
+the same thread.
+3.Choice is what starts a new transition. This can be a different thread (e.g., scheduling choice),
+or different random data value.
+
+Examples:
+1.gov.nasa.jpf.tools.VarTracker
+2.gov.nasa.jpf.tools.StateSpaceDot
+3.gov.nasa.jpf.tools.SearchMonitor
+4.gov.nasa.jpf.tools.MethodTester
+5.gov.nasa.jpf.tools.LogConsole
+6.gov.nasa.jpf.tools.JavaJPF
+7.gov.nasa.jpf.tools.InsnCounter
+8.gov.nasa.jpf.tools.GenPeerDispatcher
+9.gov.nasa.jpf.tools.GenPeer
+10.gov.nasa.jpf.tools.ExecTracker
+
+Note:
+1. classpath is used by JPF to find the SUT (subject under test) classes,
+'native_classpath' is how the system finds the classes that constitue JPF 
+at runtime (including the listeners)
+
+Run JPF (suppose the project jpf-core is kept in the directory "F://MyProgram/JPF/jpf-core", where is the current directory):
+1. Run JPF from the command line:
+1).ant->build the project, a "build" directory is created. 
+2).create a site.properties file, a sample like this:
+jpf.home = ..
+jpf-core = ${jpf.home}/jpf-core
+3).revise the jpf.properties
+config_path = .
+4).revise the default.properties
+user.home = .
+site = ${user.home}/site.properties
+5). run the JPF to test Racer.jpf
+java -jar build/RunJPF.jar +site=./site.properties src/examples/Racer.jpf
+
+2. Run JPF from Eclipse
+1).Copy the whole "build" directory in the last example to the current path. 
+1).configure the default.properties is enough:  add "config_path = ."
+2).Run JPF ->Rand (The JPF serves as another common JVM in this setting)
+3).Run JPF ->src/Rand.jpf (The JPF can detect the DivideByZero exceptions in this setting)
+
+
+3. Parameters
+report.console.finished = result, statistics: SearchListener.searchFinished()->Publisher.publishFinished()
+report.console.property_violation=error,snapshot: SearchListener.propertyViolated(Search search);
+report.console.start=jpf,sut,platform,user,dtg,config: SearchListener.searchStart()
+
+search.properties=gov.nasa.jpf.jvm.NotDeadlockedProperty,gov.nasa.jpf.jvm.NoUncaughtExceptionsProperty:
+
