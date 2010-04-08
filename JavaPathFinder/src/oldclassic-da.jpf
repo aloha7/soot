@@ -2,6 +2,7 @@
 
 target=oldclassic
 
+report.console.start=jpf,sut,platform,user,dtg,config
 # turn off instruction trace
 report.console.property_violation=error,snapshot
 

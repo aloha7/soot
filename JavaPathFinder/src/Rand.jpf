@@ -1,4 +1,6 @@
 target = Rand
 
 cg.enumerate_random = true
-report.console.property_violation=error,trace
+report.console.start=jpf,sut,platform,user,dtg,config
+listener=gov.nasa.jpf.listener.PreciseRaceDetector,gov.nasa.jpf.listener.CoverageAnalyzer
+report.console.property_violation=error,trace,snapshot,output

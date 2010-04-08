@@ -1,5 +1,7 @@
 target = Racer
 
+report.console.start=jpf,sut,platform,user,dtg,config
+
 listener=gov.nasa.jpf.listener.PreciseRaceDetector
 
 report.console.property_violation=error,trace

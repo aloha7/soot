@@ -1,0 +1,7 @@
+target=CoverageTest
+
+
+cg.enumerate_random = true
+report.console.start=jpf,sut,platform,user,dtg,config
+listener=gov.nasa.jpf.listener.VarTracker
+report.console.property_violation=error,trace,snapshot,output
