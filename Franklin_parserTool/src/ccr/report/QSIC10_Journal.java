@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -91,9 +92,9 @@ public class QSIC10_Journal {
 		StringBuilder sb_nonOverlapping = new StringBuilder();
 		
 		sb.append("MutantOperator").append("\t").append("FaultNo").
-				append("\t").append("FailedTestCase").append("\n");
+				append("\t").append("FailedTestCaseNo").append("\t").append("CDs").append("\n");
 		sb_nonOverlapping.append("MutantOperator").append("\t").append("FaultNo").
-		append("\t").append("FailedTestCase").append("\n");
+				append("\t").append("FailedTestCaseNo").append("\t").append("CDs").append("\n");
 		
 		Iterator<MutantOperator> ite_MO = MOList.values().iterator();
 		while(ite_MO.hasNext()){
@@ -102,12 +103,16 @@ public class QSIC10_Journal {
 			sb_nonOverlapping.append(MO.toString_nonOverlapping()).append("\n");
 		}
 		
-		String filename = saveDir + "\\" + "mutantOperator_CD.txt";
+		DecimalFormat format = new DecimalFormat("0.00");
+		String filename = saveDir + "/" + "mutantOperator_CD_" +format.format(lower_fr)
+			+"_" + format.format(upper_fr)+ ".txt";
 		Logger.getInstance().setPath(filename, false);
 		Logger.getInstance().write(sb.toString());
 		Logger.getInstance().close();
 		
-		filename = saveDir + "\\" + "mutantOperator_CD_nonOverlapping.txt";
+		
+		filename = saveDir + "/" + "mutantOperator_CD_nonOverlapping_"+format.format(lower_fr)
+			+"_" + format.format(upper_fr)+".txt";
 		Logger.getInstance().setPath(filename, false);
 		Logger.getInstance().write(sb_nonOverlapping.toString());
 		Logger.getInstance().close();
@@ -130,7 +135,7 @@ public class QSIC10_Journal {
 				String line;
 				while((line = br.readLine())!= null){
 					String[] strs = line.split("\t");
-					String id = strs[0];
+					String id = strs[0].substring(0,3); //we use the first chars as the ID of mutation operator
 					
 					if(!MOList.containsKey(id)){
 						MOList.put(id, new MutantOperator(id));
@@ -172,7 +177,7 @@ public class QSIC10_Journal {
 				
 				while(ite.hasNext()){
 					String faultId = ite.next();
-					File file = new File(dir + "\\" + "detailed_" + faultId + "_" 
+					File file = new File(dir + "/" + "detailed_" + faultId + "_" 
 						+ (Integer.parseInt(faultId) + 1) + ".txt");
 					if(file.exists()){
 						try {
@@ -269,6 +274,7 @@ public class QSIC10_Journal {
 			sb.append(id).append("\t").append(mutants.size()).append("\t");
 			
 			ArrayList<Double> validateCDs = getCD_FailedTestCases();
+			sb.append(validateCDs.size()).append("\t");
 			for(int i = 0; i < validateCDs.size(); i ++){
 				sb.append(validateCDs.get(i)).append("\t");
 			}			
@@ -280,6 +286,7 @@ public class QSIC10_Journal {
 			sb.append(id).append("\t").append(mutants.size()).append("\t");
 			
 			ArrayList<Double> validateCDs = getCD_FailedTestCases_NonOverlapping();
+			sb.append(validateCDs.size()).append("\t");
 			for(int i = 0; i < validateCDs.size(); i ++){
 				sb.append(validateCDs.get(i)).append("\t");
 			}			
@@ -318,23 +325,26 @@ public class QSIC10_Journal {
 	
 	
 	public static void main(String[] args) {
-		String saveDir = System.getProperty("user.dir") + "\\src\\ccr" +
-		"\\experiment\\Context-Intensity_backup\\TestHarness" +
-		"\\QSIC_Journal\\MutantOperator_CD\\";
+		if(args.length <2){
+			System.out.println("Please specify the upper and lower bound of failure rates of mutants");			
+		}else{
+			String saveDir = System.getProperty("user.dir") + "/src/ccr" +
+			"/experiment/Context-Intensity_backup/TestHarness" +
+			"/QSIC_Journal/MutantOperator_CD/";
+			
+			
+			String mutantFile = saveDir + "MO_fault_FR.txt";
+			
+			double lower_fr = Double.parseDouble(args[0]);
+			double upper_fr = Double.parseDouble(args[1]);
+			
+			String testDetailDir = System.getProperty("user.dir") + "/src/ccr" +
+					"/experiment/Context-Intensity_backup/TestHarness" +
+					"/20100121/Mutant/";
+			
+			new QSIC10_Journal().analyzeCD(mutantFile, lower_fr, upper_fr, testDetailDir, saveDir);			
+		}
 		
-		
-		String mutantFile = saveDir + "MO_fault_FR.txt";
-		
-		double lower_fr = 0.0;
-		double upper_fr = 1.0;
-		
-		String testDetailDir = System.getProperty("user.dir") + "\\src\\ccr" +
-				"\\experiment\\Context-Intensity_backup\\TestHarness" +
-				"\\20100121\\Mutant\\";
-		
-		
-		
-		new QSIC10_Journal().analyzeCD(mutantFile, lower_fr, upper_fr, testDetailDir, saveDir);
 	}
 
 }
