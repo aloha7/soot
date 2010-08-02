@@ -95,8 +95,12 @@ public class Oracle {
 				String testcase = tmp[0];
 
 				String[] outputs = tmp[1].split(" ");
-				int moved = Integer.parseInt(outputs[0].substring(outputs[0].indexOf(":")+ ":".length()));
-				int reliable = Integer.parseInt(outputs[1].substring(outputs[1].indexOf(":")+ ":".length()));
+//				int moved = Integer.parseInt(outputs[0].substring(outputs[0].indexOf(":")+ ":".length()));
+//				int reliable = Integer.parseInt(outputs[1].substring(outputs[1].indexOf(":")+ ":".length()));
+				
+				int moved = Integer.parseInt(outputs[1]);
+				int reliable = Integer.parseInt(outputs[3]);
+				
 				ApplicationResult result = new ApplicationResult(moved, reliable);
 				
 				outcome.put(testcase, result);
