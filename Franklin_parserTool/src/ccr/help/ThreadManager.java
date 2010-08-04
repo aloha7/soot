@@ -38,12 +38,14 @@ public class ThreadManager {
 					finished = true;
 				}	
 			}else{ //for threads which have no time limited
+				long minutes =0, minutes_tmp;
 				while(t.isAlive()){
 					duration = System.currentTimeMillis() - start;
-					
-					if(duration %(60*1000) == 0){ //report the verbose information per hour
+					minutes_tmp = duration/(60*1000);
+					if(minutes_tmp > minutes){ //report the verbose information per hour
+						minutes ++;
 						System.out.println("[ThreadManager.startThread]This thread " +
-								"has runned:" + (double)duration/(60*1000) + " minutes");						
+								"has runned:" + (double)minutes_tmp + " minutes");						
 					}
 					
 					Thread.sleep(sleep_time);
