@@ -275,7 +275,7 @@ public class TestDriver {
 		HashMap execHistory = new HashMap();
 				
 		String historyFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
-				+ date + "/detailed_" + faultNumber + "_"+ (Integer.parseInt(faultNumber) + 1) + ".txt";
+				+ date + "/detailed_" + Integer.parseInt(faultNumber) + "_"+ (Integer.parseInt(faultNumber) + 1) + ".txt";
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(
 					historyFile));
@@ -355,7 +355,7 @@ public class TestDriver {
 						else
 							line += "0" + "\t";
 						line += "1" + "\n";
-//						System.out.print(line);
+						System.out.print(line);
 						sb.append(line);
 				}
 			}
@@ -481,7 +481,9 @@ public class TestDriver {
 					}
 				}
 				bw.write(sb.toString());
+				bw.flush();
 				bw.close();
+				System.out.println("The data has been flushed");
 			} catch (IOException e) {
 				System.out.println(e);
 			}
