@@ -462,8 +462,9 @@ public class TestDriver {
 								+ "."
 								+ appClassName.substring(0, appClassName
 										.indexOf(".java"));
-						String faultyVersion =appClassName.substring(appClassName.indexOf("_")+"_".length()); 
-						if(!faultList.contains(faultyVersion))
+						String faultyVersion ="" + Integer.parseInt(appClassName.substring(appClassName.indexOf("_")+"_".length())); 
+						
+						if(!faultList.contains(faultyVersion) &&!faultList.contains("0" + faultyVersion))
 							continue;
 						
 
