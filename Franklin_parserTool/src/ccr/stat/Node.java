@@ -86,6 +86,11 @@ public class Node {
 				" Def" + Def + " Use" + Use;
 	}
 	
+	public boolean equals(Node tmp){
+		return index.equals(tmp.index);
+	}
+	
+	
 	public String toString() {
 		
 		return index;
