@@ -1313,7 +1313,7 @@ public class Reporter_Reduction {
 				sb.append(format.format(alpha)).append("\t");	
 			}
 			
-			sb.append(result.min).append("\t").append(times_tmp.length).append("\t").append(result.mean).append("\t").
+			sb.append(times_tmp.length).append("\t").append(result.min).append("\t").append(result.mean).append("\t").
 			append(result.median).append("\t").append(result.max).append("\t").append(result.std).append("\n");
 		}
 		
