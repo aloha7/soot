@@ -147,24 +147,24 @@ public class ASE10 {
 			sb.append("\n");
 			
 			//compare RA-H with CA
-//			for(int i = 0; i < criteria.length; i ++){
-//				String criterion = criteria[i];
-//				sb.append( criterion+"_RAH-CA\t");
-//				for(int k = 0; k < diffs.length; k ++){
-//					double diff = diffs[k];
-//					ArrayList criterion_diffs = null;
-//					if(criterion.equals("AS"))
-//						criterion_diffs = AS_RAH_CA_diffs;
-//					else if(criterion.equals("ASU"))
-//						criterion_diffs = ASU_RAH_CA_diffs;
-//					else if(criterion.equals("A2SU"))
-//						criterion_diffs = A2SU_RAH_CA_diffs;
-//					
-//					HashMap<Double, Integer> threshold_counter = classifyDiff(criterion_diffs, diff);
-//					sb.append(format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_CA_diffs.size()) + "%\t");					
-//				}
-//				sb.append("\n");
-//			}
+			for(int i = 0; i < criteria.length; i ++){
+				String criterion = criteria[i];
+				sb.append( criterion+"_RAH-CA\t");
+				for(int k = 0; k < diffs.length; k ++){
+					double diff = diffs[k];
+					ArrayList criterion_diffs = null;
+					if(criterion.equals("AS"))
+						criterion_diffs = AS_RAH_CA_diffs;
+					else if(criterion.equals("ASU"))
+						criterion_diffs = ASU_RAH_CA_diffs;
+					else if(criterion.equals("A2SU"))
+						criterion_diffs = A2SU_RAH_CA_diffs;
+					
+					HashMap<Double, Integer> threshold_counter = classifyDiff(criterion_diffs, diff);
+					sb.append(format.format((double)threshold_counter.get(diff)*100/(double)AS_RAH_CA_diffs.size()) + "%\t");					
+				}
+				sb.append("\n");
+			}
 			
 			//compare RA-H with RA-L
 			for(int i = 0; i < criteria.length; i ++){
@@ -244,6 +244,7 @@ public class ASE10 {
 		
 		return sb.toString();
 	}
+	
 	
 	
 	public static void saveGenTime(String date, String size_ART){
@@ -739,10 +740,10 @@ public class ASE10 {
 				int sizeConstraint_min =  betas_min[i];
 				int sizeConstraint_max =  betas_max[i];
 				
-//				alpha_mutant_fdr = Reporter_Reduction.getFaultDetectionRate_detailed_BILP_offline(date, 
-//						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
-//						alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, 
-//						H_L_D, single_enabled);
+				alpha_mutant_fdr = Reporter_Reduction.getFaultDetectionRate_detailed_BILP_offline(date, 
+						criterion, mutantFile_date, containHeader_mutant, mutantDetailDir, containHeader_testing, 
+						alpha_min, alpha_max, alpha_interval, sizeConstraint_min, sizeConstraint_max, 
+						H_L_D, single_enabled);
 				
 				
 				String saveFile = System.getProperty("user.dir") + "/src/ccr"
