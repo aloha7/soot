@@ -101,6 +101,13 @@ public class NodeSet implements Cloneable {
 		return this;
 	}
 	
+	public NodeSet remove(int i){
+		if(i >= 0 && i < size() ){
+			nodes.remove(i);
+		}
+		return this;
+	}
+	
 	public NodeSet removeAll() {
 		
 		nodes.clear();
@@ -111,6 +118,7 @@ public class NodeSet implements Cloneable {
 		
 		return nodes.size();
 	}
+	
 	
 	public String display() {
 		
