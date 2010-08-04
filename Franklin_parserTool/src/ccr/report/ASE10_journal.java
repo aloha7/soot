@@ -1,13 +1,19 @@
 package ccr.report;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
+import ccr.help.DataAnalyzeManager;
+import ccr.help.DataDescriptionResult;
 import ccr.test.Logger;
 
 public class ASE10_journal {
@@ -35,7 +41,6 @@ public class ASE10_journal {
 	 * @param diffs
 	 * @return
 	 */
-	
 	public static String saveEffectivenessDifference(String date, String size_ART, double[] diffs){
 		String testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
 		""+date+"/" + size_ART + "/PerValidTS.txt";
@@ -239,9 +244,349 @@ public class ASE10_journal {
 		return sb.toString();
 	}
 	
+	public static String getContextDiversity(String date, String[] size_ARTs){
+		String testSetDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
+		""+date+"/";
+		
+		String[] criteria = {"AllPolicies", "All1ResolvedDU", "All2ResolvedDU"};
+		String[] strategies = {"CA", "RA-H", "RA-L", "RA-R"};
+		
+		
+		String str = null;
+		
+		HashMap<String, HashMap<String, Double>> criterion_sizeART_mean = 
+			new HashMap<String, HashMap<String,Double>>();
+		
+		HashMap<String, HashMap<String, Double>> criterion_sizeART_std= 
+			new HashMap<String, HashMap<String,Double>>();
+		
+		String criterion = null;
+		for(int k = 0; k < size_ARTs.length; k ++){
+			String size_ART = size_ARTs[k];
+			
+			
+			for(int i = 0; i < criteria.length; i ++){
+				for(int j = 0; j < strategies.length; j ++){
+					criterion = criteria[i] + "_" +strategies[j];
+					
+					String testSetFile = null;
+					if(size_ART.equals("128")){
+						testSetFile = testSetDir + "/" + size_ART +
+						"/" + criterion + "_70_CI.txt";
+					}else if(size_ART.equals("Max")){
+						testSetFile = testSetDir + "/" + size_ART +
+						"/" + criterion + "_80_CI.txt";
+					}else{
+						testSetFile = testSetDir + "/" + size_ART +
+						"/" + criterion + "_" + size_ART +"_CI.txt";			
+					}
+							
+					
+					try {
+						BufferedReader br = new BufferedReader(new FileReader(testSetFile));
+						br.readLine();//ignore headers
+						
+						ArrayList<Double> activations = new ArrayList<Double>();
+						//extract the "context diversity"
+						while((str = br.readLine())!= null){
+							String[] strs = str.split("\t");						
+							activations.add(Double.parseDouble(strs[3]));
+						}
+						
+						DataDescriptionResult result = 
+							DataAnalyzeManager.getDataDescriptive(activations);
+						
+						//record the results;
+						HashMap<String, Double> sizeART_mean = null;
+						if(criterion_sizeART_mean.containsKey(criterion)){
+							sizeART_mean = criterion_sizeART_mean.get(criterion);
+						}else{
+							sizeART_mean = new HashMap<String, Double>();
+						}						 
+						sizeART_mean.put(size_ART, result.mean);
+						criterion_sizeART_mean.put(criterion, sizeART_mean);
+						
+						HashMap<String, Double> sizeART_std = null;
+						if(criterion_sizeART_std.containsKey(criterion)){
+							sizeART_std = criterion_sizeART_std.get(criterion);
+						}else{
+							sizeART_std = new HashMap<String, Double>();
+						}
+						sizeART_std.put(size_ART, result.std);
+						criterion_sizeART_std.put(criterion, sizeART_std);
+						
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		
+	
+			//save results for each criterion
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("\t").append("Mean Context Diversity").append("\t\t\t\t\t\t").
+			append("Standard Derivation of Context Diversity").append("\n");
+		sb.append("\t");
+		for(int k = 0; k < size_ARTs.length; k ++){
+			sb.append(size_ARTs[k]).append("\t");	
+		}
+		
+		for(int k = 0; k < size_ARTs.length; k ++){
+			sb.append(size_ARTs[k]).append("\t");	
+		}
+		sb.append("\n");
+		
+		
+		DecimalFormat mean_formatter = new DecimalFormat("0.0");
+		DecimalFormat std_formatter = new DecimalFormat("0.00");
+			for(int i = 0; i < criteria.length; i ++){
+				for(int j = 0; j < strategies.length; j ++){
+					
+					//for each criterion
+					criterion = criteria[i] + "_" + strategies[j];
+					
+					sb.append(criterion).append("\t");
+					
+					
+					
+					if(criterion_sizeART_mean.containsKey(criterion)){
+						HashMap<String, Double> sizeART_meanActivations = 
+							criterion_sizeART_mean.get(criterion);
+						
+						
+						
+						for(int k = 0; k < size_ARTs.length; k ++){
+							String size_ART = size_ARTs[k];
+							double mean = sizeART_meanActivations.get(size_ART);
+							sb.append(mean_formatter.format(mean)).append("\t");
+						}	
+					}else{
+						System.out.println("missing mean situation activation of:"+ criterion);
+					}
+					
+					if(criterion_sizeART_std.containsKey(criterion)){
+						HashMap<String, Double> sizeART_stdActivations = 
+							criterion_sizeART_std.get(criterion);
+						
+						for(int k = 0; k < size_ARTs.length; k ++){
+							String size_ART = size_ARTs[k];
+							double std = sizeART_stdActivations.get(size_ART);
+							sb.append(std_formatter.format(std)).append("\t");
+						}	
+					}else{
+						System.out.println("missing std. situation activation of:"+ criterion);
+					}
+					sb.append("\n");
+				}
+			}
+		
+		return sb.toString();
+	}
+	
+	public static String getSituationActivation(String date, String[] size_ARTs){
+		String testSetDir = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
+		""+date+"/";
+		
+		String[] criteria = {"AllPolicies", "All1ResolvedDU", "All2ResolvedDU"};
+		String[] strategies = {"CA", "RA-H", "RA-L", "RA-R"};
+		
+		
+		String str = null;
+		
+		HashMap<String, HashMap<String, Double>> criterion_sizeART_meanActivations = 
+			new HashMap<String, HashMap<String,Double>>();
+		
+		HashMap<String, HashMap<String, Double>> criterion_sizeART_stdActivations = 
+			new HashMap<String, HashMap<String,Double>>();
+		
+		String criterion = null;
+		for(int k = 0; k < size_ARTs.length; k ++){
+			String size_ART = size_ARTs[k];
+//			String testSetFile = testSetDir + "/" + size_ART + "/";
+			
+			
+			for(int i = 0; i < criteria.length; i ++){
+				for(int j = 0; j < strategies.length; j ++){
+					criterion = criteria[i] + "_" +strategies[j];
+					
+					String testSetFile = null;
+					if(size_ART.equals("128")){
+						testSetFile = testSetDir + "/" + size_ART +
+						"/" + criterion + "_70_CI.txt";
+					}else if(size_ART.equals("Max")){
+						testSetFile = testSetDir + "/" + size_ART +
+						"/" + criterion + "_80_CI.txt";
+					}else{
+						testSetFile = testSetDir + "/" + size_ART +
+						"/" + criterion + "_" + size_ART +"_CI.txt";			
+					}
+							
+					
+					try {
+						BufferedReader br = new BufferedReader(new FileReader(testSetFile));
+						br.readLine();//ignore headers
+						
+						ArrayList<Double> activations = new ArrayList<Double>();
+						//extract the "Situation Activations"
+						while((str = br.readLine())!= null){
+							String[] strs = str.split("\t");						
+							activations.add(Double.parseDouble(strs[4]));
+						}
+						
+						DataDescriptionResult result = 
+							DataAnalyzeManager.getDataDescriptive(activations);
+						
+						//record the results;
+						HashMap<String, Double> sizeART_meanActivations = null;
+						if(criterion_sizeART_meanActivations.containsKey(criterion)){
+							sizeART_meanActivations = criterion_sizeART_meanActivations.get(criterion);
+						}else{
+							sizeART_meanActivations = new HashMap<String, Double>();
+						}						 
+						sizeART_meanActivations.put(size_ART, result.mean);
+						criterion_sizeART_meanActivations.put(criterion, sizeART_meanActivations);
+						
+						HashMap<String, Double> sizeART_stdActivations = null;
+						if(criterion_sizeART_stdActivations.containsKey(criterion)){
+							sizeART_stdActivations = criterion_sizeART_stdActivations.get(criterion);
+						}else{
+							sizeART_stdActivations = new HashMap<String, Double>();
+						}
+						sizeART_stdActivations.put(size_ART, result.std);
+						criterion_sizeART_stdActivations.put(criterion, sizeART_stdActivations);
+						
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		
+	
+			//save results for each criterion
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("\t").append("Mean Situation Activations").append("\t\t\t\t\t\t").
+			append("Standard Derivation of Situation Activation").append("\n");
+		sb.append("\t");
+		for(int k = 0; k < size_ARTs.length; k ++){
+			sb.append(size_ARTs[k]).append("\t");	
+		}
+		
+		for(int k = 0; k < size_ARTs.length; k ++){
+			sb.append(size_ARTs[k]).append("\t");	
+		}
+		sb.append("\n");
+		
+		
+		DecimalFormat mean_formatter = new DecimalFormat("0.0");
+		DecimalFormat std_formatter = new DecimalFormat("0.00");
+			for(int i = 0; i < criteria.length; i ++){
+				for(int j = 0; j < strategies.length; j ++){
+					
+					//for each criterion
+					criterion = criteria[i] + "_" + strategies[j];
+					
+					sb.append(criterion).append("\t");
+					
+					
+					
+					if(criterion_sizeART_meanActivations.containsKey(criterion)){
+						HashMap<String, Double> sizeART_meanActivations = 
+							criterion_sizeART_meanActivations.get(criterion);
+						
+						
+						
+						for(int k = 0; k < size_ARTs.length; k ++){
+							String size_ART = size_ARTs[k];
+							double mean = sizeART_meanActivations.get(size_ART);
+							sb.append(mean_formatter.format(mean)).append("\t");
+						}	
+					}else{
+						System.out.println("missing mean situation activation of:"+ criterion);
+					}
+					
+					if(criterion_sizeART_stdActivations.containsKey(criterion)){
+						HashMap<String, Double> sizeART_stdActivations = 
+							criterion_sizeART_stdActivations.get(criterion);
+						
+						for(int k = 0; k < size_ARTs.length; k ++){
+							String size_ART = size_ARTs[k];
+							double std = sizeART_stdActivations.get(size_ART);
+							sb.append(std_formatter.format(std)).append("\t");
+						}	
+					}else{
+						System.out.println("missing std. situation activation of:"+ criterion);
+					}
+					sb.append("\n");
+				}
+			}
+		
+		return sb.toString();
+		
+	}
+	
+	public static void motivationExample(int[] locationTrace){
+		if(locationTrace.length ==4){
+			int[] statements = new int[4];
+			if(locationTrace[0] == 1){
+				statements[0]=6;
+			}else if(locationTrace[0]==0){
+				statements[0]=7;
+			}
+			
+			
+			if(locationTrace[1] == 2){
+				statements[1]=11;
+			}else if(locationTrace[1]==1){
+				statements[1]=13;
+			}else if(locationTrace[1]==0){
+				statements[1]=14;
+			}
+			
+			if(locationTrace[2] == 3){
+				statements[2]=18;
+			}else if(locationTrace[2]==2){
+				statements[2]=20;
+			}else if(locationTrace[2]==1){
+				statements[2]=21;
+			}
+			
+			
+			if(locationTrace[3] == 3){
+				statements[3]=25;
+			}else if(locationTrace[3]==2){
+				statements[3]=27;
+			}else if(locationTrace[3]==1){
+				statements[3]=28;
+			}
+			
+			for(int i =0; i < locationTrace.length; i++){
+				System.out.println(statements[i]);
+			}
+		}
+	}
+
+	
+	
 	public static void main(String[] args) {
 		
-		String instruction = args[0];
+		String instruction;
+		if(args.length ==0){
+			instruction = "motivationExample";
+		}else{
+			instruction = args[0];
+		}
 		
 		if(instruction.equals("saveEffectivenessDifference")){
 			String date = "20100618_ASEJournal";
@@ -261,6 +606,35 @@ public class ASE10_journal {
 			}
 			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
 			""+date+"/effectivenessDiff.txt";
+			Logger.getInstance().setPath(filename, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		}else if(instruction.equals("motivationExample")){
+			int[] locationTrace = new int[]{1, 0, 1, 1};
+			motivationExample(locationTrace);
+		}else if(instruction.equals("getSituationActivations")){
+
+			String date = "20100618_ASEJournal";
+			String[] size_ARTs = {"1", "2", "4", "8", "16", "32", "64", "128","Max"};
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append(getSituationActivation(date, size_ARTs));
+			
+			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
+			""+date+"/situationActivations.txt";
+			Logger.getInstance().setPath(filename, false);
+			Logger.getInstance().write(sb.toString());
+			Logger.getInstance().close();
+		}else if(instruction.equals("getContextDiversity")){
+
+			String date = "20100618_ASEJournal";
+			String[] size_ARTs = {"1", "2", "4", "8", "16", "32", "64", "128","Max"};
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append(getContextDiversity(date, size_ARTs));
+			
+			String filename = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
+			""+date+"/ContextDiversity.txt";
 			Logger.getInstance().setPath(filename, false);
 			Logger.getInstance().write(sb.toString());
 			Logger.getInstance().close();
