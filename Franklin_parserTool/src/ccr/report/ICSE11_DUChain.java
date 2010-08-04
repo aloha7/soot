@@ -315,7 +315,7 @@ public class ICSE11_DUChain {
 	
 	
 	public static void executeTestSets(String date, String criterion, 
-			  String oldOrNew){
+			  String oldOrNew, String date_exec_history){
 		TestSet testSets[][] = new TestSet[1][];
 		String testSetFile = "src/ccr/experiment/Context-Intensity_backup/TestHarness/"
 			+ date + "/" 
@@ -349,8 +349,9 @@ public class ICSE11_DUChain {
 		}
 
 		// 2.run the test
-		TestDriver.test(versionPackageName, "TestCFG2", testSets,
-			saveFile, faultList);
+		TestDriver.test_load(testSets, faultList, date_exec_history, saveFile);
+//		TestDriver.test(versionPackageName, "TestCFG2", testSets,
+//			saveFile, faultList);
 	}
 		
 	public static void testGetDUChain(){
@@ -399,7 +400,8 @@ public class ICSE11_DUChain {
 			String date = args[1];		
 			String criterion = args[2];
 			String oldOrNew = args[3];
-			executeTestSets(date, criterion, oldOrNew);
+			String exeHistoryDate = args[4];
+			executeTestSets(date, criterion, oldOrNew, exeHistoryDate);
 		}else if(instruction.equals("getDUChains")){
 			String criterion = args[1];
 			getDUChain(criterion);
