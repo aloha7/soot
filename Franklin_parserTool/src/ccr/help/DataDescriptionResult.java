@@ -8,4 +8,9 @@ public class DataDescriptionResult {
 	public double std;
 	
 	public double sum;
+	
+	public String toString(){
+		return "min:" + min + "\t" + "median:" + median + "\t" + "mean:" + "\t"
+		 	+ "max: " + max + "\t" + "std:" + std + "\t" + "sum:" + "\t";
+	}
 }
