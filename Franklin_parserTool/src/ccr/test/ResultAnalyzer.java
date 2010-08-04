@@ -2443,7 +2443,7 @@ public class ResultAnalyzer {
 
 				Object effectiveness = metric.get(fault);
 				if (effectiveness == null) {
-					effectiveness = metric.get(Integer.parseInt(fault) + "");
+					effectiveness = metric.get("0" + Integer.parseInt(fault));
 				}
 				sb.append(effectiveness + "\t");
 			}
@@ -2470,6 +2470,9 @@ public class ResultAnalyzer {
 				String fault = (String) faultList.get(j);
 				if(!metric.containsKey(fault)){
 					fault = Integer.parseInt(fault) + "";
+				}
+				if(!metric.containsKey(fault)){
+					fault = "0" + fault;
 				}
 				
 				Double performance = (Double) metric.get(fault);
