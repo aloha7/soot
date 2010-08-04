@@ -386,24 +386,50 @@ public class ILPSolver {
 		StringBuilder sb = new StringBuilder();
 		
 		//2.1. build the objective function
-		sb.append("min:");			
+		sb.append("min:");
+		
+		//3010-03-24: for RA-D
+		String CD_sum = ""; //
+		String testSuiteSize = "";// CD_sum/testSuiteSize = CD_avg
+		
 		for(int i = 0; i < tcArray.size(); i ++){
 			//2009-12-20: use CR rather than CD for scaling purpose
 			TestCase tc = tcArray.get(i);
 			double CD = tc.CI; //2010-03-18(big difference here):double CR = tc.CI/Double.parseDouble(tc.length);
 			double weight = 0.0;
 			
+			
 			//2010-03-22: the objective function is quite different for diverse RA strategies
 			if(H_L_D.equals("H")){ //for RA-H: minimize the context diversity values
-				weight = alpha - (1-alpha)*CD;	
+				weight = alpha - (1-alpha)*CD;
+				sb.append(" + " + new DecimalFormat("0.0000").format(weight) + " x"+ i);
 			}else if(H_L_D.equals("L")){ //For RA-L: maximize the context diversity values
 				weight = alpha + (1-alpha) * CD;
+				sb.append(" + " + new DecimalFormat("0.0000").format(weight) + " x"+ i);
 			}else if(H_L_D.equals("D")){ //For RA-D: randomize the context diversity values
-				weight = 0.0; //2010-03-22: no idea how to model RA-D
+				//2010-03-22: no idea how to model RA-D
+				
+				if(i != tcArray.size() - 1){ 
+					CD_sum += " " + CD + " x" + i + " +";
+					testSuiteSize = " " + " x" + i + " +";
+				}else{// 2010-03-24: the last test suite
+					CD_sum += " " + CD + " x" + i;
+					testSuiteSize = " " + " x" + i;
+				}
 			}
-			
-			sb.append(" + " + new DecimalFormat("0.0000").format(weight) + " x"+ i);
 		}
+		
+		if(H_L_D.equals("D")){ 
+			//2010-03-24: the objective function for RA-D: min: alpha * sigma(x_i) - (1-alpha) * [sigma/ ] 
+			for(int i = 0; i < tcArray.size(); i ++){
+				TestCase tc = tcArray.get(i);
+				double CD = tc.CI;
+				double weight = 0.0;
+				
+			}
+		}
+		
+		
 		sb.append(";\n");
 
 		//2009-12-21: 
