@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import ccr.help.DataAnalyzeManager;
 import ccr.help.DataDescriptionResult;
@@ -323,11 +324,109 @@ public class QSIC10_Journal {
 		}
 	}
 	
+	public static void getCD_failedTestCase(String fileName){
+		File file = new File(fileName);
+		
+		StringBuilder sb = new StringBuilder();
+		String str = null;
+		if(file.exists()){
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				br.readLine();
+				
+				System.out.println("MutantOperator\tFaultNo\tFailedTestCaseNo");
+				
+				
+				HashMap<String, HashMap<String, Integer>> mo_cd_frequency = new
+					HashMap<String, HashMap<String,Integer>>();
+				
+				while((str = br.readLine())!= null){
+					String[] strs = str.split("\t");
+					
+					//for each mutation operator
+					
+					
+					if(!strs[1].equals("0")){
+						
+						HashMap<String, Integer> cd_frequency = new 
+							HashMap<String, Integer>();
+						
+						for(int i = 3; i< strs.length; i ++){
+							sb.append(strs[i]).append("\t");
+							
+							if(cd_frequency.containsKey(strs[i])){
+								int frequency = cd_frequency.get(strs[i]);
+								cd_frequency.put(strs[i], frequency + 1);
+							}else{
+								cd_frequency.put(strs[i], 1);
+							}
+							
+						}
+						
+						sb.append("\n");
+						
+						System.out.println(strs[0] + "\t" + strs[1] + "\t"  
+								+ strs[2] + "\t" + (strs.length-3) + "\t");
+						
+						mo_cd_frequency.put(strs[0], cd_frequency);
+						
+					}
+				}
+				
+				StringBuilder sb_1 = new StringBuilder();
+				Iterator<String> mo_ite = mo_cd_frequency.keySet().iterator();
+				
+				String mo = mo_ite.next();
+				HashMap<String, Integer> cd_frequency = mo_cd_frequency.get(mo);
+				List<String> cds = Arrays.asList(cd_frequency.keySet().toArray(new String[0]));
+				
+				String[] cds_temp = cds.toArray(new String[0]);
+				
+				for(int i = 0; i < cds_temp.length; i ++){
+					sb_1.append(cds_temp[i]).append("\t");
+				}
+				sb_1.append("\n");
+				for(int i = 0; i < cds_temp.length; i ++){
+					
+					String cd = cds_temp[i];
+					sb_1.append(cd_frequency.get(cd)).append("\t");
+				}
+				sb_1.append("\n");
+				
+				while(mo_ite.hasNext()){
+					mo = mo_ite.next();
+					cd_frequency = mo_cd_frequency.get(mo);
+					
+					for(int i = 0; i < cds_temp.length; i ++){
+						String cd = cds_temp[i];
+						sb_1.append(cd_frequency.get(cd)).append("\t");
+					}
+					sb_1.append("\n");				
+				}
+				
+				String filename = "c:\\normalityTest_frequency.txt";
+				Logger.getInstance().setPath(filename, false);
+				Logger.getInstance().write(sb_1.toString());
+				Logger.getInstance().close();
+				
+				filename = "c:\\normalityTest.txt";
+				Logger.getInstance().setPath(filename, false);
+				Logger.getInstance().write(sb.toString());
+				Logger.getInstance().close();
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+	}
 	
 	public static void main(String[] args) {
+		String instruction = args[0];
 		if(args.length <2){
 			System.out.println("Please specify the upper and lower bound of failure rates of mutants");			
-		}else{
+		}else if(instruction.equals("analyzeCD")){
 			String saveDir = System.getProperty("user.dir") + "/src/ccr" +
 			"/experiment/Context-Intensity_backup/TestHarness" +
 			"/QSIC_Journal/MutantOperator_CD/";
@@ -343,6 +442,10 @@ public class QSIC10_Journal {
 					"/20100121/Mutant/";
 			
 			new QSIC10_Journal().analyzeCD(mutantFile, lower_fr, upper_fr, testDetailDir, saveDir);			
+		}else if(instruction.equals("getCD_failedTestCase")){
+			String fileName = "src/ccr/experiment/Context-Intensity_backup/TestHarness/" +
+			"/QSIC_Journal/MutantOperator_CD/mutantOperator_CD_0.00_1.00.txt";
+			getCD_failedTestCase(fileName);
 		}
 		
 	}
