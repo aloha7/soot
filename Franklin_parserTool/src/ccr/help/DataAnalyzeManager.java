@@ -99,6 +99,14 @@ public class DataAnalyzeManager {
 		return percentileValue;
 	}
 	
+	public static DataDescriptionResult getDataDescriptive(ArrayList<Double> data){
+		double[] src = new double[data.size()];
+		for(int i = 0; i < data.size(); i ++){
+			src[i] = data.get(i);
+		}
+		return getDataDescriptive(src);
+	}
+	
 	/**2010-03-14:get the min, max, mean, median, std description of the data Array
 	 * 
 	 * @param data: 
@@ -123,7 +131,7 @@ public class DataAnalyzeManager {
 			double ins = data[i];
 			temp += (ins - mean)*(ins-mean);
 		}
-		double std = Math.sqrt(temp/data.length);
+		double std = Math.sqrt(temp/(data.length-1));
 		double median = getPercentileValue(data, 50);
 		
 		descriptionResult.min = min;
@@ -140,15 +148,15 @@ public class DataAnalyzeManager {
 		double[] x = new double[]{3, 5, 9};
 		double[] y = new double[]{8, 11, 14};
 		
-//		System.out.println(DataAnalyzeManager.getPearsonCorrelationTest(x, y));
+		System.out.println(DataAnalyzeManager.getPearsonCorrelationTest(x, y));
 		
 //		x = new double[]{5, 3, 7, 9, 8, 11, 13, 15};
 		
 //		x = new double[]{4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7,7, 8, 8, 9, 9, 9, 10, 10, 10};
 		
-		x = new double[]{2, 3, 5, 9, 11};
+//		x = new double[]{2, 3, 5, 9, 11};
 		
-		System.out.println(getPercentileValue(x, 50));
+//		System.out.println(getPercentileValue(x, 50));
 		
 	}
 	
