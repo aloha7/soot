@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Vector;
 
 import ccr.app.ApplicationResult;
-import ccr.app.TestCFG2_CI;
+import ccr.help.CFGHelper;
 import ccr.stat.CFG;
 import ccr.stat.Criterion;
 import ccr.stat.Node;
@@ -247,7 +247,7 @@ public class TestCaseStatistics {
 		TestCase t = new TestCase();
 		t.index = index;
 		
-		TestCFG2_CI ins = new TestCFG2_CI();
+		CFGHelper ins = new CFGHelper();
 		
 		long startTime = System.currentTimeMillis();
 		Object output = ins.application(t.index);
