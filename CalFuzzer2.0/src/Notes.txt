@@ -1,0 +1,27 @@
+2010-09-13:
+Main methods:
+(1) javato.activetesting.atominfer.InferAtomicBlocks
+(2) javato.activetesting.common.MersenneTwisterFast
+(3) javato.activetesting.instrumentor.InstrumentorForActiveTesting
+(4) javato.determinism.DeterminismInferenceMain
+(5) javato.determinism.DeterminismInferenceMain2
+
+RaceFuzzer:
+To invoke SOOT:
+MainClass: javato.activetesting.instrumentor.InstrumentorForActiveTesting
+arguments java -p jb use-original-names -validate -keep-line-number -no-output-inner-classes-attribute -d ./tmpclasses -x javato -x edu.berkeley.cs.detcheck --app benchmarks.testcases.TestRace1
+(1) Configurations: javato.activetesting.common.Parameters
+
+(2) Visitor (Parser of the binary code): javato.instrumentor.RecursiveVisitor;(Main Controller) 
+	javato.activetesting.VisitorForActiveTesting (Special Handling of interested fields or method calling)
+	javato.instrumentor.Visitor (Instrumentation: addCall(), addCallWithObject())
+
+(3) Observer (Code used to inserted into the instrumetation):javato.activetesting.analysis.ObserverForActiveTesting : 
+	javato.instrumentor.TransformerForInstrumentation (internalTransform())
+	
+Output: iidToLine.map.html; javato.usedids;	./tmpclasses/benchmarks/testcases/
+
+Analysis-Framework:
+javato.activetesting.HybridAnalysis: infer potential data races statically 
+javato.activetesting.RaceFuzzerAnalysis: validate potential data races dynamically  
+javato.activetesting.activechecker: interleaving scheduler
