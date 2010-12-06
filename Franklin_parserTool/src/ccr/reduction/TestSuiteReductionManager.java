@@ -75,7 +75,7 @@ public class TestSuiteReductionManager {
 	
 	public static HashMap<Integer, HashMap<Double, ArrayList<TestSet>>> buildAndSolveILPs_BiCriteria_Manager(String date, String criterion, 
 			double alpha_min, double alpha_max, double alpha_interval, int beta_min, int beta_max, int beta_interval,
-			ArrayList<TestSet> testSets_beforeReduction, long timeLimit,	long sleepTime){		
+			ArrayList<TestSet> testSets_beforeReduction, long timeLimit,	long sleepTime, boolean use_DR){		
 	
 		HashMap<Integer, HashMap<Double, ArrayList<TestSet>>> beta_alpha_reducedTestSets = new 
 			HashMap<Integer, HashMap<Double,ArrayList<TestSet>>>();
@@ -97,7 +97,7 @@ public class TestSuiteReductionManager {
 				for(int i = 0; i < testSets_beforeReduction.size(); i ++){
 					TestSet testSet_beforeReduction = testSets_beforeReduction.get(i);
 					long start = System.currentTimeMillis();					
-					buildILPModels_BiCriteria_Manager(date, criterion, alpha, sizeConstraint, testSet_beforeReduction);					
+					buildILPModels_BiCriteria_Manager(date, criterion, alpha, sizeConstraint, testSet_beforeReduction, use_DR);					
 					long modelBuildTime = System.currentTimeMillis() - start;
 					
 					TestSet reducedTestSet = solveILPModels_BiCriteria_Manager_TimeLimited(date, criterion, testSet_beforeReduction, alpha,
@@ -124,7 +124,7 @@ public class TestSuiteReductionManager {
 	 * @return
 	 */
 	public static ArrayList<TestCase> buildILPModels_BiCriteria_Manager(String date, String criterion,
-			double alpha, int sizeConstraint, TestSet testSet_beforeReduction){
+			double alpha, int sizeConstraint, TestSet testSet_beforeReduction, boolean use_DR){
 		
 		ArrayList<TestCase> testSet = null;
 		boolean containHeader = true;
@@ -142,7 +142,7 @@ public class TestSuiteReductionManager {
 			+ testSet_beforeReduction.index +".txt";	
 				
 		testSet = buildILPModel_BiCriteria(criterion, testcaseFile, containHeader, alpha, sizeConstraint, 
-				modelFile, infoFile, testSet_beforeReduction);
+				modelFile, infoFile, testSet_beforeReduction, use_DR);
 		
 		return testSet;
 	}
@@ -162,7 +162,7 @@ public class TestSuiteReductionManager {
 	 * @return: the test set with detailed coverage information 
 	 */
 	public static ArrayList<TestCase> buildILPModel_BiCriteria(String criterion, String testcaseFile, boolean containHeader, double alpha, 
-			int sizeConstraints, String modelFile, String infoFile, TestSet testSet_BeforeReduce){
+			int sizeConstraints, String modelFile, String infoFile, TestSet testSet_BeforeReduce, boolean use_DR){
 		
 		//1. read info of all test cases
 		HashMap<String, TestCase> index_tcCov = new HashMap<String, TestCase>();
@@ -186,10 +186,17 @@ public class TestSuiteReductionManager {
 		
 		//3.1. build the objective function
 		sb.append("min:");			
+
 		for(int i = 0; i < testSet_cover.size(); i ++){
 			//2010-11-15: integrate CD into the objective function 
-			TestCase tc = testSet_cover.get(i);		
-			double CD = tc.CI;
+			TestCase tc = testSet_cover.get(i);
+			double CD;
+			if(!use_DR){
+				CD = tc.CI;	
+			}else{
+				CD = tc.CI/Double.parseDouble(tc.length);
+			}
+			
 			double weight = alpha - (1-alpha)*CD;
 			sb.append(" + " + new DecimalFormat("0.0000").format(weight) + " x"+ i);
 		}
@@ -735,6 +742,13 @@ public class TestSuiteReductionManager {
 				testSet_endIndex = Integer.parseInt(args[3]); //100
 				beta_min = Integer.parseInt(args[4]); //16 for AllPolicies, All1ResolvedDU, All2ResolvedDU
 				beta_max = Integer.parseInt(args[5]); //33, 53, 60 for AllPolicies, All1ResolvedDU, All2ResolvedDU
+			}else if(args.length == 7){
+				date = args[1];
+				criterion = args[2];
+				testSet_startIndex = Integer.parseInt(args[3]);
+				testSet_endIndex = Integer.parseInt(args[4]);
+				beta_min = Integer.parseInt(args[5]);
+				beta_max = Integer.parseInt(args[6]);
 			}
 			
 			
@@ -747,7 +761,7 @@ public class TestSuiteReductionManager {
 				
 				buildAndSolveILPs_BiCriteria_Manager(date, criterion,
 						alpha_min, alpha_max, alpha_interval, beta_min, 
-						beta_max, beta_interval, testSets_beforeReduction, timeLimit, sleepTime);
+						beta_max, beta_interval, testSets_beforeReduction, timeLimit, sleepTime, false);
 				
 			}else if(instruction.equals("saveReductionResult")){				
 
@@ -765,6 +779,46 @@ public class TestSuiteReductionManager {
 				String[] criteria = {"AllPolicies", "All1ResolvedDU", "All2ResolvedDU"};
 				saveTestSetInfo_beforeReduction(date, criteria, testSuiteSize, oldOrNew, randomOrCriterion, H_L_R, size_ART, containHeader, testSet_startIndex, testSet_endIndex);
 			}
+		}else if(instruction.equals("createAndBuildILPModel_DR")){
+			
+			String date = "20101122";
+			String criterion = "AllPolicies"; //AllPolicies, All1ResolvedDU, All2ResolvedDU
+			int testSuiteSize = -1;
+			String oldOrNew = "new";
+			String randomOrCriterion = "random";
+			String H_L_R = "H";
+			int size_ART = 80;
+			int testSet_startIndex = 0;
+			int testSet_endIndex = 100;
+			boolean containHeader = false;
+			
+			double alpha_min = 0.0;
+			double alpha_max = 1.1;
+			double alpha_interval = 0.1;
+			
+			int beta_min = 16;
+			int beta_max = 33;
+			int beta_interval = 1;
+			long timeLimit = 3600000; //60*60*1000: 1 hour
+			long sleepTime = 1000; //1 second
+			
+			
+			if(args.length == 6){
+				criterion = args[1];
+				testSet_startIndex = Integer.parseInt(args[2]); //0
+				testSet_endIndex = Integer.parseInt(args[3]); //100
+				beta_min = Integer.parseInt(args[4]); //16 for AllPolicies, All1ResolvedDU, All2ResolvedDU
+				beta_max = Integer.parseInt(args[5]); //33, 53, 60 for AllPolicies, All1ResolvedDU, All2ResolvedDU
+			}
+				
+			ArrayList<TestSet> testSets_beforeReduction = loadTestSet_offline_range(date, criterion, 
+						testSuiteSize, oldOrNew, randomOrCriterion, 
+						H_L_R, size_ART, containHeader, testSet_startIndex, testSet_endIndex);
+				
+			buildAndSolveILPs_BiCriteria_Manager(date, criterion,
+						alpha_min, alpha_max, alpha_interval, beta_min, 
+						beta_max, beta_interval, testSets_beforeReduction, timeLimit, sleepTime, true);
+				
 		}
 	}
 	
