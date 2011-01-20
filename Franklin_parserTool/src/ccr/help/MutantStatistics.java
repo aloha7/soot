@@ -260,7 +260,7 @@ public class MutantStatistics {
 		
 		String mutantFile = System.getProperty("user.dir") + "/src/ccr"
 				+ "/experiment/Context-Intensity_backup/TestHarness/" + date
-				+ "/Mutant/FaultList.txt";
+				+ "/Mutant/FaultList_full.txt";
 		
 		return loadFaults_offline(mutantFile, containHeader);
 	}
